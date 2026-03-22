@@ -30,38 +30,21 @@ venv/
 Thumbs.db
 desktop.ini
 
-# ---------- Data (too large for GitHub) ----------
-data/images/
-data/labels/
-data/raw/
-*.zip
-*.tar.gz
-*.rar
-
-# Keep data.yaml (it's small and defines dataset config)
-!data/data.yaml
-
-# ---------- Training outputs ----------
+# ---------- Training outputs (large, regenerable) ----------
 runs/
 logs/
 *.log
 
-# ---------- Model weights ----------
+# ---------- Model weights (large) ----------
 models/*.onnx
 models/*.pt
 saved_models/
 *.pth
-*.onnx
-*.pt
 *.engine
 *.trt
 
-# ---------- SAM checkpoints ----------
-*.pth
-
-# ---------- Results / generated assets ----------
-# Keep docs/assets/ structure but ignore large generated files
-docs/assets/*.gif
+# ---------- SAM checkpoints (large) ----------
+sam_vit_*.pth
 
 # ---------- Docker ----------
 *.tar
@@ -69,3 +52,9 @@ docs/assets/*.gif
 # ---------- Misc ----------
 *.bak
 *.tmp
+
+# ============================================
+# NOTE: NEU-DET dataset (~28MB) is intentionally
+# tracked in git for full reproducibility.
+# Clone -> run -> get results, no extra downloads.
+# ============================================
