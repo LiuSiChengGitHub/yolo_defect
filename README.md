@@ -1,1 +1,829 @@
-Initial
+# Steel Surface Defect Detection with YOLOv8
+
+![Python](https://img.shields.io/badge/Python-3.9-blue?logo=python)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0-red?logo=pytorch)
+![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-green)
+![ONNX](https://img.shields.io/badge/ONNX-Runtime-orange?logo=onnx)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+
+End-to-end industrial defect detection pipeline: from data preparation to ONNX deployment, built on the NEU-DET steel surface dataset with YOLOv8.
+
+<!-- TODO: Add demo GIF -->
+
+## Highlights
+
+- **Production-Ready Pipeline** — Data prep, training, evaluation, ONNX export, and inference in one repo
+- **Clone & Run** — Dataset (28MB) included in the repo, no external downloads needed
+- **ONNX Deployment** — Export to ONNX for cross-platform, framework-agnostic inference
+- **Configurable Experiments** — YAML-based hyperparameter management for reproducible training
+- **FastAPI-Ready** — Detector class designed for direct integration with web services
+
+## Quick Start
+
+```bash
+# Clone (dataset included, ~28MB)
+git clone https://github.com/LiuSiChengGitHub/yolo_defect.git
+cd yolo_defect
+
+# Install dependencies
+conda env create -f environment.yml
+conda activate yolo_defect
+
+# Prepare data (VOC XML -> YOLO TXT)
+python scripts/prepare_data.py
+
+# Train
+python scripts/train.py
+
+# Inference (after training & ONNX export)
+python scripts/inference_onnx.py --model models/best.onnx --image your_image.jpg
+```
+
+## Dataset
+
+### NEU-DET: Northeastern University Surface Defect Database
+
+**Source:** [NEU Surface Defect Database](http://faculty.neu.edu.cn/songkechen/zh_CN/zdylm/263270/list/)
+
+The NEU-DET dataset contains 1,800 grayscale images of hot-rolled steel strip surfaces, covering 6 types of typical surface defects:
+
+| Class | English | Chinese | Description |
+|-------|---------|---------|-------------|
+| 0 | crazing | 龟裂 | Network of fine cracks on the surface |
+| 1 | inclusion | 夹杂 | Foreign material embedded in the steel |
+| 2 | patches | 斑块 | Irregular discolored areas |
+| 3 | pitted_surface | 麻面 | Small pits scattered across the surface |
+| 4 | rolled-in_scale | 压入氧化铁皮 | Oxide scale pressed into the surface during rolling |
+| 5 | scratches | 划痕 | Linear marks from mechanical contact |
+
+### Statistics
+
+- **Total images:** 1,800 (300 per class)
+- **Image size:** 200 x 200 pixels
+- **Format:** JPG (grayscale, 1 channel in annotation but readable as 3-channel)
+- **Split:** Pre-divided into train (~240/class) and validation (~60/class)
+
+### Directory Structure
+
+The dataset is pre-split and included at `data/NEU-DET/`:
+
+```
+data/NEU-DET/
+├── train/                         # ~1440 images
+│   ├── annotations/               # VOC XML (flat directory)
+│   │   ├── crazing_1.xml
+│   │   ├── inclusion_1.xml
+│   │   └── ...
+│   └── images/                    # JPG (subdirectories by class)
+│       ├── crazing/
+│       ├── inclusion/
+│       ├── patches/
+│       ├── pitted_surface/
+│       ├── rolled-in_scale/
+│       └── scratches/
+└── validation/                    # ~360 images
+    ├── annotations/
+    └── images/                    # Same structure as train
+```
+
+### Annotation Format
+
+VOC XML format with `<bndbox>` containing absolute pixel coordinates:
+
+```xml
+<object>
+    <name>crazing</name>
+    <bndbox>
+        <xmin>2</xmin>
+        <ymin>2</ymin>
+        <xmax>193</xmax>
+        <ymax>194</ymax>
+    </bndbox>
+</object>
+```
+
+Each image may contain multiple bounding boxes (multiple defect instances).
+
+## Data Preparation
+
+### What the conversion does
+
+`prepare_data.py` converts the original VOC XML annotations to YOLO TXT format that Ultralytics YOLOv8 expects.
+
+**VOC XML format** (absolute pixel coordinates):
+```
+xmin, ymin, xmax, ymax  →  e.g., 2, 2, 193, 194
+```
+
+**YOLO TXT format** (normalized center coordinates):
+```
+class_id cx cy w h  →  e.g., 0 0.487500 0.490000 0.955000 0.960000
+```
+
+The normalization formula:
+- `cx = (xmin + xmax) / 2 / image_width`
+- `cy = (ymin + ymax) / 2 / image_height`
+- `w = (xmax - xmin) / image_width`
+- `h = (ymax - ymin) / image_height`
+
+### Class Mapping
+
+| Class Name | Class ID |
+|------------|----------|
+| crazing | 0 |
+| inclusion | 1 |
+| patches | 2 |
+| pitted_surface | 3 |
+| rolled-in_scale | 4 |
+| scratches | 5 |
+
+### Run
+
+```bash
+python scripts/prepare_data.py
+# or specify custom paths:
+python scripts/prepare_data.py --data-root data/NEU-DET --output-dir data
+```
+
+### Output Structure
+
+```
+data/
+├── images/
+│   ├── train/          # Flat directory, all training images
+│   └── val/            # Flat directory, all validation images
+├── labels/
+│   ├── train/          # YOLO TXT labels, one per image
+│   └── val/
+└── data.yaml           # YOLO dataset config
+```
+
+### Important Notes
+
+- The dataset is **already split** into train/validation — no random splitting needed
+- `rolled-in_scale` contains a hyphen, so the script uses known class name prefix matching (longest match first) instead of naive underscore splitting
+- Images are copied from class subdirectories to a flat output directory (YOLO requirement)
+
+## Training
+
+### Run Training
+
+```bash
+# Using YAML config (recommended)
+python scripts/train.py --config configs/train_config.yaml
+
+# Or directly via Ultralytics CLI
+yolo detect train data=data/data.yaml model=yolov8n.pt epochs=50 imgsz=640
+```
+
+### Hyperparameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `model` | `yolov8n.pt` | Pre-trained model variant. `n`=nano (fastest), `s`/`m`/`l`/`x` for larger models |
+| `data` | `data/data.yaml` | Dataset configuration file with paths and class names |
+| `epochs` | 50 | Total training epochs. More epochs = better convergence, but risk of overfitting |
+| `imgsz` | 640 | Input image size. Larger = better accuracy, slower training. Images are resized from 200x200 |
+| `batch` | 16 | Batch size. Larger = more stable gradients, more GPU memory needed. Use -1 for auto |
+| `lr0` | 0.01 | Initial learning rate. The optimizer adjusts this during training via scheduling |
+| `optimizer` | `auto` | Optimizer selection. `auto` picks the best based on model and dataset |
+| `mosaic` | 1.0 | Mosaic augmentation probability. Combines 4 images into one, improving small object detection |
+| `mixup` | 0.0 | Mixup augmentation probability. Blends two images together for regularization |
+| `device` | 0 | CUDA device index. Use `cpu` for CPU training |
+| `workers` | 8 | Number of dataloader worker processes for data loading |
+
+### Training Process Overview
+
+1. **Pre-trained weights loading** — YOLOv8n is initialized with COCO pre-trained weights, providing a strong feature extraction baseline (transfer learning)
+2. **Data augmentation** — Mosaic (4-image composition), mixup, random flip, HSV adjustment, and scale jitter are applied on-the-fly to improve generalization
+3. **Multi-scale training** — Images are randomly resized during training to make the model robust to different object scales
+4. **Automatic checkpointing** — `best.pt` (highest mAP) and `last.pt` (latest epoch) are saved under `runs/detect/train/weights/`
+
+## Results
+
+> *To be filled after training experiments*
+
+### Experiment Comparison
+
+| Experiment | imgsz | lr0 | epochs | mAP@0.5 | mAP@50-95 | Train Time | Notes |
+|------------|-------|-----|--------|---------|-----------|------------|-------|
+| baseline | 640 | 0.01 | 50 | - | - | - | Default config |
+
+### PR Curve
+
+<!-- TODO: Add PR curve image after training -->
+
+### Confusion Matrix
+
+<!-- TODO: Add confusion matrix image after training -->
+
+### Per-Class AP
+
+| Class | AP@0.5 | AP@50-95 |
+|-------|--------|----------|
+| crazing | - | - |
+| inclusion | - | - |
+| patches | - | - |
+| pitted_surface | - | - |
+| rolled-in_scale | - | - |
+| scratches | - | - |
+
+## ONNX Deployment
+
+### Why ONNX?
+
+- **Cross-platform** — Run on Windows, Linux, macOS, edge devices without PyTorch installed
+- **Framework-agnostic** — No dependency on the training framework at inference time
+- **Performance** — ONNX Runtime provides optimized inference with hardware-specific acceleration (CUDA, TensorRT, DirectML)
+- **Smaller footprint** — No need to ship the entire PyTorch runtime in production
+
+### Export
+
+```bash
+python scripts/export_onnx.py --weights runs/detect/train/weights/best.pt
+# Output: models/best.onnx
+```
+
+### Inference
+
+```bash
+# Single image
+python scripts/inference_onnx.py --model models/best.onnx --image path/to/image.jpg
+
+# Batch (entire directory)
+python scripts/inference_onnx.py --model models/best.onnx --image-dir data/images/val --output-dir results/
+```
+
+### Performance Comparison
+
+> *To be filled after export*
+
+| Format | mAP@0.5 | FPS (CPU) | FPS (GPU) | Model Size |
+|--------|---------|-----------|-----------|------------|
+| PyTorch (.pt) | - | - | - | - |
+| ONNX (.onnx) | - | - | - | - |
+
+### YOLODetector Class (`src/detector.py`)
+
+The `YOLODetector` class provides a clean 3-step inference API:
+
+1. **`preprocess(image)`** — BGR to RGB, resize to model input size, normalize to 0-1, HWC to CHW, add batch dimension
+2. **`predict(image)`** — Run ONNX inference, parse output tensor, apply confidence filtering and NMS, return detections list
+3. **`draw(image, detections, class_names)`** — Draw bounding boxes with class labels and confidence scores
+
+This class is designed to be directly reused by the FastAPI service in `api/`, keeping inference logic in one place.
+
+## Project Structure
+
+```
+yolo_defect/
+├── README.md                     # This file
+├── LICENSE                       # MIT License
+├── requirements.txt              # pip dependencies
+├── environment.yml               # Conda environment (PyTorch + CUDA)
+├── .gitignore                    # Ignore rules
+├── data/
+│   ├── data.yaml                 # YOLO dataset config (auto-generated)
+│   └── NEU-DET/                  # Original dataset (committed to git)
+│       ├── train/                #   Training split (~240/class)
+│       └── validation/           #   Validation split (~60/class)
+├── scripts/
+│   ├── prepare_data.py           # VOC XML -> YOLO TXT converter
+│   ├── data_analysis.py          # Dataset statistics & visualization
+│   ├── train.py                  # Training entry point (reads YAML config)
+│   ├── evaluate.py               # Model evaluation + PR curve + confusion matrix
+│   ├── export_onnx.py            # ONNX model export
+│   └── inference_onnx.py         # ONNX inference (single + batch)
+├── src/
+│   ├── __init__.py
+│   └── detector.py               # YOLODetector class (ONNX inference, FastAPI reuse)
+├── api/
+│   └── .gitkeep                  # FastAPI service (Week 2)
+├── configs/
+│   └── train_config.yaml         # Training hyperparameters
+├── models/
+│   └── .gitkeep                  # Exported ONNX models
+├── docs/
+│   ├── tasks/                    # Project prompts & task docs
+│   ├── experiment_log.md         # Experiment tracking template
+│   └── assets/                   # PR curves, demo GIFs, plots
+└── runs/
+    └── .gitkeep                  # YOLO training outputs (gitignored)
+```
+
+### Design Principles
+
+- **`scripts/`** — One-off scripts for data processing, training, evaluation, export. Run from command line with argparse.
+- **`src/`** — Reusable modules. `detector.py` is imported by both `inference_onnx.py` and the future FastAPI service.
+- **`configs/`** — Separated hyperparameters. Easy to track experiments by diffing config files.
+
+## Tech Stack
+
+| Tool | Purpose | Version |
+|------|---------|---------|
+| Python | Language | 3.9 |
+| PyTorch | Deep learning framework | 2.0.0 |
+| Ultralytics | YOLOv8 training & inference | latest |
+| ONNX | Model interchange format | latest |
+| ONNX Runtime | Optimized inference engine | latest (GPU) |
+| OpenCV | Image processing | (via ultralytics) |
+| Matplotlib | Visualization & plotting | (via ultralytics) |
+| FastAPI | REST API service (Week 2) | latest |
+| Conda | Environment management | — |
+
+## Key Design Decisions
+
+### Why YOLOv8n over YOLOv5 or larger models?
+
+YOLOv8 is the latest generation with improved architecture (C2f modules, anchor-free detection, decoupled head). The `nano` variant is chosen because:
+- NEU-DET is a small dataset (1,800 images) — a larger model would overfit
+- Edge deployment friendly — fast inference on CPU and mobile devices
+- Easy to scale up: if `n` isn't enough, swap to `s`/`m` with one config change
+
+### Why include the dataset in the repo?
+
+The NEU-DET dataset is only 28MB. Including it means:
+- `git clone` → immediately runnable, no manual downloads or registration
+- Guaranteed reproducibility — the exact same data every time
+- Interviewer-friendly — they can verify results in minutes
+
+### Why YAML config instead of CLI arguments?
+
+- **Traceability** — Each experiment's config is a file that can be version-controlled and diffed
+- **Reproducibility** — Re-run any experiment by pointing to its config
+- **Comparison** — Side-by-side parameter comparison across experiments
+
+### Why separate `src/detector.py`?
+
+- **Separation of concerns** — Inference logic is independent of the training framework
+- **FastAPI reuse** — The API service imports `YOLODetector` directly, no code duplication
+- **Testing** — The detector can be unit-tested in isolation
+
+## Roadmap / TODO
+
+- [ ] Run baseline training and fill in Results section
+- [ ] Data augmentation experiments (mosaic, mixup tuning)
+- [ ] SAM (Segment Anything Model) integration for instance segmentation
+- [ ] FastAPI service with file upload endpoint
+- [ ] Docker containerization for deployment
+- [ ] Bad sample analysis (misdetections, class confusion)
+- [ ] TensorRT optimization for maximum GPU inference speed
+- [ ] CI/CD pipeline with automated testing
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+The NEU-DET dataset is provided by Northeastern University (NEU). Please cite the original paper if you use this dataset in academic work:
+
+> K. Song and Y. Yan, "A noise robust method based on completed local binary patterns for hot-rolled steel strip surface defects," Applied Surface Science, vol. 285, pp. 858-864, 2013.
+
+---
+
+---
+
+# 钢材表面缺陷检测 — 基于 YOLOv8
+
+![Python](https://img.shields.io/badge/Python-3.9-blue?logo=python)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0-red?logo=pytorch)
+![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-green)
+![ONNX](https://img.shields.io/badge/ONNX-Runtime-orange?logo=onnx)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+
+端到端工业缺陷检测流水线：从数据准备到 ONNX 部署，基于 NEU-DET 钢材表面数据集与 YOLOv8 构建。
+
+<!-- TODO: 添加 Demo GIF -->
+
+## 项目亮点
+
+- **生产级流水线** — 数据准备、训练、评估、ONNX 导出、推理一站式完成
+- **克隆即用** — 数据集（28MB）已包含在仓库内，无需额外下载
+- **ONNX 部署** — 导出为 ONNX 格式，跨平台、框架无关推理
+- **可配置实验** — 基于 YAML 的超参数管理，实验可追溯可复现
+- **FastAPI 就绪** — 检测器类设计直接支持 Web 服务集成
+
+## 快速开始
+
+```bash
+# 克隆（数据集已包含，约 28MB）
+git clone https://github.com/LiuSiChengGitHub/yolo_defect.git
+cd yolo_defect
+
+# 安装依赖
+conda env create -f environment.yml
+conda activate yolo_defect
+
+# 数据准备（VOC XML -> YOLO TXT）
+python scripts/prepare_data.py
+
+# 训练
+python scripts/train.py
+
+# 推理（训练并导出 ONNX 后）
+python scripts/inference_onnx.py --model models/best.onnx --image your_image.jpg
+```
+
+## 数据集
+
+### NEU-DET：东北大学钢材表面缺陷数据库
+
+**来源：** [NEU Surface Defect Database](http://faculty.neu.edu.cn/songkechen/zh_CN/zdylm/263270/list/)
+
+NEU-DET 数据集由东北大学宋克臣教授团队发布，包含 1,800 张热轧钢带表面灰度图像，是工业缺陷检测领域最常用的公开基准数据集之一。涵盖 6 类典型表面缺陷：
+
+| 类别 ID | 英文名 | 中文名 | 描述 | 检测难度 |
+|---------|--------|--------|------|----------|
+| 0 | crazing | 龟裂 | 表面细密裂纹网络 | 高（纹理细密，与背景区分度低） |
+| 1 | inclusion | 夹杂 | 钢材内嵌入的异物 | 中 |
+| 2 | patches | 斑块 | 不规则变色区域 | 中 |
+| 3 | pitted_surface | 麻面 | 表面分布的小凹坑 | 中 |
+| 4 | rolled-in_scale | 压入氧化铁皮 | 轧制过程中压入表面的氧化皮 | 中 |
+| 5 | scratches | 划痕 | 机械接触产生的线性痕迹 | 低（线性特征明显） |
+
+### 数据统计
+
+- **总图片数：** 1,800（每类 300 张）
+- **图片尺寸：** 200 x 200 像素
+- **格式：** JPG（标注中标记为 depth=1 灰度，但实际可以作为 3 通道 BGR 读取）
+- **划分：** 已预划分为训练集（每类约 240 张）和验证集（每类约 60 张），约 80:20
+- **数据集已包含在 `data/NEU-DET/` 目录中**
+
+### 原始数据目录结构
+
+```
+data/NEU-DET/
+├── train/                         # 训练集 (~1440 张)
+│   ├── annotations/               # VOC XML 标注（扁平目录，所有类混在一起）
+│   │   ├── crazing_1.xml          #   文件名格式：{类名}_{编号}.xml
+│   │   ├── inclusion_1.xml
+│   │   ├── rolled-in_scale_1.xml  #   注意：类名含连字符！
+│   │   └── ...
+│   └── images/                    # JPG 图片（按类名分子目录）
+│       ├── crazing/               #   文件名格式：{类名}/{类名}_{编号}.jpg
+│       │   ├── crazing_1.jpg
+│       │   └── ...
+│       ├── inclusion/
+│       ├── patches/
+│       ├── pitted_surface/
+│       ├── rolled-in_scale/
+│       └── scratches/
+└── validation/                    # 验证集 (~360 张)，结构同 train
+    ├── annotations/
+    └── images/
+```
+
+> **注意设计上的不对称：** annotations 是扁平目录（所有类的 XML 混在一起），而 images 按类名分子目录。这种不对称在数据准备脚本中需要特殊处理。
+
+### 标注格式说明
+
+原始数据使用 **VOC XML** 格式（源自 Pascal VOC 目标检测挑战赛）。每张图对应一个 XML 文件：
+
+```xml
+<annotation>
+    <size>
+        <width>200</width>            <!-- 图片宽度 -->
+        <height>200</height>           <!-- 图片高度 -->
+        <depth>1</depth>               <!-- 通道数（灰度=1） -->
+    </size>
+    <object>                           <!-- 一个标注目标（可以有多个 object） -->
+        <name>crazing</name>           <!-- 类别名称 -->
+        <bndbox>
+            <xmin>2</xmin>             <!-- 左上角 x 坐标（像素） -->
+            <ymin>2</ymin>             <!-- 左上角 y 坐标（像素） -->
+            <xmax>193</xmax>           <!-- 右下角 x 坐标（像素） -->
+            <ymax>194</ymax>           <!-- 右下角 y 坐标（像素） -->
+        </bndbox>
+    </object>
+    <!-- 一张图可能有多个 <object>，如 rolled-in_scale 常有 2-3 个 bbox -->
+</annotation>
+```
+
+> **面试知识点：** VOC 格式用绝对像素坐标的角点表示 (xmin, ymin, xmax, ymax)，而 YOLO 格式用归一化的中心点+宽高 (cx, cy, w, h)。这是两种最常见的标注格式，面试常问区别。
+
+## 数据准备
+
+### 转换说明
+
+`prepare_data.py` 将 VOC XML 标注转换为 YOLO TXT 格式（Ultralytics YOLOv8 要求的输入格式）。
+
+**VOC 格式**（绝对像素坐标，角点表示）：
+```
+xmin, ymin, xmax, ymax  →  例如: 2, 2, 193, 194
+```
+
+**YOLO 格式**（归一化中心坐标）：
+```
+class_id cx cy w h  →  例如: 0 0.487500 0.490000 0.955000 0.960000
+```
+
+**归一化转换公式：**
+```
+cx = (xmin + xmax) / 2 / image_width    # 中心点 x，归一化到 0-1
+cy = (ymin + ymax) / 2 / image_height   # 中心点 y，归一化到 0-1
+w  = (xmax - xmin) / image_width        # 宽度，归一化到 0-1
+h  = (ymax - ymin) / image_height       # 高度，归一化到 0-1
+```
+
+> **为什么要归一化？** 归一化后坐标与图片分辨率无关。训练时 YOLO 会把 200x200 的原图 resize 到 640x640，归一化坐标会自动适配，不用手动调整标签值。
+
+### 类别映射
+
+| 类别名称 | 类别 ID | 说明 |
+|----------|---------|------|
+| crazing | 0 | 顺序固定，与 data.yaml 中的 names 对应 |
+| inclusion | 1 | |
+| patches | 2 | |
+| pitted_surface | 3 | |
+| rolled-in_scale | 4 | 注意：名字含连字符，不能用下划线分割提取类名 |
+| scratches | 5 | |
+
+### 运行
+
+```bash
+python scripts/prepare_data.py
+# 或指定自定义路径：
+python scripts/prepare_data.py --data-root data/NEU-DET --output-dir data
+```
+
+### 输出目录结构
+
+```
+data/
+├── images/
+│   ├── train/          # 扁平目录，所有训练图片（从子目录复制过来）
+│   └── val/            # 扁平目录，所有验证图片
+├── labels/
+│   ├── train/          # YOLO TXT 标签（每张图一个 .txt，与图片同名）
+│   └── val/
+└── data.yaml           # YOLO 数据集配置文件
+```
+
+> **YOLO 对目录的要求：** `images/` 和 `labels/` 必须平级，且文件一一对应（`crazing_1.jpg` ↔ `crazing_1.txt`）。所以必须把按类名分的图片"拍平"到一个目录里。
+
+### 踩坑注意事项
+
+- 数据集**已经预划分**好训练集/验证集，不需要也不应该自己做随机划分
+- `rolled-in_scale` 类名包含连字符 `-`，如果用 `filename.split('_')[0]` 提取类名会得到 `rolled-in`（错误！）。正确做法是用已知类名列表做前缀匹配，按长度从长到短排序确保最长匹配优先
+- 图片必须从按类名分的子目录复制到扁平输出目录（YOLO 格式的硬性要求）
+
+## 训练
+
+### 运行训练
+
+```bash
+# 方式一：通过 YAML 配置文件（推荐，实验可追溯）
+python scripts/train.py --config configs/train_config.yaml
+
+# 方式二：通过 Ultralytics CLI（快速实验）
+yolo detect train data=data/data.yaml model=yolov8n.pt epochs=50 imgsz=640
+```
+
+### 超参数详解
+
+| 参数 | 默认值 | 说明 | 面试要点 |
+|------|--------|------|----------|
+| `model` | `yolov8n.pt` | 模型变体。`n`=nano（最快），`s`/`m`/`l`/`x` 依次增大 | YOLOv8 有 5 个尺寸，参数量从 3M 到 68M |
+| `data` | `data/data.yaml` | 数据集配置文件，定义路径和类名 | |
+| `epochs` | 50 | 总训练轮数。太少欠拟合，太多过拟合 | 通常看 loss 曲线是否收敛来判断 |
+| `imgsz` | 640 | 输入图片尺寸。原图 200x200 会被 resize 到 640x640 | 更大 = 更准但更慢，是常见调参变量 |
+| `batch` | 16 | 批大小。更大 = 梯度更稳定，但需要更多显存 | -1 可以让 YOLO 自动选择最大 batch |
+| `lr0` | 0.01 | 初始学习率。训练过程中会按 schedule 自动衰减 | 太大会震荡，太小收敛慢 |
+| `optimizer` | `auto` | 优化器。auto 会根据模型自动选择 SGD 或 AdamW | SGD+momentum 是经典选择，Adam 收敛更快 |
+| `mosaic` | 1.0 | Mosaic 数据增强概率。4 张图拼成 1 张 | 提升小目标检测，增加上下文信息 |
+| `mixup` | 0.0 | Mixup 数据增强概率。两张图按比例混合 | 正则化效果，防止过拟合 |
+| `device` | 0 | CUDA 设备编号。`cpu` 则用 CPU 训练 | |
+| `workers` | 8 | 数据加载的工作进程数 | Windows 上可能需要设为 0 |
+
+### 训练流程详解
+
+1. **加载预训练权重（迁移学习）**
+   - YOLOv8n 使用在 COCO 数据集（80 类、33 万张图）上预训练的权重
+   - 骨干网络（Backbone）已经学会了通用的特征提取能力（边缘、纹理、形状等）
+   - 我们只需要在 NEU-DET 上微调（Fine-tune），让模型学习钢材缺陷的特定特征
+   - **面试考点：** 迁移学习为什么有效？因为底层特征（边缘、纹理）是通用的，高层特征才是任务特定的
+
+2. **数据增强（在线增强，不额外占磁盘）**
+   - **Mosaic**：把 4 张图拼成一张，每张占一个象限。好处是一次看到更多目标，提升小目标检测
+   - **Mixup**：两张图按随机比例混合叠加，起正则化效果
+   - **随机翻转**：水平/垂直翻转，增加数据多样性
+   - **HSV 调整**：随机调整色相、饱和度、亮度，增强对光照变化的鲁棒性
+   - **尺度抖动**：随机缩放输入图片，让模型适应不同大小的目标
+
+3. **多尺度训练**
+   - 训练时随机调整输入尺寸（如 480-640-800），让模型在不同分辨率下都能检测
+   - 推理时固定为设定的 imgsz
+
+4. **自动保存检查点**
+   - `best.pt`：验证集上 mAP 最高的那个 epoch 的权重（用于最终评估和部署）
+   - `last.pt`：最后一个 epoch 的权重（用于断点续训）
+   - 保存路径：`runs/detect/train/weights/`
+
+## 实验结果
+
+> *训练完成后填写*
+
+### 实验对比
+
+| 实验 | imgsz | lr0 | epochs | mosaic | mAP@0.5 | mAP@50-95 | 训练时间 | 备注 |
+|------|-------|-----|--------|--------|---------|-----------|----------|------|
+| baseline | 640 | 0.01 | 50 | 1.0 | - | - | - | 默认配置 |
+
+### PR 曲线
+
+<!-- TODO: 训练完成后添加 PR 曲线图 -->
+<!-- ![PR Curve](docs/assets/PR_curve.png) -->
+
+> **面试知识点：** PR 曲线（Precision-Recall Curve）展示不同置信度阈值下 Precision 和 Recall 的权衡关系。曲线下面积（AUC）就是 AP（Average Precision）。mAP 是所有类 AP 的平均值。
+
+### 混淆矩阵
+
+<!-- TODO: 训练完成后添加混淆矩阵图 -->
+<!-- ![Confusion Matrix](docs/assets/confusion_matrix.png) -->
+
+> **面试知识点：** 混淆矩阵揭示哪些类别容易被互相误判。例如 crazing 和 scratches 可能被混淆（都是线性纹理）。
+
+### 各类 AP
+
+| 类别 | AP@0.5 | AP@50-95 |
+|------|--------|----------|
+| crazing | - | - |
+| inclusion | - | - |
+| patches | - | - |
+| pitted_surface | - | - |
+| rolled-in_scale | - | - |
+| scratches | - | - |
+
+## ONNX 部署
+
+### 为什么选择 ONNX？
+
+ONNX（Open Neural Network Exchange）是微软和 Facebook 联合推出的开放神经网络格式：
+
+- **跨平台** — 无需安装 PyTorch，Windows/Linux/macOS/边缘设备均可运行
+- **框架无关** — 推理时不依赖训练框架，部署环境只需要轻量的 ONNX Runtime
+- **性能优化** — ONNX Runtime 提供硬件加速（CUDA, TensorRT, DirectML），推理速度通常优于原生 PyTorch
+- **体积更小** — 不用打包整个 PyTorch 运行时，部署镜像更小
+
+> **面试考点：** 为什么不直接用 PyTorch 部署？因为 PyTorch 安装包 >1GB，还需要 CUDA 工具包。ONNX Runtime 只有几十 MB，且支持多种硬件后端（CPU、GPU、NPU）。在工业场景中，边缘设备可能没有 PyTorch 环境。
+
+### 导出命令
+
+```bash
+python scripts/export_onnx.py --weights runs/detect/train/weights/best.pt
+# 输出: models/best.onnx
+```
+
+### 推理命令
+
+```bash
+# 单张推理
+python scripts/inference_onnx.py --model models/best.onnx --image test.jpg
+
+# 批量推理（整个目录）
+python scripts/inference_onnx.py --model models/best.onnx --image-dir data/images/val --output-dir results/
+```
+
+### 性能对比
+
+> *导出后填写*
+
+| 格式 | mAP@0.5 | FPS (CPU) | FPS (GPU) | 模型大小 |
+|------|---------|-----------|-----------|----------|
+| PyTorch (.pt) | - | - | - | - |
+| ONNX (.onnx) | - | - | - | - |
+
+> **验证要点：** ONNX 导出后 mAP 差异应 < 0.01，否则说明导出过程有精度损失。
+
+### YOLODetector 类（`src/detector.py`）
+
+`src/detector.py` 封装了完整的 ONNX 推理流程，三步 API 设计：
+
+1. **`preprocess(image)`** — 图片预处理
+   - BGR → RGB（OpenCV 读的是 BGR，模型期望 RGB）
+   - Resize 到模型输入尺寸（如 640x640）
+   - 像素值归一化到 0-1（除以 255）
+   - HWC → CHW（维度重排，PyTorch/ONNX 的标准）
+   - 添加 batch 维度（3维→4维）
+
+2. **`predict(image)`** — 模型推理 + 后处理
+   - ONNX Runtime 前向推理
+   - 解析输出张量（YOLOv8 输出形状 `[1, 4+nc, 8400]`）
+   - 置信度过滤（默认 > 0.25）
+   - **NMS（非极大值抑制）**：同一目标可能被多个框检测到，NMS 只保留最优框
+
+3. **`draw(image, detections, class_names)`** — 结果可视化
+   - 画边界框 + 类名 + 置信度分数
+
+> **面试高频考点 — NMS 算法：**
+> 1. 按置信度从高到低排序所有检测框
+> 2. 取最高分的框，与其余框逐一计算 IoU（交并比）
+> 3. IoU > 阈值的框被抑制（认为检测的是同一个目标）
+> 4. 重复直到处理完所有框
+>
+> 本项目在 `detector.py` 中手动实现了 NMS（不依赖 torchvision），面试可以直接讲。
+
+该类的设计目的是**复用**：`scripts/inference_onnx.py` 和未来的 FastAPI 服务都直接 `from src.detector import YOLODetector`，推理逻辑只写一份。
+
+## 项目结构
+
+```
+yolo_defect/
+├── README.md                     # 项目说明（英文+中文双版本）
+├── CLAUDE.md                     # AI 助手上下文文件
+├── LICENSE                       # MIT 开源协议
+├── requirements.txt              # pip 依赖列表
+├── environment.yml               # Conda 环境配置（含 PyTorch + CUDA）
+├── .gitignore                    # Git 忽略规则
+├── data/
+│   ├── data.yaml                 # YOLO 数据集配置（prepare_data.py 自动生成）
+│   └── NEU-DET/                  # 原始数据集（28MB，提交到 git）
+│       ├── train/                #   训练集 (~240张/类)
+│       └── validation/           #   验证集 (~60张/类)
+├── scripts/                      # 一次性脚本（命令行运行）
+│   ├── prepare_data.py           #   VOC XML → YOLO TXT 格式转换
+│   ├── data_analysis.py          #   数据集统计与可视化
+│   ├── train.py                  #   训练入口（读取 YAML 配置）
+│   ├── evaluate.py               #   模型评估 + PR 曲线 + 混淆矩阵
+│   ├── export_onnx.py            #   ONNX 模型导出
+│   └── inference_onnx.py         #   ONNX 推理（单张 + 批量）
+├── src/                          # 可复用模块
+│   ├── __init__.py
+│   └── detector.py               #   YOLODetector 类（ONNX 推理，FastAPI 复用）
+├── api/                          # FastAPI 服务（Week 2 填充）
+│   └── .gitkeep
+├── configs/
+│   └── train_config.yaml         # 训练超参数配置
+├── models/
+│   └── .gitkeep                  # 导出的 ONNX 模型（gitignored）
+├── docs/
+│   ├── tasks/                    # 项目任务文档
+│   ├── experiment_log.md         # 实验记录模板
+│   └── assets/                   # PR 曲线、Demo GIF、分析图表
+└── runs/
+    └── .gitkeep                  # YOLO 训练输出（gitignored）
+```
+
+### 设计原则
+
+- **`scripts/`**：一次性脚本，用 argparse 接收参数，从命令行运行。每个脚本独立，做一件事。
+- **`src/`**：可复用模块。`detector.py` 同时被推理脚本和 FastAPI 服务 import，避免代码重复。
+- **`configs/`**：超参数与代码分离。调参时改配置文件，不用改代码。用 git diff 可以对比两次实验的参数差异。
+
+## 技术栈
+
+| 工具 | 用途 | 版本 |
+|------|------|------|
+| Python | 编程语言 | 3.9 |
+| PyTorch | 深度学习框架 | 2.0.0 |
+| Ultralytics | YOLOv8 训练和推理 | latest |
+| ONNX | 开放神经网络格式 | latest |
+| ONNX Runtime | 优化推理引擎 | latest (GPU) |
+| OpenCV | 图像处理 | (via ultralytics) |
+| Matplotlib | 可视化绘图 | (via ultralytics) |
+| FastAPI | REST API 服务（Week 2） | latest |
+| Conda | 环境管理 | — |
+
+## 关键设计决策
+
+### 为什么选 YOLOv8n 而不是 v5 或更大的模型？
+
+- **YOLOv8 vs YOLOv5：** YOLOv8 是最新一代，架构改进包括 C2f 模块（替代 C3）、Anchor-Free 检测头（不需要预定义锚框）、解耦头（分类和回归分开处理）。同等大小下 YOLOv8 精度更高。
+- **为什么 nano (n) 版本：** NEU-DET 只有 1,800 张图，数据集很小。用更大的模型（s/m/l）容易过拟合，且推理速度慢。nano 版本仅 3.2M 参数，在边缘设备上也能实时运行。
+- **灵活升级：** 如果 nano 精度不够，改一行配置就能换成 s 或 m，无需改代码。
+
+### 为什么把数据集放在仓库里？
+
+NEU-DET 数据集只有 28MB（远小于 GitHub 的 100MB 单文件限制）。放在仓库里意味着：
+- `git clone` 后立刻可以跑，不需要手动下载、注册账号、解压
+- 保证完全可复现——每个人用的是完全相同的数据
+- 面试官友好——几分钟内就能验证你的结果
+
+### 为什么用 YAML 配置文件而不是命令行参数？
+
+- **可追溯**：每次实验的配置是一个文件，可以 git commit 保存
+- **可对比**：用 `diff exp1.yaml exp2.yaml` 直接看两次实验改了什么
+- **可复现**：`python train.py --config exp1.yaml` 就能精确重现实验
+
+### 为什么 `src/detector.py` 要独立封装？
+
+- **关注点分离**：推理逻辑不依赖 ultralytics 或 PyTorch，只依赖 ONNX Runtime
+- **代码复用**：推理脚本和 FastAPI 服务共用同一份推理代码
+- **可测试性**：可以对 detector 类单独写单元测试，不用启动整个训练框架
+
+## 路线图
+
+- [ ] 基线训练，填写实验结果
+- [ ] 数据增强实验（mosaic、mixup 调参）
+- [ ] SAM 集成（YOLO 检测框 → SAM 精细分割，简历亮点）
+- [ ] FastAPI 服务化（`POST /detect` 上传图片返回 JSON）
+- [ ] Docker 容器化部署
+- [ ] 坏样本分析（误检/漏检案例，找出模型薄弱点）
+- [ ] TensorRT 推理优化
+
+## 许可证
+
+本项目采用 MIT 许可证 — 详见 [LICENSE](LICENSE) 文件。
+
+NEU-DET 数据集由东北大学提供，学术引用请参考：
+
+> K. Song and Y. Yan, "A noise robust method based on completed local binary patterns for hot-rolled steel strip surface defects," Applied Surface Science, vol. 285, pp. 858-864, 2013.

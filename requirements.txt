@@ -1,0 +1,25 @@
+# ============================================
+# YOLO Defect Detection - pip dependencies
+# Extracted from environment.yml
+# ============================================
+
+# Training
+ultralytics                # YOLOv8
+
+# Deployment
+onnx                       # ONNX model format
+onnxruntime-gpu            # ONNX Runtime with GPU support (CPU-only: onnxruntime)
+
+# SAM integration
+segment-anything           # Meta SAM
+
+# API service
+fastapi
+uvicorn[standard]
+python-multipart           # FastAPI file upload support
+
+# Monitoring
+tensorboard
+
+# Optional
+jupyter

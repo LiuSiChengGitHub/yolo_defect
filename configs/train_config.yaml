@@ -1,0 +1,16 @@
+# YOLOv8 Training Configuration
+# Modify this file for different experiments
+
+model: yolov8n.pt          # Model: yolov8n/s/m/l/x
+data: data/data.yaml        # Dataset config
+epochs: 50                  # Total training epochs
+imgsz: 640                  # Input image size
+batch: 16                   # Batch size (-1 for auto)
+lr0: 0.01                   # Initial learning rate
+optimizer: auto             # Optimizer: SGD, Adam, AdamW, auto
+mosaic: 1.0                 # Mosaic augmentation (0.0 to disable)
+mixup: 0.0                  # Mixup augmentation
+device: 0                   # CUDA device (0 for first GPU)
+workers: 8                  # Dataloader workers
+project: runs/detect        # Save directory
+name: train                 # Experiment name
