@@ -1,23 +1,71 @@
-# 忽略 Conda 环境和虚拟环境
+# ============================================
+# YOLO Defect Detection Project .gitignore
+# ============================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ---------- Conda / venv ----------
 env/
 venv/
 .conda/
 
-# 忽略 Python 缓存和日志
-__pycache__/
-*.pyc
+# ---------- Jupyter ----------
 .ipynb_checkpoints/
-logs/
 
-# 忽略数据集和模型权重 (太大了传不上 GitHub)
-data/
-datasets/
-*.zip
-*.tar.gz
-*.pth
-*.pt
-*.onnx
-
-# 忽略 IDE 配置
+# ---------- IDE ----------
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Data (too large for GitHub) ----------
+data/images/
+data/labels/
+data/raw/
+*.zip
+*.tar.gz
+*.rar
+
+# Keep data.yaml (it's small and defines dataset config)
+!data/data.yaml
+
+# ---------- Training outputs ----------
+runs/
+logs/
+*.log
+
+# ---------- Model weights ----------
+models/*.onnx
+models/*.pt
+saved_models/
+*.pth
+*.onnx
+*.pt
+*.engine
+*.trt
+
+# ---------- SAM checkpoints ----------
+*.pth
+
+# ---------- Results / generated assets ----------
+# Keep docs/assets/ structure but ignore large generated files
+docs/assets/*.gif
+
+# ---------- Docker ----------
+*.tar
+
+# ---------- Misc ----------
+*.bak
+*.tmp

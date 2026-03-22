@@ -4,16 +4,33 @@ channels:
   - nvidia
   - defaults
 dependencies:
+  # --- Core (conda channel, ensures CUDA compatibility) ---
   - python=3.9
   - pytorch=2.0.0
   - torchvision=0.15.0
-  - pytorch-cuda=11.8   # 适配 RTX 3060 / 4060
+  - pytorch-cuda=11.8        # RTX 3060 / 4060
   - numpy
-  - matplotlib
-  - jupyter
-  - pandas
   - pip
+
+  # --- pip packages ---
   - pip:
-    - opencv-python
+    # Training
+    - ultralytics             # YOLOv8 (auto-installs opencv, matplotlib, pandas, etc.)
+
+    # Deployment
+    - onnx                    # ONNX model format
+    - onnxruntime-gpu         # ONNX Runtime with GPU support (CPU-only: onnxruntime)
+
+    # SAM integration
+    - segment-anything        # Meta SAM
+
+    # API service (Week 2)
+    - fastapi
+    - uvicorn[standard]
+    - python-multipart        # FastAPI file upload support
+
+    # Monitoring
     - tensorboard
-    - ultralytics
+
+    # Optional but useful
+    - jupyter
