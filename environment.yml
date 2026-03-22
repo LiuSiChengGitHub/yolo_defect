@@ -1,0 +1,19 @@
+name: yolo_defect
+channels:
+  - pytorch
+  - nvidia
+  - defaults
+dependencies:
+  - python=3.9
+  - pytorch=2.0.0
+  - torchvision=0.15.0
+  - pytorch-cuda=11.8   # 适配 RTX 3060 / 4060
+  - numpy
+  - matplotlib
+  - jupyter
+  - pandas
+  - pip
+  - pip:
+    - opencv-python
+    - tensorboard
+    - ultralytics

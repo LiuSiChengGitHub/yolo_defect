@@ -1,0 +1,23 @@
+# 忽略 Conda 环境和虚拟环境
+env/
+venv/
+.conda/
+
+# 忽略 Python 缓存和日志
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+logs/
+
+# 忽略数据集和模型权重 (太大了传不上 GitHub)
+data/
+datasets/
+*.zip
+*.tar.gz
+*.pth
+*.pt
+*.onnx
+
+# 忽略 IDE 配置
+.vscode/
+.idea/
