@@ -43,16 +43,43 @@ docs/assets/ → Plots, PR curves, demo GIFs
 - Annotations flat: `annotations/{class_name}_N.xml` (VOC XML format)
 - Pre-split: train (~240/class), validation (~60/class) — do NOT re-split
 
+## Collaboration Mode
+
+This project is the user's **resume core project** for applying to foreign company internships (Bosch, Siemens, Cognex, etc.). The collaboration follows a "tutor + executor" pattern:
+
+1. **Claude executes** — Write code, run scripts, debug issues, generate outputs
+2. **User internalizes** — Understands every step well enough to explain in interviews
+3. **After each step** — Claude summarizes key learnings and interview-relevant knowledge points, then updates `docs/YOLO_Project.md` with progress and learnings
+
+### Workflow for each new conversation:
+1. Read `docs/YOLO_Project.md` to see current progress and what step we're on
+2. Read `docs/tasks/YOLO 0322-0328.md` for the weekly plan if needed
+3. Pick up where we left off — no need for user to re-explain context
+4. After completing work, update `docs/YOLO_Project.md` before ending
+
+### Interview awareness:
+- After completing each step, highlight **interview talking points** the user should memorize
+- Flag common interview questions related to what we just did
+- The user targets CV engineer roles at industrial/medical foreign companies
+
+## Environment
+
+- **Python executable:** The conda env `yolo_defect` Python is NOT on PATH. Use the full path to run scripts:
+  ```bash
+  /d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/xxx.py
+  ```
+- **Conda itself** is also not on PATH in the bash shell — do not use `conda run`
+
 ## Common Commands
 
 ```bash
-conda activate yolo_defect
-python scripts/prepare_data.py          # VOC XML → YOLO TXT
-python scripts/data_analysis.py         # Dataset stats & plots
-python scripts/train.py                 # Train (reads configs/train_config.yaml)
-python scripts/evaluate.py --weights runs/detect/train/weights/best.pt
-python scripts/export_onnx.py --weights runs/detect/train/weights/best.pt
-python scripts/inference_onnx.py --model models/best.onnx --image test.jpg
+# Use full Python path (conda not on PATH in bash)
+/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/prepare_data.py
+/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/data_analysis.py
+/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/train.py
+/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/evaluate.py --weights runs/detect/train/weights/best.pt
+/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/export_onnx.py --weights runs/detect/train/weights/best.pt
+/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/inference_onnx.py --model models/best.onnx --image test.jpg
 ```
 
 ## Do NOT
