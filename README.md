@@ -164,6 +164,14 @@ data/
 - `rolled-in_scale` contains a hyphen, so the script uses known class name prefix matching (longest match first) instead of naive underscore splitting
 - Images are copied from class subdirectories to a flat output directory (YOLO requirement)
 
+## Data Analysis
+
+Running `data_analysis.py` on the converted dataset reveals the following characteristics: the dataset is well-balanced across all 6 classes (~240 train / ~60 val images each), so no oversampling or class-weighting is needed. All images are uniformly 200×200 px. Each image contains between 1 and 9 bounding boxes (mean: 2.33), indicating moderate defect density. Bounding box sizes vary dramatically — from as small as 8×9 px (narrow scratches) to nearly 199×199 px (crazing covering the entire image) — making this a challenging multi-scale detection task. The anchor-free design of YOLOv8 handles this wide size range well without manual anchor tuning. Analysis charts are saved in `docs/assets/`.
+
+```bash
+python scripts/data_analysis.py
+```
+
 ## Training
 
 ### Run Training
@@ -201,21 +209,38 @@ yolo detect train data=data/data.yaml model=yolov8n.pt epochs=50 imgsz=640
 
 ## Results
 
-> *To be filled after training experiments*
-
 ### Experiment Comparison
 
-| Experiment | imgsz | lr0 | epochs | mAP@0.5 | mAP@50-95 | Train Time | Notes |
-|------------|-------|-----|--------|---------|-----------|------------|-------|
-| baseline | 640 | 0.01 | 50 | - | - | - | Default config |
+| Experiment | Model | imgsz | lr0 | epochs | mAP@0.5 | mAP@50-95 | Train Time | Notes |
+|------------|-------|-------|-----|--------|---------|-----------|------------|-------|
+| baseline | yolov8n | 640 | 0.01 | 50 | **0.734** | 0.390 | ~9 min | Default config, exceeds 0.70 target |
+
+### Per-Class AP (Baseline)
+
+| Class | AP@0.5 | Precision | Recall |
+|-------|--------|-----------|--------|
+| patches | 0.928 | 0.857 | 0.855 |
+| pitted_surface | 0.830 | 0.749 | 0.755 |
+| inclusion | 0.793 | 0.733 | 0.760 |
+| scratches | 0.731 | 0.545 | 0.860 |
+| rolled-in_scale | 0.581 | 0.551 | 0.485 |
+| crazing | 0.542 | 0.668 | 0.395 |
+
+### Training Curves
+
+![Training Results](docs/assets/results.png)
 
 ### PR Curve
 
-<!-- TODO: Add PR curve image after training -->
+![PR Curve](docs/assets/PR_curve.png)
 
 ### Confusion Matrix
 
-<!-- TODO: Add confusion matrix image after training -->
+![Confusion Matrix](docs/assets/confusion_matrix.png)
+
+### Sample Predictions
+
+![Validation Predictions](docs/assets/val_pred_sample.jpg)
 
 ### Per-Class AP
 
@@ -565,6 +590,14 @@ data/
 - 数据集**已经预划分**好训练集/验证集，不需要也不应该自己做随机划分
 - `rolled-in_scale` 类名包含连字符 `-`，如果用 `filename.split('_')[0]` 提取类名会得到 `rolled-in`（错误！）。正确做法是用已知类名列表做前缀匹配，按长度从长到短排序确保最长匹配优先
 - 图片必须从按类名分的子目录复制到扁平输出目录（YOLO 格式的硬性要求）
+
+## 数据分析
+
+对转换后的数据集运行 `data_analysis.py` 可得出以下结论：6 个类别样本分布均衡（训练集每类约 240 张，验证集每类约 60 张），无需过采样或类别加权。所有图片均为 200×200 px。每张图的 bbox 数量在 1 至 9 个之间（均值 2.33），目标密度适中。Bbox 尺寸差异极大——从 8×9 px 的细长划痕到近 199×199 px 的大面积裂纹——是一个多尺度检测的挑战性场景。YOLOv8 的 anchor-free 设计无需手动设置 anchor，天然适合处理这种宽泛的尺寸分布。分析图表已保存至 `docs/assets/`。
+
+```bash
+python scripts/data_analysis.py
+```
 
 ## 训练
 

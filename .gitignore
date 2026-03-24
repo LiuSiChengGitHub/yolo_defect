@@ -43,6 +43,10 @@ saved_models/
 *.engine
 *.trt
 
+# ---------- Auto-downloaded pretrained weights (ultralytics caches these in cwd) ----------
+yolov8*.pt
+yolo*.pt
+
 # ---------- SAM checkpoints (large) ----------
 sam_vit_*.pth
 

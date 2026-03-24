@@ -8,7 +8,14 @@
       "Read(//c/Users/Administrator/anaconda3/envs/yolo_defect/**)",
       "Read(//c/Users/Administrator/**)",
       "Read(//c/ProgramData/**)",
-      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe --version)"
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe --version)",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe -c \"import ultralytics; print\\(ultralytics.__version__\\)\")",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/train.py --config configs/train_config.yaml 2>&1)",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe -m pip install \"numpy<2\" --quiet)",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe -m pip install \"numpy<2\" \"opencv-python<4.10\" --quiet)",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe -c \"import numpy; import cv2; import torch; print\\('numpy', numpy.__version__\\); print\\('cv2', cv2.__version__\\); print\\('torch', torch.__version__\\); print\\('torch.from_numpy OK:', torch.from_numpy\\(numpy.array\\([1.0]\\)\\).shape\\)\")",
+      "Bash(ls /d/Base/CodingSpace/yolo_defect/*.pt)",
+      "Bash(ls /d/Base/CodingSpace/yolo_defect/*.yaml)"
     ]
   }
 }

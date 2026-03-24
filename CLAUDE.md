@@ -45,11 +45,41 @@ docs/assets/ → Plots, PR curves, demo GIFs
 
 ## Collaboration Mode
 
-This project is the user's **resume core project** for applying to foreign company internships (Bosch, Siemens, Cognex, etc.). The collaboration follows a "tutor + executor" pattern:
+This project is the user's **resume core project** for applying to foreign company internships (Bosch, Siemens, Cognex, etc.). The collaboration follows a "tutor + executor" pattern, **project-driven with learning embedded**.
 
-1. **Claude executes** — Write code, run scripts, debug issues, generate outputs
-2. **User internalizes** — Understands every step well enough to explain in interviews
-3. **After each step** — Claude summarizes key learnings and interview-relevant knowledge points, then updates `docs/YOLO_Project.md` with progress and learnings
+### Core Principle: Speed first, depth after
+
+Time is tight (秋招 2026-10, need 2 internship experiences before that). Priority order:
+1. **Complete the project ASAP** to a resume-ready state
+2. **Embed learning** during the process (knowledge points, interview Q&A)
+3. **Deep-dive practice** after project completion (notebook verification, hand-writing core algorithms)
+
+### Task Division (AI agent + User)
+
+| Category | Who | User's action |
+|----------|-----|---------------|
+| Scaffolding code (data prep, train script, export, API, Docker) | AI agent writes | Read code, be able to verbally describe input/output/purpose |
+| Core inference code (detector.py post-processing, preprocessing alignment) | AI agent writes first draft | After project done, verify in notebook by printing intermediate shapes/values |
+| **Hyperparameter tuning decisions** | **User decides** | Look at loss curves & mAP → decide what to change next and why |
+| **Experiment analysis text** | **User writes** | AI gives data/tables, user writes "why did mAP improve/drop" conclusions |
+| IOU/NMS hand-writing | Separate practice | Interview prep, not during project |
+
+### Step Execution Flow
+
+1. AI agent executes the task, reports results
+2. AI agent summarizes **interview knowledge points** (Q&A format)
+3. User reviews results, **makes own judgment** (tuning direction, analysis conclusions)
+4. AI agent updates `docs/YOLO_Project.md`, marking which decisions were made by the user
+5. After full project completion, user does "5-min blank page test" per step to find gaps
+
+### Post-Training Checklist (AI agent does ALL of this automatically after every training run)
+
+After every training run completes, the AI agent MUST do the following without being asked, then notify the user:
+
+1. **Fill `docs/experiment_log.md`** — add one row to the Training Results table and Per-Class AP table with the actual numbers from that run
+2. **Copy key charts to `docs/assets/`** — `results.png`, `confusion_matrix.png` (normalized), `BoxPR_curve.png`, `val_batch0_pred.jpg` — use descriptive names like `results_exp1.png`, `confusion_matrix_exp1.png`
+3. **Update `docs/YOLO_Project.md`** — add the new experiment section with results table and leave placeholder for user's analysis text
+4. **Notify the user** — briefly state what was recorded and where: "已记录：experiment_log.md exp1 行填入，图表保存至 docs/assets/results_exp1.png 等4张"
 
 ### Workflow for each new conversation:
 1. Read `docs/YOLO_Project.md` to see current progress and what step we're on
@@ -61,6 +91,7 @@ This project is the user's **resume core project** for applying to foreign compa
 - After completing each step, highlight **interview talking points** the user should memorize
 - Flag common interview questions related to what we just did
 - The user targets CV engineer roles at industrial/medical foreign companies
+- Key interview focus: **why** you made certain decisions (not just what the code does)
 
 ## Environment
 
@@ -81,6 +112,36 @@ This project is the user's **resume core project** for applying to foreign compa
 /d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/export_onnx.py --weights runs/detect/train/weights/best.pt
 /d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/inference_onnx.py --model models/best.onnx --image test.jpg
 ```
+
+## Step Progress & Key Context
+
+### Step 1: Data Preparation — Done (2026-03-23)
+- Converted VOC XML → YOLO TXT via `scripts/prepare_data.py`
+- 1,439 train + 360 val images in `data/images/` and `data/labels/`
+- Data analysis charts in `docs/assets/` (class_distribution, bbox_sizes, bbox_per_image)
+
+### Step 2: Baseline Training — Done (2026-03-24)
+- Fixed NumPy 2.x / PyTorch 2.0 incompatibility: downgraded numpy to 1.26.4, opencv to 4.9.0
+- Ran `scripts/train.py --config configs/train_config.yaml` (YOLOv8n, 50 epochs, imgsz=640)
+- **Result: mAP@0.5 = 0.734** (exceeded 0.70 target at baseline)
+- Weights saved: `runs/detect/train2/weights/best.pt` (train2, not train, because train/ existed from a failed run)
+- Key finding: crazing AP = 0.542 (worst class, 52%漏检 into background), patches AP = 0.928 (best)
+- Training charts copied to `docs/assets/`: results.png, confusion_matrix.png, PR_curve.png, val_pred_sample.jpg
+- Detailed learning notes: `docs/YOLO_notes.md`
+- Loss still declining at epoch 50 → room for improvement
+
+### File Management Rules (established in Step 2)
+- `runs/` is gitignored — weights/CSV stay local, must be manually backed up (cloud drive)
+- Important charts are copied from `runs/` to `docs/assets/` for git tracking
+- `docs/assets/` is committed to git (charts, prediction samples)
+- Key files to backup externally: `best.pt` (6.3MB), `results.csv`
+
+### Step 3: Hyperparameter Tuning — Next
+- User to decide experiment direction based on baseline analysis
+- Suggested experiments: (1) epochs=150, (2) yolov8s, (3) cls_loss_weight↑ for crazing漏检
+- Each experiment goes into a new YAML: `configs/exp1.yaml`, `configs/exp2.yaml`, etc.
+- Results → `runs/detect/exp1/`, `runs/detect/exp2/`, etc.
+- User writes analysis conclusions (why mAP changed); Claude records data/tables
 
 ## Do NOT
 
