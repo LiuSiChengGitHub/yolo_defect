@@ -4,13 +4,13 @@
 
 ---
 
-## 当前进度：Step 2 完成，准备进入 Step 3
+## 当前进度：Step 3 进行中（exp1 已完成）
 
 | Step | 内容 | 状态 |
 |------|------|------|
 | Step 1 | 数据准备 | Done (2026-03-23) |
 | Step 2 | 基线训练 | Done (2026-03-24) — mAP@0.5=0.734 |
-| Step 3 | 调参优化 | Next |
+| Step 3 | 调参优化 | In Progress (2026-03-24) — exp1(imgsz=512) done |
 | Step 4 | 结果分析 | - |
 | Step 5 | ONNX 导出 + 推理验证 | - |
 | Step 6 | SAM 集成 | - |
@@ -123,46 +123,9 @@
 
 ### 如何读懂训练图表
 
-#### results.png（训练过程曲线）
+详细说明已移至：
 
-图分两行：上行训练集，下行验证集。左侧 3 列是 Loss，右侧 2 列是指标。
-
-**Loss 三个分量：**
-- `box_loss`：预测框位置与真实框的距离误差
-- `cls_loss`：类别分类错误（把 crazing 认成 inclusion 之类）
-- `dfl_loss`：Distribution Focal Loss，YOLOv8 特有，框边界的分布精度
-
-**健康的训练曲线特征：**
-- 训练 loss 和验证 loss 走势一致 → 无过拟合
-- 两条线都持续下降 → 还有提升空间
-- 验证 loss 先降后升 → 过拟合信号，应早停或加正则化
-
-**本次 baseline 表现：** Loss 在 epoch 50 仍在缓慢下降，说明 50 epoch 不够，有提升空间。
-
-#### confusion_matrix_normalized.png（归一化混淆矩阵）
-
-- **横轴**：真实类别（Ground Truth）；**纵轴**：预测类别（Predicted）
-- **对角线**：预测正确（越深越好）
-- **最后一行 background**：漏检——模型没检测出来的真实目标
-
-| 真实类别 | 正确率 | 主要问题 |
-|---------|-------|---------|
-| crazing | 0.48 | 0.52 漏检为 background |
-| inclusion | 0.77 | 0.16 漏检 |
-| patches | 0.87 | 表现最好 |
-| pitted_surface | 0.77 | 极少类间混淆 |
-| rolled-in_scale | 0.58 | 0.42 漏检 |
-| scratches | 0.88 | 0.31 漏检（但检出的很准）|
-
-**结论：主要问题是漏检（recall 低），不是类间混淆（各类边界清晰）。**
-
-#### PR_curve.png（Precision-Recall 曲线）
-
-- 每条线 = 一个类别，曲线下面积 = AP（该类的平均精度）
-- 越靠近右上角越好（高 Precision + 高 Recall 同时成立）
-- **crazing 曲线短且低**：Recall 超过 0.4 后 Precision 急剧下降，说明模型只能找到约 40% 的 crazing，不是阈值问题，是特征提取问题
-
-**面试口述：** "PR 曲线中 crazing 的 AP 最低（0.542），曲线形态显示 Recall 上限约 40%，结合混淆矩阵中 52% 的漏检率，判断是特征表达问题——crazing 缺陷边界模糊，与背景纹理相近，需要更强的特征提取能力。"
+- [[notes/YOLO_notes#如何读懂训练图表|如何读懂训练图表]]
 
 ### 你能调整的超参数（面试常问"你怎么调参"）
 
@@ -252,6 +215,67 @@ docs/assets/                ← git 管理（committed）
 
 ---
 
-## Step 3：调参优化（待开始）
+## Step 3：调参优化（进行中）
 
-根据 baseline 结果，由用户分析后决定优化方向（见上方"我自己做的决策"）。
+### Experiment 1：`imgsz=512`（2026-03-24）
+
+#### 这次改了什么
+
+- **用户决策：** 先测试更小输入尺寸 `imgsz=512`
+- **AI 执行：** 新建 `configs/exp1.yaml`，保持其余参数与 baseline 一致
+- 输出目录：`runs/detect/exp1/`
+
+#### 训练结果（best.pt 在验证集上的表现）
+
+| 类别 | Precision | Recall | mAP@0.5 | mAP@50-95 |
+|------|-----------|--------|---------|-----------|
+| **all** | **0.659** | **0.665** | **0.730** | **0.393** |
+| crazing | 0.585 | 0.235 | 0.476 | 0.215 |
+| inclusion | 0.732 | 0.774 | 0.835 | 0.449 |
+| patches | 0.798 | 0.860 | 0.909 | 0.582 |
+| pitted_surface | 0.770 | 0.759 | 0.821 | 0.456 |
+| rolled-in_scale | 0.490 | 0.492 | 0.520 | 0.250 |
+| scratches | 0.581 | 0.868 | 0.821 | 0.409 |
+
+#### 和 baseline 对比
+
+- baseline：`imgsz=640`，mAP@0.5 = **0.734**，训练时间约 **9.4 分钟**
+- exp1：`imgsz=512`，mAP@0.5 = **0.730**，训练时间约 **7.2 分钟**
+- **结论：** 总体 mAP 基本持平，但难类 `crazing` 和 `rolled-in_scale` 明显下降，说明较小输入尺寸会损失细粒度纹理信息
+
+#### 已记录的产物
+
+- `docs/assets/results_exp1.png`
+- `docs/assets/confusion_matrix_exp1.png`
+- `docs/assets/PR_curve_exp1.png`
+- `docs/assets/val_pred_sample_exp1.jpg`
+
+#### 重要工程细节
+
+- 本次训练日志显示 `optimizer=auto` 自动选择了 **AdamW(lr=0.001)**
+- 这意味着配置文件里的 `lr0=0.01` **没有真正生效**
+- 所以如果后面要做“学习率对比实验”，必须先把 `optimizer` 固定，不能继续用 `auto`
+
+#### 你的分析（待填写）
+
+> 你可以用下面模板写你自己的判断：
+> - 我认为 `imgsz=512` 对总体 mAP 影响不大，但对 hardest classes 有负面影响，原因是：___
+> - `crazing` 从 0.542 降到 0.476，说明：___
+> - `rolled-in_scale` 从 0.581 降到 0.520，说明：___
+> - 这组实验支持/不支持我继续往更小输入尺寸方向优化，因为：___
+
+### 下一步候选
+
+- `imgsz=800`：验证更大输入尺寸是否能帮助细纹理类
+- 固定 optimizer 后再做 learning-rate 对比
+- 增加 epochs：验证 baseline 和 exp1 在 50 epoch 时是否都还没收敛
+
+---
+
+## 笔记跳转
+
+以下长期知识型内容已整理到学习笔记，项目推进文档只保留跳转：
+
+- [[notes/YOLO_notes#如何读懂训练图表|如何读懂训练图表]]
+- [[notes/YOLO_notes#项目文件观|项目文件观]]
+- [[notes/YOLO_notes#调参判断方法|调参判断方法]]

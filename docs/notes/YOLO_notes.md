@@ -1,7 +1,9 @@
-
 # YOLO 目标检测 — 从入门到项目落地学习笔记
 
-> 作者背景：PyTorch 基础（CIFAR-10 分类 + ResNet 迁移学习）→ 目标检测入门 目标岗位：外企 CV 算法/部署工程师（博世、西门子、KLA 等） 配套项目：YOLOv8 钢材缺陷检测（NEU-DET 数据集） 创建日期：2026年3月23日
+> **作者背景：** PyTorch 基础（CIFAR-10 分类 + ResNet 迁移学习）→ 目标检测入门
+> **目标岗位：** 外企 CV 算法/部署工程师（博世、西门子、KLA 等）
+> **配套项目：** YOLOv8 钢材缺陷检测（NEU-DET 数据集）
+> **创建日期：** 2026 年 3 月 23 日
 
 ---
 
@@ -9,15 +11,15 @@
 
 ### 1.1 任务对比
 
-|维度|图像分类（你已经会的）|目标检测（你要学的）|
-|---|---|---|
-|输入|一张图片|一张图片|
-|输出|一个类别标签|**N 个检测结果**，每个包含位置+类别+置信度|
-|典型输出形状|`[batch, num_classes]` 如 `[1, 10]`|`[batch, 4+nc, num_candidates]` 如 `[1, 10, 8400]`|
-|回答的问题|"这张图是什么？"|"这张图里有什么？在哪里？有多确定？"|
-|后处理|argmax 取最大概率|置信度过滤 + NMS 去重|
-|典型模型|ResNet, VGG, EfficientNet|YOLO, Faster RCNN, DETR|
-|损失函数|CrossEntropyLoss|分类损失 + 回归损失 + 目标置信度损失|
+| 维度 | 图像分类（你已经会的） | 目标检测（你要学的） |
+|------|----------------------|-------------------|
+| 输入 | 一张图片 | 一张图片 |
+| 输出 | 一个类别标签 | **N 个检测结果**，每个包含位置 + 类别 + 置信度 |
+| 典型输出形状 | `[batch, num_classes]` 如 `[1, 10]` | `[batch, 4+nc, num_candidates]` 如 `[1, 10, 8400]` |
+| 回答的问题 | "这张图是什么？" | "这张图里有什么？在哪里？有多确定？" |
+| 后处理 | argmax 取最大概率 | 置信度过滤 + NMS 去重 |
+| 典型模型 | ResNet, VGG, EfficientNet | YOLO, Faster RCNN, DETR |
+| 损失函数 | CrossEntropyLoss | 分类损失 + 回归损失 + 目标置信度损失 |
 
 ### 1.2 数据流对比
 
@@ -25,25 +27,25 @@
 分类：图片 → Backbone → FC Layer → [1, 10] → argmax → "cat"
 
 检测：图片 → Backbone → Neck(FPN) → Head → [1, 10, 8400] → 过滤+NMS → N个框
-                                                                        ↓
-                                                    每个框 = [x, y, w, h, class, confidence]
+                                                                     ↓
+                                                 每个框 = [x, y, w, h, class, confidence]
 ```
 
 核心区别：检测多了 Neck（多尺度特征融合）和 Head（输出框坐标），以及后处理步骤。
 
 ### 1.3 从 ResNet 到 YOLOv8 的对应关系
 
-|ResNet 分类|YOLOv8 检测|说明|
-|---|---|---|
-|ResNet Backbone|CSPDarknet Backbone|都是卷积堆叠提取特征，YOLO 用 C2f 模块替代 ResBlock|
-|Global Average Pooling|FPN Neck|分类把特征压成一个向量；检测保留空间信息，做多尺度融合|
-|FC Layer (512→10)|Decoupled Head|分类只输出类别概率；检测同时输出坐标+类别（解耦处理）|
-|argmax|NMS|分类直接取最大值；检测要去除重复框|
-|无|Anchor-free|YOLOv8 直接回归坐标，不依赖预定义的锚框|
+| ResNet 分类 | YOLOv8 检测 | 说明 |
+|------------|------------|------|
+| ResNet Backbone | CSPDarknet Backbone | 都是卷积堆叠提取特征，YOLO 用 C2f 模块替代 ResBlock |
+| Global Average Pooling | FPN Neck | 分类把特征压成一个向量；检测保留空间信息，做多尺度融合 |
+| FC Layer (512→10) | Decoupled Head | 分类只输出类别概率；检测同时输出坐标+类别（解耦处理） |
+| argmax | NMS | 分类直接取最大值；检测要去除重复框 |
+| 无 | Anchor-free | YOLOv8 直接回归坐标，不依赖预定义的锚框 |
 
 ---
 
-## 二、核心概念速查表
+## 二、核心概念速查
 
 ### 2.1 Bounding Box（边界框）表示法
 
@@ -152,11 +154,11 @@ def nms(boxes, scores, iou_threshold=0.45):
 
 **TP / FP / FN 在检测任务中的定义**：
 
-|术语|含义|判定条件|
-|---|---|---|
-|TP（True Positive）|正确检测|预测框与某个真实框的 IoU ≥ 阈值|
-|FP（False Positive）|误检|预测框找不到匹配的真实框（IoU 都 < 阈值），或重复匹配|
-|FN（False Negative）|漏检|真实框没有被任何预测框匹配到|
+| 术语 | 含义 | 判定条件 |
+|------|------|---------|
+| TP（True Positive） | 正确检测 | 预测框与某个真实框的 IoU ≥ 阈值 |
+| FP（False Positive） | 误检 | 预测框找不到匹配的真实框（IoU 都 < 阈值），或重复匹配 |
+| FN（False Negative） | 漏检 | 真实框没有被任何预测框匹配到 |
 
 **Precision 和 Recall**：
 
@@ -180,13 +182,13 @@ Recall    = TP / (TP + FN)  → 真实目标里有多少被检测到了（漏不
 
 ### 3.1 发展脉络（了解级，不需要深入每个版本）
 
-|版本|年份|关键改进|一句话特点|
-|---|---|---|---|
-|YOLOv1|2016|开创性地将检测当作回归问题|第一个实时检测器，速度快但精度一般|
-|YOLOv3|2018|多尺度预测（FPN）、Darknet-53|平衡了速度和精度，工业界开始广泛使用|
-|YOLOv5|2020|PyTorch 实现、AutoAnchor、丰富的数据增强|工程化做得最好，社区最活跃|
-|YOLOv8|2023|**Anchor-free、C2f 模块、解耦头**|当前主流，Ultralytics 官方维护|
-|YOLOv9|2024|PGI（可编程梯度信息）|精度更高，但生态不如 v8 成熟|
+| 版本 | 年份 | 关键改进 | 一句话特点 |
+|------|------|---------|----------|
+| YOLOv1 | 2016 | 开创性地将检测当作回归问题 | 第一个实时检测器，速度快但精度一般 |
+| YOLOv3 | 2018 | 多尺度预测（FPN）、Darknet-53 | 平衡了速度和精度，工业界开始广泛使用 |
+| YOLOv5 | 2020 | PyTorch 实现、AutoAnchor、丰富的数据增强 | 工程化做得最好，社区最活跃 |
+| YOLOv8 | 2023 | **Anchor-free、C2f 模块、解耦头** | 当前主流，Ultralytics 官方维护 |
+| YOLOv9 | 2024 | PGI（可编程梯度信息） | 精度更高，但生态不如 v8 成熟 |
 
 **面试回答 "Why YOLOv8 over v5?"**：
 
@@ -197,15 +199,15 @@ Recall    = TP / (TP + FN)  → 真实目标里有多少被检测到了（漏不
 
 ### 3.2 一阶段 vs 二阶段检测器
 
-|维度|一阶段（YOLO）|二阶段（Faster RCNN）|
-|---|---|---|
-|流程|一次前向传播直接出框|先生成候选区域(RPN)，再分类+回归|
-|速度|快（实时 30+ FPS）|慢（通常 5-10 FPS）|
-|精度|略低（v8 已经很接近了）|略高（尤其是小目标）|
-|适用场景|实时检测、边缘部署、工业产线|精度优先、不要求实时|
-|代表|YOLOv8, SSD, RetinaNet|Faster RCNN, Mask RCNN, Cascade RCNN|
+| 维度 | 一阶段（YOLO） | 二阶段（Faster RCNN） |
+|------|-------------|-------------------|
+| 流程 | 一次前向传播直接出框 | 先生成候选区域(RPN)，再分类+回归 |
+| 速度 | 快（实时 30+ FPS） | 慢（通常 5-10 FPS） |
+| 精度 | 略低（v8 已经很接近了） | 略高（尤其是小目标） |
+| 适用场景 | 实时检测、边缘部署、工业产线 | 精度优先、不要求实时 |
+| 代表 | YOLOv8, SSD, RetinaNet | Faster RCNN, Mask RCNN, Cascade RCNN |
 
-**面试一句话**：YOLO 是一阶段检测器，一次前向传播直接输出所有框，速度快适合工业部署；Faster RCNN 是二阶段，先用 RPN 生成候选区域再精细分类，精度更高但速度慢。
+**面试一句话**：YOLO 是一阶段检测器，一次前向传播直接输出所有框，速度快适合工业部署；Faster RCNN 是两阶段，先用 RPN 生成候选区域再精细分类，精度更高但速度慢。
 
 ---
 
@@ -304,13 +306,13 @@ keep = nms(boxes, confidences, iou_threshold=0.45)
 
 ### 4.4 YOLOv8 模型尺寸对比
 
-|变体|参数量|FLOPs|mAP@0.5 (COCO)|适用场景|
-|---|---|---|---|---|
-|YOLOv8n (nano)|3.2M|8.7G|37.3|**边缘部署、资源受限**，本项目首选|
-|YOLOv8s (small)|11.2M|28.6G|44.9|精度和速度的平衡|
-|YOLOv8m (medium)|25.9M|78.9G|50.2|服务器部署，精度优先|
-|YOLOv8l (large)|43.7M|165.2G|52.9|高精度需求|
-|YOLOv8x (xlarge)|68.2M|257.8G|53.9|最高精度，不考虑速度|
+| 变体 | 参数量 | FLOPs | mAP@0.5 (COCO) | 适用场景 |
+|------|--------|-------|----------------|---------|
+| YOLOv8n (nano) | 3.2M | 8.7G | 37.3 | **边缘部署、资源受限**，本项目首选 |
+| YOLOv8s (small) | 11.2M | 28.6G | 44.9 | 精度和速度的平衡 |
+| YOLOv8m (medium) | 25.9M | 78.9G | 50.2 | 服务器部署，精度优先 |
+| YOLOv8l (large) | 43.7M | 165.2G | 52.9 | 高精度需求 |
+| YOLOv8x (xlarge) | 68.2M | 257.8G | 53.9 | 最高精度，不考虑速度 |
 
 本项目选择 **YOLOv8n** 的原因：NEU-DET 只有 1800 张小图，用大模型容易过拟合；nano 版本推理快，符合边缘部署定位；如果精度不够再换 v8s，只需改一行配置。
 
@@ -366,18 +368,27 @@ yolo export model=runs/detect/train/weights/best.pt format=onnx simplify=True
 
 ### 5.3 超参数详解
 
-|参数|默认值|说明|调参建议|
-|---|---|---|---|
-|`model`|`yolov8n.pt`|模型尺寸，n/s/m/l/x|小数据集从 n 开始，精度不够换 s|
-|`epochs`|50|训练轮数|看 loss 是否收敛，通常 50-200|
-|`imgsz`|640|输入图片尺寸|更大=更准但更慢，常见调参变量|
-|`batch`|16|批大小|-1 自动选择最大 batch，显存不够就减小|
-|`lr0`|0.01|初始学习率|微调时可降到 0.001|
-|`optimizer`|`auto`|优化器|auto 自动选择 SGD 或 AdamW|
-|`mosaic`|1.0|Mosaic 增强概率|4 图拼 1 图，提升小目标检测|
-|`mixup`|0.0|Mixup 增强概率|两图混合叠加，正则化效果|
-|`close_mosaic`|10|最后 N 个 epoch 关闭 mosaic|让模型最后阶段适应正常图片|
-|`patience`|50|早停耐心值|连续 N 个 epoch 没提升就停止|
+| 参数 | 默认值 | 说明 | 调参建议 |
+|------|--------|------|---------|
+| `model` | `yolov8n.pt` | 模型尺寸，n/s/m/l/x | 小数据集从 n 开始，精度不够换 s |
+| `epochs` | 50 | 训练轮数 | 看 loss 是否收敛，通常 50-200 |
+| `imgsz` | 640 | 输入图片尺寸 | 更大=更准但更慢，常见调参变量 |
+| `batch` | 16 | 批大小 | -1 自动选择最大 batch，显存不够就减小 |
+| `lr0` | 0.01 | 初始学习率 | 微调时可降到 0.001 |
+| `lrf` | 0.01 | 最终学习率比例 | 最终 lr ≈ lr0 × lrf |
+| `optimizer` | `auto` | 优化器 | auto 自动选择 SGD 或 AdamW |
+| `mosaic` | 1.0 | Mosaic 增强概率 | 4 图拼 1 图，提升小目标检测 |
+| `mixup` | 0.0 | Mixup 增强概率 | 两图混合叠加，正则化效果 |
+| `close_mosaic` | 10 | 最后 N 个 epoch 关闭 mosaic | 让模型最后阶段适应正常图片 |
+| `patience` | 50 | 早停耐心值 | 连续 N 个 epoch 没提升就停止 |
+
+**学习率 `lr0` 和 `lrf` 的关系**：
+
+- `lr0`：初始学习率，控制"起跑速度"
+- `lrf`：最终学习率比例，控制"收尾精细度"，最终 lr ≈ `lr0 * lrf`
+- 前期需要较大的步子快速靠近较优区域，后期需要较小的步子做细调
+
+**注意**：`optimizer=auto` 时 Ultralytics 可能自动覆盖 `lr0`（如选 AdamW 时会改为 0.001）。做学习率对比实验时必须先固定 optimizer，否则实验不成立。
 
 ### 5.4 data.yaml 配置文件格式
 
@@ -400,13 +411,13 @@ YOLO 的硬性要求：`images/` 和 `labels/` 必须平级，文件一一对应
 
 ### 5.5 数据增强（检测任务专用）
 
-|增强方式|效果|对比分类任务|
-|---|---|---|
-|**Mosaic**|4 张图拼成 1 张，每张占一个象限|分类没有这个。检测用它增加目标密度和上下文信息|
-|**Mixup**|两张图按随机比例 α 混合叠加|类似分类的 Mixup，但标签是框不是类别|
-|**随机翻转**|水平/垂直翻转|跟分类一样|
-|**HSV 调整**|随机调色相/饱和度/亮度|类似 ColorJitter|
-|**尺度抖动**|随机缩放输入尺寸|分类用 RandomResizedCrop，检测用全图缩放|
+| 增强方式 | 效果 | 对比分类任务 |
+|---------|------|------------|
+| **Mosaic** | 4 张图拼成 1 张，每张占一个象限 | 分类没有这个。检测用它增加目标密度和上下文信息 |
+| **Mixup** | 两张图按随机比例 α 混合叠加 | 类似分类的 Mixup，但标签是框不是类别 |
+| **随机翻转** | 水平/垂直翻转 | 跟分类一样 |
+| **HSV 调整** | 随机调色相/饱和度/亮度 | 类似 ColorJitter |
+| **尺度抖动** | 随机缩放输入尺寸 | 分类用 RandomResizedCrop，检测用全图缩放 |
 
 **Mosaic 的直觉**：训练时把 4 张图拼成 1 张大图，模型一次能看到 4 张图的目标。好处是增加了"小目标在大图中"的场景（因为每张图被缩到 1/4），并且增加了目标周围的上下文信息。
 
@@ -426,20 +437,104 @@ runs/detect/train/
 └── args.yaml                   # 本次训练的完整参数记录
 ```
 
+**关于 `exp1.yaml` 和 `args.yaml` 的区别**：
+
+- `exp1.yaml` = 你的实验意图（只写主动覆盖的参数）
+- `runs/detect/<exp>/args.yaml` = 训练真正生效的完整快照（含 Ultralytics 补全的默认值）
+
 ---
 
 ## 六、评估与结果分析
 
 ### 6.1 必看的 4 张图
 
-|图表|文件|看什么|
-|---|---|---|
-|**训练曲线**|`results.png`|loss 是否收敛、是否过拟合（train loss 下降但 val loss 上升）|
-|**PR 曲线**|`PR_curve.png`|每个类别的 AP，曲线越靠右上角越好|
-|**混淆矩阵**|`confusion_matrix.png`|哪些类别容易互相误判（如 crazing ↔ scratches）|
-|**验证集预测**|`val_batch0_pred.jpg`|直观看检测效果，找误检/漏检案例|
+| 图表 | 文件 | 看什么 |
+|------|------|--------|
+| **训练曲线** | `results.png` | loss 是否收敛、是否过拟合（train loss 下降但 val loss 上升） |
+| **PR 曲线** | `PR_curve.png` | 每个类别的 AP，曲线越靠右上角越好 |
+| **混淆矩阵** | `confusion_matrix.png` | 哪些类别容易互相误判（如 crazing ↔ scratches） |
+| **验证集预测** | `val_batch0_pred.jpg` | 直观看检测效果，找误检/漏检案例 |
 
-### 6.2 调参实验记录模板
+### 6.2 如何读懂训练曲线（results.png）
+
+图分两行：上行训练集，下行验证集。左侧 3 列是 Loss，右侧 2 列是指标。
+
+**Loss 三个分量**：
+
+- `box_loss`：预测框位置与真实框的距离误差
+- `cls_loss`：类别分类错误（把 crazing 认成 inclusion 之类）
+- `dfl_loss`：Distribution Focal Loss，YOLOv8 特有，框边界的分布精度
+
+**健康的训练曲线特征**：
+
+| 曲线形态 | 含义 | 建议操作 |
+|---------|------|---------|
+| train/val loss 都持续下降，最后还没平台 | 还没收敛 | `epochs ↑` |
+| train loss 继续降，但 val loss 开始升 | 过拟合 | 更强数据增强 / 减少 epoch / 更小模型 |
+| loss 曲线震荡明显 | 学习率过大 | 固定 optimizer，`lr0 ↓` |
+| mAP@0.5 还行，但 mAP@50-95 明显偏低 | 能找到但定位不精 | `imgsz ↑`，关注 box/dfl |
+| cls_loss 降得慢，漏检多 | 模型对"有没有目标"不敏感 | `cls ↑`，`epochs ↑` |
+
+**本项目 baseline 的实际信号**：Loss 在 epoch 50 仍在缓慢下降，说明 50 epoch 不够，有继续训练空间。
+
+### 6.3 如何读懂混淆矩阵（confusion_matrix_normalized.png）
+
+- **横轴**：真实类别（Ground Truth）
+- **纵轴**：预测类别（Predicted）
+- **对角线**：预测正确（越深越好）
+- **最后一行 background**：漏检，即模型没有检测出来的真实目标
+
+| 真实类别 | 正确率 | 主要问题 |
+|---------|-------|---------|
+| crazing | 0.48 | 0.52 漏检为 background |
+| inclusion | 0.77 | 0.16 漏检 |
+| patches | 0.87 | 表现最好 |
+| pitted_surface | 0.77 | 极少类间混淆 |
+| rolled-in_scale | 0.58 | 0.42 漏检 |
+| scratches | 0.88 | 0.31 漏检（但检出的很准）|
+
+**两类混淆矩阵问题的处置方向**：
+
+- **大量落入 background（漏检）** → `imgsz ↑`、`epochs ↑`、`cls ↑`、针对 hardest classes 做增强
+- **不同类别之间互相混淆严重** → 更强模型（yolov8s）、有针对性的增强、检查标签质量
+
+**本项目结论**：主要问题是**漏检（recall 低）**，不是类间混淆主导。
+
+### 6.4 如何读懂 PR 曲线（PR_curve.png）
+
+- 每条线 = 一个类别
+- 曲线下面积 = AP（该类的平均精度）
+- 越靠近右上角越好（高 Precision + 高 Recall 同时成立）
+
+| PR 曲线形态 | 含义 | 建议操作 |
+|------------|------|---------|
+| 某类曲线整体很低、很短 | 该类特征表达不足 | `imgsz ↑`、更强模型、针对该类增强 |
+| Precision 高但 Recall 很低 | 模型太保守，检出来的准但漏得多 | `cls ↑`、`epochs ↑`、`imgsz ↑` |
+| Recall 上去后 Precision 掉很快 | 模型能找但不够稳 | 数据增强、查标签质量、更稳学习率 |
+
+**本项目 crazing 的观察**：曲线低且短，Recall 超过 0.4 后 Precision 急剧下降，Recall 上限偏低。说明模型只能找到约 40% 的 crazing，不是简单阈值问题，而是特征提取能力不足。
+
+**面试口述模板**：
+
+> PR 曲线中 crazing 的 AP 最低，曲线形态显示 Recall 上限偏低；结合混淆矩阵中大量漏检进 background，可以判断主要瓶颈是特征表达能力不足，而不是类别间混淆。
+
+### 6.5 per-class AP 分析原则
+
+工业项目不能只看 overall mAP，还要看 hardest classes。
+
+- **overall mAP 接近，但 hardest classes 掉很多** → 通常不能算更优实验
+- **overall mAP 没涨多少，但 hardest classes 明显改善** → 在工业项目里很可能是有价值的优化方向
+
+### 6.6 误检案例分析思路
+
+找 10 张误检/漏检图，按以下维度分析：
+
+- 是哪个类漏检了？该类本身是否纹理细密、对比度低（如 crazing）？
+- 误检的框预测成了什么类？两个类是否视觉上相似？
+- 是否存在标注错误（数据质量问题）？
+- 框位置偏了还是类别搞错了？→ 决定优化方向是调增强还是调模型
+
+### 6.7 调参实验记录模板
 
 每组实验只改一个变量，用 YAML 配置文件管理超参，用 git diff 对比两次实验的参数差异。
 
@@ -449,35 +544,116 @@ runs/detect/train/
 | baseline | 640 | 0.01 | 50 | 1.0 | ? | ? | ? | YOLOv8n 默认 |
 | exp1 | 512 | 0.01 | 50 | 1.0 | ? | ? | ? | 缩小输入 |
 | exp2 | 800 | 0.01 | 50 | 1.0 | ? | ? | ? | 增大输入 |
-| exp3 | 640 | 0.001 | 50 | 1.0 | ? | ? | ? | 降低学习率 |
-| exp4 | 640 | 0.01 | 50 | 0.0 | ? | ? | ? | 关闭 mosaic |
 ```
-
-### 6.3 误检案例分析思路
-
-找 10 张误检/漏检图，按以下维度分析：
-
-- 是哪个类漏检了？该类本身是否纹理细密、对比度低（如 crazing）？
-- 误检的框预测成了什么类？两个类是否视觉上相似？
-- 是否存在标注错误（数据质量问题）？
-- 框位置偏了还是类别搞错了？→ 决定优化方向是调增强还是调模型
 
 ---
 
-## 七、ONNX 部署
+## 七、调参决策方法
 
-### 7.1 为什么需要 ONNX
+### 7.1 超参数三大类
 
-|维度|PyTorch 直接部署|ONNX Runtime 部署|
-|---|---|---|
-|安装包大小|>1 GB（含 CUDA 工具包）|~50 MB|
-|依赖|需要完整 PyTorch 环境|只需 onnxruntime|
-|跨平台|仅 Python|C++、Java、C#、JS 均可调用|
-|硬件加速|CUDA|CUDA、TensorRT、DirectML、OpenVINO 等|
-|推理速度|基准|通常快 1.2-2x（图优化、算子融合）|
-|边缘设备|几乎不可能|Jetson、树莓派等可直接跑|
+#### 训练过程参数
 
-### 7.2 导出与验证流程
+```yaml
+epochs
+imgsz
+batch
+lr0
+lrf
+optimizer
+model
+device
+workers
+name
+project
+```
+
+作用：控制训练多久、输入图像大小、学习率如何变化、选什么优化器、使用哪个模型尺寸。
+
+#### 数据增强参数
+
+```yaml
+mosaic
+mixup
+hsv_h
+hsv_s
+hsv_v
+scale
+translate
+fliplr
+flipud
+copy_paste
+```
+
+作用：改变训练时模型看到的数据分布，增强泛化能力，对 hardest classes 做针对性增强。
+
+#### Loss 权重参数
+
+```yaml
+box    # 更关注框的位置回归
+cls    # 更关注类别判断 / 是否有目标
+dfl    # 更关注边界框分布精度
+```
+
+### 7.2 调参决策树
+
+**起点：先判断主要问题是哪一类**
+
+1. **Loss 到最后还在下降吗？**
+   - 是 → `epochs ↑`
+   - 否 → 进入下一步
+
+2. **主要问题是漏检到 background 吗？**
+   - 是 → 优先考虑：`imgsz ↑`、`cls ↑`、`epochs ↑`
+   - 否 → 进入下一步
+
+3. **主要问题是类间混淆吗？**
+   - 是 → 优先考虑：更强模型（yolov8s）、数据增强、检查标签质量
+   - 否 → 进入下一步
+
+4. **曲线震荡明显吗？**
+   - 是 → 固定 optimizer 后 `lr0 ↓`
+   - 否 → 进入下一步
+
+5. **overall mAP 接近但 hardest classes 下降吗？**
+   - 是 → 不接受该实验为更优解
+   - 否 → 继续比较速度、显存和部署成本
+
+### 7.3 本项目的优先调参路线
+
+结合 baseline 和 exp1 的结果，目前更合理的优先级是：
+
+1. **`imgsz=800`** — 验证更大输入是否改善细纹理 hardest classes
+2. **固定 optimizer 后再做 learning-rate 对比** — 否则 `lr0` 实验不成立
+3. **`epochs=150`** — baseline 和 exp1 都显示 50 epoch 可能还没完全收敛
+4. **如果漏检问题依旧明显，再考虑 `cls ↑`** — 用于强化"是否有目标"的学习
+
+### 7.4 压缩记忆版
+
+```
+loss 没收敛            → epochs ↑
+曲线震荡大             → 固定 optimizer，lr0 ↓
+hardest classes 漏检重 → imgsz ↑、cls ↑
+类间混淆重             → 更强模型、增强、查标签
+overall mAP 接近但 hardest classes 掉很多 → 这组实验不算优
+```
+
+---
+
+## 八、ONNX 部署
+
+### 8.1 为什么需要 ONNX
+
+| 维度 | PyTorch 直接部署 | ONNX Runtime 部署 |
+|------|---------------|-----------------|
+| 安装包大小 | >1 GB（含 CUDA 工具包） | ~50 MB |
+| 依赖 | 需要完整 PyTorch 环境 | 只需 onnxruntime |
+| 跨平台 | 仅 Python | C++、Java、C#、JS 均可调用 |
+| 硬件加速 | CUDA | CUDA、TensorRT、DirectML、OpenVINO 等 |
+| 推理速度 | 基准 | 通常快 1.2-2x（图优化、算子融合） |
+| 边缘设备 | 几乎不可能 | Jetson、树莓派等可直接跑 |
+
+### 8.2 导出与验证流程
 
 ```bash
 # 1. 导出
@@ -495,7 +671,7 @@ python scripts/inference_onnx.py --model models/best.onnx --image test.jpg
 python scripts/evaluate.py --model models/best.onnx --format onnx
 ```
 
-### 7.3 推理核心类设计（src/detector.py）
+### 8.3 推理核心类设计（src/detector.py）
 
 `YOLODetector` 类封装了完整的 ONNX 推理流程，三步 API 设计：
 
@@ -542,18 +718,18 @@ class YOLODetector:
 
 **设计目的**：`scripts/inference_onnx.py` 和 `api/app.py`（FastAPI）都 `from src.detector import YOLODetector`，推理逻辑只写一份。
 
-### 7.4 预处理踩坑清单
+### 8.4 预处理踩坑清单
 
-|步骤|常见错误|正确做法|
-|---|---|---|
-|颜色空间|OpenCV 读的是 BGR，直接送模型|必须 BGR → RGB|
-|归一化|忘记除以 255|`img / 255.0`，float32|
-|维度顺序|NumPy 默认 HWC (H,W,3)|必须转成 CHW (3,H,W)|
-|Batch 维度|3 维张量直接送模型|必须 `expand_dims` 加 batch 维|
-|数据类型|int8 / float64|模型期望 float32|
-|Resize 方式|直接 resize 不保持比例|可以 letterbox（加灰边保持比例），也可以直接 resize（简单项目够用）|
+| 步骤 | 常见错误 | 正确做法 |
+|------|---------|---------|
+| 颜色空间 | OpenCV 读的是 BGR，直接送模型 | 必须 BGR → RGB |
+| 归一化 | 忘记除以 255 | `img / 255.0`，float32 |
+| 维度顺序 | NumPy 默认 HWC (H,W,3) | 必须转成 CHW (3,H,W) |
+| Batch 维度 | 3 维张量直接送模型 | 必须 `expand_dims` 加 batch 维 |
+| 数据类型 | int8 / float64 | 模型期望 float32 |
+| Resize 方式 | 直接 resize 不保持比例 | 可以 letterbox（加灰边保持比例），也可以直接 resize（简单项目够用） |
 
-### 7.5 ONNX 性能对比表格模板
+### 8.5 ONNX 性能对比表格模板
 
 ```markdown
 | 格式 | mAP@0.5 | FPS (CPU) | FPS (GPU) | 模型大小 |
@@ -565,32 +741,32 @@ class YOLODetector:
 
 ---
 
-## 八、数据准备（NEU-DET 项目专用）
+## 九、数据准备（NEU-DET 项目专用）
 
-### 8.1 数据集概况
+### 9.1 数据集概况
 
-|项目|说明|
-|---|---|
-|名称|NEU-DET（东北大学钢材表面缺陷数据库）|
-|图片总数|1,800（每类 300）|
-|图片尺寸|200×200 像素，灰度图|
-|类别|6 类：crazing, inclusion, patches, pitted_surface, rolled-in_scale, scratches|
-|标注格式|VOC XML（需转换为 YOLO TXT）|
-|划分|已预划分：train (~1440) / validation (~360)|
-|数据集大小|~28MB，可直接放在 Git 仓库|
+| 项目 | 说明 |
+|------|------|
+| 名称 | NEU-DET（东北大学钢材表面缺陷数据库） |
+| 图片总数 | 1,800（每类 300） |
+| 图片尺寸 | 200×200 像素，灰度图 |
+| 类别 | 6 类：crazing, inclusion, patches, pitted_surface, rolled-in_scale, scratches |
+| 标注格式 | VOC XML（需转换为 YOLO TXT） |
+| 划分 | 已预划分：train (~1440) / validation (~360) |
+| 数据集大小 | ~28MB，可直接放在 Git 仓库 |
 
-### 8.2 类别映射（顺序固定）
+### 9.2 类别映射（顺序固定）
 
-|类别|ID|中文|检测难度|视觉特征|
-|---|---|---|---|---|
-|crazing|0|龟裂|高|细密裂纹网络，与背景区分度低|
-|inclusion|1|夹杂|中|嵌入的异物颗粒|
-|patches|2|斑块|中|不规则变色区域|
-|pitted_surface|3|麻面|中|表面小凹坑|
-|rolled-in_scale|4|压入氧化铁皮|中|轧制时压入的氧化皮|
-|scratches|5|划痕|低|线性痕迹，特征明显|
+| 类别 | ID | 中文 | 检测难度 | 视觉特征 |
+|------|----|------|---------|---------|
+| crazing | 0 | 龟裂 | 高 | 细密裂纹网络，与背景区分度低 |
+| inclusion | 1 | 夹杂 | 中 | 嵌入的异物颗粒 |
+| patches | 2 | 斑块 | 中 | 不规则变色区域 |
+| pitted_surface | 3 | 麻面 | 中 | 表面小凹坑 |
+| rolled-in_scale | 4 | 压入氧化铁皮 | 中 | 轧制时压入的氧化皮 |
+| scratches | 5 | 划痕 | 低 | 线性痕迹，特征明显 |
 
-### 8.3 数据转换踩坑
+### 9.3 数据转换踩坑
 
 - **不要自己做 train/val 划分**：NEU-DET 已经预划分好了，直接用
 - **`rolled-in_scale` 的连字符陷阱**：文件名用 `_` 分隔类名和编号（如 `rolled-in_scale_1.jpg`），但类名内部有 `-`。用 `split('_')[0]` 提取类名会得到 `rolled-in`（错误）。正确做法：用已知类名列表做最长前缀匹配
@@ -599,32 +775,106 @@ class YOLODetector:
 
 ---
 
-## 九、常见踩坑清单
+## 十、项目文件观
 
-### 9.1 训练阶段
+### 10.1 一次训练真正需要哪些文件？
 
-|问题|原因|解决方案|
-|---|---|---|
-|mAP 停在 0.3-0.4|imgsz 太小（原图 200px 放到 640 会模糊）|试 512 或保持 640，确认增强策略合理|
-|loss 震荡不收敛|学习率太大|降到 0.001，或用 AdamW|
-|某个类 AP 特别低|该类样本少或特征不明显|分析混淆矩阵，针对性增强|
-|训练 OOM (显存不够)|batch 太大或 imgsz 太大|减小 batch，或 `batch=-1` 自动选择|
-|Windows 上 DataLoader 卡死|workers > 0 在 Windows 上有问题|设 `workers=0`|
+**最小闭环**：
 
-### 9.2 ONNX 阶段
+1. **YOLO 格式数据**：`data/images/train/`、`data/images/val/`、`data/labels/train/`、`data/labels/val/`、`data/data.yaml`
+2. **训练配置文件**：`configs/train_config.yaml` 或某个实验配置，如 `configs/exp1.yaml`
+3. **训练入口脚本**：`scripts/train.py`
+4. **初始模型权重**：`yolov8n.pt`
+5. **Python 环境与依赖**：`ultralytics`、`torch`、`opencv`、`yaml` 等
 
-|问题|原因|解决方案|
-|---|---|---|
-|ONNX 精度比 PyTorch 低很多|导出时 simplify 出问题|试 `simplify=False`，对比两者|
-|ONNX Runtime 推理报错|输入 shape 或 dtype 不对|用 `session.get_inputs()` 确认模型期望的输入|
-|推理结果全是空|后处理代码 bug|先不做置信度过滤，看原始输出是否有值|
-|C++ 和 Python 结果不一致|预处理不一致（BGR/RGB、归一化方式）|对齐每一步的中间结果|
+**注意**：`data/NEU-DET/` 是**原始数据源**，只在"数据准备阶段"必须；`runs/detect/` 里的旧权重、旧 CSV、旧图表不是新训练的前置依赖，它们是**历史实验产物**。
+
+### 10.2 训练流水线全景
+
+```
+原始数据 (data/NEU-DET/)
+    ↓ scripts/prepare_data.py
+YOLO 格式数据 (data/images/ + data/labels/ + data/data.yaml)
+    ↓ scripts/train.py + configs/*.yaml
+训练产物 (runs/detect/<exp>/)
+    ├── weights/best.pt
+    ├── results.csv / results.png
+    ├── confusion_matrix*.png
+    └── BoxPR_curve.png
+    ↓ scripts/evaluate.py + 手动归档
+评估记录 (docs/experiment_log.md) + 展示图表 (docs/assets/)
+    ↓ scripts/export_onnx.py
+ONNX 模型 (models/best.onnx)
+    ↓ src/detector.py + api/app.py
+推理服务 (FastAPI + Docker)
+```
+
+**最终链路一句话**：原始数据 → YOLO 格式数据 → 训练生成 best.pt → 评估与记录 → 导出 ONNX → 推理/服务化
+
+### 10.3 runs/detect/ 和 docs/assets/ 的区别
+
+| 目录 | 定位 | Git 跟踪 | 文件名 |
+|------|------|---------|--------|
+| `runs/detect/` | 训练程序自动生成的**实验现场**，内容最完整 | `.gitignore`，不进入 Git | 自动命名 |
+| `docs/assets/` | 人工挑出来保存的**展示版成果** | 进入 Git | 整理成 `results_exp1.png` 等清晰形式 |
+
+### 10.4 当前项目目录速查
+
+| 目录/文件 | 作用 |
+|----------|------|
+| `data/NEU-DET/` | 原始数据集（VOC XML + 原始图片） |
+| `data/images/` + `data/labels/` + `data/data.yaml` | YOLO 真正训练时读取的数据 |
+| `configs/` | baseline 和各组实验配置 |
+| `scripts/` | 各阶段一次性 CLI 脚本入口 |
+| `src/` | 可复用模块，目前主要是 ONNX 推理核心类 |
+| `runs/detect/` | 每次训练自动生成的实验产物 |
+| `docs/assets/` | 复制保存的关键图表，用于 Git 跟踪与展示 |
+| `docs/experiment_log.md` | 横向对比各实验结果 |
+| `docs/YOLO_Project.md` | 项目推进笔记、学习笔记、用户分析入口 |
+| `models/` | 导出的 ONNX 模型 |
+| `api/` | FastAPI 服务代码 |
+
+### 10.5 6 层文件观（记忆版）
+
+```
+1. 原始输入层  → data/NEU-DET/
+2. 训练输入层  → data/images/、data/labels/、data/data.yaml
+3. 实验定义层  → configs/*.yaml
+4. 执行层      → scripts/*.py
+5. 训练产物层  → runs/detect/*
+6. 总结展示层  → docs/*
+```
+
+如果面试时能把这 6 层讲顺，项目的结构感会非常清楚。
 
 ---
 
-## 十、面试高频题集
+## 十一、常见踩坑清单
 
-### 10.1 基础概念（必答）
+### 11.1 训练阶段
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| mAP 停在 0.3-0.4 | imgsz 太小（原图 200px 放到 640 会模糊） | 试 512 或保持 640，确认增强策略合理 |
+| loss 震荡不收敛 | 学习率太大 | 降到 0.001，或用 AdamW |
+| 某个类 AP 特别低 | 该类样本少或特征不明显 | 分析混淆矩阵，针对性增强 |
+| 训练 OOM (显存不够) | batch 太大或 imgsz 太大 | 减小 batch，或 `batch=-1` 自动选择 |
+| Windows 上 DataLoader 卡死 | workers > 0 在 Windows 上有问题 | 设 `workers=0` |
+
+### 11.2 ONNX 阶段
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| ONNX 精度比 PyTorch 低很多 | 导出时 simplify 出问题 | 试 `simplify=False`，对比两者 |
+| ONNX Runtime 推理报错 | 输入 shape 或 dtype 不对 | 用 `session.get_inputs()` 确认模型期望的输入 |
+| 推理结果全是空 | 后处理代码 bug | 先不做置信度过滤，看原始输出是否有值 |
+| C++ 和 Python 结果不一致 | 预处理不一致（BGR/RGB、归一化方式） | 对齐每一步的中间结果 |
+
+---
+
+## 十二、面试高频题集
+
+### 12.1 基础概念（必答）
 
 **Q: YOLO 和 Faster RCNN 最大的区别？**
 
@@ -646,7 +896,7 @@ class YOLODetector:
 
 > 1 是 batch size；10 = 4 个坐标 + 6 个类别概率；8400 是三个检测尺度的网格数之和 (80² + 40² + 20²)。
 
-### 10.2 项目深入（加分项）
+### 12.2 项目深入（加分项）
 
 **Q: 为什么选 YOLOv8n？**
 
@@ -670,9 +920,9 @@ class YOLODetector:
 
 ---
 
-## 十一、学习路线与踩点建议
+## 十三、学习路线与踩点建议
 
-### 11.1 推荐学习顺序
+### 13.1 推荐学习顺序
 
 ```
 第 0 步（2h）：概念速通
@@ -700,7 +950,7 @@ class YOLODetector:
   重点：展示级，简历亮点
 ```
 
-### 11.2 关键踩点提醒
+### 13.2 关键踩点提醒
 
 - **不要纠结理论**：YOLO 的损失函数（CIoU + DFL + BCE）ultralytics 全封装了，面试时知道"分类损失 + 回归损失 + 置信度损失"三部分就够
 - **不要手写训练循环**：直接用 `model.train()`，YOLO 不像 CIFAR-10 需要你自己写 epoch 循环
@@ -710,19 +960,19 @@ class YOLODetector:
 
 ---
 
-## 十二、适合的岗位与工作方向
+## 十四、适合的岗位与工作方向
 
-### 12.1 YOLO 技能对应的岗位
+### 14.1 YOLO 技能对应的岗位
 
-|岗位方向|公司类型|核心技能要求|YOLO 项目的价值|
-|---|---|---|---|
-|CV 算法工程师|博世、西门子、Cognex|YOLO/检测 + 数据分析 + 调参|直接对口，核心项目|
-|AI 部署工程师|KLA、应用材料|ONNX/TensorRT + C++ + 边缘设备|ONNX 导出 + C++ 推理经验|
-|工业视觉工程师|海克斯康、ABB|缺陷检测 + 光学 + 产线集成|工业场景经验 + 数据闭环思路|
-|MLOps / 模型服务化|各类外企 IT|FastAPI + Docker + CI/CD|API 服务化 + 容器化部署|
-|机器人视觉工程师|ABB、发那科|目标检测 + 位姿估计 + ROS|YOLO 检测 + 部署能力|
+| 岗位方向 | 公司类型 | 核心技能要求 | YOLO 项目的价值 |
+|---------|---------|------------|--------------|
+| CV 算法工程师 | 博世、西门子、Cognex | YOLO/检测 + 数据分析 + 调参 | 直接对口，核心项目 |
+| AI 部署工程师 | KLA、应用材料 | ONNX/TensorRT + C++ + 边缘设备 | ONNX 导出 + C++ 推理经验 |
+| 工业视觉工程师 | 海克斯康、ABB | 缺陷检测 + 光学 + 产线集成 | 工业场景经验 + 数据闭环思路 |
+| MLOps / 模型服务化 | 各类外企 IT | FastAPI + Docker + CI/CD | API 服务化 + 容器化部署 |
+| 机器人视觉工程师 | ABB、发那科 | 目标检测 + 位姿估计 + ROS | YOLO 检测 + 部署能力 |
 
-### 12.2 简历中的项目描述模板
+### 14.2 简历中的项目描述模板
 
 ```
 工业缺陷检测系统（2026.03）
@@ -775,16 +1025,16 @@ outputs = session.run(None, {input_info.name: input_tensor})
 
 ## 附录 C：关键文件路径速查（项目内）
 
-|文件|作用|
-|---|---|
-|`data/data.yaml`|数据集配置（路径 + 类名）|
-|`configs/train_config.yaml`|训练超参数|
-|`scripts/prepare_data.py`|VOC → YOLO 格式转换|
-|`scripts/train.py`|训练入口|
-|`scripts/evaluate.py`|评估 + 可视化|
-|`scripts/export_onnx.py`|ONNX 导出|
-|`scripts/inference_onnx.py`|ONNX 推理|
-|`src/detector.py`|推理核心类（FastAPI 复用）|
-|`docs/experiment_log.md`|实验记录|
-|`runs/detect/train/weights/best.pt`|最优权重|
-|`models/best.onnx`|导出的 ONNX 模型|
+| 文件 | 作用 |
+|------|------|
+| `data/data.yaml` | 数据集配置（路径 + 类名） |
+| `configs/train_config.yaml` | 训练超参数 |
+| `scripts/prepare_data.py` | VOC → YOLO 格式转换 |
+| `scripts/train.py` | 训练入口 |
+| `scripts/evaluate.py` | 评估 + 可视化 |
+| `scripts/export_onnx.py` | ONNX 导出 |
+| `scripts/inference_onnx.py` | ONNX 推理 |
+| `src/detector.py` | 推理核心类（FastAPI 复用） |
+| `docs/experiment_log.md` | 实验记录 |
+| `runs/detect/train/weights/best.pt` | 最优权重 |
+| `models/best.onnx` | 导出的 ONNX 模型 |

@@ -1,0 +1,16 @@
+# YOLOv8 Experiment 1 Configuration
+# Change only imgsz compared with baseline.
+
+model: yolov8n.pt          # Model: yolov8n/s/m/l/x
+data: data/data.yaml       # Dataset config
+epochs: 50                 # Total training epochs
+imgsz: 512                 # Input image size for experiment 1
+batch: 16                  # Batch size (-1 for auto)
+lr0: 0.01                  # Initial learning rate
+optimizer: auto            # Optimizer: SGD, Adam, AdamW, auto
+mosaic: 1.0                # Mosaic augmentation (0.0 to disable)
+mixup: 0.0                 # Mixup augmentation
+device: 0                  # CUDA device (0 for first GPU)
+workers: 8                 # Dataloader workers
+project: runs/detect       # Save directory
+name: exp1                 # Experiment name

@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 Project context for AI assistants working on this codebase.
 
@@ -141,7 +141,7 @@ After every training run completes, the AI agent MUST do the following without b
 - Suggested experiments: (1) epochs=150, (2) yolov8s, (3) cls_loss_weight↑ for crazing漏检
 - Each experiment goes into a new YAML: `configs/exp1.yaml`, `configs/exp2.yaml`, etc.
 - Results → `runs/detect/exp1/`, `runs/detect/exp2/`, etc.
-- User writes analysis conclusions (why mAP changed); Claude records data/tables
+- User writes analysis conclusions (why mAP changed); Codex records data/tables
 
 ## Do NOT
 
