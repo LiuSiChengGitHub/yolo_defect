@@ -1,0 +1,16 @@
+# 实验 3 低学习率组：固定优化器后测试 lr0=0.001
+# 目的：和 exp3_lr01 做公平对比，观察更小学习率是否更稳定或更慢
+
+model: yolov8n.pt
+data: data/data.yaml
+epochs: 50
+imgsz: 640
+batch: 16
+lr0: 0.001
+optimizer: SGD
+mosaic: 1.0
+mixup: 0.0
+device: 0
+workers: 8
+project: runs/detect
+name: exp3_lr001

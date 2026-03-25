@@ -37,7 +37,7 @@ def main():
     # - 可以用 git diff 对比两次实验的参数差异
     config_path = os.path.abspath(args.config)
     print(f"Loading config: {config_path}")
-    with open(config_path, "r") as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     # 提取模型名称（如 'yolov8n.pt'），从 config 字典中弹出

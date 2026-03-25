@@ -1,0 +1,16 @@
+# 实验 3 对照组：固定优化器后测试 lr0=0.01
+# 目的：作为 lr0=0.001 的公平对照，只改学习率一个变量
+
+model: yolov8n.pt
+data: data/data.yaml
+epochs: 50
+imgsz: 640
+batch: 16
+lr0: 0.01
+optimizer: SGD
+mosaic: 1.0
+mixup: 0.0
+device: 0
+workers: 8
+project: runs/detect
+name: exp3_lr01

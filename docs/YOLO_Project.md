@@ -4,13 +4,13 @@
 
 ---
 
-## 当前进度：Step 3 进行中（exp1 已完成）
+## 当前进度：Step 3 进行中（exp1 + exp2 + exp3 + exp4 已完成）
 
 | Step | 内容 | 状态 |
 |------|------|------|
 | Step 1 | 数据准备 | Done (2026-03-23) |
 | Step 2 | 基线训练 | Done (2026-03-24) — mAP@0.5=0.734 |
-| Step 3 | 调参优化 | In Progress (2026-03-24) — exp1(imgsz=512) done |
+| Step 3 | 调参优化 | In Progress (2026-03-25) — exp1(imgsz=512) + exp2(imgsz=800) + exp3(lr ablation) + exp4(augment) done |
 | Step 4 | 结果分析 | - |
 | Step 5 | ONNX 导出 + 推理验证 | - |
 | Step 6 | SAM 集成 | - |
@@ -264,11 +264,297 @@ docs/assets/                ← git 管理（committed）
 > - `rolled-in_scale` 从 0.581 降到 0.520，说明：___
 > - 这组实验支持/不支持我继续往更小输入尺寸方向优化，因为：___
 
+### Experiment 2：`imgsz=800`（2026-03-25）
+
+#### 这次改了什么
+
+- **用户决策：** 测试更大输入尺寸 `imgsz=800`
+- **AI 执行：** 新建 `configs/exp2.yaml`，保持其余参数与 baseline / exp1 一致
+- 输出目录：`runs/detect/exp2/`
+
+#### 训练结果（best.pt 在验证集上的表现）
+
+| 类别 | Precision | Recall | mAP@0.5 | mAP@50-95 |
+|------|-----------|--------|---------|-----------|
+| **all** | **0.698** | **0.684** | **0.741** | **0.384** |
+| crazing | 0.683 | 0.327 | 0.476 | 0.187 |
+| inclusion | 0.726 | 0.802 | 0.833 | 0.472 |
+| patches | 0.820 | 0.855 | 0.921 | 0.600 |
+| pitted_surface | 0.864 | 0.690 | 0.807 | 0.423 |
+| rolled-in_scale | 0.563 | 0.537 | 0.596 | 0.231 |
+| scratches | 0.529 | 0.893 | 0.815 | 0.389 |
+
+#### 和 baseline / exp1 对比
+
+- baseline：`imgsz=640`，mAP@0.5 = **0.734**，训练时间约 **9.4 分钟**
+- exp1：`imgsz=512`，mAP@0.5 = **0.730**，训练时间约 **7.2 分钟**
+- exp2：`imgsz=800`，mAP@0.5 = **0.741**，训练时间约 **13.4 分钟**
+
+#### 这组实验说明了什么
+
+- 更大输入尺寸确实让 **总体 mAP@0.5** 来到了目前图片尺寸实验里的最高点
+- `rolled-in_scale` 从 **0.581 → 0.596**，说明更细输入网格对部分纹理类是有帮助的
+- 但最关键的 hardest class `crazing` **没有改善**，仍然停在 **0.476**
+- 这说明 `imgsz=800` 带来的收益并不是“全面改善难类”，更像是：
+  - 对部分类别有帮助
+  - 但对最核心的 `crazing` 瓶颈帮助有限
+  - 同时训练时间明显增加
+
+#### 重要工程细节
+
+- 本次训练继续使用 `optimizer=auto`
+- 日志显示 Ultralytics 再次自动选择了 **AdamW(lr=0.001)**
+- 所以 exp2 和 baseline / exp1 在 **imgsz 维度** 上仍然可以对比，但不要拿它去和固定 SGD 的 lr 实验直接混着解释
+
+#### 已记录的产物
+
+- `docs/assets/results_exp2.png`
+- `docs/assets/confusion_matrix_exp2.png`
+- `docs/assets/PR_curve_exp2.png`
+- `docs/assets/val_pred_sample_exp2.jpg`
+
+#### 你的分析（待填写）
+
+> 你可以用下面模板写你自己的判断：
+> - 我认为 `imgsz=800` 带来的主要收益是：___
+> - 为什么 `rolled-in_scale` 提升了，但 `crazing` 没有明显改善：___
+> - 这组实验支持/不支持我继续走“大输入尺寸”方向，因为：___
+> - 如果要进一步验证这个方向，我下一步会：___
+
+### Experiment 3：固定优化器后的 learning-rate 对比（2026-03-25）
+
+#### 这次你要学会的核心步骤
+
+1. **先判断旧对照组是否有效**
+   - 上一次我们发现 baseline/exp1 都用了 `optimizer=auto`
+   - 所以“baseline 的 `lr0=0.01`”并不是一个真正生效的学习率对照
+
+2. **先补一个公平对照组**
+   - 新建 `configs/exp3_lr01.yaml`
+   - 固定 `optimizer=SGD`
+   - 保持 `imgsz=640`、`epochs=50`、`batch=16`、`mosaic=1.0` 不变
+
+3. **再跑只改一个变量的实验组**
+   - 新建 `configs/exp3_lr001.yaml`
+   - 唯一改动：`lr0: 0.01 → 0.001`
+
+4. **训练后先看 `args.yaml`，再看指标**
+   - 这一步非常关键：先确认实际生效参数真的是 `optimizer=SGD`
+   - 然后再比较 `results.png`、`results.csv`、per-class AP 和 hardest classes
+
+#### 这次改了什么
+
+- **用户决策：** 推进 Experiment 3，做 `lr0=0.001` vs `0.01` 的学习率对比
+- **AI 执行：**
+  - 新建 `configs/exp3_lr01.yaml`（公平对照组）
+  - 新建 `configs/exp3_lr001.yaml`（低学习率组）
+  - 修复 `scripts/train.py` 的 YAML 编码问题：读取配置时显式使用 `utf-8`
+
+#### 训练结果（best.pt 在验证集上的表现）
+
+| 实验 | Optimizer | lr0 | Precision | Recall | mAP@0.5 | mAP@50-95 | 时间 |
+|------|-----------|-----|-----------|--------|---------|-----------|------|
+| exp3_lr01 | SGD | 0.01 | 0.638 | 0.691 | **0.736** | **0.395** | 约 9.0 分钟 |
+| exp3_lr001 | SGD | 0.001 | 0.646 | 0.674 | 0.711 | 0.387 | 约 10.1 分钟 |
+
+#### hardest classes 对比
+
+| 类别 | exp3_lr01 | exp3_lr001 |
+|------|-----------|------------|
+| crazing | 0.470 | 0.462 |
+| rolled-in_scale | 0.537 | 0.507 |
+| scratches | 0.846 | 0.762 |
+
+#### 这组实验说明了什么
+
+- 在 **相同 50 epoch 预算** 下，`lr0=0.001` 没有带来更好的结果
+- 更小学习率虽然常常更“稳”，但这次更像是 **步子太小，50 个 epoch 内没学够**
+- hardest classes 没有改善，反而继续下降，说明这组设置不适合当前项目作为默认方案
+- 这次真正值得记住的不是“0.001 不好”，而是：
+  - **做学习率实验前，必须先锁死 optimizer**
+  - **看学习率时不能只看总 mAP，还要看 hardest classes**
+
+#### 已记录的产物
+
+- `docs/assets/results_exp3_lr01.png`
+- `docs/assets/confusion_matrix_exp3_lr01.png`
+- `docs/assets/PR_curve_exp3_lr01.png`
+- `docs/assets/val_pred_sample_exp3_lr01.jpg`
+- `docs/assets/results_exp3_lr001.png`
+- `docs/assets/confusion_matrix_exp3_lr001.png`
+- `docs/assets/PR_curve_exp3_lr001.png`
+- `docs/assets/val_pred_sample_exp3_lr001.jpg`
+
+#### 你的分析（待填写）
+
+> 你可以用下面模板写你自己的判断：
+> - 我认为这次 `lr0=0.001` 没有优于 `0.01`，主要原因是：___
+> - 从 `crazing` 和 `rolled-in_scale` 的结果来看，我判断更小学习率：___
+> - 这组实验给我的调参方法论启发是：___
+> - 如果以后还想继续试 learning rate，我会怎样改实验设计：___
+
+### Experiment 4：增强策略 `mosaic=1.0, mixup=0.1`（2026-03-25）
+
+#### 这次我具体是怎么操作的
+
+1. **先选底座配置**
+   - 我没有把“best imgsz”和“best lr”硬拼在一起
+   - 而是先从当前已经完成的实验里，选出 **整体表现最好的完整配置 `exp2`**
+   - 这样做更稳妥，因为 `exp2` 是一个真实跑过并验证过的完整方案
+
+2. **再只改增强参数**
+   - 复制 `exp2` 的配置思路，新建 `configs/exp4.yaml`
+   - 保持这些参数不变：
+     - `imgsz=800`
+     - `epochs=50`
+     - `batch=16`
+     - `optimizer=auto`
+     - `mosaic=1.0`
+   - 唯一新增改动：
+     - `mixup: 0.0 -> 0.1`
+
+3. **训练后先验收配置有没有生效**
+   - 不是直接看 mAP
+   - 而是先检查 `runs/detect/exp4/args.yaml`
+   - 确认 `mixup: 0.1` 真正写进实际配置
+
+4. **最后再比较结果**
+   - 和 `exp2` 做一对一对比
+   - 因为这次真正想回答的问题是：
+     - “在 `imgsz=800` 的最优底座上，加一点 mixup，会不会更好？”
+
+#### 这次改了什么
+
+- **用户决策：** 推进增强实验，测试 `mosaic=1.0, mixup=0.1`
+- **AI 执行：**
+  - 新建 `configs/exp4.yaml`
+  - 基于 `exp2` 只新增 `mixup=0.1`
+  - 训练输出目录：`runs/detect/exp4/`
+
+#### 训练结果（best.pt 在验证集上的表现）
+
+| 类别 | Precision | Recall | mAP@0.5 | mAP@50-95 |
+|------|-----------|--------|---------|-----------|
+| **all** | **0.692** | **0.679** | **0.735** | **0.384** |
+| crazing | 0.637 | 0.314 | 0.464 | 0.196 |
+| inclusion | 0.696 | 0.786 | 0.812 | 0.444 |
+| patches | 0.789 | 0.891 | 0.930 | 0.611 |
+| pitted_surface | 0.883 | 0.724 | 0.813 | 0.412 |
+| rolled-in_scale | 0.608 | 0.485 | 0.577 | 0.241 |
+| scratches | 0.535 | 0.875 | 0.815 | 0.402 |
+
+#### 和 exp2 对比
+
+- exp2：`imgsz=800`, `mosaic=1.0`, `mixup=0.0`
+  - best mAP@0.5 = **0.742**
+- exp4：`imgsz=800`, `mosaic=1.0`, `mixup=0.1`
+  - best mAP@0.5 = **0.741**
+
+#### 这组实验说明了什么
+
+- 加入 `mixup=0.1` 后，整体结果基本没有提升
+- 最关键的 hardest classes 反而略有下降：
+  - `crazing`: **0.476 -> 0.464**
+  - `rolled-in_scale`: **0.596 -> 0.577**
+- 这说明在工业缺陷这种 **细纹理、局部结构很关键** 的任务里，过强的图像混合增强不一定有利
+- 你可以先形成一个直觉：
+  - `mixup` 对自然图像分类常常有帮助
+  - 但对这种依赖局部纹理的缺陷检测，可能会把缺陷边界和纹理模式“搅得更不自然”
+
+#### 重要工程细节
+
+- 这次依然使用 `optimizer=auto`
+- 训练日志显示实际还是 **AdamW(lr=0.001)**
+- 所以 exp4 的正确比较对象是 **exp2**
+- 这是一组“增强策略对比实验”，不是 lr 实验
+
+#### 已记录的产物
+
+- `docs/assets/results_exp4.png`
+- `docs/assets/confusion_matrix_exp4.png`
+- `docs/assets/PR_curve_exp4.png`
+- `docs/assets/val_pred_sample_exp4.jpg`
+
+#### 你的分析（待填写）
+
+> 你可以用下面模板写你自己的判断：
+> - 我认为 `mixup=0.1` 没有带来提升，主要原因是：___
+> - 为什么这种增强在工业缺陷检测里可能不如分类任务有效：___
+> - 这组实验给我的增强策略启发是：___
+> - 如果继续做增强实验，我下一步会试：___
+
+### 误检/漏检案例分析（2026-03-25）
+
+#### 这次做了什么
+
+- 基于当前候选最佳模型 `runs/detect/exp3_lr01/weights/best.pt`
+- 新增脚本 `scripts/analyze_failures.py`
+- 在验证集上逐张推理，按 **同类 + IoU>=0.5** 的规则匹配预测框和真值框
+- 自动筛出失败最明显的 10 张图，保存到：
+  - `docs/assets/failure_cases_exp3_lr01/`
+
+#### 已保存的案例产物
+
+- `docs/assets/failure_cases_exp3_lr01/case_01_inclusion_287.jpg`
+- `docs/assets/failure_cases_exp3_lr01/case_02_crazing_299.jpg`
+- `docs/assets/failure_cases_exp3_lr01/case_03_rolled-in_scale_259.jpg`
+- `docs/assets/failure_cases_exp3_lr01/case_04_rolled-in_scale_292.jpg`
+- `docs/assets/failure_cases_exp3_lr01/case_05_crazing_278.jpg`
+- `docs/assets/failure_cases_exp3_lr01/case_06_pitted_surface_279.jpg`
+- `docs/assets/failure_cases_exp3_lr01/case_07_crazing_246.jpg`
+- `docs/assets/failure_cases_exp3_lr01/case_08_crazing_250.jpg`
+- `docs/assets/failure_cases_exp3_lr01/case_09_pitted_surface_280.jpg`
+- `docs/assets/failure_cases_exp3_lr01/case_10_scratches_293.jpg`
+- 摘要表：`docs/assets/failure_cases_exp3_lr01/failure_summary_exp3_lr01.md`
+
+#### 目前观察到的共性
+
+- `crazing`、`rolled-in_scale`、`scratches` 反复出现在失败案例中，和之前的 per-class AP 结论一致
+- 很多失败图不是单纯“没框出来”，而是 **漏检 + 误检同时存在**
+- 背景纹理和缺陷纹理相似时，容易出现同类误检
+- 同图目标较多时，模型更容易同时出现漏检和重复/偏移检测
+
+#### 你做人为分析时的标准流程
+
+1. **先看失败类型**
+   - 橙色框是漏检的 GT（FN）
+   - 红色框是没有匹配到 GT 的预测（FP）
+
+2. **再判断错因属于哪一类**
+   - 纹理太细 / 对比度太低
+   - 边界弥散 / 框定义宽泛
+   - 背景纹理相似
+   - 同图目标密集，定位和去重更难
+
+3. **最后把现象连接到调参方向**
+   - 细纹理缺陷多：考虑 `imgsz↑`、更强模型
+   - 明显没学够：考虑 `epochs↑`
+   - 漏检多：考虑 `cls` 或针对性增强
+   - 误检多：考虑更干净的数据增强或更强特征表达
+
+#### 这次你应该学会的核心方法
+
+- 不要手挑几张“看起来像失败”的图片
+- 应该先定义匹配规则，再系统筛选 top-k 失败案例
+- 误检案例分析不是只写“模型错了”，而是要把：
+  - **视觉现象**
+  - **类别特性**
+  - **可能的训练改进方向**
+  连起来讲清楚
+
+#### 你的分析（待填写）
+
+> 你可以用下面模板写你自己的判断：
+> - 我观察到 hardest cases 主要集中在：___
+> - 这些图的共同视觉特征是：___
+> - 我认为最主要的失败原因是：___
+> - 如果继续优化，我优先尝试的方向是：___
+
 ### 下一步候选
 
-- `imgsz=800`：验证更大输入尺寸是否能帮助细纹理类
-- 固定 optimizer 后再做 learning-rate 对比
-- 增加 epochs：验证 baseline 和 exp1 在 50 epoch 时是否都还没收敛
+- `epochs=150`：作为新的 `exp5`，验证当前配置在更长训练预算下是否还能继续提升
+- 如果想继续追 `imgsz` 方向：需要结合 hardest class 和训练耗时判断 `800` 是否值得保留
+- 如果以后还想继续试 learning rate：在固定 optimizer 的前提下，把 `epochs` 拉长后再复测 `lr0=0.001`
 
 ---
 

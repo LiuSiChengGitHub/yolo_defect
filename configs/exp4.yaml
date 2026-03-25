@@ -1,0 +1,17 @@
+# 实验 4：在当前最强完整配置基础上测试增强策略
+# 基线来源：exp2（imgsz=800）
+# 唯一新增改动：mixup 从 0.0 提升到 0.1，mosaic 保持 1.0
+
+model: yolov8n.pt
+data: data/data.yaml
+epochs: 50
+imgsz: 800
+batch: 16
+lr0: 0.01
+optimizer: auto
+mosaic: 1.0
+mixup: 0.1
+device: 0
+workers: 8
+project: runs/detect
+name: exp4
