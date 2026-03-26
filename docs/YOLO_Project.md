@@ -4,15 +4,15 @@
 
 ---
 
-## 当前进度：Step 3 进行中（exp1 + exp2 + exp3 + exp4 已完成）
+## 当前进度：Step 3 已完成（exp1 + exp2 + exp3 + exp4 + exp5 + final_train + final_train_2 已完成）
 
 | Step | 内容 | 状态 |
 |------|------|------|
 | Step 1 | 数据准备 | Done (2026-03-23) |
 | Step 2 | 基线训练 | Done (2026-03-24) — mAP@0.5=0.734 |
-| Step 3 | 调参优化 | In Progress (2026-03-25) — exp1(imgsz=512) + exp2(imgsz=800) + exp3(lr ablation) + exp4(augment) done |
-| Step 4 | 结果分析 | - |
-| Step 5 | ONNX 导出 + 推理验证 | - |
+| Step 3 | 调参优化 | Done (2026-03-26) — 9组实验, best mAP@0.5=0.743 (final_train_2) |
+| Step 4 | 结果分析 + 实验收尾 | Done (2026-03-26) — 误检案例分析, experiment_log 汇总, best model 选定 |
+| Step 5 | ONNX 导出 + 推理验证 | Next |
 | Step 6 | SAM 集成 | - |
 | Step 7 | GitHub 美化 | - |
 | Step 8 | FastAPI + Docker | - |
@@ -483,6 +483,299 @@ docs/assets/                ← git 管理（committed）
 > - 这组实验给我的增强策略启发是：___
 > - 如果继续做增强实验，我下一步会试：___
 
+### Experiment 5：关闭增强 `mosaic=0, mixup=0`（2026-03-26）
+
+#### 这次我具体是怎么操作的
+
+1. **先明确对照家族**
+   - 这次不是回到最早的 baseline
+   - 而是沿用 `exp2 / exp4` 的同一底座：
+     - `imgsz=800`
+     - `epochs=50`
+     - `batch=16`
+     - `optimizer=auto`
+
+2. **再把目标增强项全部关掉**
+   - 新建 `configs/exp5.yaml`
+   - 显式写成：
+     - `mosaic: 0.0`
+     - `mixup: 0.0`
+   - 这样它就成为 `exp2 / exp4` 这条增强实验线里的“去增强对照组”
+
+3. **训练后先验收配置**
+   - 先看 `runs/detect/exp5/args.yaml`
+   - 确认：
+     - `mosaic: 0.0`
+     - `mixup: 0.0`
+   - 这一步是为了确保“关增强”不是你以为关了，而是真的关了
+
+4. **最后再比较结果**
+   - 重点和 `exp2`、`exp4` 比
+   - 这次真正想回答的问题是：
+     - “在同样的 800 输入底座上，强增强、弱增强、关增强，哪一种更适合工业缺陷检测？”
+
+#### 这次改了什么
+
+- **用户决策：** 推进关闭增强实验，设定 `mosaic=0, mixup=0`
+- **AI 执行：**
+  - 新建 `configs/exp5.yaml`
+  - 保持底座配置不变，只关闭样本混合增强
+  - 输出目录：`runs/detect/exp5/`
+
+#### 训练结果（best.pt 在验证集上的表现）
+
+| 类别 | Precision | Recall | mAP@0.5 | mAP@50-95 |
+|------|-----------|--------|---------|-----------|
+| **all** | **0.655** | **0.685** | **0.737** | **0.395** |
+| crazing | 0.523 | 0.265 | 0.462 | 0.196 |
+| inclusion | 0.746 | 0.774 | 0.838 | 0.435 |
+| patches | 0.750 | 0.912 | 0.928 | 0.607 |
+| pitted_surface | 0.753 | 0.701 | 0.800 | 0.448 |
+| rolled-in_scale | 0.523 | 0.566 | 0.522 | 0.246 |
+| scratches | 0.633 | 0.893 | 0.874 | 0.436 |
+
+#### 和 exp2 / exp4 对比
+
+- exp2：`mosaic=1.0`, `mixup=0.0`
+  - best mAP@0.5 = **0.742**
+- exp4：`mosaic=1.0`, `mixup=0.1`
+  - best mAP@0.5 = **0.741**
+- exp5：`mosaic=0.0`, `mixup=0.0`
+  - best mAP@0.5 = **0.740**
+
+#### 这组实验说明了什么
+
+- 关掉样本混合增强以后，整体 mAP 并没有明显崩掉
+- 某些类别反而更好：
+  - `inclusion`: **0.812 -> 0.838**（相对 exp4）
+  - `scratches`: **0.815 -> 0.874**
+- 这说明对这个项目来说，保留真实纹理分布可能比强行混图更重要
+- 但 `crazing` 依然没有改善，说明 hardest class 的问题并不主要来自增强策略，而更可能来自：
+  - 训练轮数不够
+  - 纹理特征表达不足
+  - 类别本身边界弥散
+
+#### 重要工程细节
+
+- 这次依然使用 `optimizer=auto`
+- 训练日志显示实际还是 **AdamW(lr=0.001)**
+- 所以 `exp5` 的正确比较对象是 **exp2 / exp4**
+- 这是增强策略对照实验，不是优化器或学习率实验
+
+#### 已记录的产物
+
+- `docs/assets/results_exp5.png`
+- `docs/assets/confusion_matrix_exp5.png`
+- `docs/assets/PR_curve_exp5.png`
+- `docs/assets/val_pred_sample_exp5.jpg`
+
+#### 你的分析（待填写）
+
+> 你可以用下面模板写你自己的判断：
+> - 我认为关闭增强后结果没有明显变差，说明：___
+> - 为什么 `scratches` 和 `inclusion` 可能从去增强中受益：___
+> - 为什么 `crazing` 依然没有改善：___
+> - 这组实验对我下一步调参方向的启发是：___
+
+### Final Train：最优参数组合 + `epochs=100`（2026-03-26）
+
+#### 这次我是怎么具体操作的
+1. **先确定“最终训练”不是随意拼参数**
+   - 我没有把每个实验里看起来最好的单项结果机械拼接
+   - 而是先选出一条 **方法上自洽、已经完整跑通过的最优配置家族**
+   - 这次选的是 `exp2` 这条 `imgsz=800` 路线，因为它在完整实验里拿到了最高的 `mAP@0.5`
+
+2. **再吸收增强实验里的结论**
+   - `exp4` 说明 `mixup=0.1` 没带来提升
+   - `exp5` 说明完全关闭增强不会崩，但也没有整体超过 `exp2`
+   - 所以最终训练采用：
+     - `imgsz=800`
+     - `optimizer=auto`
+     - `mosaic=1.0`
+     - `mixup=0.0`
+
+3. **最后只改一个长预算变量**
+   - 新建 `configs/final_train.yaml`
+   - 只把 `epochs: 50 -> 100`
+   - 输出目录：`runs/detect/final_train/`
+
+4. **训练后先验收，再下结论**
+   - 先检查 `runs/detect/final_train/args.yaml`
+   - 确认 `imgsz=800`、`epochs=100`、`mosaic=1.0`、`mixup=0.0` 真正生效
+   - 然后再单独验证 `weights/best.pt`
+   - 这是为了避免只看训练过程里某一个高点
+
+#### 训练结果（best.pt 在验证集上的表现）
+
+| 类别 | Precision | Recall | mAP@0.5 | mAP@50-95 |
+|------|-----------|--------|---------|-----------|
+| **all** | **0.680** | **0.688** | **0.729** | **0.379** |
+| crazing | 0.514 | 0.444 | 0.468 | 0.200 |
+| inclusion | 0.727 | 0.786 | 0.813 | 0.457 |
+| patches | 0.842 | 0.850 | 0.920 | 0.588 |
+| pitted_surface | 0.899 | 0.690 | 0.812 | 0.419 |
+| rolled-in_scale | 0.575 | 0.485 | 0.544 | 0.226 |
+| scratches | 0.524 | 0.876 | 0.816 | 0.385 |
+
+#### 训练过程里的一个重要现象
+
+- `results.csv` 里训练过程最高的 `mAP@0.5` 出现在 **epoch 87 = 0.736**
+- 但最终 `best.pt` 单独复验是 **0.729 / 0.379**
+- 这说明：
+  - **训练过程里某个 epoch 的单指标最高，不一定就是最终 best.pt**
+  - Ultralytics 选 `best.pt` 看的是综合 fitness，更接近 `mAP@50-95` 这类更严格指标
+
+#### 和前面最强实验对比
+
+- exp2：`imgsz=800`, 50 epochs
+  - `best.pt` = **0.741 / 0.384**
+- exp3_lr01：`imgsz=640`, `optimizer=SGD`, `lr0=0.01`, 50 epochs
+  - `best.pt` = **0.736 / 0.395**
+- final_train：`imgsz=800`, 100 epochs
+  - `best.pt` = **0.729 / 0.379**
+
+#### 这次最终训练说明了什么
+
+- 在当前这条 `imgsz=800 + optimizer=auto` 路线下，**单纯把训练拉长到 100 epochs 并没有带来更好的最终模型**
+- hardest classes 依然没有实质突破：
+  - `crazing` 相比 exp2 没提升
+  - `rolled-in_scale` 反而下降
+- 训练时间增加到约 **26.1 分钟**，已经接近 50 epoch `imgsz=800` 实验的两倍
+- 所以这次很好的结论不是“100 epoch 更强”，而是：
+  - **更长训练预算不等于更优最终 checkpoint**
+  - **最终训练也要回到 best.pt 的真实验证结果来判断**
+
+#### 已记录的产物
+
+- `docs/assets/results_final_train.png`
+- `docs/assets/confusion_matrix_final_train.png`
+- `docs/assets/PR_curve_final_train.png`
+- `docs/assets/val_pred_sample_final_train.jpg`
+
+#### 这一步你最该学会的实验方法
+
+- 最终训练不是把所有“看起来最好”的数字硬拼在一起
+- 应该先选一个 **完整、自洽、已经验证过的配置家族**
+- 然后只增加“最终预算变量”，这里就是 `epochs=100`
+- 跑完后一定区分：
+  - **训练过程中的峰值**
+  - **最终 best.pt 的真实验证结果**
+
+#### 你的分析（待填写）
+
+> 你可以用下面模板写你自己的判断：
+> - 我认为 final_train 没有超过 exp2 / exp3_lr01，说明：___
+> - 为什么训练过程的最高 mAP@0.5 不等于最终 best.pt：___
+> - 这次最终训练对我理解“如何选最终模型”的启发是：___
+
+### Final Train 2：手动组合最优候选参数（2026-03-26）
+
+#### 这次是谁做了什么
+
+- **用户手动执行：**
+  - 自己创建最终候选配置
+  - 自己在终端运行训练命令
+- **AI 接手收尾：**
+  - 复验 `best.pt`
+  - 归档图表到 `docs/assets/`
+  - 更新实验日志、项目笔记和 README
+
+#### 这次配置是怎么确定的
+
+这次不是继续沿用 `final_train` 的 `optimizer=auto` 路线，而是把前面实验里更有说服力的结果重新组合成一个**新的最终候选**：
+
+- `imgsz=800`
+  - 来自图片尺寸实验里的最优方向
+- `optimizer=SGD`
+  - 来自有效 learning-rate 对比实验
+- `lr0=0.01`
+  - 是固定 SGD 条件下更优的学习率
+- `mosaic=1.0`
+  - 作为主增强基线保留
+- `mixup=0.0`
+  - 因为 exp4 证明 `mixup=0.1` 没有带来收益
+- `epochs=100`
+  - 作为最终收尾训练预算
+
+#### 训练前先验收的关键点
+
+这次一定要先看 `runs/detect/final_train_2/args.yaml`，确认下面这些参数真的生效：
+
+- `optimizer: SGD`
+- `lr0: 0.01`
+- `imgsz: 800`
+- `epochs: 100`
+- `mosaic: 1.0`
+- `mixup: 0.0`
+
+这一步非常关键，因为它证明这次训练确实是你想验证的“手动组合最优候选”，而不是又被 `optimizer=auto` 改写了。
+
+#### 训练结果（best.pt 在验证集上的表现）
+
+| 类别 | Precision | Recall | mAP@0.5 | mAP@50-95 |
+|------|-----------|--------|---------|-----------|
+| **all** | **0.679** | **0.690** | **0.743** | **0.388** |
+| crazing | 0.513 | 0.543 | 0.550 | 0.202 |
+| inclusion | 0.773 | 0.742 | 0.827 | 0.454 |
+| patches | 0.856 | 0.850 | 0.920 | 0.598 |
+| pitted_surface | 0.821 | 0.701 | 0.807 | 0.439 |
+| rolled-in_scale | 0.507 | 0.462 | 0.553 | 0.255 |
+| scratches | 0.602 | 0.843 | 0.803 | 0.381 |
+
+#### 训练过程中的关键信号
+
+- `results.csv` 里最佳一轮出现在 **epoch 90**
+- 当时训练过程指标是：
+  - `mAP@0.5 = 0.743`
+  - `mAP@50-95 = 0.388`
+- 单独复验 `best.pt` 后结果几乎一致
+- 这说明这次训练的最佳 checkpoint 非常稳定，不是偶然抖上去的一帧
+
+#### 和之前最强实验对比
+
+- exp2：`imgsz=800`, `optimizer=auto`, 50 epochs
+  - `best.pt` = **0.741 / 0.384**
+- exp3_lr01：`imgsz=640`, `optimizer=SGD`, `lr0=0.01`, 50 epochs
+  - `best.pt` = **0.736 / 0.395**
+- final_train：`imgsz=800`, `optimizer=auto`, 100 epochs
+  - `best.pt` = **0.729 / 0.379**
+- final_train_2：`imgsz=800`, `optimizer=SGD`, `lr0=0.01`, 100 epochs
+  - `best.pt` = **0.743 / 0.388**
+
+#### 这次手动最终训练说明了什么
+
+- 这次 **确实验证了“把当前最优候选参数组合起来”是有价值的**
+- `final_train_2` 成为了当前项目里 **mAP@0.5 最高** 的模型
+- 最明显的亮点是 hardest class `crazing` 提升到了 **0.550**
+- 但也要保持诚实：
+  - `rolled-in_scale` 仍然不如 exp2
+  - `mAP@50-95` 仍然不如 exp3_lr01
+- 所以最合理的工程结论是：
+  - 如果主打整体 `mAP@0.5`，`final_train_2` 是当前最佳部署候选
+  - 如果主打更严格定位指标，`exp3_lr01` 仍然值得保留做对照
+
+#### 已记录的产物
+
+- `docs/assets/results_final_train_2.png`
+- `docs/assets/confusion_matrix_final_train_2.png`
+- `docs/assets/PR_curve_final_train_2.png`
+- `docs/assets/val_pred_sample_final_train_2.jpg`
+
+#### 这一步你最该学会的实验方法
+
+- “理论最优参数”不是纸面上直接推出来的
+- 更好的做法是：
+  - 先在各自可比的实验家族里选优
+  - 再把跨家族的最优候选组合成一个**新实验**
+  - 最后用一次独立训练去验证这个组合到底是不是真的更优
+
+#### 你的分析（待填写）
+
+> 你可以用下面模板写你自己的判断：
+> - 我认为 `final_train_2` 能超过 `exp2`，说明：___
+> - 为什么 `crazing` 提升明显，但 `rolled-in_scale` 没有同步成为最优：___
+> - 这次手动最终训练让我对“理论最优参数”和“实证最优参数”的区别理解为：___
+
 ### 误检/漏检案例分析（2026-03-25）
 
 #### 这次做了什么
@@ -550,11 +843,57 @@ docs/assets/                ← git 管理（committed）
 > - 我认为最主要的失败原因是：___
 > - 如果继续优化，我优先尝试的方向是：___
 
+### Step 3+4 收尾总结：单次实验的标准流程
+
+每组实验从头到尾经过以下步骤：
+
+1. **确定实验设计** — 明确只改一个变量（或一组有理由的组合），选定对照组
+2. **创建配置文件** — `configs/expN.yaml`，基于对照组修改目标参数
+3. **运行训练** — `python scripts/train.py --config configs/expN.yaml`
+4. **验收配置生效** — 检查 `runs/detect/expN/args.yaml`，确认参数真正生效（尤其 `optimizer=auto` 会覆写 `lr0`）
+5. **独立复验 best.pt** — `python scripts/evaluate.py --weights runs/detect/expN/weights/best.pt`，不依赖训练过程峰值
+6. **归档图表** — 复制 `results.png`、`confusion_matrix.png`、`PR_curve.png`、`val_pred_sample.jpg` 到 `docs/assets/`
+7. **更新实验日志** — 在 `docs/experiment_log.md` 填入 Training Results 行 + Per-Class AP 行
+8. **更新项目笔记** — 在 `docs/YOLO_Project.md` 写入实验配置、结果表、对比分析、待填用户分析
+9. **更新 README** — 同步 Results 表格和图表引用
+
+#### 实验汇总
+
+| 排名 | 实验 | mAP@0.5 | 关键配置差异 |
+|------|------|---------|-------------|
+| 1 | **final_train_2** | **0.743** | imgsz=800, SGD, lr0=0.01, epochs=100 |
+| 2 | exp2 | 0.742 | imgsz=800, auto(AdamW), epochs=50 |
+| 3 | exp4 | 0.741 | + mixup=0.1 (无提升) |
+| 4 | exp5 | 0.740 | 关闭 mosaic+mixup |
+| 5 | exp3-lr01 | 0.736 | SGD, lr0=0.01 (最优 mAP@50-95=0.395) |
+| 6 | baseline | 0.734 | imgsz=640, 默认配置 |
+| 7 | exp1 | 0.733 | imgsz=512 (速度快但损精度) |
+| 8 | final_train | 0.729 | auto(AdamW) + 100 epochs (单纯加轮不够) |
+| 9 | exp3-lr001 | 0.711 | SGD, lr0=0.001 (学习率太小) |
+
+#### Best Model 选定
+
+- **部署首选：`final_train_2`** — mAP@0.5 = 0.743，当前最高
+- **对照保留：`exp3_lr01`** — mAP@50-95 = 0.395，最严格定位指标最优
+- 权重路径：`runs/detect/final_train_2/weights/best.pt`
+
+#### 核心调参结论（面试 3 句话版）
+
+1. **imgsz=800 > 640 > 512** — 工业缺陷图原尺寸小(200px)，大输入分辨率保留更多纹理细节
+2. **SGD + lr0=0.01 > AdamW(auto)** — 固定优化器后学习率对比有效，0.001 在 50 epoch 预算下欠拟合
+3. **mixup 不适合本任务** — 工业缺陷依赖局部纹理，图像混合破坏纹理结构
+
+---
+
 ### 下一步候选
 
-- `epochs=150`：作为新的 `exp5`，验证当前配置在更长训练预算下是否还能继续提升
-- 如果想继续追 `imgsz` 方向：需要结合 hardest class 和训练耗时判断 `800` 是否值得保留
-- 如果以后还想继续试 learning rate：在固定 optimizer 的前提下，把 `epochs` 拉长后再复测 `lr0=0.001`
+- 进入 **Step 5：ONNX 导出 + 推理验证**
+- 选定要作为部署主模型的 checkpoint：
+  - 如果主打 `mAP@0.5`，优先考虑 `final_train_2`
+  - 如果想强调更规范的 lr 对照和更高 `mAP@50-95`，保留 `exp3_lr01` 作为重要候选
+- 如果以后还想继续做纯调参扩展：
+  - 可以把 `epochs=150` 作为可选 `exp6`
+  - 但它不再是当前项目推进的最高优先级
 
 ---
 

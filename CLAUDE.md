@@ -136,12 +136,21 @@ After every training run completes, the AI agent MUST do the following without b
 - `docs/assets/` is committed to git (charts, prediction samples)
 - Key files to backup externally: `best.pt` (6.3MB), `results.csv`
 
-### Step 3: Hyperparameter Tuning — Next
-- User to decide experiment direction based on baseline analysis
-- Suggested experiments: (1) epochs=150, (2) yolov8s, (3) cls_loss_weight↑ for crazing漏检
-- Each experiment goes into a new YAML: `configs/exp1.yaml`, `configs/exp2.yaml`, etc.
-- Results → `runs/detect/exp1/`, `runs/detect/exp2/`, etc.
-- User writes analysis conclusions (why mAP changed); Claude records data/tables
+### Step 3: Hyperparameter Tuning — Done (2026-03-26)
+- 9 experiments completed: baseline, exp1-5, final_train, final_train_2
+- Best model: `final_train_2` (mAP@0.5=0.743, SGD+lr0=0.01+imgsz=800+epochs=100)
+- All results recorded in `docs/experiment_log.md` and `docs/YOLO_Project.md`
+
+### Step 4: Results Analysis — Done (2026-03-26)
+- Failure case analysis with `scripts/analyze_failures.py` on exp3_lr01
+- Experiment summary table and best model selection completed
+- README.md updated with full experiment comparison
+
+### Step 5: ONNX Export + Inference Verification — Next
+- Export `final_train_2` best.pt to ONNX via `scripts/export_onnx.py`
+- Verify ONNX accuracy alignment with PyTorch model
+- Benchmark CPU/GPU inference speed
+- Scripts already exist: `scripts/export_onnx.py`, `scripts/inference_onnx.py`, `src/detector.py`
 
 ## Do NOT
 

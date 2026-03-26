@@ -1,0 +1,18 @@
+# 最终训练：基于当前表现最好的完整配置 exp2，只增加训练轮数到 100
+# 选择依据：
+# 1. exp2 是目前完整配置里 mAP@0.5 最高的方案
+# 2. exp3 的 lr 结论来自固定 SGD 的另一套对照，不能直接与 exp2 硬拼
+
+model: yolov8n.pt
+data: data/data.yaml
+epochs: 100
+imgsz: 800
+batch: 16
+lr0: 0.01
+optimizer: auto
+mosaic: 1.0
+mixup: 0.0
+device: 0
+workers: 8
+project: runs/detect
+name: final_train

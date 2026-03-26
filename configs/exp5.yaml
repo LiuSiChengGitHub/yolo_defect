@@ -1,0 +1,17 @@
+# 实验 5：关闭样本混合增强，作为 exp2/exp4 的去增强对照组
+# 底座来源：exp2 / exp4（imgsz=800）
+# 唯一改动：mosaic=0.0, mixup=0.0，其余参数保持不变
+
+model: yolov8n.pt
+data: data/data.yaml
+epochs: 50
+imgsz: 800
+batch: 16
+lr0: 0.01
+optimizer: auto
+mosaic: 0.0
+mixup: 0.0
+device: 0
+workers: 8
+project: runs/detect
+name: exp5

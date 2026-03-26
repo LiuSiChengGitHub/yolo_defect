@@ -546,6 +546,122 @@ runs/detect/train/
 | exp2 | 800 | 0.01 | 50 | 1.0 | ? | ? | ? | 增大输入 |
 ```
 
+### 6.8 训练结束后如何记录结果
+
+训练跑完后，不要一上来就只看某一张图，也不要只盯着终端最后一行。建议固定成下面这套顺序：
+
+1. **先看 `args.yaml`**
+   - 确认这次实验到底有没有按你以为的方式跑起来
+   - 重点核对：
+     - `optimizer`
+     - `lr0`
+     - `imgsz`
+     - `epochs`
+     - `mosaic`
+     - `mixup`
+
+2. **再看 `results.csv` 和 `results.png`**
+   - `results.csv` 负责抄数字
+   - `results.png` 负责看趋势
+   - 常看的数字：
+     - `metrics/mAP50(B)`
+     - `metrics/mAP50-95(B)`
+     - `metrics/precision(B)`
+     - `metrics/recall(B)`
+   - 常看的趋势：
+     - loss 是否还在下降
+     - mAP 是否已经平台
+     - 曲线是否震荡
+
+3. **如果要写最终结论，再单独验证 `best.pt`**
+   - 训练过程里的某一轮高点，不一定就是最终最适合汇报的模型结果
+   - 更稳妥的做法是跑：
+
+```bash
+python scripts/evaluate.py --weights runs/detect/<exp>/weights/best.pt --imgsz 800 --save-dir temp_eval
+```
+
+   - 这个脚本会给你：
+     - 最终 `best.pt` 的 `mAP@0.5`
+     - `mAP@50-95`
+     - `Precision`
+     - `Recall`
+     - 每个类别的 AP
+
+4. **再看 4 张关键图做分析**
+   - `results.png`：看收敛、震荡、过拟合趋势
+   - `confusion_matrix_normalized.png`：看漏检是不是大量掉进 background
+   - `BoxPR_curve.png`：看 hardest classes 的曲线是不是整体偏低
+   - `val_batch0_pred.jpg`：看视觉上是漏检、误检还是框偏
+
+### 6.9 哪些数字写进 log，哪些图只用于分析
+
+**应该写进 `docs/experiment_log.md` 的数字：**
+
+- 实验名
+- `imgsz`
+- `optimizer`
+- `lr0`
+- `epochs`
+- `mosaic`
+- `batch`
+- `mAP@0.5`
+- `mAP@50-95`
+- `Time`
+- 每个类别的 `AP@0.5`
+
+这些数字的推荐来源是：
+
+- **优先** `evaluate.py` 的输出（对应最终 `best.pt`）
+- **其次** `results.csv`
+
+**主要用于写分析，不直接抄进表格的图：**
+
+- `results.png`
+  - 用来判断 loss 是否收敛、mAP 是否平台化
+- `confusion_matrix_normalized.png`
+  - 用来判断主要问题是漏检还是类间混淆
+- `BoxPR_curve.png`
+  - 用来判断 hardest classes 的 Precision / Recall 结构
+- `val_batch0_pred.jpg`
+  - 用来给出视觉层面的误检/漏检解释
+
+一句话记忆：
+
+```text
+表格抄数字 → args.yaml / results.csv / evaluate.py
+分析写原因 → results.png / 混淆矩阵 / PR 曲线 / 预测图
+```
+
+### 6.10 图表归档与收尾动作
+
+每次训练完成后，固定做下面 4 件事：
+
+1. **复制关键图到 `docs/assets/`**
+
+```bash
+Copy-Item runs/detect/<exp>/results.png docs/assets/results_<exp>.png
+Copy-Item runs/detect/<exp>/confusion_matrix_normalized.png docs/assets/confusion_matrix_<exp>.png
+Copy-Item runs/detect/<exp>/BoxPR_curve.png docs/assets/PR_curve_<exp>.png
+Copy-Item runs/detect/<exp>/val_batch0_pred.jpg docs/assets/val_pred_sample_<exp>.jpg
+```
+
+2. **更新 `docs/experiment_log.md`**
+   - Training Results 表新增一行
+   - Per-Class AP 表新增一列
+   - 新增这次实验的分析小节
+
+3. **更新 `docs/YOLO_Project.md`**
+   - 记录：
+     - 这次改了什么
+     - 结果怎样
+     - 你从中学到了什么
+
+4. **决定这次实验的角色**
+   - 是新的最优模型？
+   - 还是失败但有启发的对照实验？
+   - 这一步很重要，因为不是所有实验都应该被当成“最终模型”
+
 ---
 
 ## 七、调参决策方法
@@ -641,6 +757,199 @@ overall mAP 接近但 hardest classes 掉很多 → 这组实验不算优
 ---
 
 ## 八、ONNX 部署
+
+### 8.0 ONNX 前置知识：从零理解
+
+#### 8.0.1 什么是 ONNX
+
+ONNX = Open Neural Network Exchange（开放神经网络交换格式）。
+
+一句话理解：**ONNX 是模型的"通用语言"。** 就像 PDF 让你不用关心文档是用 Word 还是 WPS 写的，ONNX 让推理引擎不用关心模型是用 PyTorch 还是 TensorFlow 训练的。
+
+```
+训练阶段                        部署阶段
+┌──────────┐    导出     ┌──────────┐    加载     ┌──────────────────┐
+│ PyTorch  │ ────────→  │  .onnx   │ ────────→  │ ONNX Runtime     │
+│ TensorFlow│            │  文件    │            │ TensorRT         │
+│ PaddlePaddle│          │ (通用格式)│            │ OpenVINO         │
+└──────────┘             └──────────┘            │ DirectML (Windows)│
+  你只用一个框架训练        中间交换文件              └──────────────────┘
+                                                  可以选最适合硬件的引擎
+```
+
+#### 8.0.2 计算图：理解 ONNX 的核心概念
+
+ONNX 文件存储的不是 Python 代码，而是一个**计算图（Computational Graph）**。
+
+**什么是计算图？**
+
+你在 PyTorch 里写的 `model(x)` 实际上做了一系列数学操作。计算图把这些操作记录成一个有向无环图（DAG）：
+
+```
+输入 [1,3,800,800]
+       │
+    ┌──▼──┐
+    │ Conv │  ← 节点（operator），存储了卷积核权重
+    └──┬──┘
+       │
+    ┌──▼──┐
+    │ BN  │  ← BatchNorm，存储了 mean/var/gamma/beta
+    └──┬──┘
+       │
+    ┌──▼──┐
+    │ SiLU│  ← 激活函数
+    └──┬──┘
+       │
+      ...（几十到几百个节点）
+       │
+    ┌──▼──┐
+    │Concat│ ← 把多个分支的特征拼起来
+    └──┬──┘
+       │
+输出 [1,10,8400]
+```
+
+**关键点：**
+- 每个节点 = 一个算子（Conv、Relu、Add、Reshape...），ONNX 定义了 ~180 个标准算子
+- 每条边 = 一个张量（Tensor），有明确的形状和数据类型
+- 权重（weights）直接嵌入在节点里，不需要额外的 `.pt` 文件
+- 图结构是**静态的**——没有 if/else、没有 for 循环、没有 Python 逻辑
+
+#### 8.0.3 导出（Export）到底做了什么
+
+当你执行 `model.export(format='onnx')` 时，背后发生的事：
+
+```
+Step 1: Tracing（跟踪）
+   PyTorch 给模型喂一个假输入（dummy input），
+   记录所有经过的算子和张量形状
+   → 得到一个"执行轨迹"
+
+Step 2: 转换
+   把 PyTorch 算子映射到 ONNX 标准算子
+   例: torch.nn.Conv2d → onnx::Conv
+   例: torch.nn.BatchNorm2d → onnx::BatchNormalization
+
+Step 3: 优化（simplify=True 时）
+   - 常量折叠：把能在导出时算好的东西提前算
+   - BN 融合：BatchNorm 的参数合并进 Conv 的权重
+     （推理时 BN 不再是独立操作，速度更快）
+   - 死节点消除：去掉 training-only 的分支
+
+Step 4: 序列化
+   把优化后的计算图 + 权重写入 .onnx 文件（protobuf 格式）
+```
+
+**面试关键：** 导出后的 ONNX 模型**不包含任何 Python 代码**。它就是一个数据文件（计算图 + 权重），任何支持 ONNX 格式的推理引擎都能直接加载运行。
+
+#### 8.0.4 ONNX Runtime 是什么
+
+ONNX Runtime（简称 ORT）是微软开源的推理引擎，专门用来运行 .onnx 模型。
+
+**和 PyTorch 的关系：**
+- PyTorch = 训练框架（能训练、能推理，但推理不是最优化的）
+- ONNX Runtime = 专用推理引擎（不能训练，但推理做了大量优化）
+
+**为什么 ORT 推理更快？**
+
+| 优化手段 | 说明 |
+|---------|------|
+| 算子融合 | Conv + BN + ReLU 三步合成一步执行 |
+| 内存优化 | 重用中间张量的内存，减少 allocation |
+| 硬件调度 | 自动选择 CUDA / TensorRT / CPU 最优实现 |
+| 无 Python 开销 | 推理过程纯 C++ 执行，没有 GIL 锁 |
+
+**Execution Providers（EP）= 硬件后端：**
+```python
+# 优先用 GPU，不行就退回 CPU
+session = ort.InferenceSession("model.onnx",
+    providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+```
+常见 EP：`CUDAExecutionProvider`（NVIDIA GPU）、`TensorrtExecutionProvider`（极致 GPU 加速）、`CPUExecutionProvider`（通用 CPU）、`DirectMLExecutionProvider`（Windows GPU）
+
+#### 8.0.5 PyTorch 推理 vs ONNX 推理的数据流对比
+
+```
+PyTorch 推理（训练框架直接用）：
+  image → Python 预处理 → torch.Tensor → model(x) → Python 后处理 → 结果
+                                          ↑
+                               PyTorch runtime（含大量训练相关代码）
+                               ~1GB 安装包
+
+ONNX 推理（专用引擎）：
+  image → Python/C++ 预处理 → numpy array → session.run() → Python/C++ 后处理 → 结果
+                                              ↑
+                                   ONNX Runtime（纯推理优化）
+                                   ~50MB 安装包
+```
+
+**注意：** 预处理和后处理**不在** ONNX 模型里。ONNX 只负责 `输入张量 → 输出张量` 这一步。所以你需要自己保证：
+- 预处理（resize、归一化、HWC→CHW）和训练时完全一致
+- 后处理（置信度过滤、NMS）自己用 numpy/OpenCV 实现
+
+这就是 `src/detector.py` 存在的原因——它封装了预处理和后处理。
+
+#### 8.0.6 ONNX 的输入输出——你的模型具体长什么样
+
+导出后可以用 `session.get_inputs()` / `session.get_outputs()` 查看：
+
+```
+输入:
+  name: "images"
+  shape: [1, 3, 800, 800]     ← batch=1, RGB 3通道, 800x800（和 imgsz 一致）
+  type: float32
+
+输出:
+  name: "output0"
+  shape: [1, 10, 8400]        ← batch=1, 10=(4坐标+6类别), 8400个候选框
+  type: float32
+```
+
+输出的 `[1, 10, 8400]` 怎么解读：
+- `10 = 4 + 6`：前 4 个值是 `(cx, cy, w, h)` 归一化坐标，后 6 个是 6 个类别的置信度
+- `8400`：YOLOv8 在 3 个尺度上生成的候选框总数（和 imgsz 有关）
+- 后处理就是：对 8400 个框做置信度过滤 → 坐标转换 → NMS 去重 → 最终 N 个检测结果
+
+#### 8.0.7 精度对齐：为什么 ONNX 结果可能有微小差异
+
+导出后的 ONNX 模型和 PyTorch 模型的 mAP 差异通常 **< 0.005**，但不会完全相同：
+
+| 差异来源 | 说明 |
+|---------|------|
+| 浮点精度 | PyTorch 用 CUDA kernel，ORT 可能用不同实现，浮点误差会累积 |
+| BN 融合 | BatchNorm 合并到 Conv 后，计算路径变了 |
+| Resize 实现 | OpenCV resize 和 PyTorch F.interpolate 的插值算法可能不完全一致 |
+| NMS 实现 | PyTorch 用 torchvision.ops.nms，ONNX 推理用 OpenCV/numpy 实现 |
+
+**工程规则：** 差异 < 0.01 就算对齐成功。如果差 > 0.02，一定是预处理或后处理有 bug。
+
+#### 8.0.8 面试高频题
+
+**Q: 为什么不直接用 PyTorch 部署？**
+- 安装包太大（>1GB），服务器/边缘设备不想装完整训练框架
+- PyTorch 推理带 Python GIL 和训练时代码路径，不如专用引擎高效
+- ONNX Runtime 支持多语言（C++/C#/Java），PyTorch 几乎只能 Python
+
+**Q: ONNX 导出后模型能继续训练吗？**
+- 不能。ONNX 是纯推理格式，只有前向计算图，没有梯度信息
+- 如果要继续训练（fine-tune），必须回到 PyTorch 的 .pt 文件
+
+**Q: 什么是算子融合（Operator Fusion）？举个例子。**
+- Conv → BatchNorm → ReLU 三个独立操作可以合成一个融合算子
+- 好处：减少内存读写次数（不用存中间结果）、减少 kernel 启动开销
+- BN 融合的数学原理：BN 是线性变换 `y = γ(x-μ)/σ + β`，Conv 也是线性变换，两个线性变换可以合成一个
+
+**Q: ONNX 模型的输入输出形状怎么确定？**
+- 导出时由 dummy input 的形状决定
+- 可以用 `session.get_inputs()[0].shape` 查看
+- 如果要支持不同尺寸输入，导出时需要设置 dynamic axes
+
+**Q: 你的项目里 ONNX 导出后精度有变化吗？怎么验证的？**
+- 用**同一组验证集图片**分别跑 PyTorch 推理和 ONNX 推理
+- 比较两者的 mAP@0.5 和 mAP@50-95，差异应 < 0.01
+- 如果差异大，排查预处理是否一致（颜色空间、归一化、resize 方式）
+
+---
 
 ### 8.1 为什么需要 ONNX
 

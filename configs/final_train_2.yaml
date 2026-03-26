@@ -1,0 +1,16 @@
+# 实验 2：只增大输入尺寸到 800，观察细纹理类是否受益
+# 目的：与 baseline / exp1 公平对比，只修改 imgsz 一个变量
+
+model: yolov8n.pt
+data: data/data.yaml
+epochs: 100
+imgsz: 800
+batch: 16
+lr0: 0.01
+optimizer: SGD
+mosaic: 1.0
+mixup: 0.0
+device: 0
+workers: 8
+project: runs/detect
+name: final_train_2
