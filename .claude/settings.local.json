@@ -15,7 +15,10 @@
       "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe -m pip install \"numpy<2\" \"opencv-python<4.10\" --quiet)",
       "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe -c \"import numpy; import cv2; import torch; print\\('numpy', numpy.__version__\\); print\\('cv2', cv2.__version__\\); print\\('torch', torch.__version__\\); print\\('torch.from_numpy OK:', torch.from_numpy\\(numpy.array\\([1.0]\\)\\).shape\\)\")",
       "Bash(ls /d/Base/CodingSpace/yolo_defect/*.pt)",
-      "Bash(ls /d/Base/CodingSpace/yolo_defect/*.yaml)"
+      "Bash(ls /d/Base/CodingSpace/yolo_defect/*.yaml)",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/export_onnx.py --weights runs/detect/final_train_2/weights/best.pt --imgsz 800)",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/inference_onnx.py --model models/best.onnx --image data/images/val/crazing_242.jpg --output-dir results/)",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/inference_onnx.py --model models/best.onnx --image-dir data/images/val --output-dir results/ 2>/dev/null)"
     ]
   }
 }
