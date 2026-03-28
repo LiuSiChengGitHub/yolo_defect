@@ -1,0 +1,12 @@
+{
+  "weights": "D:\\Base\\CodingSpace\\yolo_defect\\scripts\\..\\runs\\detect\\final_train_2\\weights\\best.pt",
+  "device": "cpu",
+  "imgsz": 800,
+  "conf_thresh": 0.25,
+  "iou_thresh": 0.45,
+  "warmup_images": 5,
+  "timed_images": 100,
+  "avg_time_ms": 118.65565400000008,
+  "fps": 8.427748415595934,
+  "avg_detections_per_image": 2.66
+}

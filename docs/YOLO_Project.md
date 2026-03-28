@@ -4,7 +4,7 @@
 
 ---
 
-## 当前进度：Step 3 已完成（exp1 + exp2 + exp3 + exp4 + exp5 + final_train + final_train_2 已完成）
+## 当前进度：Step 5 持续推进中（Day 1：精度对齐 + 理解推理链路已完成；ONNX 全量 mAP 对齐待做）
 
 | Step | 内容 | 状态 |
 |------|------|------|
@@ -12,7 +12,7 @@
 | Step 2 | 基线训练 | Done (2026-03-24) — mAP@0.5=0.734 |
 | Step 3 | 调参优化 | Done (2026-03-26) — 9组实验, best mAP@0.5=0.743 (final_train_2) |
 | Step 4 | 结果分析 + 实验收尾 | Done (2026-03-26) — 误检案例分析, experiment_log 汇总, best model 选定 |
-| Step 5 | ONNX 导出 + 推理验证 | Next |
+| Step 5 | ONNX 导出 + 推理验证 | In Progress (2026-03-28) — 导出完成, ONNX CPU 22.5 FPS, PyTorch CPU 8.43 FPS, `debug_detector.py`/阈值实验/50张近似对比已完成, ONNX 全量 mAP 待做 |
 | Step 6 | SAM 集成 | - |
 | Step 7 | GitHub 美化 | - |
 | Step 8 | FastAPI + Docker | - |
@@ -885,15 +885,373 @@ docs/assets/                ← git 管理（committed）
 
 ---
 
-### 下一步候选
+---
 
-- 进入 **Step 5：ONNX 导出 + 推理验证**
-- 选定要作为部署主模型的 checkpoint：
-  - 如果主打 `mAP@0.5`，优先考虑 `final_train_2`
-  - 如果想强调更规范的 lr 对照和更高 `mAP@50-95`，保留 `exp3_lr01` 作为重要候选
-- 如果以后还想继续做纯调参扩展：
-  - 可以把 `epochs=150` 作为可选 `exp6`
-  - 但它不再是当前项目推进的最高优先级
+## Step 5：ONNX 导出 + 推理验证（2026-03-27）
+
+### 做了什么
+
+#### 5.1 ONNX 导出
+
+- 使用 `scripts/export_onnx.py` 将 `final_train_2` 的 best.pt 导出为 ONNX 格式
+- 命令：`python scripts/export_onnx.py --weights runs/detect/final_train_2/weights/best.pt --imgsz 800`
+- 导出参数：`imgsz=800`（与训练时一致）、`simplify=True`（图优化）
+- 输出：`models/best.onnx`（11.77 MB）
+
+#### 5.2 推理核心类（src/detector.py）
+
+- 封装了 `YOLODetector` 类，完整的 ONNX 推理流程：
+  - `__init__`：加载 ONNX 模型，自动选择 CUDA/CPU 后端
+  - `preprocess`：BGR→RGB → Resize(800x800) → 归一化(0-1) → HWC→CHW → 加batch维
+  - `predict`：预处理 → ONNX Runtime 推理 → 解析输出 `[1,10,13125]` → 置信度过滤 → 坐标转换(cxcywh→xyxy) → 手写 NMS → 返回检测结果列表
+  - `draw`：在图上画框 + 类名 + 置信度
+  - `_nms`：**手写 NMS 实现**，不依赖 torchvision
+- **设计意图**：不依赖 ultralytics，同一个类被 `inference_onnx.py`（CLI 测试）和后续 `FastAPI`（Web 服务）复用
+
+#### 5.3 批量推理验证（scripts/inference_onnx.py）
+
+- 对验证集全部 360 张图片做 ONNX 推理
+- 命令：`python scripts/inference_onnx.py --model models/best.onnx --image-dir data/images/val --output-dir results/`
+- **结果：CPU 平均 22.5 FPS**（~44.4 ms/image）
+- 带标注的结果图保存在 `results/` 目录
+
+#### 5.4 PyTorch 精度基线测量（2026-03-28）
+
+- 用 `scripts/evaluate.py` 对 `final_train_2` 的 `best.pt` 在验证集上重新跑 `model.val()`
+- 命令：`python scripts/evaluate.py --weights runs/detect/final_train_2/weights/best.pt --imgsz 800`
+- **为什么 `imgsz` 也要写 800：**
+  - `final_train_2` 训练时使用的是 `imgsz=800`
+  - 我们后面要做的是 **PyTorch vs ONNX 精度对齐**
+  - ONNX 导出时同样用了 `imgsz=800`，所以 PyTorch 基线也必须保持一致，避免“不是模型差异，而是输入尺寸差异”
+- 结果：
+  - `mAP@0.5 = 0.7433`
+  - `mAP@50-95 = 0.3880`
+  - `Precision = 0.6785`
+  - `Recall = 0.6902`
+- 逐类 AP@0.5 / AP@50-95：
+  - `crazing`: `0.5497 / 0.2020`
+  - `inclusion`: `0.8272 / 0.4538`
+  - `patches`: `0.9204 / 0.5975`
+  - `pitted_surface`: `0.8066 / 0.4390`
+  - `rolled-in_scale`: `0.5534 / 0.2553`
+  - `scratches`: `0.8029 / 0.3805`
+- 评估结果目录：`runs/detect/val5`
+
+#### 5.5 为什么要先测 PyTorch mAP
+
+- **这一步不是重复训练结果，而是建立“部署前基线”**
+- 训练日志里的 best metric 说明“训练过程中最好达到过什么水平”
+- `model.val()` 重新评估 `best.pt`，说明“现在我要拿去部署和对齐的这个权重，在验证集上实际是多少”
+- 后面做 ONNX 对齐时，真正要比较的是：
+  - PyTorch `best.pt` 的验证集结果
+  - ONNX 模型在同一验证集上的结果
+- 只有先把 PyTorch 基线钉住，后面才知道 ONNX 是否真的有精度损失
+
+#### 5.6 中间值打印实验（2026-03-28）
+
+- 新建 `scripts/debug_detector.py`，用于手动展开 `preprocess` 与 ONNX 前向过程
+- 成功打印 5 个关键 shape：
+  - 原图：`(200, 200, 3)`
+  - Resize 后：`(800, 800, 3)`
+  - `HWC -> CHW` 后：`(3, 800, 800)`
+  - 加 batch 维后：`(1, 3, 800, 800)`
+  - ONNX 原始输出：`(1, 10, 13125)`
+- 这次实验的目的不是改模型，而是把“原图 -> 模型输入张量 -> 模型原始输出”的链路看清楚
+- 运行时 CUDA EP 创建失败，但 ONNX Runtime 已自动回退到 CPU，实验本身有效
+
+#### 5.7 这一步我真正学会了什么
+
+- `detector = YOLODetector(model_path)` 不是“处理图片”，而是“创建检测器对象并在 `__init__` 里加载模型、记录输入信息”
+- 中间值打印不是“回头插进已经执行完的流程”，而是把 `preprocess()` 关键步骤手动展开，并在步骤之间加 `print`
+- 当前项目导出的 `imgsz=800` ONNX 模型原始输出 shape 是 **`(1, 10, 13125)`**，比背 `8400` 更贴近当前部署版本
+
+#### 5.8 conf / iou 阈值观察实验（2026-03-28）
+
+- 在同一张验证图 `data/images/val/crazing_241.jpg` 上，只改后处理阈值，不改模型权重
+- 基线：`conf=0.25, iou=0.45`
+  - `3 detections`，`47.2 ms`
+- 降低置信度阈值：`conf=0.10, iou=0.45`
+  - `8 detections`，`49.0 ms`
+- 提高置信度阈值：`conf=0.50, iou=0.45`
+  - `0 detections`，`34.2 ms`
+- 调整 NMS 阈值：
+  - `conf=0.25, iou=0.30` → `3 detections`
+  - `conf=0.25, iou=0.60` → `3 detections`
+
+#### 5.9 这组阈值实验说明了什么
+
+- 在 `crazing_241.jpg` 这张图上，**`conf_thresh` 比 `iou_thresh` 敏感得多**
+- `conf=0.25 -> 0.10` 时框数从 `3 -> 8`，说明有不少低分候选框原本被过滤掉
+- `conf=0.25 -> 0.50` 时框数从 `3 -> 0`，说明这张图上的候选框整体置信度并不高
+- `iou=0.30` 和 `iou=0.60` 最终框数都还是 `3`，说明这张图的主要矛盾不是重复框，而是候选框置信度分布
+- 这一步的目的不是“找最优阈值”，而是理解 ONNX 推理后处理里 `conf` 控制“先保留哪些框”，`iou` 控制“NMS 去重有多狠”
+
+#### 5.10 近似精度对比（2026-03-28）
+
+- 新建 `scripts/compare_pt_onnx.py`
+- 方法：
+  - 从 `data/images/val` 按文件名顺序抽取 50 张图
+  - PyTorch 端使用 `best.pt` + `imgsz=800` + `conf=0.25` + `iou=0.45`
+  - ONNX 端使用 `best.onnx` + `YOLODetector` 同样的阈值
+  - 不追求“逐框 IoU 精确匹配”，先做 **工程上足够快的近似对比**：
+    - 每张图检测框数量是否一致
+    - 所有检测框的置信度分布是否接近
+- 命令：`python scripts/compare_pt_onnx.py --num-images 50 --imgsz 800 --device cpu`
+- 结果：
+  - 50 张图里有 **48 张** 检测框数量完全一致，比例 **96%**
+  - 平均绝对框数差 `0.04`
+  - 最大框数差 `1`
+  - 两边总检测框数都为 **147**
+  - 只出现 2 张有差异的图片：
+    - `crazing_280.jpg`：PyTorch 1 框，ONNX 2 框
+    - `crazing_288.jpg`：PyTorch 3 框，ONNX 2 框
+- 置信度分布也非常接近：
+  - PyTorch mean / median：`0.4021 / 0.3751`
+  - ONNX mean / median：`0.4021 / 0.3748`
+- 输出文件：
+  - `results/pt_onnx_compare/compare_50_images.csv`
+  - `results/pt_onnx_compare/compare_50_summary.json`
+
+#### 5.11 为什么先做“50 张近似对比”
+
+- 因为它比“直接重写一整套 ONNX mAP 评估器”更快，适合先判断 ONNX 是否**大体没跑偏**
+- 如果抽样结果已经出现：
+  - 检测框数量普遍差很多
+  - 置信度分布明显漂移
+  - 某些类大量消失
+  那就说明 ONNX 部署链路很可能有问题，没必要继续往后做 FastAPI
+- 这一步的定位是 **快速 sanity check**
+- 它不能替代最终的全量 mAP 对齐，但能先证明：**PyTorch 和 ONNX 在样本级输出上已经非常接近**
+
+#### 5.12 PyTorch CPU FPS 测量（2026-03-28）
+
+- 新建 `scripts/benchmark_pytorch.py`
+- 命令：`python scripts/benchmark_pytorch.py --num-images 100 --warmup 5 --imgsz 800 --device cpu`
+- **为什么固定 `device=cpu`：**
+  - 当前 ONNX 已记录的是 **CPU 22.5 FPS**
+  - 如果 PyTorch 用 GPU、ONNX 用 CPU，就不是公平对比
+  - 所以这一步故意把后端对齐，做 **同硬件后端** 的速度比较
+- **为什么先 warmup 5 张：**
+  - 第一次推理通常包含额外初始化开销
+  - warmup 后再测 100 张，平均值更稳定
+- **为什么先把图片读进内存：**
+  - FPS 想测的是模型推理速度，不是磁盘 IO 速度
+  - 所以脚本把图片预读到内存，计时只包住 `model.predict()`
+- 结果：
+  - 平均延迟：`118.7 ms/image`
+  - 平均速度：**`8.43 FPS`**
+  - 平均每张图检测框数：`2.66`
+  - 结果文件：`results/pytorch_benchmark_100.json`
+- 与 ONNX CPU 对比：
+  - ONNX CPU：`22.5 FPS`
+  - PyTorch CPU：`8.43 FPS`
+  - **ONNX CPU 大约快 2.67x**
+
+#### 5.13 代表性结果图筛选（2026-03-28）
+
+- 新建 `scripts/select_representative_examples.py`
+- 目标：每类自动筛选 `1 张正确案例 + 1 张错误案例`，共 12 张
+- 做法：
+  - 使用 ONNX `YOLODetector` 在验证集上逐张推理
+  - 读取 `data/labels/val/*.txt` 作为 GT
+  - 用“同类 + IoU>=0.5”匹配预测框与 GT
+  - 正确案例：该类 GT 全部匹配成功，且无明显额外框
+  - 错误案例：该类存在 FN，或有明显 FP / 错分
+- 输出目录：`docs/assets/representative_examples/`
+- 自动生成内容：
+  - 12 张单图
+  - 1 张总览拼图：`representative_examples_grid.jpg`
+  - 1 份摘要：`representative_examples_summary.json`
+- 本次自动筛选结果：
+  - `crazing`：正确 `crazing_290.jpg`；错误 `crazing_252.jpg`
+  - `inclusion`：正确 `inclusion_298.jpg`；错误 `inclusion_282.jpg`
+  - `patches`：正确 `patches_245.jpg`；错误 `patches_248.jpg`
+  - `pitted_surface`：正确 `pitted_surface_276.jpg`；错误 `pitted_surface_280.jpg`
+  - `rolled-in_scale`：正确 `rolled-in_scale_264.jpg`；错误 `rolled-in_scale_259.jpg`
+  - `scratches`：正确 `scratches_296.jpg`；错误 `scratches_271.jpg`
+- 这一步的价值：
+  - 不再靠肉眼在几百张图里硬翻
+  - 选图逻辑可复现，后面 README 换图也方便
+  - 正确/错误案例都有，便于讲“模型什么时候做得好、什么时候会失败”
+
+#### 5.14 今日填写用性能对比表格（2026-03-28）
+
+| 格式 | mAP@0.5 | mAP@50-95 | FPS (CPU) | 模型大小 | 备注 |
+|------|---------|-----------|-----------|----------|------|
+| PyTorch (.pt) | **0.7433** | **0.3880** | **8.43** | **~6.3 MB** | ultralytics `model.val()` + 100图 CPU benchmark |
+| ONNX (.onnx) | **≈0.743** | **≈0.388** | **22.5** | **11.77 MB** | `detector.py` + `onnxruntime`，50图近似对比已验证接近 |
+
+#### 5.15 今日分析文字（2-3句版）
+
+- PyTorch 基线评估结果为 `mAP@0.5 = 0.7433`、`mAP@50-95 = 0.3880`，作为后续 ONNX 精度对齐的参考标准。
+- 抽样 50 张验证图做近似对比时，PyTorch 与 ONNX 有 `48/50` 张图片检测框数量一致，总检测框数同为 `147`，且置信度分布几乎重合，说明 ONNX 推理结果与 PyTorch 高度接近。
+- 在 CPU 部署速度上，ONNX 达到 `22.5 FPS`，明显快于 PyTorch 的 `8.43 FPS`，约提升 `2.67x`，更适合作为部署格式。
+
+#### 5.16 闭卷 3 题总结（2026-03-28）
+
+**1. ONNX 输出 `[1, 10, 13125]`，13125 怎么来的？**
+- `13125` 是当前 `imgsz=800` 时 3 个检测尺度上的候选位置总数。
+- YOLOv8 这里可以近似理解为 3 个特征层：
+  - `100 x 100 = 10000`
+  - `50 x 50 = 2500`
+  - `25 x 25 = 625`
+- 三者相加就是 `13125`。
+- 更稳妥的记法是：输出通式为 **`[1, 4+nc, num_predictions]`**，本项目里 `nc=6`，所以第二维是 `10`。
+
+**2. preprocess() 做了哪 5 步？顺序？**
+- `BGR -> RGB`
+- `resize` 到模型输入尺寸 `800x800`
+- 像素值归一化到 `0-1`
+- `HWC -> CHW`
+- 加 batch 维，变成 `[1, 3, 800, 800]`
+- 顺序不能乱，因为推理输入分布必须尽量和训练时保持一致。
+
+**3. NMS 的 4 步流程？**
+1. 按置信度从高到低排序所有候选框。
+2. 取最高分框加入保留列表。
+3. 计算它和剩余框的 IoU，删除 IoU 高于阈值的重复框。
+4. 对剩余框重复上述过程，直到处理完。
+
+#### 5.17 Day 1 完成确认（对应任务单）
+
+- [x] 通读 `detector.py`
+- [x] 中间值打印实验（`debug_detector.py`）
+- [x] 改 `conf/iou` 阈值看效果
+- [x] PyTorch mAP 测量（`model.val()`）
+- [x] 近似精度对比（50 张图）
+- [x] PyTorch FPS 测量（100 张图平均）
+- [x] 填写对比表格 + 简短分析
+- [x] 挑选 12 张代表性结果图（已脚本化自动筛选）
+- [x] 更新 `YOLO_Project.md` Step 5
+
+- **结论：今天已完成 [YOLO 0327-0409.md](D:/Base/CodingSpace/yolo_defect/docs/tasks/YOLO 0327-0409.md) 中的 Day 1：精度对齐 + 理解推理链路。**
+
+#### 5.18 README 同步（2026-03-28）
+
+- 已同步更新 `README.md` 的性能对比表，补入 `mAP@50-95`、PyTorch CPU `8.43 FPS`、ONNX CPU `22.5 FPS`
+- 已在 README 明确当前近似对比结论：`48/50` 张框数一致，总检测框数同为 `147`
+- 已在 README 标记：代表性结果图已自动筛选完成，Day 1（精度对齐 + 理解推理链路）已收口
+
+### 关键数据
+
+| 指标 | 数值 |
+|------|------|
+| 模型来源 | `final_train_2` best.pt (mAP@0.5=0.743) |
+| ONNX 模型大小 | 11.77 MB |
+| 输入尺寸 | [1, 3, 800, 800] |
+| 输出形状 | [1, 10, 13125]（4坐标 + 6类别，imgsz=800 时的候选框总数） |
+| PyTorch mAP@0.5 | **0.7433** |
+| PyTorch mAP@50-95 | **0.3880** |
+| 50张近似对比一致率 | **96%**（48/50 张检测框数量一致） |
+| PyTorch 置信度均值 / 中位数 | `0.4021 / 0.3751` |
+| ONNX 置信度均值 / 中位数 | `0.4021 / 0.3748` |
+| PyTorch CPU 推理速度 | **8.43 FPS**（118.7 ms/image, 100张平均） |
+| ONNX CPU 推理速度 | **22.5 FPS**（~44.4 ms/image） |
+| 代表性结果图 | 已自动筛选 12 张（每类正确+错误各 1） |
+| 验证集数量 | 360 张 |
+| conf_thresh | 0.25 |
+| iou_thresh | 0.45 |
+
+### 面试知识点
+
+**Q: 你项目中为什么要导出 ONNX，不直接用 PyTorch 部署？**
+- PyTorch 安装包 >1GB，生产环境或边缘设备太重
+- ONNX Runtime 只需 ~50MB，且支持 C++/Java/C# 多语言调用
+- ORT 做了算子融合、内存优化，推理速度通常比 PyTorch 快 1.2-2x
+
+**Q: 导出时 imgsz 为什么选 800？**
+- 必须和训练时的 imgsz 一致。我的 final_train_2 训练时用的 imgsz=800
+- 导出后 ONNX 模型的输入形状是固定的 [1,3,800,800]，推理时预处理也必须 resize 到 800x800
+- NEU-DET 原图只有 200x200，大输入分辨率能保留更多纹理细节（调参阶段验证过 800>640>512）
+
+**Q: detector.py 的预处理为什么要和训练完全一致？**
+- 模型在训练时"学会了"特定分布的输入（RGB、0-1归一化、CHW 格式）
+- 如果推理时用了不同的预处理（比如忘了 BGR→RGB），输入分布完全不同，模型预测就会乱
+- 五步必须全做：BGR→RGB → Resize → 归一化 → HWC→CHW → 加 batch 维
+
+**Q: 为什么在做 ONNX 对齐前，还要先跑一次 PyTorch 的 `model.val()`？**
+- 因为要先建立一个“当前部署权重的 PyTorch 基线”
+- 训练日志里的 best metric 只能说明训练过程中最好达到过什么水平
+- 真正做部署对齐时，要比较的是 **同一份 best.pt** 和 **对应导出的 ONNX** 在 **同一验证集、同一输入尺寸** 下的结果
+- 这样如果后面 ONNX mAP 掉了，才能确定是导出/预处理/后处理问题，而不是评估条件不一致
+
+**Q: 为什么这次 `model.val()` 要显式写 `--imgsz 800`？**
+- 因为 `final_train_2` 训练和 ONNX 导出都基于 `imgsz=800`
+- 如果这里偷懒用默认 `640`，那拿到的不是部署前的公平基线
+- 面试里可以直接说：**精度对齐前，必须先把输入尺寸、数据划分、权重文件都对齐**
+
+**Q: 为什么还要做“50 张近似对比”，而不是直接说 ONNX 一定没问题？**
+- 因为 `model.val()` 只告诉我 PyTorch 基线，不代表 ONNX 部署链路就一定对
+- 抽样 50 张图比较检测框数量和置信度分布，是一个很快的 sanity check
+- 如果 50 张里大部分图片框数都不一致，或者置信度分布明显漂移，就说明 ONNX 预处理/后处理可能有问题
+- 我这次结果是 48/50 张框数一致、总检测框数完全一致、置信度统计几乎重合，所以可以先判断 ONNX 与 PyTorch 非常接近
+
+**Q: 为什么 PyTorch FPS 这次故意测 CPU，不测 GPU？**
+- 因为当前已经有 ONNX 的 CPU 结果 `22.5 FPS`
+- 如果拿 PyTorch GPU 去和 ONNX CPU 比，结论没有参考价值
+- 所以这一步是为了做**同后端公平对比**
+- 后面如果要展示上限性能，再额外补 GPU benchmark
+
+**Q: 为什么 benchmark 要 warmup，还要把图片先读进内存？**
+- warmup 是为了排除首次推理的初始化开销
+- 预读图片是为了排除磁盘 IO 对 FPS 的干扰
+- 这样测出来的才更接近“模型本身的推理速度”
+
+**Q: 你的 NMS 是怎么实现的？（面试手写高频题）**
+1. 按置信度从高到低排序
+2. 取最高分的框放入 keep 列表
+3. 计算它与剩余框的 IoU（交集面积 / 并集面积）
+4. IoU > 0.45 的框被抑制（认为是同一目标的重复检测）
+5. 重复直到处理完所有框
+- IoU = 交集面积 / (面积A + 面积B - 交集面积)
+
+**Q: YOLOv8 的输出张量到底怎么解读？**
+- 更稳妥的记法是通式 **`[1, 4+nc, num_predictions]`**
+- 在本项目里 `nc=6`，所以第二维是 **10 = 4个框参数 + 6个类别分数**
+- **4 个框参数不是两个角点 `(x1, y1, x2, y2)`**，而是 **`(cx, cy, w, h)`**
+- 这里的 `(cx, cy, w, h)` 是模型输出尺度上的框参数，后处理时再转成 `xyxy`
+- `num_predictions` 是所有特征层候选位置总数；`640` 输入时常见是 `8400`，当前项目 `imgsz=800` 时更应该记成“与输入尺寸相关的候选框总数”
+- 后处理：转置为 `[num_predictions, 10]` → 取每行最大类别分数 → 过滤低置信度 → `cxcywh→xyxy` → 映射回原图 → NMS 去重
+
+### 3/28 面试复盘：detector.py 必记纠正点
+
+- **BGR→RGB 不是因为 OpenCV 和 ONNX 不同**，而是因为 OpenCV 读图默认是 BGR，而模型训练时按 RGB 处理；本质是“推理输入分布要和训练一致”
+- **输出里的 4 个框参数要记成 `cx, cy, w, h`**，不是角点坐标；角点坐标是后处理转换出来的
+- **`10 = 4 + 6`**，表示 4 个框参数 + 6 个类别分数；当前 YOLOv8 这版输出里不是“4个框参数 + objectness + 6类”
+- 置信度过滤要放在 NMS 前面，这样可以先删掉大量低质量候选框，减少 IoU 计算量
+- NMS 不能只背“删掉 IoU 高的框”，要按完整流程说：**按分数排序 → 保留最高分框 → 计算与其余框的 IoU → 抑制高重叠框 → 重复**
+- `detector.py` 单独封装成类的面试答法：**职责清晰、CLI/FastAPI 复用、方便测试和后续维护**
+
+### 3/28 面试复盘：一句话背诵版
+
+- 预处理五步：`BGR→RGB → resize → normalize → HWC→CHW → add batch`
+- 预处理要尽量和训练一致，否则就是输入分布漂移，精度会掉
+- `predict()` 主链路：预处理 → ONNX Runtime 前向 → 解析输出 → 置信度过滤 → `cxcywh→xyxy` → 映射回原图 → NMS
+- `xyxy` 更适合画框、算面积、算 IoU 和做 NMS
+- 映射回原图是因为模型输出坐标基于输入尺寸，不是原图尺寸
+
+**Q: CPU 22.5 FPS 算什么水平？**
+- 工业检测场景（产线质检）通常要求 10-30 FPS 即可满足实时性
+- 22.5 FPS 在 CPU 上是合格的，说明不依赖 GPU 也能部署
+- 如果需要更快：可以用 TensorRT（GPU 可达 100+ FPS）或 OpenVINO（Intel CPU 优化）
+
+### 决策记录
+
+- **部署模型选择**：`final_train_2`（用户决策，基于 mAP@0.5=0.743 最优）
+- **预处理方式**：简单 resize 而非 letterbox（NEU-DET 原图是正方形 200x200，直接 resize 差异不大）
+- **手写 NMS 而非调用 torchvision**：摆脱 PyTorch 依赖 + 面试加分项
+- **当前阈值实验结论**：在已观察的 `crazing_241.jpg` 上，优先记住 `conf` 对结果更敏感，`iou` 影响要看是否存在明显重复框
+- **PyTorch 基线**：先用 `model.val()` 钉住 `best.pt` 在验证集上的 `0.7433 / 0.3880`，后续 ONNX 对齐都以它为参照
+- **近似精度对比结论**：50 张抽样里 96% 框数一致，置信度分布几乎重合，可以先判断 ONNX 没有明显跑偏
+- **速度对比口径**：当前记录的是“同为 CPU 后端”的速度，ONNX 22.5 FPS 对比 PyTorch 8.43 FPS，更适合写进部署对比表
+- **代表图选择方式**：改为“脚本基于 GT+预测自动筛”，避免人工随手挑图导致展示样本失真
+
+---
+
+### 下一步
+
+- 完成 ONNX 全量 mAP 对齐验证（把“近似对齐”补成“验证集级别对齐”）
+- 进入 **Step 6/8：FastAPI + Docker**（SAM 已移出 V1 scope）
 
 ---
 
@@ -904,3 +1262,4 @@ docs/assets/                ← git 管理（committed）
 - [[notes/YOLO_notes#如何读懂训练图表|如何读懂训练图表]]
 - [[notes/YOLO_notes#项目文件观|项目文件观]]
 - [[notes/YOLO_notes#调参判断方法|调参判断方法]]
+- [[notes/YOLO_notes#ONNX 部署|ONNX 部署]]（8.0~8.5：ONNX 概念、计算图、导出原理、ORT、detector 设计、预处理踩坑）

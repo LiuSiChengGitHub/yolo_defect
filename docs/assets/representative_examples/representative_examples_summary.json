@@ -1,0 +1,104 @@
+{
+  "classes": {
+    "crazing": {
+      "correct": {
+        "image": "crazing_290.jpg",
+        "reason": [
+          "all GT matched",
+          "no obvious extra boxes"
+        ]
+      },
+      "error": {
+        "image": "crazing_252.jpg",
+        "reason": [
+          "FN x3",
+          "same-class FP x3"
+        ]
+      }
+    },
+    "inclusion": {
+      "correct": {
+        "image": "inclusion_298.jpg",
+        "reason": [
+          "all GT matched",
+          "no obvious extra boxes"
+        ]
+      },
+      "error": {
+        "image": "inclusion_282.jpg",
+        "reason": [
+          "FN x2",
+          "same-class FP x2"
+        ]
+      }
+    },
+    "patches": {
+      "correct": {
+        "image": "patches_245.jpg",
+        "reason": [
+          "all GT matched",
+          "no obvious extra boxes"
+        ]
+      },
+      "error": {
+        "image": "patches_248.jpg",
+        "reason": [
+          "FN x3",
+          "wrong-class FP x1",
+          "contains wrong labels"
+        ]
+      }
+    },
+    "pitted_surface": {
+      "correct": {
+        "image": "pitted_surface_276.jpg",
+        "reason": [
+          "all GT matched",
+          "no obvious extra boxes"
+        ]
+      },
+      "error": {
+        "image": "pitted_surface_280.jpg",
+        "reason": [
+          "FN x3",
+          "same-class FP x1",
+          "wrong-class FP x1",
+          "contains wrong labels"
+        ]
+      }
+    },
+    "rolled-in_scale": {
+      "correct": {
+        "image": "rolled-in_scale_264.jpg",
+        "reason": [
+          "all GT matched",
+          "no obvious extra boxes"
+        ]
+      },
+      "error": {
+        "image": "rolled-in_scale_259.jpg",
+        "reason": [
+          "FN x4",
+          "same-class FP x2"
+        ]
+      }
+    },
+    "scratches": {
+      "correct": {
+        "image": "scratches_296.jpg",
+        "reason": [
+          "all GT matched",
+          "no obvious extra boxes"
+        ]
+      },
+      "error": {
+        "image": "scratches_271.jpg",
+        "reason": [
+          "FN x2",
+          "same-class FP x3"
+        ]
+      }
+    }
+  },
+  "grid": "representative_examples_grid.jpg"
+}

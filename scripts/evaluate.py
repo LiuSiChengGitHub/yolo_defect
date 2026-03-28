@@ -111,8 +111,17 @@ def main():
     # 这里复制到 docs/assets/ 方便 README 引用和 GitHub 展示
     val_dir = metrics.save_dir if hasattr(metrics, "save_dir") else None
     if val_dir and os.path.isdir(val_dir):
-        for plot_name in ["PR_curve.png", "confusion_matrix.png",
-                          "F1_curve.png", "P_curve.png", "R_curve.png"]:
+        # Ultralytics 新版评估图表文件名通常带 Box 前缀，这里统一兼容
+        plot_names = [
+            "BoxPR_curve.png",
+            "BoxF1_curve.png",
+            "BoxP_curve.png",
+            "BoxR_curve.png",
+            "confusion_matrix.png",
+            "confusion_matrix_normalized.png",
+            "val_batch0_pred.jpg",
+        ]
+        for plot_name in plot_names:
             src = os.path.join(val_dir, plot_name)
             if os.path.exists(src):
                 dst = os.path.join(save_dir, plot_name)
