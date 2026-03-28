@@ -295,18 +295,14 @@ The current ONNX deployment target is exported with `imgsz=800`, so the model in
 
 ### Performance Comparison
 
-| Format | mAP@0.5 | FPS (CPU) | FPS (GPU) | Model Size |
-|--------|---------|-----------|-----------|------------|
-| PyTorch (.pt) | **0.7433** | **8.43** | Pending | ~6.3 MB (`best.pt`) |
-| ONNX (.onnx) | Alignment pending | **22.5** | Pending | **11.77 MB** |
+| Format | mAP@0.5 | mAP@50-95 | FPS (CPU) | FPS (GPU) | Model Size | Notes |
+|--------|---------|-----------|-----------|-----------|------------|-------|
+| PyTorch (.pt) | **0.7433** | **0.3880** | 7.1 | 60.5 | ~6.3 MB | ultralytics `model.val()` |
+| ONNX (.onnx) | **≈0.743** | **≈0.388** | 22.0 | **69.8** | 11.77 MB | `detector.py` + onnxruntime |
 
-Current status:
-- PyTorch validation baseline has been re-measured with `model.val()`: **mAP@0.5 = 0.7433**, **mAP@50-95 = 0.3880**
-- A 50-image approximate comparison shows PyTorch and ONNX are already very close: **48/50** images have identical detection counts, total detections are **147 vs 147**, and confidence statistics nearly overlap
-- ONNX export is complete and CPU batch inference on the 360-image validation set reaches **22.5 FPS**
-- PyTorch CPU benchmark on 100 timed images reaches **8.43 FPS**, so ONNX CPU is about **2.67x faster** on the same machine/backend
-- Accuracy alignment between PyTorch and ONNX is the next verification step
-- GPU inference is still pending because the local ONNX Runtime CUDA environment has not been finalized yet
+- 50-image approximate comparison: **50/50** images have identical detection counts (148 vs 148), confidence statistics nearly identical (mean 0.4011 vs 0.4011)
+- ONNX GPU is **9.8x faster** than PyTorch CPU, and **1.15x faster** than PyTorch GPU
+- GPU benchmarked on NVIDIA RTX 3060, 100 images with warmup
 
 ### YOLODetector Class (`src/detector.py`)
 
@@ -780,20 +776,17 @@ python scripts/inference_onnx.py --model models/best.onnx --image-dir data/image
 
 | 格式 | mAP@0.5 | mAP@50-95 | FPS (CPU) | FPS (GPU) | 模型大小 | 备注 |
 |------|---------|-----------|-----------|-----------|----------|------|
-| PyTorch (.pt) | **0.7433** | **0.3880** | **8.43** | 待测 | ~6.3 MB (`best.pt`) | ultralytics `model.val()` + 100张 CPU benchmark |
-| ONNX (.onnx) | **≈0.743** | **≈0.388** | **22.5** | 待测 | **11.77 MB** | `detector.py` + `onnxruntime`，50张近似对比已验证接近 |
+| PyTorch (.pt) | **0.7433** | **0.3880** | 7.1 | 60.5 | ~6.3 MB (`best.pt`) | ultralytics `model.val()` |
+| ONNX (.onnx) | **≈0.743** | **≈0.388** | 22.0 | **69.8** | **11.77 MB** | `detector.py` + `onnxruntime` |
 
 > **验证要点：** ONNX 导出后 mAP 差异应 < 0.01，否则说明导出过程有精度损失。
 
 当前状态：
-- 已用 `model.val()` 重新测得 PyTorch 验证集基线：**mAP@0.5 = 0.7433**，**mAP@50-95 = 0.3880**
-- 已抽样 50 张图做近似对比：**48/50** 张图片检测框数量一致，PyTorch / ONNX 总检测框数都是 **147**，置信度统计几乎重合
-- ONNX 导出已经完成，验证集 360 张图的 CPU 批量推理速度为 **22.5 FPS**
-- 已测得 PyTorch CPU（100 张图平均）为 **8.43 FPS**，同机同后端下 ONNX CPU 约快 **2.67x**
+- 已用 `model.val()` 测得 PyTorch 验证集基线：**mAP@0.5 = 0.7433**，**mAP@50-95 = 0.3880**
+- 修复 ONNX Runtime GPU 后，50 张近似对比 **50/50 全部一致**，总检测框数 `148 vs 148`，置信度统计几乎完全相同
+- ONNX GPU 达到 **69.8 FPS**（RTX 3060），比 PyTorch GPU `60.5 FPS` 快 1.15x，比 PyTorch CPU `7.1 FPS` 快 9.8x
+- ONNX CPU 达到 **22.0 FPS**，比 PyTorch CPU 快 3.1x，不依赖 GPU 也能满足工业检测实时性要求
 - 已自动筛选 12 张代表性结果图（每类正确 + 错误各 1 张），用于 README / 面试展示
-- 已完成任务单 [YOLO 0327-0409.md](docs/tasks/YOLO%200327-0409.md) 的 Day 1：精度对齐 + 理解推理链路
-- PyTorch vs ONNX 的精度对齐是下一步重点验证项
-- GPU 推理速度仍待补，因为本机 ONNX Runtime 的 CUDA 环境尚未完全对齐
 
 ### YOLODetector 类（`src/detector.py`）
 

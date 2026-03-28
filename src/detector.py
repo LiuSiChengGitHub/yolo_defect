@@ -12,9 +12,50 @@ Usage:
     result = detector.draw(image, detections, class_names)
 """
 
-import cv2
-import numpy as np
-import onnxruntime as ort
+import os
+import sys
+
+
+def _add_cuda_dll_dirs():
+    """将 CUDA/cuDNN 的 DLL 目录加入 Windows DLL 搜索路径。
+
+    必须在 import onnxruntime 之前调用！
+    ORT 在 import 时就会尝试加载 onnxruntime_providers_cuda.dll，
+    该 DLL 依赖 cudart/cublas/cudnn/cufft 等，必须提前把路径注册好。
+
+    PyTorch (conda) 把 CUDA runtime DLL 放在 conda_env/bin/，
+    cuDNN DLL 放在 torch/lib/。ORT 的 LoadLibrary 默认找不到这些位置。
+    """
+    if sys.platform != "win32":
+        return
+
+    # conda env 的 bin/ 目录：含 cudart64_110.dll, cublas64_11.dll, cufft64_10.dll
+    env_bin = os.path.join(sys.prefix, "bin")
+    # torch/lib/ 目录：含 cudnn64_8.dll
+    try:
+        torch_lib = os.path.join(
+            os.path.dirname(__import__("torch").__file__), "lib"
+        )
+    except ImportError:
+        torch_lib = None
+
+    dirs = [d for d in [env_bin, torch_lib] if d and os.path.isdir(d)]
+
+    for d in dirs:
+        os.add_dll_directory(d)
+
+    # 把路径加到 PATH 前面，兼容旧式 DLL 搜索
+    path_env = os.environ.get("PATH", "")
+    prepend = ";".join(dirs)
+    os.environ["PATH"] = prepend + ";" + path_env
+
+
+# 必须在 import onnxruntime 之前执行
+_add_cuda_dll_dirs()
+
+import cv2  # noqa: E402
+import numpy as np  # noqa: E402
+import onnxruntime as ort  # noqa: E402
 
 
 class YOLODetector:

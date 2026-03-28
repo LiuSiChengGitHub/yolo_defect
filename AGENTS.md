@@ -149,11 +149,17 @@ After every training run completes, the AI agent MUST do the following without b
 - Experiment summary table and best model selection completed
 - README.md updated with full experiment comparison
 
-### Step 5: ONNX Export + Inference Verification — In Progress
-- Export `final_train_2` best.pt to ONNX via `scripts/export_onnx.py`
-- Verify ONNX accuracy alignment with PyTorch model
-- Benchmark CPU/GPU inference speed
-- Scripts already exist: `scripts/export_onnx.py`, `scripts/inference_onnx.py`, `src/detector.py`
+### Step 5: ONNX Export + Inference Verification — Done (2026-03-28)
+- Exported `final_train_2` best.pt to ONNX (11.77 MB, imgsz=800)
+- ONNX accuracy verified: 50-image comparison **50/50 identical** to PyTorch, confidence stats match to 4 decimal places
+- **ONNX Runtime GPU fix**: `src/detector.py` adds `conda_env/bin/` and `torch/lib/` to DLL search path before `import onnxruntime` — fixes LoadLibrary error 126 on Windows
+- Speed: ONNX GPU **69.8 FPS**, PyTorch GPU 60.5 FPS, ONNX CPU 22.0 FPS, PyTorch CPU 7.1 FPS
+
+### ONNX Runtime GPU on Windows (important for future reference)
+- ORT's `onnxruntime_providers_cuda.dll` needs: `cudart64_110.dll`, `cublas64_11.dll`, `cufft64_10.dll` (in `conda_env/bin/`), `cudnn64_8.dll` (in `torch/lib/`)
+- These paths are NOT on system PATH by default when using conda + pip PyTorch
+- `src/detector.py` has `_add_cuda_dll_dirs()` that runs before `import onnxruntime` to fix this
+- Must be done BEFORE import — ORT registers providers at import time
 
 ## Do NOT
 

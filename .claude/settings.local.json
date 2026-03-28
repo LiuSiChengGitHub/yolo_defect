@@ -18,7 +18,10 @@
       "Bash(ls /d/Base/CodingSpace/yolo_defect/*.yaml)",
       "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/export_onnx.py --weights runs/detect/final_train_2/weights/best.pt --imgsz 800)",
       "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/inference_onnx.py --model models/best.onnx --image data/images/val/crazing_242.jpg --output-dir results/)",
-      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/inference_onnx.py --model models/best.onnx --image-dir data/images/val --output-dir results/ 2>/dev/null)"
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe scripts/inference_onnx.py --model models/best.onnx --image-dir data/images/val --output-dir results/ 2>/dev/null)",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe -c \"import onnxruntime; print\\('ORT version:', onnxruntime.__version__\\); print\\('Available providers:', onnxruntime.get_available_providers\\(\\)\\)\")",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe -c \"import torch; print\\('PyTorch:', torch.__version__\\); print\\('CUDA available:', torch.cuda.is_available\\(\\)\\); print\\('CUDA version:', torch.version.cuda\\); print\\('cuDNN version:', torch.backends.cudnn.version\\(\\)\\)\")",
+      "Bash(/d/Base/Tools/Anaconda/Anaconda3/envs/yolo_defect/python.exe -c \"import pip; [print\\(p\\) for p in sorted\\([str\\(d\\) for d in __import__\\('pkg_resources'\\).working_set]\\) if 'onnx' in str\\(p\\).lower\\(\\) or 'cuda' in str\\(p\\).lower\\(\\) or 'cudnn' in str\\(p\\).lower\\(\\) or 'nvidia' in str\\(p\\).lower\\(\\)]\")"
     ]
   }
 }
