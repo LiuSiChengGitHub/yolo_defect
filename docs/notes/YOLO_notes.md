@@ -1438,6 +1438,323 @@ ONNX 模型 (models/best.onnx)
 
 ---
 
+## 十五、FastAPI 服务化入门速查
+
+### 15.1 FastAPI 到底解决什么问题
+
+在这个项目里，FastAPI 的作用不是“训练模型”，而是把已经写好的推理逻辑封装成一个可以通过 HTTP 调用的服务接口。这样前端、测试脚本、产线系统都不需要直接 import Python 代码，只要发请求就能拿到检测结果。
+
+**一句话理解**：FastAPI 是把 `src/detector.py` 里的推理能力，包装成 `api/app.py` 里的可调用接口。
+
+### 15.2 最小 FastAPI 程序（先看懂入口和路由）
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def root():
+    return {"message": "YOLO defect API is running"}
+```
+
+这几行的含义：
+
+- `FastAPI()`：创建应用对象，后面所有路由都挂在这个对象上
+- `@app.get("/")`：声明一个 GET 路由，请求 `/` 时会进入下面这个函数
+- `def root()`：真正处理请求的 Python 函数
+- `return {...}`：FastAPI 会自动把字典转成 JSON 响应
+
+启动后常见地址：
+
+- `/`：最简单的健康检查入口
+- `/docs`：Swagger 文档页，可直接在线调接口
+- `/redoc`：另一种风格的接口文档页
+
+**这一节记住什么**：
+
+- `app = FastAPI()` 是入口
+- `@app.get(...)` 是路由装饰器
+- FastAPI 的基本思路就是“URL -> Python 函数 -> JSON 响应”
+
+### 15.3 Path Parameters（路径参数）：定位你要操作的资源
+
+路径参数就是 URL 路径里变化的那一段，通常表示“你要处理哪一个对象”。
+
+```python
+@app.get("/images/{image_name}")
+def read_image(image_name: str):
+    return {"image_name": image_name}
+```
+
+访问：
+
+```text
+/images/crazing_241.jpg
+```
+
+这里的 `crazing_241.jpg` 会传给函数里的 `image_name`。
+
+如果写成带类型注解的形式：
+
+```python
+@app.get("/runs/{run_id}")
+def read_run(run_id: int):
+    return {"run_id": run_id}
+```
+
+FastAPI 会自动做三件事：
+
+- 把字符串转成你声明的类型
+- 校验类型是否合法
+- 自动把参数信息写进接口文档
+
+**顺序注意**：固定路径要写在参数路径前面。
+
+```python
+@app.get("/runs/latest")
+def read_latest():
+    return {"run": "final_train_2"}
+
+@app.get("/runs/{run_name}")
+def read_run(run_name: str):
+    return {"run_name": run_name}
+```
+
+否则 `/runs/latest` 可能会被误当成 `run_name="latest"`。
+
+**这一节记住什么**：
+
+- `{xxx}` 表示路径参数
+- 路径参数更适合表达“是谁、哪个资源、哪条记录”
+- 固定路由写前面，通用参数路由写后面
+
+### 15.4 Query Parameters（查询参数）：控制怎么查、怎么返回
+
+查询参数写在 URL 的 `?` 后面，通常表示“怎么查、怎么筛、怎么控制返回结果”。
+
+```python
+@app.get("/predict")
+def predict(conf: float = 0.25, iou: float = 0.45, show_label: bool = True):
+    return {"conf": conf, "iou": iou, "show_label": show_label}
+```
+
+访问：
+
+```text
+/predict?conf=0.30&iou=0.50&show_label=false
+```
+
+这里：
+
+- `conf`：控制置信度阈值
+- `iou`：控制 NMS 阈值
+- `show_label`：控制是否返回标签信息
+
+为什么它适合做查询参数？因为这些值不是在“指定哪张图”，而是在“控制这次推理怎么执行”。
+
+默认值的含义：
+
+- 有默认值：可不传，不传就走默认设置
+- 默认值是 `None`：可选参数
+- 没有默认值：必填参数
+
+例如：
+
+```python
+@app.get("/search")
+def search_images(keyword: str | None = None, limit: int = 10):
+    return {"keyword": keyword, "limit": limit}
+```
+
+**这一节记住什么**：
+
+- `?` 后面的是查询参数
+- 查询参数适合表达筛选、分页、阈值、开关等控制项
+- FastAPI 会自动完成类型转换和校验
+
+### 15.5 Path 和 Query 的区别（部署时最容易混的点）
+
+可以用一句话区分：
+
+- **Path Parameters**：表示“你要处理谁”
+- **Query Parameters**：表示“你想怎么处理”
+
+对照看最清楚：
+
+```text
+/images/crazing_241.jpg
+```
+
+这里 `crazing_241.jpg` 是路径参数，因为它在定位资源。
+
+```text
+/predict/crazing_241.jpg?conf=0.25&save_vis=true
+```
+
+这里：
+
+- `crazing_241.jpg` 是路径参数，表示哪张图
+- `conf=0.25`、`save_vis=true` 是查询参数，表示这次推理的控制选项
+
+**面试一句话**：Path 用来定位资源，Query 用来控制查询或返回方式。
+
+### 15.6 一个贴近本项目的综合例子
+
+下面这个例子已经接近后面 `api/app.py` 的思路了，只是为了先理解 FastAPI 的参数解析机制：
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/predict/{image_name}")
+def predict_image(
+    image_name: str,
+    conf: float = 0.25,
+    iou: float = 0.45,
+    save_vis: bool = False
+):
+    return {
+        "image_name": image_name,
+        "conf": conf,
+        "iou": iou,
+        "save_vis": save_vis
+    }
+```
+
+访问：
+
+```text
+/predict/crazing_241.jpg?conf=0.30&save_vis=true
+```
+
+这一条请求里：
+
+- `image_name` 是路径参数，表示推理哪张图
+- `conf` 和 `iou` 是查询参数，表示阈值怎么设
+- `save_vis` 是查询参数，表示要不要保存可视化结果
+
+在真实项目里，函数内部就会继续调用：
+
+```python
+detector.predict(...)
+```
+
+然后把检测框、类别、置信度整理成 JSON 返回给调用方。
+
+### 15.7 本项目里的最小 API 闭环
+
+对这个项目来说，FastAPI 不是“重新做一套推理”，而是把已经存在的 ONNX 推理能力包装成 HTTP 接口。
+
+最小闭环就是两条路由：
+
+- `GET /health`：检查服务和模型是否就绪
+- `POST /detect`：上传图片并返回检测结果 JSON
+
+这样一来，项目就从“只能本地跑脚本”升级成了“可以被前端、测试脚本、产线系统调用的服务”。
+
+**面试一句话**：FastAPI 这一步的价值不在于模型更准，而在于把推理能力服务化，证明项目具备训练→部署→服务化的工程闭环。
+
+### 15.8 FastAPI 和 Flask 怎么区分（面试高频）
+
+**FastAPI 更适合当前这个项目的原因：**
+
+- **类型注解友好**：请求参数和返回结构更清晰
+- **自动参数校验**：少写很多手工判断
+- **自动文档**：`/docs` 能直接调接口，演示和排错都很快
+- **更适合接口型项目**：做模型服务展示时性价比高
+
+**Flask 的特点：**
+
+- 更轻量、更经典
+- 自由度高
+- 但很多参数校验和接口文档能力需要自己补
+
+**面试回答思路**：不是说 Flask 不行，而是 FastAPI 更适合这种“快速搭建模型接口、还要顺手展示文档和类型定义”的场景。
+
+### 15.9 为什么推理逻辑不直接写在 `app.py`
+
+这是一个典型的**关注点分离**问题：
+
+- `app.py`：负责 Web 层，请求、响应、状态码、日志
+- `src/detector.py`：负责模型层，预处理、ONNX Runtime 前向、NMS、结果组织
+
+这么拆的好处：
+
+- CLI 脚本和 FastAPI 服务复用同一个 `YOLODetector`
+- 以后改推理逻辑时，不用改 Web 层代码
+- 更容易单测、排障和维护
+
+**面试一句话**：`app.py` 管请求，`detector.py` 管推理，这样代码才可复用、可测试、可维护。
+
+### 15.10 如果有 100 个并发请求，你的 API 会怎样
+
+这题不要只背 “GIL” 两个字，要先说清现象和优化方向。
+
+当前这版 API 是**最小可用版本**，本地通常用：
+
+```bash
+uvicorn api.app:app --reload
+```
+
+这意味着它更偏开发调试，而不是生产高并发部署。
+
+如果突然来 100 个并发请求，典型现象是：
+
+- 客户端总响应时间明显上升
+- 请求开始排队
+- 吞吐量很快碰到瓶颈
+
+原因不是模型单次推理一定慢，而是：
+
+- 单 worker 开发模式本身不适合高并发
+- 推理任务是重计算型工作
+- 总响应时间包含了排队、调度、JSON 序列化等开销
+
+优化方向通常是：
+
+- 增加 worker 数
+- 去掉 `--reload`
+- 用更正式的部署方式
+- 必要时做请求队列或异步任务拆分
+
+**面试一句话**：100 并发时，当前单 worker 开发版会排队、延迟上升；优化重点应该放在服务并发处理能力，而不是先怀疑模型前向速度。
+
+### 15.11 今日 FastAPI 实测数据（2026-03-29）
+
+今天在本地拿到的关键结果：
+
+- `/health`：返回 `200 OK`，`status=ok`
+- `/detect`：对 `crazing_241.jpg` 返回 `count=3`
+- `benchmark_api.py`（10 张图、并发 10）：
+  - 成功请求数：`10/10`
+  - 平均客户端响应时间：`2333.37 ms`
+  - 总耗时：`3.06 s`
+  - 吞吐量：`3.27 QPS`
+
+**怎么解释这些数据：**
+
+- 客户端总响应时间 ≠ 纯模型推理时间
+- 大多数服务端 `inference_time_ms` 只有 `13-23 ms`
+- 第一条请求达到 `2198.88 ms`，更像是冷启动 / 排队 / 本地开发模式的影响
+
+**面试回答方向**：这组数据说明接口稳定性已经通过，但当前瓶颈更像服务并发处理能力，而不是模型单次前向本身。
+
+**这一章压缩记忆版**：
+
+- FastAPI 的本质是把 Python 函数变成 HTTP API
+- `app = FastAPI()` 是应用入口
+- `@app.get("/xxx")` 定义 GET 路由
+- Path 参数负责定位资源
+- Query 参数负责控制查询方式和返回形式
+- 对这个项目来说，FastAPI 是把 ONNX 推理能力服务化的关键一步
+- `app.py` 管请求，`detector.py` 管推理
+- 客户端总响应时间和纯模型推理时间要分开看
+- 面试里讲 FastAPI，重点是工程闭环和服务化价值，不是背框架语法
+
+---
+
 ## 附录 A：ultralytics 常用函数速查
 
 ```python

@@ -17,6 +17,7 @@ segment-anything           # Meta SAM
 fastapi
 uvicorn[standard]
 python-multipart           # FastAPI file upload support
+requests                   # API 调用与简单压测
 
 # Monitoring
 tensorboard

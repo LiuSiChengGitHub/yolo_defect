@@ -321,6 +321,88 @@ For debugging and interview prep, `scripts/debug_detector.py` manually expands t
 - batched input shape
 - raw ONNX output shape
 
+### FastAPI API Usage
+
+The project now includes a minimal FastAPI service in `api/app.py` with two endpoints:
+
+- `GET /health` — health check for service and model readiness
+- `POST /detect` — upload one image and receive detection results in JSON
+
+Start the API service:
+
+```bash
+python -m uvicorn api.app:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Health check example:
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+Example response:
+
+```json
+{
+  "status": "ok",
+  "model": "best.onnx",
+  "request_stats": {
+    "total_requests": 0,
+    "avg_response_time_ms": 0.0
+  }
+}
+```
+
+Detection request example:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/detect" \
+  -F "file=@data/images/val/crazing_241.jpg"
+```
+
+Example response:
+
+```json
+{
+  "filename": "crazing_241.jpg",
+  "count": 3,
+  "image_size": {
+    "width": 200,
+    "height": 200
+  },
+  "model": "best.onnx",
+  "conf_thresh": 0.25,
+  "iou_thresh": 0.45,
+  "inference_time_ms": 20.57,
+  "detections": [
+    {
+      "class_id": 0,
+      "class_name": "crazing",
+      "confidence": 0.4457,
+      "bbox": [-1.34, 53.68, 176.91, 146.24]
+    }
+  ]
+}
+```
+
+Notes:
+
+- The upload field name must be `file`
+- The API returns JSON results, not visualization images
+- `inference_time_ms` is service-side model inference time; client-observed response time can be larger under concurrent load
+- `scripts/benchmark_api.py` can be used for a simple concurrency benchmark of `POST /detect`
+
+Current local verification (2026-03-29):
+
+- `GET /health` returned `200 OK` with `{"status":"ok","model":"best.onnx"}`
+- `POST /detect` on `data/images/val/crazing_241.jpg` returned `count=3`
+- `scripts/benchmark_api.py` with 10 images and concurrency 10 finished with:
+  - success requests: `10/10`
+  - average client-observed response time: `2333.37 ms`
+  - total wall time: `3.06 s`
+  - throughput: `3.27 QPS`
+- Under the same run, most service-side `inference_time_ms` values were around `13-23 ms`, while the first request was much slower (`2198.88 ms`), indicating cold-start / queueing effects in local development mode
+
 ## Project Structure
 
 ```
@@ -344,12 +426,13 @@ yolo_defect/
 │   ├── debug_detector.py         # Debug script for intermediate shapes / ONNX output
 │   ├── compare_pt_onnx.py        # 50-image approximate comparison of PT vs ONNX outputs
 │   ├── benchmark_pytorch.py      # PyTorch FPS benchmark on a fixed image subset
+│   ├── benchmark_api.py          # Simple concurrent benchmark for POST /detect
 │   └── inference_onnx.py         # ONNX inference (single + batch)
 ├── src/
 │   ├── __init__.py
 │   └── detector.py               # YOLODetector class (ONNX inference, FastAPI reuse)
 ├── api/
-│   └── .gitkeep                  # FastAPI service (Week 2)
+│   └── app.py                    # FastAPI service (`GET /health`, `POST /detect`)
 ├── configs/
 │   ├── train_config.yaml         # Baseline training hyperparameters
 │   └── exp*.yaml                 # Experiment configs (imgsz/lr/augment/final runs)
@@ -419,8 +502,8 @@ The NEU-DET dataset is only 28MB. Including it means:
 - [x] Hyperparameter tuning (imgsz / lr / augment comparisons)
 - [x] Bad sample analysis (misdetections, class confusion)
 - [x] ONNX export and CPU inference validation
-- [ ] ONNX accuracy alignment (PyTorch vs ONNX)
-- [ ] FastAPI service with file upload endpoint
+- [x] ONNX accuracy alignment (PyTorch vs ONNX)
+- [x] FastAPI service with file upload endpoint
 - [ ] Docker containerization for deployment
 - [ ] Demo GIF and repository polish
 - [ ] TensorRT / C++ ONNX Runtime optimization (V2 scope)
@@ -820,6 +903,88 @@ python scripts/inference_onnx.py --model models/best.onnx --image-dir data/image
 
 另外，`scripts/debug_detector.py` 用于手动展开预处理与 ONNX 前向过程，并打印 5 个关键 shape，适合排查预处理问题和准备面试表达。
 
+### FastAPI API 使用
+
+项目现在已经包含一个最小可用的 FastAPI 服务，入口是 `api/app.py`，目前提供两个接口：
+
+- `GET /health`：健康检查，用来确认服务是否启动、模型是否加载成功
+- `POST /detect`：上传单张图片，返回检测结果 JSON
+
+启动服务：
+
+```bash
+python -m uvicorn api.app:app --host 127.0.0.1 --port 8000 --reload
+```
+
+健康检查示例：
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+示例响应：
+
+```json
+{
+  "status": "ok",
+  "model": "best.onnx",
+  "request_stats": {
+    "total_requests": 0,
+    "avg_response_time_ms": 0.0
+  }
+}
+```
+
+检测请求示例：
+
+```bash
+curl -X POST "http://127.0.0.1:8000/detect" \
+  -F "file=@data/images/val/crazing_241.jpg"
+```
+
+示例响应：
+
+```json
+{
+  "filename": "crazing_241.jpg",
+  "count": 3,
+  "image_size": {
+    "width": 200,
+    "height": 200
+  },
+  "model": "best.onnx",
+  "conf_thresh": 0.25,
+  "iou_thresh": 0.45,
+  "inference_time_ms": 20.57,
+  "detections": [
+    {
+      "class_id": 0,
+      "class_name": "crazing",
+      "confidence": 0.4457,
+      "bbox": [-1.34, 53.68, 176.91, 146.24]
+    }
+  ]
+}
+```
+
+使用说明：
+
+- 上传字段名必须是 `file`
+- 返回结果是 JSON，不是画框后的图片
+- `inference_time_ms` 是服务端模型推理时间，并发场景下客户端总等待时间通常会更长
+- 可以用 `scripts/benchmark_api.py` 对 `POST /detect` 做简单压测，统计平均响应时间和 QPS
+
+本地实测结果（2026-03-29）：
+
+- `GET /health` 已返回 `200 OK`，且 `status=ok`
+- `POST /detect` 对 `data/images/val/crazing_241.jpg` 返回 `count=3`
+- 用 `scripts/benchmark_api.py` 对 `POST /detect` 做 10 张图、并发 10 的简单压测：
+  - 成功请求数：`10/10`
+  - 客户端观测平均响应时间：`2333.37 ms`
+  - 总耗时：`3.06 s`
+  - 吞吐量：`3.27 QPS`
+- 同一轮压测里，大多数服务端 `inference_time_ms` 在 `13-23 ms`，但第一条请求达到 `2198.88 ms`，说明本地开发模式下存在明显的冷启动 / 排队影响
+
 ## 项目结构
 
 ```
@@ -844,12 +1009,13 @@ yolo_defect/
 │   ├── debug_detector.py         #   中间值打印 / ONNX 输出观察
 │   ├── compare_pt_onnx.py        #   PyTorch vs ONNX 50张近似对比
 │   ├── benchmark_pytorch.py      #   PyTorch 100张 CPU FPS 测试
+│   ├── benchmark_api.py          #   POST /detect 并发压测脚本
 │   └── inference_onnx.py         #   ONNX 推理（单张 + 批量）
 ├── src/                          # 可复用模块
 │   ├── __init__.py
 │   └── detector.py               #   YOLODetector 类（ONNX 推理，FastAPI 复用）
-├── api/                          # FastAPI 服务（Week 2 填充）
-│   └── .gitkeep
+├── api/                          # FastAPI 服务
+│   └── app.py                    #   `GET /health` + `POST /detect`
 ├── configs/
 │   ├── train_config.yaml         # baseline 训练超参数配置
 │   └── exp*.yaml                 # 各组实验配置（imgsz / lr / augment / final）
@@ -918,8 +1084,8 @@ NEU-DET 数据集只有 28MB（远小于 GitHub 的 100MB 单文件限制）。�
 - [x] 超参数调优（imgsz / lr / augment 对比）
 - [x] 坏样本分析（误检/漏检案例）
 - [x] ONNX 导出与 CPU 推理验证
-- [ ] ONNX 精度对齐（PyTorch vs ONNX）
-- [ ] FastAPI 服务化（`POST /detect` 上传图片返回 JSON）
+- [x] ONNX 精度对齐（PyTorch vs ONNX）
+- [x] FastAPI 服务化（`POST /detect` 上传图片返回 JSON）
 - [ ] Docker 容器化部署
 - [ ] Demo GIF 与仓库展示优化
 - [ ] TensorRT / C++ ONNX Runtime 优化（V2）
