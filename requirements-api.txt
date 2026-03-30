@@ -1,0 +1,11 @@
+# ============================================
+# YOLO Defect Detection - API deployment only
+# 用于 Docker / Linux CPU 部署，不包含训练依赖
+# ============================================
+
+fastapi
+uvicorn[standard]
+python-multipart
+numpy
+opencv-python-headless
+onnxruntime

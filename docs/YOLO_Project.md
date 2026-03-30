@@ -4,7 +4,7 @@
 
 ---
 
-## 当前进度：Step 8 进行中（FastAPI app.py 初版完成：POST /detect + GET /health）
+## 当前进度：Step 8 进行中（FastAPI 已跑通，Dockerfile 初版已完成，待 Docker 本地 build/run 验证）
 
 | Step | 内容 | 状态 |
 |------|------|------|
@@ -15,7 +15,7 @@
 | Step 5 | ONNX 导出 + 推理验证 | Done (2026-03-28) — ONNX GPU 修复完成, ONNX GPU 69.8 FPS, 50张精度对比 50/50 一致 |
 | Step 6 | SAM 集成 | - |
 | Step 7 | GitHub 美化 | - |
-| Step 8 | FastAPI + Docker | In Progress (2026-03-29) — `api/app.py` 已完成，含 `POST /detect` + `GET /health` |
+| Step 8 | FastAPI + Docker | In Progress (2026-03-30) — `api/app.py` 已完成，Dockerfile + `requirements-api.txt` 已补齐，待容器实测 |
 
 ---
 
@@ -1597,12 +1597,103 @@ curl -X POST "http://127.0.0.1:8000/detect" -F "file=@data/images/val/crazing_24
 - 当前瓶颈更像服务并发处理能力，而不是模型单次前向本身
 
 
+### 8.10 Docker 容器化初版（2026-03-30）
+
+#### 8.10.1 这次做了什么
+
+1. **新增 `requirements-api.txt`**
+   - 单独为 Docker 部署准备最小依赖集合
+   - 只保留 `fastapi`、`uvicorn[standard]`、`python-multipart`、`numpy`、`opencv-python-headless`、`onnxruntime`
+   - 明确**不把训练依赖打进镜像**，例如 `ultralytics`、`segment-anything`、`onnxruntime-gpu`
+2. **新增根目录 `Dockerfile`**
+   - 基础镜像：`python:3.9-slim`
+   - 工作目录：`/app`
+   - 安装系统库：`libgl1`、`libglib2.0-0`
+   - 安装 API 最小 Python 依赖
+   - 只复制 `src/`、`api/`、`models/`
+   - 暴露 `8000` 端口
+   - 用 `uvicorn api.app:app --host 0.0.0.0 --port 8000` 启动服务
+3. **把 Docker 设计意图写清楚**
+   - 这次目标是 Linux CPU 部署，不是把 Windows 本地开发环境原样搬进去
+   - 镜像追求“能部署 API”而不是“同时能训练 YOLO”
+
+#### 8.10.2 为什么要拆出 `requirements-api.txt`
+
+- 现有 `requirements.txt` 是**训练 + 部署混合版**
+- 如果 Docker 直接安装它，会把训练、SAM、GPU 方向的包一起装进去
+- 这样会带来 3 个问题：
+  - 镜像更大
+  - 构建更慢
+  - 在 `python:3.9-slim` 里更容易出现不必要的兼容性问题
+
+所以这次专门拆出一个“部署专用依赖文件”，只服务于 FastAPI + ONNX Runtime 这条链路。
+
+#### 8.10.3 Dockerfile 每一层在做什么（面试可以按这个顺序讲）
+
+1. `FROM python:3.9-slim`
+   - 选择和项目一致的 Python 版本
+   - `slim` 比完整镜像更轻，适合展示部署能力
+2. `WORKDIR /app`
+   - 让后续命令和代码都以 `/app` 为当前目录
+   - 这样 `api/app.py` 里按相对位置找 `models/best.onnx` 也能正常工作
+3. `ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1`
+   - 不生成 `.pyc`
+   - 日志直接刷到终端，方便看容器日志
+4. `RUN apt-get update ... libgl1 libglib2.0-0`
+   - `python:3.9-slim` 很干净
+   - OpenCV 在 Linux 运行时需要这些系统动态库
+5. `COPY requirements-api.txt .`
+   - 先只复制依赖文件
+   - 这样以后只改 Python 代码时，Docker 可以复用依赖安装缓存
+6. `RUN pip install ... -r requirements-api.txt`
+   - 只安装 API 推理链路真正需要的包
+7. `COPY src/ src/`、`COPY api/ api/`、`COPY models/ models/`
+   - 只把运行服务需要的代码和模型放进镜像
+   - 不用 `COPY . .`，避免把数据集、文档、训练输出一起打包
+8. `EXPOSE 8000`
+   - 声明服务监听端口
+9. `CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000"]`
+   - 容器里必须监听 `0.0.0.0`
+   - 如果只监听 `127.0.0.1`，宿主机端口映射后也访问不到
+
+#### 8.10.4 这一步和本地 Windows GPU 版本有什么不同
+
+- 当前 Docker 目标是 **Linux CPU 部署**
+- 所以容器里使用的是 `onnxruntime`，不是 `onnxruntime-gpu`
+- `src/detector.py` 里 Windows 的 `_add_cuda_dll_dirs()` 逻辑在 Linux 容器里不会生效，也不是这一步的重点
+- 这并不冲突：
+  - 本地 Windows 继续保留 GPU 推理能力
+  - Docker 先证明“跨环境可部署的 CPU 服务版”已经具备
+
+#### 8.10.5 当前状态与限制
+
+- `Dockerfile` 和 `requirements-api.txt` 已完成
+- `models/best.onnx` 本地已存在，当前 Docker 方案默认把它复制进镜像
+- **当前终端里 `docker` 不在 PATH**，所以还没做 `docker build` / `docker run` 实测
+- 下一步需要在装好 Docker Desktop / Engine 的环境里完成以下验证：
+
+```bash
+docker build -t yolo-defect-api .
+docker run --rm -p 8000:8000 yolo-defect-api
+curl http://127.0.0.1:8000/health
+curl -X POST "http://127.0.0.1:8000/detect" -F "file=@data/images/val/crazing_241.jpg"
+```
+
+#### 8.10.6 我今天至少要能脱口而出的面试点
+
+- 我没有直接复用训练环境依赖，而是专门拆了一个部署版 `requirements-api.txt`
+- Dockerfile 没有 `COPY . .`，因为服务运行只需要 `src`、`api`、`models`
+- 选择 `python:3.9-slim` 是为了兼顾版本一致性和镜像体积
+- `opencv-python-headless` 更适合容器，因为服务端不需要 GUI
+- `CMD` 里必须监听 `0.0.0.0`，这是容器网络访问的基本要求
+
+
 
 ---
 
 ### 下一步
 
-- 继续 **Step 8 后半段：本地接口验证 + Docker 容器化**
+- 继续 **Step 8 后半段：Docker 本地 build/run 验证 + README Docker 使用说明**
 
 ---
 
