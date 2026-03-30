@@ -15,8 +15,8 @@ End-to-end industrial defect detection pipeline: from data preparation to ONNX d
 ## Highlights
 
 - **Best Experimental Result** — Best checkpoint `final_train_2` reaches **mAP@0.5 = 0.743** on NEU-DET
-- **Fast ONNX Inference** — ONNX Runtime reaches **69.8 FPS (GPU)** and **22.0 FPS (CPU)**
-- **Measured API Throughput** — Local FastAPI benchmark reaches **3.27 QPS** at concurrency 10
+- **PyTorch vs ONNX Consistency Check** — 50-image comparison shows **48/50** identical detection-count matches, with total detections **147 vs 147**
+- **Measured CPU Benchmark** — PyTorch validation inference benchmark records **8.43 FPS** on **100** timed images
 - **Docker Verified** — `python:3.9-slim` image has been tested with `/health` and `/detect`
 - **Clone & Run** — Dataset (28MB) included in the repo, no external downloads needed
 
@@ -27,10 +27,10 @@ End-to-end industrial defect detection pipeline: from data preparation to ONNX d
 | Best model | `final_train_2` |
 | mAP@0.5 | **0.743** |
 | mAP@50-95 | **0.388** |
-| ONNX FPS | **22.0 (CPU)** / **69.8 (GPU)** |
-| PyTorch FPS | 7.1 (CPU) / 60.5 (GPU) |
+| PT/ONNX same-count ratio | **48 / 50** images (**96%**) |
+| Mean abs count diff | **0.04** |
+| PyTorch CPU benchmark | **8.43 FPS** / **118.66 ms** per image |
 | Model size (`best.pt` / `best.onnx`) | ~6.0 MiB / ~11.8 MiB |
-| API throughput | **3.27 QPS** (`10` requests, concurrency `10`) |
 
 ## Quick Start
 
@@ -75,10 +75,11 @@ The NEU-DET dataset contains 1,800 grayscale images of hot-rolled steel strip su
 
 ### Statistics
 
-- **Total images:** 1,800 (300 per class)
+- **Dataset paper / official description:** 1,800 images (300 per class)
+- **Files bundled in `data/NEU-DET/`:** 1,800 readable JPG images
 - **Image size:** 200 x 200 pixels
 - **Format:** JPG (grayscale, 1 channel in annotation but readable as 3-channel)
-- **Split:** Pre-divided into train (~240/class) and validation (~60/class)
+- **Generated YOLO copy in `data/images/`:** 1,439 train + 361 val images
 
 ### Directory Structure
 
@@ -86,7 +87,7 @@ The dataset is pre-split and included at `data/NEU-DET/`:
 
 ```
 data/NEU-DET/
-├── train/                         # ~1440 images
+├── train/                         # 1,439 readable images
 │   ├── annotations/               # VOC XML (flat directory)
 │   │   ├── crazing_1.xml
 │   │   ├── inclusion_1.xml
@@ -98,7 +99,7 @@ data/NEU-DET/
 │       ├── pitted_surface/
 │       ├── rolled-in_scale/
 │       └── scratches/
-└── validation/                    # ~360 images
+└── validation/                    # 361 XMLs, 361 readable images
     ├── annotations/
     └── images/                    # Same structure as train
 ```
@@ -180,10 +181,11 @@ data/
 - The dataset is **already split** into train/validation — no random splitting needed
 - `rolled-in_scale` contains a hyphen, so the script uses known class name prefix matching (longest match first) instead of naive underscore splitting
 - Images are copied from class subdirectories to a flat output directory (YOLO requirement)
+- If the raw dataset is updated manually, rerun `prepare_data.py` so `data/images/` and `data/labels/` stay in sync with `data/NEU-DET/`
 
 ## Data Analysis
 
-Running `data_analysis.py` on the converted dataset reveals the following characteristics: the dataset is well-balanced across all 6 classes (~240 train / ~60 val images each), so no oversampling or class-weighting is needed. All images are uniformly 200×200 px. Each image contains between 1 and 9 bounding boxes (mean: 2.33), indicating moderate defect density. Bounding box sizes vary dramatically — from as small as 8×9 px (narrow scratches) to nearly 199×199 px (crazing covering the entire image) — making this a challenging multi-scale detection task. The anchor-free design of YOLOv8 handles this wide size range well without manual anchor tuning. Analysis charts are saved in `docs/assets/`.
+Running `data_analysis.py` on the converted dataset reveals the following characteristics: the dataset is effectively balanced across all 6 classes, so no oversampling or class-weighting is needed. All images are uniformly 200×200 px. Each image contains between 1 and 9 bounding boxes (mean: 2.33), indicating moderate defect density. Bounding box sizes vary dramatically — from as small as 8×9 px (narrow scratches) to nearly 199×199 px (crazing covering the entire image) — making this a challenging multi-scale detection task. The anchor-free design of YOLOv8 handles this wide size range well without manual anchor tuning. Analysis charts are saved in `docs/assets/`.
 
 ```bash
 python scripts/data_analysis.py
@@ -319,15 +321,17 @@ The current ONNX deployment target is exported with `imgsz=800`, so the model in
 
 ### Performance Comparison
 
-| Format | mAP@0.5 | mAP@50-95 | FPS (CPU) | FPS (GPU) | Model Size | Notes |
-|--------|---------|-----------|-----------|-----------|------------|-------|
-| PyTorch (.pt) | **0.7433** | **0.3880** | 7.1 | 60.5 | ~6.0 MiB | ultralytics `model.val()` |
-| ONNX (.onnx) | **≈0.743** | **≈0.388** | 22.0 | **69.8** | ~11.8 MiB | `detector.py` + onnxruntime |
+| Check | Value | Evidence |
+|-------|-------|----------|
+| Best PyTorch validation result | **mAP@0.5 = 0.7433**, **mAP@50-95 = 0.3880** | `docs/experiment_log.md` |
+| PyTorch CPU benchmark | **8.43 FPS**, **118.66 ms/image** over **100** timed images | `results/pytorch_benchmark_100.json` |
+| PT vs ONNX detection-count match | **48 / 50** images (**96%**) | `results/pt_onnx_compare/compare_50_summary.json` |
+| Total detections in PT vs ONNX check | **147 vs 147** | `results/pt_onnx_compare/compare_50_summary.json` |
+| Mean absolute detection-count difference | **0.04** | `results/pt_onnx_compare/compare_50_summary.json` |
+| Current local model sizes | `best.pt = 6,286,072 bytes`, `best.onnx = 12,336,935 bytes` | local artifacts |
 
-- 50-image approximate comparison: **50/50** images have identical detection counts (148 vs 148), confidence statistics nearly identical (mean 0.4011 vs 0.4011)
-- ONNX GPU is **9.8x faster** than PyTorch CPU, and **1.15x faster** than PyTorch GPU
-- GPU benchmarked on NVIDIA RTX 3060, 100 images with warmup
-- Current local files: `best.pt = 6,286,072 bytes`, `best.onnx = 12,336,935 bytes`
+- The repository currently includes raw artifacts for the PyTorch validation summary, PyTorch CPU benchmark, and the 50-image PyTorch-vs-ONNX comparison.
+- GPU benchmark logs and API benchmark logs are not checked into this repository yet, so headline GPU / QPS numbers are intentionally omitted from this README.
 
 ### YOLODetector Class (`src/detector.py`)
 
@@ -421,12 +425,7 @@ Current local verification:
 
 - `GET /health` returned `200 OK` with `{"status":"ok","model":"best.onnx"}`
 - `POST /detect` on `data/images/val/crazing_241.jpg` returned `count=3`
-- `scripts/benchmark_api.py` with 10 images and concurrency 10 finished with:
-  - success requests: `10/10`
-  - average client-observed response time: `2333.37 ms`
-  - total wall time: `3.06 s`
-  - throughput: `3.27 QPS`
-- Under the same run, most service-side `inference_time_ms` values were around `13-23 ms`, while the first request was much slower (`2198.88 ms`), indicating cold-start / queueing effects in local development mode
+- `scripts/benchmark_api.py` is included for local concurrency testing, but its raw benchmark log is not committed yet, so throughput numbers are omitted here
 
 ### Docker Deployment
 
@@ -454,10 +453,9 @@ curl -X POST http://127.0.0.1:8000/detect \
 
 Current Docker verification:
 
-- `docker build` completed successfully in `184.7 s`
 - `GET /health` returned `status=ok`, `model=best.onnx`
 - `POST /detect` on `crazing_241.jpg` returned `count=3`
-- The tested container response included `inference_time_ms = 73.99`
+- Numeric Docker benchmark logs are not committed yet, so only endpoint-level verification is reported here
 
 ## Project Structure
 

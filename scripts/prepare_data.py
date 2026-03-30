@@ -149,7 +149,8 @@ def process_split(data_root, split_name, output_dir, yolo_split_name):
         yolo_split_name: 输出子集名 ('train' 或 'val')
 
     Returns:
-        每个类别处理的图片数量统计字典
+        stats: 每个类别处理的图片数量统计字典
+        skipped_missing_images: 因原始图片缺失而跳过的样本名列表
     """
     ann_dir = os.path.join(data_root, split_name, "annotations")
     img_base_dir = os.path.join(data_root, split_name, "images")
@@ -161,6 +162,7 @@ def process_split(data_root, split_name, output_dir, yolo_split_name):
     os.makedirs(out_lbl_dir, exist_ok=True)
 
     stats = defaultdict(int)  # 用 defaultdict 统计每类图片数，省去初始化
+    skipped_missing_images = []
     xml_files = sorted([f for f in os.listdir(ann_dir) if f.endswith(".xml")])
 
     for xml_file in xml_files:
@@ -172,6 +174,19 @@ def process_split(data_root, split_name, output_dir, yolo_split_name):
             print(f"  Warning: cannot determine class for '{xml_file}', skipping")
             continue
 
+        # 原始路径: images/{class_name}/{stem}.jpg → 目标路径: images/{split}/{stem}.jpg
+        # 如果 XML 存在但原图缺失，就跳过该样本，并删除旧输出，避免留下孤儿 label。
+        src_img = os.path.join(img_base_dir, class_name, stem + ".jpg")
+        dst_img = os.path.join(out_img_dir, stem + ".jpg")
+        label_path = os.path.join(out_lbl_dir, stem + ".txt")
+        if not os.path.exists(src_img):
+            print(f"  Warning: image not found, skipping sample: {src_img}")
+            for stale_path in (dst_img, label_path):
+                if os.path.exists(stale_path):
+                    os.remove(stale_path)
+            skipped_missing_images.append(stem)
+            continue
+
         # 解析 XML 标注文件
         xml_path = os.path.join(ann_dir, xml_file)
         boxes, img_size = parse_voc_xml(xml_path)
@@ -179,25 +194,22 @@ def process_split(data_root, split_name, output_dir, yolo_split_name):
         # 转换为 YOLO 格式
         yolo_lines = voc_to_yolo(boxes, img_size)
         if not yolo_lines:
+            print(f"  Warning: no valid boxes found, skipping sample: {xml_path}")
+            for stale_path in (dst_img, label_path):
+                if os.path.exists(stale_path):
+                    os.remove(stale_path)
             continue
 
         # 写 YOLO 标签文件（每个 bbox 一行）
-        label_path = os.path.join(out_lbl_dir, stem + ".txt")
         with open(label_path, "w") as f:
             f.write("\n".join(yolo_lines) + "\n")
 
         # 复制图片到扁平输出目录
-        # 原始路径: images/{class_name}/{stem}.jpg → 目标路径: images/{split}/{stem}.jpg
-        src_img = os.path.join(img_base_dir, class_name, stem + ".jpg")
-        dst_img = os.path.join(out_img_dir, stem + ".jpg")
-        if os.path.exists(src_img):
-            shutil.copy2(src_img, dst_img)  # copy2 保留文件元数据
-        else:
-            print(f"  Warning: image not found: {src_img}")
+        shutil.copy2(src_img, dst_img)  # copy2 保留文件元数据
 
         stats[class_name] += 1
 
-    return stats
+    return stats, skipped_missing_images
 
 
 def generate_data_yaml(output_dir):
@@ -261,12 +273,12 @@ def main():
 
     # 处理训练集：train/ → images/train/ + labels/train/
     print("Processing train split...")
-    train_stats = process_split(data_root, "train", output_dir, "train")
+    train_stats, train_skipped = process_split(data_root, "train", output_dir, "train")
 
     # 处理验证集：validation/ → images/val/ + labels/val/
     # 注意源目录叫 "validation"，输出目录叫 "val"（YOLO 惯例）
     print("Processing validation split...")
-    val_stats = process_split(data_root, "validation", output_dir, "val")
+    val_stats, val_skipped = process_split(data_root, "validation", output_dir, "val")
 
     # 生成 data.yaml 配置文件
     generate_data_yaml(output_dir)
@@ -286,6 +298,13 @@ def main():
         print(f"{class_name:<20} {t:>6} {v:>6} {t + v:>6}")
     print("-" * 40)
     print(f"{'Total':<20} {total_train:>6} {total_val:>6} {total_train + total_val:>6}")
+    print()
+    skipped_total = len(train_skipped) + len(val_skipped)
+    print(f"Skipped samples: {skipped_total}")
+    if train_skipped:
+        print(f"  Train skipped: {', '.join(train_skipped)}")
+    if val_skipped:
+        print(f"  Val skipped:   {', '.join(val_skipped)}")
     print()
     print(f"Output images: {output_dir}/images/{{train,val}}/")
     print(f"Output labels: {output_dir}/labels/{{train,val}}/")

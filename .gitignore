@@ -1,6 +1,3 @@
-# ============================================
-# YOLO Defect Detection Project .gitignore
-# ============================================
 
 # ---------- Python ----------
 __pycache__/
@@ -37,6 +34,8 @@ logs/
 
 # ---------- Model weights (large) ----------
 models/*.onnx
+!models/best.onnx
+
 models/*.pt
 saved_models/
 *.pth
@@ -53,15 +52,12 @@ sam_vit_*.pth
 # ---------- Docker ----------
 *.tar
 
-# ---------- Inference results / temp evaluation outputs ----------
+# ---------- temp  outputs ----------
 results/
 temp_eval*/
-
-# ---------- Private docs (learning notes, AI prompts, task plans) ----------
+.claude/
 docs/me/
 
-# ---------- Claude Code config ----------
-.claude/
 
 # ---------- YOLO cache ----------
 *.cache
@@ -70,8 +66,5 @@ docs/me/
 *.bak
 *.tmp
 
-# ============================================
-# NOTE: NEU-DET dataset (~28MB) is intentionally
-# tracked in git for full reproducibility.
-# Clone -> run -> get results, no extra downloads.
-# ============================================
+
+
