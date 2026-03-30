@@ -4,7 +4,7 @@
 
 ---
 
-## 当前进度：Step 8 进行中（FastAPI 已跑通，Dockerfile 初版已完成，待 Docker 本地 build/run 验证）
+## 当前进度：Step 8 进行中（FastAPI 已跑通，Docker 本地 build/run/curl 已验证，下一步补 README Docker 使用说明）
 
 | Step | 内容 | 状态 |
 |------|------|------|
@@ -15,7 +15,7 @@
 | Step 5 | ONNX 导出 + 推理验证 | Done (2026-03-28) — ONNX GPU 修复完成, ONNX GPU 69.8 FPS, 50张精度对比 50/50 一致 |
 | Step 6 | SAM 集成 | - |
 | Step 7 | GitHub 美化 | - |
-| Step 8 | FastAPI + Docker | In Progress (2026-03-30) — `api/app.py` 已完成，Dockerfile + `requirements-api.txt` 已补齐，待容器实测 |
+| Step 8 | FastAPI + Docker | In Progress (2026-03-30) — `api/app.py`、Dockerfile、`requirements-api.txt` 已完成，Docker 本地验证通过 |
 
 ---
 
@@ -1665,12 +1665,11 @@ curl -X POST "http://127.0.0.1:8000/detect" -F "file=@data/images/val/crazing_24
   - 本地 Windows 继续保留 GPU 推理能力
   - Docker 先证明“跨环境可部署的 CPU 服务版”已经具备
 
-#### 8.10.5 当前状态与限制
+#### 8.10.5 Docker 本地实测结果（2026-03-30）
 
 - `Dockerfile` 和 `requirements-api.txt` 已完成
-- `models/best.onnx` 本地已存在，当前 Docker 方案默认把它复制进镜像
-- **当前终端里 `docker` 不在 PATH**，所以还没做 `docker build` / `docker run` 实测
-- 下一步需要在装好 Docker Desktop / Engine 的环境里完成以下验证：
+- `models/best.onnx` 本地已存在，并已成功复制进镜像
+- 已在 Windows + Docker Desktop 环境完成本地验证：
 
 ```bash
 docker build -t yolo-defect-api .
@@ -1678,6 +1677,34 @@ docker run --rm -p 8000:8000 yolo-defect-api
 curl http://127.0.0.1:8000/health
 curl -X POST "http://127.0.0.1:8000/detect" -F "file=@data/images/val/crazing_241.jpg"
 ```
+
+**实测结果：**
+
+- `docker build -t yolo-defect-api .` 已成功完成
+  - 构建总耗时约 `184.7 s`
+  - `apt-get` 系统库安装阶段约 `95.2 s`
+  - `pip install` Python 依赖阶段约 `67.7 s`
+- `docker run --rm -p 8000:8000 yolo-defect-api` 已成功启动容器
+- `GET /health` 返回：
+  - `status = ok`
+  - `model = best.onnx`
+- `POST /detect` 测试图片：
+  - `data/images/val/crazing_241.jpg`
+  - 返回 `count = 3`
+  - 3 个检测结果的 `class_name` 都是 `crazing`
+  - 本次容器内返回的 `inference_time_ms = 73.99`
+
+**这一步说明了什么：**
+
+- 镜像已经能成功构建，说明 Dockerfile、依赖文件、模型复制路径都没问题
+- 容器已经能成功启动，说明 `uvicorn api.app:app` 在镜像内可运行
+- `/health` 成功说明服务与模型加载链路正常
+- `/detect` 成功说明“上传图片 → OpenCV 解码 → ONNX Runtime 推理 → NMS → JSON 返回”整条容器内服务链路已经打通
+
+**当前剩余工作：**
+
+- README 补充 Docker 使用说明
+- 可选：补一句“首次构建较慢主要耗在 apt/pip 安装层，后续可利用 Docker 层缓存加速”
 
 #### 8.10.6 我今天至少要能脱口而出的面试点
 
@@ -1693,7 +1720,7 @@ curl -X POST "http://127.0.0.1:8000/detect" -F "file=@data/images/val/crazing_24
 
 ### 下一步
 
-- 继续 **Step 8 后半段：Docker 本地 build/run 验证 + README Docker 使用说明**
+- 继续 **Step 8 后半段：README Docker 使用说明 + Day 3 后续 README / Git Push**
 
 ---
 
