@@ -53,6 +53,19 @@ sam_vit_*.pth
 # ---------- Docker ----------
 *.tar
 
+# ---------- Inference results / temp evaluation outputs ----------
+results/
+temp_eval*/
+
+# ---------- Private docs (learning notes, AI prompts, task plans) ----------
+docs/me/
+
+# ---------- Claude Code config ----------
+.claude/
+
+# ---------- YOLO cache ----------
+*.cache
+
 # ---------- Misc ----------
 *.bak
 *.tmp

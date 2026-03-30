@@ -1,12 +1,4 @@
-"""
-analyze_failures.py - Find and save typical false-positive / false-negative cases.
-
-在验证集上逐张运行检测，基于“同类 + IoU 阈值”的规则匹配预测框与真值框，
-然后筛出失败最明显的图片，保存到 docs/assets/ 方便做误检案例分析。
-
-Usage:
-    python scripts/analyze_failures.py --weights runs/detect/exp3_lr01/weights/best.pt
-"""
+"""误检/漏检分析：匹配预测框与真值框，筛选失败案例并保存可视化"""
 
 import argparse
 import os

@@ -1,15 +1,4 @@
-"""
-benchmark_api.py - Simple concurrent benchmark for FastAPI /detect endpoint.
-
-用途：
-1. 并发上传多张图片到 POST /detect
-2. 记录每个请求的响应时间
-3. 汇总平均响应时间、总耗时和 QPS
-
-示例：
-    python scripts/benchmark_api.py
-    python scripts/benchmark_api.py --url http://127.0.0.1:8000/detect --num-images 10 --concurrency 10
-"""
+"""API 压测脚本：并发上传图片到 POST /detect，统计响应时间和 QPS。"""
 
 import argparse
 import mimetypes

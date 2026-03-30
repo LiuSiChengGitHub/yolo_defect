@@ -1,31 +1,12 @@
-"""
-detector.py - YOLODetector class for ONNX inference.
-
-Encapsulates ONNX model loading, preprocessing, inference with NMS,
-and result visualization. Designed to be reused by FastAPI service.
-
-Usage:
-    from src.detector import YOLODetector
-
-    detector = YOLODetector("models/best.onnx")
-    detections = detector.predict(image)
-    result = detector.draw(image, detections, class_names)
-"""
+"""ONNX 推理封装：模型加载、预处理、NMS 后处理、可视化。供推理脚本和 FastAPI 复用。"""
 
 import os
 import sys
 
 
 def _add_cuda_dll_dirs():
-    """将 CUDA/cuDNN 的 DLL 目录加入 Windows DLL 搜索路径。
+    # 将 CUDA/cuDNN 的 DLL 目录加入 Windows DLL 搜索路径。
 
-    必须在 import onnxruntime 之前调用！
-    ORT 在 import 时就会尝试加载 onnxruntime_providers_cuda.dll，
-    该 DLL 依赖 cudart/cublas/cudnn/cufft 等，必须提前把路径注册好。
-
-    PyTorch (conda) 把 CUDA runtime DLL 放在 conda_env/bin/，
-    cuDNN DLL 放在 torch/lib/。ORT 的 LoadLibrary 默认找不到这些位置。
-    """
     if sys.platform != "win32":
         return
 
@@ -59,22 +40,8 @@ import onnxruntime as ort  # noqa: E402
 
 
 class YOLODetector:
-    """ONNX-based YOLOv8 detector for steel surface defect detection.
+    # 推理流程：preprocess → ONNX Runtime 推理 → 后处理（NMS）→ 可视化
 
-    为什么要单独封装这个类？
-    1. 关注点分离：推理逻辑独立于训练框架，不依赖 ultralytics
-    2. 复用性：inference_onnx.py 和 FastAPI 都直接 import 这个类
-    3. 可测试性：可以单独对这个类写单元测试
-
-    推理流程：preprocess → ONNX Runtime 推理 → 后处理（NMS）→ 可视化
-
-    Attributes:
-        session: ONNX Runtime 推理会话
-        input_name: 模型输入张量的名称
-        input_shape: 期望的输入形状 (batch, channels, height, width)
-        conf_thresh: 置信度阈值，低于此值的检测结果被过滤
-        iou_thresh: NMS 的 IoU 阈值，重叠度高于此值的框被抑制
-    """
 
     def __init__(self, model_path, conf_thresh=0.25, iou_thresh=0.45):
         """Initialize detector with ONNX model.
@@ -89,7 +56,6 @@ class YOLODetector:
 
         # 加载 ONNX 模型
         # providers 列表定义推理后端的优先级：先尝试 GPU（CUDA），不行就用 CPU
-        # 面试考点：ONNX Runtime 支持多种 ExecutionProvider（CUDA、TensorRT、DirectML、CPU）
         providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
         self.session = ort.InferenceSession(model_path, providers=providers)
 
@@ -102,25 +68,8 @@ class YOLODetector:
         self.input_w = self.input_shape[3]  # 输入宽度（如 640）
 
     def preprocess(self, image):
-        """Preprocess image for model input.
+        # 图片预处理流程（BGR → RGB，Resize，Normalize，HWC → CHW，添加 batch 维度）：
 
-        图片预处理流程（必须和训练时一致，否则推理结果会出问题）：
-
-        1. BGR → RGB：OpenCV 默认读取 BGR 格式，但模型训练用 RGB
-        2. Resize：缩放到模型期望尺寸（如 640x640）
-        3. Normalize：像素值从 0-255 归一化到 0-1（float32）
-        4. HWC → CHW：图片维度从 (H, W, C) 转为 (C, H, W)（PyTorch/ONNX 的标准格式）
-        5. 添加 batch 维度：从 (C, H, W) 变为 (1, C, H, W)
-
-        面试考点：预处理必须与训练时完全一致，否则模型性能会急剧下降！
-
-        Args:
-            image: 输入 BGR 图片（numpy 数组，HWC 格式）
-
-        Returns:
-            预处理后的 float32 numpy 数组 [1, 3, H, W]
-            缩放因子 (scale_x, scale_y) 用于将检测结果映射回原图尺寸
-        """
         orig_h, orig_w = image.shape[:2]
 
         # Step 1: BGR → RGB
@@ -147,17 +96,9 @@ class YOLODetector:
         return img, (scale_x, scale_y)
 
     def predict(self, image):
-        """Run inference on an image and return detections after NMS.
 
-        完整推理流程：预处理 → ONNX 推理 → 解析输出 → 置信度过滤 → NMS
+        # 完整推理流程：预处理 → ONNX 推理 → 解析输出 → 置信度过滤 → NMS
 
-        Args:
-            image: 输入 BGR 图片（numpy 数组）
-
-        Returns:
-            检测结果列表，每个元素是字典：
-            {"bbox": [x1, y1, x2, y2], "confidence": float, "class_id": int}
-        """
         # 预处理
         input_tensor, (scale_x, scale_y) = self.preprocess(image)
 
@@ -166,14 +107,8 @@ class YOLODetector:
         # None 表示获取所有输出
         outputs = self.session.run(None, {self.input_name: input_tensor})
 
-        # ============================================================
-        # 解析 YOLOv8 输出
-        # ============================================================
-        # YOLOv8 输出形状：[1, num_classes+4, num_predictions]
-        # - 前 4 个值是 cx, cy, w, h（中心坐标和宽高，相对于输入尺寸）
-        # - 后 num_classes 个值是每个类别的置信度分数
-        #
-        # 转置后变为 [num_predictions, 4+num_classes]，方便按行处理
+
+        # 解析 YOLOv8 输出，转置后变为 [num_predictions, 4+num_classes]，方便按行处理
         output = outputs[0]
         output = np.transpose(output[0])  # [num_predictions, 4+num_classes]
 
@@ -185,11 +120,7 @@ class YOLODetector:
         class_ids = np.argmax(scores, axis=1)      # 最高分的类别 ID
         confidences = np.max(scores, axis=1)        # 最高分的置信度值
 
-        # ============================================================
         # 置信度过滤
-        # ============================================================
-        # 只保留置信度 > conf_thresh 的预测
-        # YOLOv8 通常输出 8400 个预测框，大部分置信度很低，需要过滤
         mask = confidences > self.conf_thresh
         boxes_xywh = boxes_xywh[mask]
         class_ids = class_ids[mask]
@@ -198,12 +129,8 @@ class YOLODetector:
         if len(boxes_xywh) == 0:
             return []
 
-        # ============================================================
+
         # 坐标格式转换：中心格式 → 角点格式
-        # ============================================================
-        # (cx, cy, w, h) → (x1, y1, x2, y2)
-        # x1 = cx - w/2, y1 = cy - h/2 （左上角）
-        # x2 = cx + w/2, y2 = cy + h/2 （右下角）
         boxes_xyxy = np.zeros_like(boxes_xywh)
         boxes_xyxy[:, 0] = boxes_xywh[:, 0] - boxes_xywh[:, 2] / 2  # x1
         boxes_xyxy[:, 1] = boxes_xywh[:, 1] - boxes_xywh[:, 3] / 2  # y1
@@ -216,16 +143,7 @@ class YOLODetector:
         boxes_xyxy[:, 2] *= scale_x
         boxes_xyxy[:, 3] *= scale_y
 
-        # ============================================================
         # NMS（非极大值抑制）
-        # ============================================================
-        # 面试高频考点！
-        # 问题：同一个目标可能被多个框检测到，怎么只保留最好的那个？
-        # NMS 算法：
-        # 1. 按置信度从高到低排序
-        # 2. 取最高分的框，与其余所有框计算 IoU
-        # 3. IoU > 阈值的框被抑制（删除）
-        # 4. 重复步骤 2-3 直到所有框都处理完
         indices = self._nms(boxes_xyxy, confidences, self.iou_thresh)
 
         # 组装最终检测结果
@@ -241,23 +159,7 @@ class YOLODetector:
 
     @staticmethod
     def _nms(boxes, scores, iou_thresh):
-        """Non-Maximum Suppression (非极大值抑制).
 
-        手动实现 NMS，不依赖 torchvision.ops.nms。
-        面试可能要求手写这个算法！
-
-        IoU (Intersection over Union) 计算：
-            IoU = 两个框交集面积 / 两个框并集面积
-            IoU = 1 表示完全重叠，IoU = 0 表示没有重叠
-
-        Args:
-            boxes: [N, 4] 的边界框数组 (x1, y1, x2, y2)
-            scores: [N] 的置信度数组
-            iou_thresh: IoU 阈值
-
-        Returns:
-            保留的框索引列表
-        """
         x1 = boxes[:, 0]
         y1 = boxes[:, 1]
         x2 = boxes[:, 2]

@@ -1,14 +1,4 @@
-"""
-compare_pt_onnx.py - Approximate comparison between PyTorch and ONNX inference.
-
-Sample N validation images and compare:
-1. detection count per image
-2. confidence distribution across all detections
-
-Usage:
-    python scripts/compare_pt_onnx.py
-    python scripts/compare_pt_onnx.py --num-images 50 --imgsz 800
-"""
+"""PyTorch vs ONNX 精度对比：逐图对比检测结果，验证 ONNX 导出一致性。"""
 
 import argparse
 import csv

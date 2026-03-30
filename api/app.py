@@ -1,17 +1,4 @@
-"""
-app.py - FastAPI service for YOLO ONNX detector.
-
-当前目标只做两个最小可用接口：
-1. GET /health  -> 服务健康检查
-2. POST /detect -> 上传图片并返回检测结果 JSON
-
-为什么先做这两个？
-- /health 让我们快速确认“服务是否启动、模型是否加载成功”
-- /detect 证明“上传图片 -> 模型推理 -> 返回结果”整条链路已经打通
-
-运行示例：
-    uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
-"""
+"""FastAPI 服务入口：GET /health 健康检查，POST /detect 上传图片返回检测结果。"""
 
 import logging
 import os
@@ -240,8 +227,6 @@ def health_check():
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)):
     """上传图片并返回检测结果。
-
-    请求流非常重要，面试常问：
     1. 接收上传文件
     2. 解码成 OpenCV 图片
     3. 调用 detector.predict()

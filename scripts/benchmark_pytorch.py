@@ -1,15 +1,4 @@
-"""
-benchmark_pytorch.py - Measure PyTorch inference speed on a fixed number of images.
-
-Benchmark logic:
-1. preload images outside the timed loop
-2. optional warmup runs
-3. time only model.predict() per image
-
-Usage:
-    python scripts/benchmark_pytorch.py
-    python scripts/benchmark_pytorch.py --num-images 100 --device cpu
-"""
+"""PyTorch 推理速度测试：在固定图片子集上测量 FPS。"""
 
 import argparse
 import json

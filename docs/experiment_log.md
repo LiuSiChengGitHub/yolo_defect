@@ -275,4 +275,4 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 - Recommended deployment/reporting choice for now:
   - If headline metric is `mAP@0.5`, use **final_train_2**
   - If you want the cleanest lr-ablation methodology and strongest `mAP@50-95`, keep **exp3-lr01** as an important comparison model
-- Step 3 is now strong enough for a resume-ready tuning story; next priority should move to **ONNX export, inference verification, and service packaging**
+-  next priority should move to **ONNX export, inference verification, and service packaging**

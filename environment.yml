@@ -24,7 +24,7 @@ dependencies:
     # SAM integration
     - segment-anything        # Meta SAM
 
-    # API service (Week 2)
+    # API service
     - fastapi
     - uvicorn[standard]
     - python-multipart        # FastAPI file upload support

@@ -1,12 +1,4 @@
-"""
-inference_onnx.py - Run ONNX inference on images using YOLODetector.
-
-Supports single image and batch directory inference with visualization.
-
-Usage:
-    python scripts/inference_onnx.py --model models/best.onnx --image test.jpg
-    python scripts/inference_onnx.py --model models/best.onnx --image-dir data/images/val --output-dir results/
-"""
+"""ONNX 推理脚本：支持单张和批量推理，输出标注图和 FPS 统计。"""
 
 import argparse
 import os
@@ -106,12 +98,8 @@ def main():
     output_dir = os.path.abspath(args.output_dir)
     os.makedirs(output_dir, exist_ok=True)
 
-    # ============================================================
     # 加载 ONNX 检测器
-    # ============================================================
-    # YOLODetector 封装了 ONNX Runtime 的所有逻辑：
-    # - 加载模型 → 预处理 → 推理 → 后处理（NMS）→ 画框
-    # 这个类后续会被 FastAPI 直接复用，同一份推理代码不用写两遍
+    # YOLODetector 封装了 ONNX Runtime 的所有逻辑：加载模型 → 预处理 → 推理 → 后处理（NMS）→ 画框
     print(f"Loading model: {args.model}")
     detector = YOLODetector(
         model_path=args.model,
@@ -135,9 +123,7 @@ def main():
     for path in image_paths:
         total_time += process_image(detector, path, output_dir)
 
-    # 计算平均 FPS（每秒处理多少张图）
-    # 面试考点：FPS 是衡量推理速度的核心指标
-    # CPU 上一般 10-30 FPS，GPU 上可以到 100+ FPS
+    # 计算平均 FPS
     if image_paths:
         avg_time = total_time / len(image_paths)
         fps = 1.0 / avg_time if avg_time > 0 else 0

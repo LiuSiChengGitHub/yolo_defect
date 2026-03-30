@@ -1,3 +1,5 @@
+"""调试工具：打印预处理中间值和 ONNX 输出张量形状，用于排查推理问题。"""
+
 import os
 import sys
 import argparse

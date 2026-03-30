@@ -1,13 +1,4 @@
-"""
-train.py - Train YOLOv8 model on NEU-DET dataset.
-
-Reads hyperparameters from a YAML config file and launches training
-using the Ultralytics YOLO API.
-
-Usage:
-    python scripts/train.py
-    python scripts/train.py --config configs/train_config.yaml
-"""
+"""训练入口：读取 YAML 配置文件，调用 Ultralytics API 启动 YOLOv8 训练。"""
 
 import argparse
 import os
@@ -28,13 +19,8 @@ def main():
     )
     args = parser.parse_args()
 
-    # ============================================================
-    # 1. 加载超参数配置
-    # ============================================================
-    # 用 YAML 文件管理超参数而不是命令行参数，好处：
-    # - 每次实验的配置可以保存为文件，方便追溯和对比
-    # - 不用记住一长串命令行参数
-    # - 可以用 git diff 对比两次实验的参数差异
+
+    # 1. 加载超参数配置(用 YAML 文件管理超参数)
     config_path = os.path.abspath(args.config)
     print(f"Loading config: {config_path}")
     with open(config_path, "r", encoding="utf-8") as f:
@@ -59,19 +45,14 @@ def main():
     print(f"Config: {config}")
     print()
 
-    # ============================================================
+
     # 2. 加载模型并开始训练
-    # ============================================================
-    # YOLO(model_name) 做了什么：
-    # - 如果是 'yolov8n.pt'：下载 COCO 预训练权重（第一次运行时）
-    # - 加载模型架构 + 预训练权重（迁移学习的基础）
-    #
-    # model.train(**config) 做了什么：
-    # - 按 config 里的超参数启动训练
-    # - 自动进行数据增强（mosaic、mixup、翻转等）
-    # - 每个 epoch 结束后在验证集上评估
-    # - 自动保存 best.pt（最高 mAP）和 last.pt（最新 epoch）
-    # - 训练日志和权重保存到 runs/detect/train/
+    # 加载模型架构 + 预训练权重
+    # 按 config 里的超参数启动训练
+    # 数据增强验证集上评估
+    # 自动保存 best.pt 和 last.pt
+    # 训练日志和权重保存到 runs/detect/train/
+
     model = YOLO(model_name)
     results = model.train(**config)
 

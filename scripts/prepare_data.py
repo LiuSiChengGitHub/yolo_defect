@@ -1,16 +1,4 @@
-"""
-prepare_data.py - Convert NEU-DET VOC XML annotations to YOLO TXT format.
-
-This script reads the pre-split NEU-DET dataset (train/validation) and converts
-VOC XML annotations to YOLO format (class_id cx cy w h, normalized 0-1).
-
-Input:  data/NEU-DET/{train,validation}/{annotations,images}/
-Output: data/{images,labels}/{train,val}/ + data/data.yaml
-
-Usage:
-    python scripts/prepare_data.py
-    python scripts/prepare_data.py --data-root data/NEU-DET --output-dir data
-"""
+"""数据准备：将 NEU-DET VOC XML 标注转换为 YOLO TXT 格式，并生成 data.yaml。"""
 
 import argparse
 import os

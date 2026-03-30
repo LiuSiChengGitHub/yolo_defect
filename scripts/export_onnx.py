@@ -1,10 +1,4 @@
-"""
-export_onnx.py - Export trained YOLOv8 model to ONNX format.
-
-Usage:
-    python scripts/export_onnx.py --weights runs/detect/train/weights/best.pt
-    python scripts/export_onnx.py --weights runs/detect/train/weights/best.pt --output models/best.onnx
-"""
+"""ONNX 导出：将训练好的 YOLOv8 .pt 权重导出为 ONNX 格式。"""
 
 import argparse
 import os

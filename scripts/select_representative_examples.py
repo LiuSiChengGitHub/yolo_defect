@@ -1,18 +1,4 @@
-"""
-select_representative_examples.py - Auto-select representative ONNX result images.
-
-目标：
-1. 每类挑 1 张“正确案例”
-2. 每类挑 1 张“错误案例”
-3. 统一生成到 docs/assets/representative_examples/
-
-选择规则（工程近似版）：
-- 正确案例：该类 GT 全部匹配成功，且没有明显多余预测框
-- 错误案例：该类存在 FN，或有明显 FP / 错分
-
-Usage:
-    python scripts/select_representative_examples.py
-"""
+“””代表性样例筛选：每类自动选取正确/错误案例各 1 张，用于 README 展示。”””
 
 import argparse
 import json

@@ -1,13 +1,4 @@
-"""
-data_analysis.py - Analyze NEU-DET dataset distribution and statistics.
-
-Generates visualizations for class distribution, bbox size distribution,
-and per-image bbox count. Saves plots to docs/assets/.
-
-Usage:
-    python scripts/data_analysis.py
-    python scripts/data_analysis.py --data-root data/NEU-DET
-"""
+"""数据分析：统计类别分布、bbox 尺寸分布和每图 bbox 数量，生成可视化图表。"""
 
 import argparse
 import os
@@ -86,10 +77,7 @@ def parse_annotations(ann_dir):
 
 
 def plot_class_distribution(train_counts, val_counts, save_dir):
-    """绘制训练集/验证集的类别分布柱状图。
-
-    面试考点：数据集是否均衡？如果某类样本特别少，可能需要过采样或数据增强。
-    NEU-DET 每类约 300 张，属于相对均衡的数据集。
+    """绘制训练集/验证集的类别分布柱状图。。
     """
     fig, ax = plt.subplots(figsize=(10, 6))
     x = np.arange(len(CLASS_NAMES))
@@ -128,10 +116,7 @@ def plot_class_distribution(train_counts, val_counts, save_dir):
 
 def plot_bbox_per_image(bbox_per_image, save_dir):
     """绘制每张图 bbox 数量的直方图。
-
-    面试考点：了解"目标密度"。
     如果一张图有很多 bbox，训练时需要更大的 max_det 参数。
-    NEU-DET 中大部分图只有 1-3 个 bbox，少数图有更多。
     """
     fig, ax = plt.subplots(figsize=(8, 5))
     max_count = max(bbox_per_image) if bbox_per_image else 1
@@ -150,8 +135,6 @@ def plot_bbox_per_image(bbox_per_image, save_dir):
 
 def plot_bbox_sizes(bbox_sizes, save_dir):
     """绘制 bbox 宽高散点图。
-
-    面试考点：了解目标尺寸分布。
     - 如果目标很小（<32px），考虑用更大的 imgsz 或小目标增强策略
     - 如果目标接近整张图大小，说明缺陷覆盖面积大（如 crazing）
     - NEU-DET 原图只有 200x200，bbox 尺寸范围差异大

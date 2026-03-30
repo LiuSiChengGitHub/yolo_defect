@@ -1,12 +1,4 @@
-"""
-evaluate.py - Evaluate trained YOLOv8 model on validation set.
-
-Generates PR curves, confusion matrix, and saves misdetection examples.
-
-Usage:
-    python scripts/evaluate.py --weights runs/detect/train/weights/best.pt
-    python scripts/evaluate.py --weights runs/detect/train/weights/best.pt --save-failures 10
-"""
+"""模型评估：在验证集上计算 mAP、生成 PR 曲线和混淆矩阵。"""
 
 import argparse
 import os
