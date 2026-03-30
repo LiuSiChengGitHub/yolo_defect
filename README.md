@@ -47,8 +47,11 @@ python scripts/prepare_data.py
 # Train
 python scripts/train.py
 
-# Inference (after training & ONNX export)
-python scripts/inference_onnx.py --model models/best.onnx --image your_image.jpg
+# Export ONNX from the default training output
+python scripts/export_onnx.py --weights runs/detect/train/weights/best.pt
+
+# Inference on a real validation image
+python scripts/inference_onnx.py --model models/best.onnx --image data/images/val/crazing_241.jpg
 ```
 
 ## Dataset
@@ -289,7 +292,7 @@ yolo detect train data=data/data.yaml model=yolov8n.pt epochs=50 imgsz=640
 ### Export
 
 ```bash
-python scripts/export_onnx.py --weights runs/detect/final_train_2/weights/best.pt
+python scripts/export_onnx.py --weights runs/detect/train/weights/best.pt
 # Output: models/best.onnx
 ```
 
@@ -297,7 +300,7 @@ python scripts/export_onnx.py --weights runs/detect/final_train_2/weights/best.p
 
 ```bash
 # Single image
-python scripts/inference_onnx.py --model models/best.onnx --image path/to/image.jpg
+python scripts/inference_onnx.py --model models/best.onnx --image data/images/val/crazing_241.jpg
 
 # Batch (entire directory)
 python scripts/inference_onnx.py --model models/best.onnx --image-dir data/images/val --output-dir results/
@@ -451,8 +454,10 @@ Current Docker verification (2026-03-30):
 
 ```
 yolo_defect/
+├── Dockerfile                    # Docker image for FastAPI deployment
 ├── README.md                     # This file
 ├── LICENSE                       # MIT License
+├── requirements-api.txt          # Minimal runtime dependencies for Docker/API
 ├── requirements.txt              # pip dependencies
 ├── environment.yml               # Conda environment (PyTorch + CUDA)
 ├── .gitignore                    # Ignore rules
@@ -471,17 +476,21 @@ yolo_defect/
 │   ├── compare_pt_onnx.py        # 50-image approximate comparison of PT vs ONNX outputs
 │   ├── benchmark_pytorch.py      # PyTorch FPS benchmark on a fixed image subset
 │   ├── benchmark_api.py          # Simple concurrent benchmark for POST /detect
+│   ├── analyze_failures.py       # Failure-case analysis for false positives/negatives
+│   ├── select_representative_examples.py  # Select representative examples for README
 │   └── inference_onnx.py         # ONNX inference (single + batch)
 ├── src/
 │   ├── __init__.py
 │   └── detector.py               # YOLODetector class (ONNX inference, FastAPI reuse)
 ├── api/
+│   ├── .gitkeep
 │   └── app.py                    # FastAPI service (`GET /health`, `POST /detect`)
 ├── configs/
 │   ├── train_config.yaml         # Baseline training hyperparameters
 │   └── exp*.yaml                 # Experiment configs (imgsz/lr/augment/final runs)
 ├── models/
 │   └── .gitkeep                  # Exported ONNX models
+├── results/                      # Inference outputs and comparison artifacts
 ├── docs/
 │   ├── tasks/                    # Project prompts & task docs
 │   ├── notes/                    # Learning notes (YOLO theory, interview points)
@@ -540,7 +549,7 @@ The NEU-DET dataset is only 28MB. Including it means:
 - **FastAPI reuse** — The API service imports `YOLODetector` directly, no code duplication
 - **Testing** — The detector can be unit-tested in isolation
 
-## Roadmap / TODO
+## Roadmap
 
 - [x] Baseline training and experiment tracking
 - [x] Hyperparameter tuning (imgsz / lr / augment comparisons)
@@ -614,8 +623,11 @@ python scripts/prepare_data.py
 # 训练
 python scripts/train.py
 
-# 推理（训练并导出 ONNX 后）
-python scripts/inference_onnx.py --model models/best.onnx --image your_image.jpg
+# 从默认训练输出导出 ONNX
+python scripts/export_onnx.py --weights runs/detect/train/weights/best.pt
+
+# 用真实验证集样例做推理
+python scripts/inference_onnx.py --model models/best.onnx --image data/images/val/crazing_241.jpg
 ```
 
 ## 数据集
@@ -895,7 +907,7 @@ ONNX（Open Neural Network Exchange）是微软和 Facebook 联合推出的开�
 ### 导出命令
 
 ```bash
-python scripts/export_onnx.py --weights runs/detect/final_train_2/weights/best.pt
+python scripts/export_onnx.py --weights runs/detect/train/weights/best.pt
 # 输出: models/best.onnx
 ```
 
@@ -903,7 +915,7 @@ python scripts/export_onnx.py --weights runs/detect/final_train_2/weights/best.p
 
 ```bash
 # 单张推理
-python scripts/inference_onnx.py --model models/best.onnx --image test.jpg
+python scripts/inference_onnx.py --model models/best.onnx --image data/images/val/crazing_241.jpg
 
 # 批量推理（整个目录）
 python scripts/inference_onnx.py --model models/best.onnx --image-dir data/images/val --output-dir results/
@@ -1077,9 +1089,10 @@ curl -X POST http://127.0.0.1:8000/detect \
 
 ```
 yolo_defect/
+├── Dockerfile                    # FastAPI 部署镜像
 ├── README.md                     # 项目说明（英文+中文双版本）
-├── CLAUDE.md                     # AI 助手上下文文件
 ├── LICENSE                       # MIT 开源协议
+├── requirements-api.txt          # Docker / API 运行时最小依赖
 ├── requirements.txt              # pip 依赖列表
 ├── environment.yml               # Conda 环境配置（含 PyTorch + CUDA）
 ├── .gitignore                    # Git 忽略规则
@@ -1098,17 +1111,21 @@ yolo_defect/
 │   ├── compare_pt_onnx.py        #   PyTorch vs ONNX 50张近似对比
 │   ├── benchmark_pytorch.py      #   PyTorch 100张 CPU FPS 测试
 │   ├── benchmark_api.py          #   POST /detect 并发压测脚本
+│   ├── analyze_failures.py       #   误检 / 漏检案例分析
+│   ├── select_representative_examples.py # README 代表样本筛选
 │   └── inference_onnx.py         #   ONNX 推理（单张 + 批量）
 ├── src/                          # 可复用模块
 │   ├── __init__.py
 │   └── detector.py               #   YOLODetector 类（ONNX 推理，FastAPI 复用）
 ├── api/                          # FastAPI 服务
+│   ├── .gitkeep
 │   └── app.py                    #   `GET /health` + `POST /detect`
 ├── configs/
 │   ├── train_config.yaml         # baseline 训练超参数配置
 │   └── exp*.yaml                 # 各组实验配置（imgsz / lr / augment / final）
 ├── models/
 │   └── .gitkeep                  # 导出的 ONNX 模型（gitignored）
+├── results/                      # 推理结果图与对比输出
 ├── docs/
 │   ├── tasks/                    # 项目任务文档
 │   ├── notes/                    # 学习笔记（YOLO 理论、面试点）

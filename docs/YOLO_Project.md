@@ -1750,7 +1750,27 @@ curl -X POST "http://127.0.0.1:8000/detect" -F "file=@data/images/val/crazing_24
   - `/health` 与 `/detect` 的 curl 验证命令
 - 已同步 README 中英文两部分，并把 roadmap 里的 Docker / Demo GIF 状态更新为已完成
 
+#### 8.10.9 README 自检与 Quick Start 实跑（2026-03-30）
 
+- 已完成 README 静态自检：
+  - 实验结果表保留真实数据
+  - PR 曲线 / 混淆矩阵 / Demo GIF 链接全部存在
+  - API 示例、Docker 用法、ONNX 性能对比表均已齐全
+  - README 中不再残留 `TODO`、`your_image.jpg`、`path/to/image.jpg`、`test.jpg`
+- 已把 Quick Start 从“看起来像流程”改成真正的 4 步闭环：
+  - `python scripts/prepare_data.py`
+  - `python scripts/train.py`
+  - `python scripts/export_onnx.py --weights runs/detect/train/weights/best.pt`
+  - `python scripts/inference_onnx.py --model models/best.onnx --image data/images/val/crazing_241.jpg`
+- 已完成 Quick Start 实跑验证：
+  - `prepare_data.py` 跑通，但发现验证集缺少 `crazing_240.jpg`，因此统计结果变为 `1439 train / 361 val`
+  - `train.py` 跑通，默认 `runs/detect/train/weights/best.pt` 成功生成
+  - 本轮默认训练的最终验证结果为 `mAP@0.5 = 0.734`、`mAP@50-95 = 0.390`
+  - `export_onnx.py` 跑通，成功生成 `models/best.onnx`，导出大小约 `11.68 MB`
+  - 导出时提示缺少 `onnxslim`，但不影响 ONNX 导出成功
+  - `inference_onnx.py` 跑通，对 `crazing_241.jpg` 返回 `1 detection(s)`，结果图成功保存到 `results/`
+  - Quick Start 验证结束后，已把 `models/best.onnx` 恢复为 `final_train_2` 的 `imgsz=800` 部署版本，避免影响 README / Docker / API 默认模型
+- 这一轮的实际意义：README 里的 Quick Start 现在不只是“语法正确”，而是已经用真实命令验证过整条训练 → 导出 → 推理链路
 
 ---
 
