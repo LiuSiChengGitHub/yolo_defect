@@ -1703,8 +1703,8 @@ curl -X POST "http://127.0.0.1:8000/detect" -F "file=@data/images/val/crazing_24
 
 **当前剩余工作：**
 
-- README 补充 Docker 使用说明
-- 可选：补一句“首次构建较慢主要耗在 apt/pip 安装层，后续可利用 Docker 层缓存加速”
+- README Docker 使用说明已补齐
+- 下一步进入 Git Push / 最终仓库收尾
 
 #### 8.10.6 我今天至少要能脱口而出的面试点
 
@@ -1713,6 +1713,42 @@ curl -X POST "http://127.0.0.1:8000/detect" -F "file=@data/images/val/crazing_24
 - 选择 `python:3.9-slim` 是为了兼顾版本一致性和镜像体积
 - `opencv-python-headless` 更适合容器，因为服务端不需要 GUI
 - `CMD` 里必须监听 `0.0.0.0`，这是容器网络访问的基本要求
+#### 8.10.7 我现在已经能自己讲清楚的 Dockerfile 理解
+
+- Dockerfile 不能只背命令，要按“环境 → 依赖 → 应用 → 启动”的顺序理解
+- 我现在能口头解释它的完整顺序：
+  - 先准备 Python 基础环境
+  - 再设定工作目录
+  - 再通过 `ENV` 优化 Python 在容器里的运行方式
+  - 再安装 Linux 系统依赖
+  - 再复制部署依赖文件并安装 Python 依赖
+  - 再复制 API 所需的代码和模型
+  - 再声明监听端口
+  - 最后通过 `CMD` 启动 FastAPI 服务
+- 我已经理解两个关键“为什么”：
+  - 为什么先 `FROM` 再 `WORKDIR`：因为要先有基础环境，再决定默认工作目录
+  - 为什么 Python 依赖不直接放进基础镜像：因为基础镜像只提供通用 Python 环境，项目依赖要按当前服务需求单独安装
+- 我也已经能区分：
+  - `EXPOSE 8000` 是声明端口
+  - `CMD ["uvicorn", ...]` 才是容器真正启动时执行的服务命令
+
+#### 8.10.8 README 全量更新（2026-03-30）
+
+- 已把 `docs/assets/demo_inference_result.gif` 接入 README 顶部，作为项目推理演示
+- 已在 README 中新增“关键指标 / Key Metrics”总表，统一展示：
+  - `mAP@0.5 = 0.743`
+  - `mAP@50-95 = 0.388`
+  - ONNX `22.0 FPS (CPU)` / `69.8 FPS (GPU)`
+  - PyTorch `7.1 FPS (CPU)` / `60.5 FPS (GPU)`
+  - API 吞吐量 `3.27 QPS`
+- 已把模型体积写成当前本地真实文件数据：
+  - `best.pt = 6,286,072 bytes`
+  - `best.onnx = 12,336,935 bytes`
+- 已在 README 的 FastAPI 部分补入 Docker 用法，包含：
+  - `docker build -t yolo-defect-api .`
+  - `docker run --rm -p 8000:8000 yolo-defect-api`
+  - `/health` 与 `/detect` 的 curl 验证命令
+- 已同步 README 中英文两部分，并把 roadmap 里的 Docker / Demo GIF 状态更新为已完成
 
 
 
@@ -1720,7 +1756,7 @@ curl -X POST "http://127.0.0.1:8000/detect" -F "file=@data/images/val/crazing_24
 
 ### 下一步
 
-- 继续 **Step 8 后半段：README Docker 使用说明 + Day 3 后续 README / Git Push**
+- 继续 **Day 3 最后一项：Git Push / 仓库最终收尾**
 
 ---
 
