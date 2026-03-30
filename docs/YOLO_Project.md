@@ -1788,3 +1788,18 @@ curl -X POST "http://127.0.0.1:8000/detect" -F "file=@data/images/val/crazing_24
 - [[notes/YOLO_notes#项目文件观|项目文件观]]
 - [[notes/YOLO_notes#调参判断方法|调参判断方法]]
 - [[notes/YOLO_notes#ONNX 部署|ONNX 部署]]（8.0~8.5：ONNX 概念、计算图、导出原理、ORT、detector 设计、预处理踩坑）
+
+#### 8.10.10 README 对外文案收口（2026-03-30）
+
+- 已把 README 中容易引起误解的 ONNX 导出路径拆成两层说明：
+  - Quick Start 继续使用 `runs/detect/train/weights/best.pt`，因为这是新用户按默认流程训练后一定会得到的输出路径
+  - 最佳指标复现明确指向 `runs/detect/final_train_2/weights/best.pt --imgsz 800`，因为 README 顶部展示的 `mAP@0.5 = 0.743` 来自这次最佳实验
+- 这样处理后，README 里的“教程路径”和“最佳模型路径”职责明确，不再会让读者误以为 `train` 与 `final_train_2` 在争夺同一个语义位置
+- 已把 README 中所有“简历 / 面试 / interview / resume”表述移出，对外只保留项目事实、实现细节、性能数据和部署说明
+- 从 README 迁回项目文档的知识点包括：
+  - VOC 与 YOLO 标注格式的核心差异：绝对角点坐标 vs 归一化中心点宽高
+  - 训练超参数表里原本附带的口头解释点：`imgsz`、`lr0`、`optimizer`、`batch` 等各自会影响什么
+  - 为什么迁移学习有效：低层纹理与边缘特征可复用，高层任务语义再做微调
+  - 为什么部署阶段选择 ONNX Runtime：依赖更轻、跨平台更好、适合边缘交付
+  - NMS 的标准流程：排序、IoU 抑制、迭代保留最优框
+- 这次收口后的 README 定位更清晰：它是对外展示项目闭环与结果的说明书；需要背诵、复盘、表达训练的内容统一留在 `YOLO_Project.md`
