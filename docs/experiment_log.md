@@ -53,7 +53,6 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
   - rolled-in_scale: 42% missed (AP=0.581)
 - Best class: patches (AP=0.928) — distinct block patterns, easy to distinguish
 
-**User analysis:** *(fill in your own interpretation here)*
 
 ---
 
@@ -76,7 +75,6 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 - Ultralytics printed `optimizer=auto`, which **overrode `lr0=0.01` and selected AdamW(lr=0.001)** automatically
 - This means a future "learning-rate-only" ablation is **not valid** unless we first set a fixed optimizer instead of `auto`
 
-**User analysis:** *(fill in your own interpretation here)*
 
 ---
 
@@ -100,7 +98,6 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 - This run still used `optimizer=auto`, so Ultralytics again selected **AdamW(lr=0.001)**
 - Therefore exp2 is a fair comparison against baseline/exp1 on the **imgsz** dimension, but not against fixed-SGD learning-rate experiments
 
-**User analysis:** *(fill in your own interpretation here)*
 
 ---
 
@@ -127,7 +124,6 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 - While starting this experiment, `train.py` hit a Windows encoding issue because YAML was opened with the default locale codec
 - Fixed by reading config files with `encoding="utf-8"`, so future YAML files can safely contain Chinese comments
 
-**User analysis:** *(fill in your own interpretation here)*
 
 ---
 
@@ -155,8 +151,6 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 - This run still used `optimizer=auto`, so Ultralytics again selected **AdamW(lr=0.001)**
 - Therefore exp4 is best understood as an **augmentation-only** comparison against `exp2`
 
-**User analysis:** *(fill in your own interpretation here)*
-
 ---
 
 ## Exp5 Analysis (2026-03-26)
@@ -182,7 +176,6 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 - This run still used `optimizer=auto`, so Ultralytics again selected **AdamW(lr=0.001)**
 - Therefore exp5 should be compared mainly against `exp2` and `exp4` as an augmentation ablation family
 
-**User analysis:** *(fill in your own interpretation here)*
 
 ---
 
@@ -214,7 +207,6 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 - The final result is therefore best interpreted as a **longer-training verification** of the `imgsz=800` family, not as a new optimizer/lr conclusion
 - Practical takeaway: under the current augmentation + optimizer family, simply training longer did not solve the core industrial defect bottlenecks
 
-**User analysis:** *(fill in your own interpretation here)*
 
 ---
 
@@ -247,8 +239,6 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 - This run is not inherited from one earlier experiment; it is a **new manually combined final candidate**
 - The result is useful exactly because it verifies that a cross-family combination can outperform the previous end-to-end winner on the headline metric
 - Practical takeaway: optimizer family matters, and longer training became valuable only after switching to the stronger manual combination
-
-**User analysis:** *(fill in your own interpretation here)*
 
 ---
 
