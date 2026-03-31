@@ -68,17 +68,28 @@ class YOLODetector:
         self.input_w = self.input_shape[3]  # 输入宽度（如 640）
 
     def preprocess(self, image):
-        # 图片预处理流程（BGR → RGB，Resize，Normalize，HWC → CHW，添加 batch 维度）：
+        # 图片预处理流程（BGR → RGB，Letterbox，Normalize，HWC → CHW，添加 batch 维度）：
 
         orig_h, orig_w = image.shape[:2]
 
         # Step 1: BGR → RGB
         img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # Step 2: Resize 到模型输入尺寸
-        # 注意：这里用简单的 resize，没有做 letterbox（保持长宽比的填充）
-        # YOLOv8 训练时用的是 letterbox，但简单 resize 在正方形图片（200x200）上差异不大
-        img = cv2.resize(img, (self.input_w, self.input_h))
+        # Step 2: Letterbox —— 保持长宽比缩放，四周填灰（与 Ultralytics 训练预处理一致）
+        scale = min(self.input_h / orig_h, self.input_w / orig_w)
+        new_w = int(round(orig_w * scale))
+        new_h = int(round(orig_h * scale))
+        img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+
+        # 居中填充（整数像素，左/上取 floor，右/下补齐余量）
+        pad_left = (self.input_w - new_w) // 2
+        pad_top  = (self.input_h - new_h) // 2
+        pad_right  = self.input_w - new_w - pad_left
+        pad_bottom = self.input_h - new_h - pad_top
+        img = cv2.copyMakeBorder(
+            img, pad_top, pad_bottom, pad_left, pad_right,
+            cv2.BORDER_CONSTANT, value=(114, 114, 114),
+        )
 
         # Step 3: 归一化到 0-1
         img = img.astype(np.float32) / 255.0
@@ -89,31 +100,27 @@ class YOLODetector:
         # Step 5: 添加 batch 维度 → [1, 3, H, W]
         img = np.expand_dims(img, axis=0)
 
-        # 计算缩放因子，后续用来把检测框坐标映射回原图
-        scale_x = orig_w / self.input_w
-        scale_y = orig_h / self.input_h
-
-        return img, (scale_x, scale_y)
+        # 返回 letterbox 参数，供坐标逆变换使用
+        return img, (scale, pad_left, pad_top, orig_w, orig_h)
 
     def predict(self, image):
 
         # 完整推理流程：预处理 → ONNX 推理 → 解析输出 → 置信度过滤 → NMS
 
         # 预处理
-        input_tensor, (scale_x, scale_y) = self.preprocess(image)
+        input_tensor, (scale, pad_left, pad_top, orig_w, orig_h) = self.preprocess(image)
 
         # ONNX Runtime 推理
         # session.run(输出名列表, 输入字典)
         # None 表示获取所有输出
         outputs = self.session.run(None, {self.input_name: input_tensor})
 
-
         # 解析 YOLOv8 输出，转置后变为 [num_predictions, 4+num_classes]，方便按行处理
         output = outputs[0]
         output = np.transpose(output[0])  # [num_predictions, 4+num_classes]
 
         # 分离坐标和分数
-        boxes_xywh = output[:, :4]   # 前 4 列：cx, cy, w, h
+        boxes_xywh = output[:, :4]   # 前 4 列：cx, cy, w, h（在模型输入空间，如 640x640）
         scores = output[:, 4:]        # 后面的列：各类别置信度
 
         # 取每个预测的最高分类别
@@ -129,28 +136,25 @@ class YOLODetector:
         if len(boxes_xywh) == 0:
             return []
 
-
-        # 坐标格式转换：中心格式 → 角点格式
+        # 坐标格式转换：中心格式 → 角点格式（仍在模型输入空间）
         boxes_xyxy = np.zeros_like(boxes_xywh)
         boxes_xyxy[:, 0] = boxes_xywh[:, 0] - boxes_xywh[:, 2] / 2  # x1
         boxes_xyxy[:, 1] = boxes_xywh[:, 1] - boxes_xywh[:, 3] / 2  # y1
         boxes_xyxy[:, 2] = boxes_xywh[:, 0] + boxes_xywh[:, 2] / 2  # x2
         boxes_xyxy[:, 3] = boxes_xywh[:, 1] + boxes_xywh[:, 3] / 2  # y2
 
-        # 将坐标从模型输入尺寸（640x640）映射回原图尺寸（200x200）
-        boxes_xyxy[:, 0] *= scale_x
-        boxes_xyxy[:, 1] *= scale_y
-        boxes_xyxy[:, 2] *= scale_x
-        boxes_xyxy[:, 3] *= scale_y
-
-        # NMS（非极大值抑制）
+        # NMS 在模型输入空间执行（与 Ultralytics 对齐）
         indices = self._nms(boxes_xyxy, confidences, self.iou_thresh)
 
-        # 组装最终检测结果
+        # Letterbox 逆变换：先减去 padding 偏移，再除以缩放因子，映射回原图空间
         detections = []
         for i in indices:
+            x1 = float(np.clip((boxes_xyxy[i, 0] - pad_left) / scale, 0, orig_w))
+            y1 = float(np.clip((boxes_xyxy[i, 1] - pad_top)  / scale, 0, orig_h))
+            x2 = float(np.clip((boxes_xyxy[i, 2] - pad_left) / scale, 0, orig_w))
+            y2 = float(np.clip((boxes_xyxy[i, 3] - pad_top)  / scale, 0, orig_h))
             detections.append({
-                "bbox": boxes_xyxy[i].tolist(),
+                "bbox": [x1, y1, x2, y2],
                 "confidence": float(confidences[i]),
                 "class_id": int(class_ids[i]),
             })

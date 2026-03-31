@@ -13,7 +13,7 @@
 ## 项目亮点
 
 - **当前最佳实验结果** — 当前最佳模型 `final_train_2` 达到 **mAP@0.5 = 0.743**
-- **PyTorch / ONNX 一致性抽查** — 50 张图里有 **49/50** 的检测框数量完全一致，总检测框数 **146 vs 145**
+- **PyTorch / ONNX 一致性抽查** — 50 张图全部检测框数量完全一致（**50/50**），总检测框数 **146 vs 146**
 - **CPU 推理速度有原始结果** — PyTorch CPU 基准测试在 **100** 张计时图片上达到 **8.43 FPS**
 - **Docker 已验证** — `python:3.9-slim` 镜像已成功跑通 `/health` 和 `/detect`
 - **克隆即用** — 数据集（28MB）已包含在仓库内，无需额外下载
@@ -25,8 +25,8 @@
 | 最佳模型 | `final_train_2` |
 | mAP@0.5 | **0.743** |
 | mAP@50-95 | **0.388** |
-| PT/ONNX 检测框数一致率 | **49 / 50**（**98%**） |
-| 平均检测框数差值 | **0.02** |
+| PT/ONNX 检测框数一致率 | **50 / 50**（**100%**） |
+| 平均检测框数差值 | **0.000** |
 | PyTorch CPU 基准测试 | **8.43 FPS** / **118.66 ms** 每张 |
 | 模型大小（`best.pt` / `best.onnx`） | ~6.0 MiB / ~11.8 MiB |
 
@@ -361,9 +361,9 @@ python scripts/inference_onnx.py --model models/best.onnx --image-dir data/image
 |--------|------|----------|
 | 最佳 PyTorch 验证结果 | **mAP@0.5 = 0.7433**，**mAP@50-95 = 0.3880** | `docs/experiment_log.md` |
 | PyTorch CPU 基准测试 | **8.43 FPS**，**118.66 ms/张**，共 **100** 张计时图片 | `results/pytorch_benchmark_100.json` |
-| PT / ONNX 检测框数一致率 | **49 / 50**（**98%**） | `results/pt_onnx_compare/compare_50_summary.json` |
-| PT / ONNX 总检测框数 | **146 vs 145** | `results/pt_onnx_compare/compare_50_summary.json` |
-| 平均绝对检测框数差值 | **0.02** | `results/pt_onnx_compare/compare_50_summary.json` |
+| PT / ONNX 检测框数一致率 | **50 / 50**（**100%**） | `results/pt_onnx_compare/compare_50_summary.json` |
+| PT / ONNX 总检测框数 | **146 vs 146** | `results/pt_onnx_compare/compare_50_summary.json` |
+| 平均绝对检测框数差值 | **0.000** | `results/pt_onnx_compare/compare_50_summary.json` |
 | 当前本地模型大小 | `best.pt = 6,286,072 bytes`，`best.onnx = 12,336,935 bytes` | 本地模型文件 |
 
 - 当前仓库已经提交了 PyTorch 验证结果摘要、PyTorch CPU benchmark 和 50 张 PT / ONNX 对比结果。

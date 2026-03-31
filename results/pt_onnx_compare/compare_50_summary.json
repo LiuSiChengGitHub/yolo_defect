@@ -6,12 +6,12 @@
   "conf_thresh": 0.25,
   "iou_thresh": 0.45,
   "pt_device": "cpu",
-  "same_count_images": 49,
-  "same_count_ratio": 0.98,
-  "mean_abs_count_diff": 0.02,
-  "max_abs_count_diff": 1,
+  "same_count_images": 50,
+  "same_count_ratio": 1.0,
+  "mean_abs_count_diff": 0.0,
+  "max_abs_count_diff": 0,
   "pt_total_detections": 146,
-  "onnx_total_detections": 145,
+  "onnx_total_detections": 146,
   "pt_confidence_summary": {
     "count": 146,
     "mean": 0.4015253782272339,
@@ -23,13 +23,13 @@
     "max": 0.7702867388725281
   },
   "onnx_confidence_summary": {
-    "count": 145,
-    "mean": 0.4025355279445648,
-    "std": 0.11407548934221268,
-    "min": 0.25071007013320923,
-    "q25": 0.3082333207130432,
-    "median": 0.3750097155570984,
-    "q75": 0.46516019105911255,
-    "max": 0.7704587578773499
+    "count": 146,
+    "mean": 0.4014935791492462,
+    "std": 0.11438452452421188,
+    "min": 0.2501288056373596,
+    "q25": 0.3076013773679733,
+    "median": 0.37440410256385803,
+    "q75": 0.46526139974594116,
+    "max": 0.7703147530555725
   }
 }
