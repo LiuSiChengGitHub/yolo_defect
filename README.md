@@ -16,7 +16,7 @@ End-to-end industrial defect detection pipeline: from data preparation to ONNX d
 
 - **Best Experimental Result** — Best checkpoint `final_train_2` reaches **mAP@0.5 = 0.743** on NEU-DET
 - **PyTorch vs ONNX Consistency Check** — 50-image comparison shows **50/50** identical detection-count matches, with total detections **146 vs 146**
-- **Measured CPU Benchmark** — PyTorch validation inference benchmark records **8.43 FPS** on **100** timed images
+- **Inference Speed Benchmark** — PyTorch CPU **8.43 FPS**; ONNX CPU **24.1 FPS**; ONNX GPU (RTX 3060) **56.4 FPS** — all measured on 100 timed images (5 warmup)
 - **Docker Verified** — `python:3.9-slim` image has been tested with `/health` and `/detect`
 - **Clone & Run** — Dataset (28MB) included in the repo, no external downloads needed
 
@@ -30,6 +30,8 @@ End-to-end industrial defect detection pipeline: from data preparation to ONNX d
 | PT/ONNX same-count ratio | **50 / 50** images (**100%**) |
 | Mean abs count diff | **0.000** |
 | PyTorch CPU benchmark | **8.43 FPS** / **118.66 ms** per image |
+| ONNX CPU benchmark | **24.1 FPS** / **41.4 ms** per image |
+| ONNX GPU benchmark (RTX 3060) | **56.4 FPS** / **17.7 ms** per image |
 | Model size (`best.pt` / `best.onnx`) | ~6.0 MiB / ~11.8 MiB |
 
 ## Quick Start
@@ -325,13 +327,12 @@ The current ONNX deployment target is exported with `imgsz=800`, so the model in
 |-------|-------|----------|
 | Best PyTorch validation result | **mAP@0.5 = 0.7433**, **mAP@50-95 = 0.3880** | `docs/experiment_log.md` |
 | PyTorch CPU benchmark | **8.43 FPS**, **118.66 ms/image** over **100** timed images | `results/pytorch_benchmark_100.json` |
+| ONNX CPU benchmark | **24.1 FPS**, **41.4 ms/image** over **100** timed images | `results/onnx_benchmark_cpu.json` |
+| ONNX GPU benchmark (RTX 3060) | **56.4 FPS**, **17.7 ms/image** over **100** timed images | `results/onnx_benchmark_gpu.json` |
 | PT vs ONNX detection-count match | **50 / 50** images (**100%**) | `results/pt_onnx_compare/compare_50_summary.json` |
 | Total detections in PT vs ONNX check | **146 vs 146** | `results/pt_onnx_compare/compare_50_summary.json` |
 | Mean absolute detection-count difference | **0.000** | `results/pt_onnx_compare/compare_50_summary.json` |
 | Current local model sizes | `best.pt = 6,286,072 bytes`, `best.onnx = 12,336,935 bytes` | local artifacts |
-
-- The repository currently includes raw artifacts for the PyTorch validation summary, PyTorch CPU benchmark, and the 50-image PyTorch-vs-ONNX comparison.
-- GPU benchmark logs and API benchmark logs are not checked into this repository yet, so headline GPU / QPS numbers are intentionally omitted from this README.
 
 ### YOLODetector Class (`src/detector.py`)
 
@@ -408,7 +409,7 @@ Example response:
       "class_id": 0,
       "class_name": "crazing",
       "confidence": 0.4457,
-      "bbox": [-1.34, 53.68, 176.91, 146.24]
+      "bbox": [0.0, 53.68, 176.91, 146.23]
     }
   ]
 }

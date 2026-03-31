@@ -34,12 +34,12 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 
 ## Deployment Performance
 
-| Format | mAP@0.5 | FPS (CPU) | FPS (GPU) | Model Size |
-|--------|---------|-----------|-----------|------------|
-| PyTorch (.pt) | 0.743 | 8.43 | 60.5 | 6.0 MB |
-| ONNX (.onnx) | ≈ 0.743 * | 22.5 | 69.8 | 11.8 MB |
+| Format | mAP@0.5 | FPS (CPU) | FPS (GPU) | Model Size | Evidence |
+|--------|---------|-----------|-----------|------------|----------|
+| PyTorch (.pt) | 0.743 | 8.43 | — | 6.0 MB | `results/pytorch_benchmark_100.json` |
+| ONNX (.onnx) | ≈ 0.743 * | 24.1 | 56.4 (RTX 3060) | 11.8 MB | `results/onnx_benchmark_cpu.json` / `onnx_benchmark_gpu.json` |
 
-\* ONNX mAP@0.5 未单独用 `model.val()` 测量；由 50 张图近似对比推断（**50/50** 框数完全一致，置信度均值差 < 0.0001）。CPU FPS 使用 `inference_onnx.py` 在全部 360 张验证集上测量；GPU FPS 在 ONNX Runtime CUDAExecutionProvider 修复后测量（RTX 3060）。
+\* ONNX mAP@0.5 未单独用 `model.val()` 测量；由 50 张图近似对比推断（**50/50** 框数完全一致，置信度均值差 < 0.0001）。ONNX CPU/GPU FPS 于 2026-03-31 重测（letterbox 修复后，100 张计时 + 5 张预热，模型输入 800×800），数字已有 JSON 证据文件。旧记录（CPU 22.5 / GPU 69.8）来自前一版 simple-resize 预处理，已被本次测量替代。
 
 ---
 

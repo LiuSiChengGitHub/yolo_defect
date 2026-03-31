@@ -14,7 +14,7 @@
 
 - **当前最佳实验结果** — 当前最佳模型 `final_train_2` 达到 **mAP@0.5 = 0.743**
 - **PyTorch / ONNX 一致性抽查** — 50 张图全部检测框数量完全一致（**50/50**），总检测框数 **146 vs 146**
-- **CPU 推理速度有原始结果** — PyTorch CPU 基准测试在 **100** 张计时图片上达到 **8.43 FPS**
+- **推理速度基准测试** — PyTorch CPU **8.43 FPS**；ONNX CPU **24.1 FPS**；ONNX GPU（RTX 3060）**56.4 FPS**，均在 100 张计时图片（5 张预热）上测量
 - **Docker 已验证** — `python:3.9-slim` 镜像已成功跑通 `/health` 和 `/detect`
 - **克隆即用** — 数据集（28MB）已包含在仓库内，无需额外下载
 
@@ -28,6 +28,8 @@
 | PT/ONNX 检测框数一致率 | **50 / 50**（**100%**） |
 | 平均检测框数差值 | **0.000** |
 | PyTorch CPU 基准测试 | **8.43 FPS** / **118.66 ms** 每张 |
+| ONNX CPU 基准测试 | **24.1 FPS** / **41.4 ms** 每张 |
+| ONNX GPU 基准测试（RTX 3060） | **56.4 FPS** / **17.7 ms** 每张 |
 | 模型大小（`best.pt` / `best.onnx`） | ~6.0 MiB / ~11.8 MiB |
 
 ## 快速开始
@@ -361,13 +363,12 @@ python scripts/inference_onnx.py --model models/best.onnx --image-dir data/image
 |--------|------|----------|
 | 最佳 PyTorch 验证结果 | **mAP@0.5 = 0.7433**，**mAP@50-95 = 0.3880** | `docs/experiment_log.md` |
 | PyTorch CPU 基准测试 | **8.43 FPS**，**118.66 ms/张**，共 **100** 张计时图片 | `results/pytorch_benchmark_100.json` |
+| ONNX CPU 基准测试 | **24.1 FPS**，**41.4 ms/张**，共 **100** 张计时图片 | `results/onnx_benchmark_cpu.json` |
+| ONNX GPU 基准测试（RTX 3060） | **56.4 FPS**，**17.7 ms/张**，共 **100** 张计时图片 | `results/onnx_benchmark_gpu.json` |
 | PT / ONNX 检测框数一致率 | **50 / 50**（**100%**） | `results/pt_onnx_compare/compare_50_summary.json` |
 | PT / ONNX 总检测框数 | **146 vs 146** | `results/pt_onnx_compare/compare_50_summary.json` |
 | 平均绝对检测框数差值 | **0.000** | `results/pt_onnx_compare/compare_50_summary.json` |
 | 当前本地模型大小 | `best.pt = 6,286,072 bytes`，`best.onnx = 12,336,935 bytes` | 本地模型文件 |
-
-- 当前仓库已经提交了 PyTorch 验证结果摘要、PyTorch CPU benchmark 和 50 张 PT / ONNX 对比结果。
-- GPU benchmark 和 API benchmark 的原始日志暂未随仓库提交，因此 README 里不再保留没有原始证据文件支撑的 GPU / QPS 数字。
 
 ### YOLODetector 类（`src/detector.py`）
 
@@ -375,7 +376,7 @@ python scripts/inference_onnx.py --model models/best.onnx --image-dir data/image
 
 1. **`preprocess(image)`** — 图片预处理
    - BGR → RGB（OpenCV 读的是 BGR，模型期望 RGB）
-   - Resize 到模型输入尺寸（本项目当前为 `800x800`）
+   - **Letterbox resize**：等比缩放后用灰色（114,114,114）填充至 `800×800`，与 Ultralytics 训练预处理完全对齐
    - 像素值归一化到 0-1（除以 255）
    - HWC → CHW（维度重排，PyTorch/ONNX 的标准）
    - 添加 batch 维度（3维→4维）
@@ -397,7 +398,7 @@ python scripts/inference_onnx.py --model models/best.onnx --image-dir data/image
 >
 > 本项目在 `detector.py` 中手动实现了 NMS（不依赖 torchvision）。
 
-该类的设计目的是**复用**：`scripts/inference_onnx.py` 和未来的 FastAPI 服务都直接 `from src.detector import YOLODetector`，推理逻辑只写一份。
+该类的设计目的是**复用**：`scripts/inference_onnx.py` 和 FastAPI 服务（`api/app.py`）都直接 `from src.detector import YOLODetector`，推理逻辑只写一份。
 
 另外，`scripts/debug_detector.py` 用于手动展开预处理与 ONNX 前向过程，并打印 5 个关键 shape，适合排查预处理问题。
 
@@ -459,7 +460,7 @@ curl -X POST "http://127.0.0.1:8000/detect" \
       "class_id": 0,
       "class_name": "crazing",
       "confidence": 0.4457,
-      "bbox": [-1.34, 53.68, 176.91, 146.24]
+      "bbox": [0.0, 53.68, 176.91, 146.23]
     }
   ]
 }
