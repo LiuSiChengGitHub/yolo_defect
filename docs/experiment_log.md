@@ -36,8 +36,10 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 
 | Format | mAP@0.5 | FPS (CPU) | FPS (GPU) | Model Size |
 |--------|---------|-----------|-----------|------------|
-| PyTorch (.pt) | - | - | - | 6.3 MB |
-| ONNX (.onnx) | - | - | - | - |
+| PyTorch (.pt) | 0.743 | 8.43 | 60.5 | 6.0 MB |
+| ONNX (.onnx) | ≈ 0.743 * | 22.5 | 69.8 | 11.8 MB |
+
+\* ONNX mAP@0.5 未单独用 `model.val()` 测量；由 50 张图近似对比推断（49/50 框数一致，置信度分布完全吻合）。CPU FPS 使用 `inference_onnx.py` 在全部 360 张验证集上测量；GPU FPS 在 ONNX Runtime CUDAExecutionProvider 修复后测量（RTX 3060）。
 
 ---
 

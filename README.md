@@ -15,7 +15,7 @@ End-to-end industrial defect detection pipeline: from data preparation to ONNX d
 ## Highlights
 
 - **Best Experimental Result** — Best checkpoint `final_train_2` reaches **mAP@0.5 = 0.743** on NEU-DET
-- **PyTorch vs ONNX Consistency Check** — 50-image comparison shows **48/50** identical detection-count matches, with total detections **147 vs 147**
+- **PyTorch vs ONNX Consistency Check** — 50-image comparison shows **49/50** identical detection-count matches, with total detections **146 vs 145**
 - **Measured CPU Benchmark** — PyTorch validation inference benchmark records **8.43 FPS** on **100** timed images
 - **Docker Verified** — `python:3.9-slim` image has been tested with `/health` and `/detect`
 - **Clone & Run** — Dataset (28MB) included in the repo, no external downloads needed
@@ -27,8 +27,8 @@ End-to-end industrial defect detection pipeline: from data preparation to ONNX d
 | Best model | `final_train_2` |
 | mAP@0.5 | **0.743** |
 | mAP@50-95 | **0.388** |
-| PT/ONNX same-count ratio | **48 / 50** images (**96%**) |
-| Mean abs count diff | **0.04** |
+| PT/ONNX same-count ratio | **49 / 50** images (**98%**) |
+| Mean abs count diff | **0.02** |
 | PyTorch CPU benchmark | **8.43 FPS** / **118.66 ms** per image |
 | Model size (`best.pt` / `best.onnx`) | ~6.0 MiB / ~11.8 MiB |
 
@@ -325,9 +325,9 @@ The current ONNX deployment target is exported with `imgsz=800`, so the model in
 |-------|-------|----------|
 | Best PyTorch validation result | **mAP@0.5 = 0.7433**, **mAP@50-95 = 0.3880** | `docs/experiment_log.md` |
 | PyTorch CPU benchmark | **8.43 FPS**, **118.66 ms/image** over **100** timed images | `results/pytorch_benchmark_100.json` |
-| PT vs ONNX detection-count match | **48 / 50** images (**96%**) | `results/pt_onnx_compare/compare_50_summary.json` |
-| Total detections in PT vs ONNX check | **147 vs 147** | `results/pt_onnx_compare/compare_50_summary.json` |
-| Mean absolute detection-count difference | **0.04** | `results/pt_onnx_compare/compare_50_summary.json` |
+| PT vs ONNX detection-count match | **49 / 50** images (**98%**) | `results/pt_onnx_compare/compare_50_summary.json` |
+| Total detections in PT vs ONNX check | **146 vs 145** | `results/pt_onnx_compare/compare_50_summary.json` |
+| Mean absolute detection-count difference | **0.02** | `results/pt_onnx_compare/compare_50_summary.json` |
 | Current local model sizes | `best.pt = 6,286,072 bytes`, `best.onnx = 12,336,935 bytes` | local artifacts |
 
 - The repository currently includes raw artifacts for the PyTorch validation summary, PyTorch CPU benchmark, and the 50-image PyTorch-vs-ONNX comparison.
