@@ -1,15 +1,15 @@
-# Experiment Log
+# 实验日志
 
-## Objective
+## 目标
 
-Track and compare training configurations to find the best model for NEU-DET steel surface defect detection.
-Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `docs/assets/`.
+追踪并比较训练配置，以找到最适合 NEU-DET 钢材表面缺陷检测的模型。
+目标：mAP@0.5 > 0.70。权重文件：`runs/detect/<name>/weights/best.pt`。图表：`docs/assets/`。
 
 ---
 
-## Training Results
+## 训练结果
 
-| Exp | Model | imgsz | lr0 | epochs | mosaic | batch | mAP@0.5 | mAP@50-95 | Time | Weights |
+| 实验 | 模型 | imgsz | lr0 | epochs | mosaic | batch | mAP@0.5 | mAP@50-95 | 耗时 | 权重 |
 |-----|-------|-------|-----|--------|--------|-------|---------|-----------|------|---------|
 | **baseline** | yolov8n | 640 | 0.01 | 50 | 1.0 | 16 | **0.734** | 0.390 | 9.4 min | train2/best.pt |
 | exp1 | yolov8n | 512 | 0.01 | 50 | 1.0 | 16 | 0.733 | **0.391** | 7.2 min | exp1/best.pt |
@@ -21,9 +21,9 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 | final_train | yolov8n | 800 | 0.01* | 100 | 1.0 | 16 | 0.729 | 0.379 | 26.1 min | final_train/best.pt |
 | final_train_2 | yolov8n (SGD) | 800 | 0.01 | 100 | 1.0 | 16 | **0.743** | 0.388 | 25.9 min | final_train_2/best.pt |
 
-## Per-Class AP@0.5
+## 各类别 AP@0.5
 
-| Class | baseline | exp1 | exp2 | exp3-lr01 | exp3-lr001 | exp4 | exp5 | final_train | final_train_2 |
+| 类别 | baseline | exp1 | exp2 | exp3-lr01 | exp3-lr001 | exp4 | exp5 | final_train | final_train_2 |
 |-------|----------|------|------|-----------|------------|------|------|-------------|---------------|
 | crazing | 0.542 | 0.476 | 0.476 | 0.470 | 0.462 | 0.464 | 0.462 | 0.468 | 0.550 |
 | inclusion | 0.793 | 0.835 | 0.833 | 0.819 | 0.813 | 0.812 | 0.838 | 0.813 | 0.827 |
@@ -32,9 +32,9 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 | rolled-in_scale | 0.581 | 0.520 | 0.596 | 0.537 | 0.507 | 0.577 | 0.522 | 0.544 | 0.553 |
 | scratches | 0.731 | 0.821 | 0.815 | 0.846 | 0.762 | 0.815 | 0.874 | 0.816 | 0.803 |
 
-## Deployment Performance
+## 部署性能
 
-| Format | mAP@0.5 | FPS (CPU) | FPS (GPU) | Model Size | Evidence |
+| 格式 | mAP@0.5 | FPS（CPU） | FPS（GPU） | 模型大小 | 证据 |
 |--------|---------|-----------|-----------|------------|----------|
 | PyTorch (.pt) | 0.743 | 8.43 | — | 6.0 MB | `results/pytorch_benchmark_100.json` |
 | ONNX (.onnx) | ≈ 0.743 * | 24.1 | 56.4 (RTX 3060) | 11.8 MB | `results/onnx_benchmark_cpu.json` / `onnx_benchmark_gpu.json` |
@@ -43,228 +43,228 @@ Target: mAP@0.5 > 0.70. Weights: `runs/detect/<name>/weights/best.pt`. Charts: `
 
 ---
 
-## Baseline Analysis (2026-03-24)
+## 基线分析（2026-03-24）
 
-**Config:** YOLOv8n, epochs=50, imgsz=640, batch=16, lr0=0.01, RTX 3060
+**配置：** YOLOv8n，epochs=50，imgsz=640，batch=16，lr0=0.01，RTX 3060
 
-**Key findings:**
-- mAP@0.5 = 0.734, exceeds target at baseline — no emergency need for tuning
-- Loss still declining at epoch 50: room for improvement with more epochs
-- Main problem: detection failure (漏检) into background, not class confusion
-  - crazing: 52% missed (AP=0.542) — diffuse texture, low contrast with background
-  - rolled-in_scale: 42% missed (AP=0.581)
-- Best class: patches (AP=0.928) — distinct block patterns, easy to distinguish
-
-
----
-
-## Exp1 Analysis (2026-03-24)
-
-**Config:** YOLOv8n, epochs=50, imgsz=512, batch=16, lr0=0.01, mosaic=1.0, RTX 3060
-
-**Key findings:**
-- Best checkpoint reached **mAP@0.5 = 0.733** and **mAP@50-95 = 0.391**, essentially flat vs baseline on the main metric
-- Training time dropped from **9.4 min → 7.2 min**, about **23% faster**
-- Smaller input size hurt the two hardest classes:
-  - crazing: **0.542 → 0.476**
-  - rolled-in_scale: **0.581 → 0.520**
-- Some easier/distinct classes improved or stayed strong:
-  - inclusion: **0.793 → 0.835**
-  - scratches: **0.731 → 0.821**
-- Practical interpretation: `imgsz=512` keeps overall mAP close, but loses fine-grained texture detail on the hardest industrial defect classes
-
-**Important note for future experiments:**
-- Ultralytics printed `optimizer=auto`, which **overrode `lr0=0.01` and selected AdamW(lr=0.001)** automatically
-- This means a future "learning-rate-only" ablation is **not valid** unless we first set a fixed optimizer instead of `auto`
+**主要发现：**
+- mAP@0.5 = 0.734，基线即超过目标，无需紧急调参
+- 第 50 轮 Loss 仍在下降，通过增加训练轮数仍有提升空间
+- 主要问题：漏检（检测失败归入背景），而非类别混淆
+  - crazing：漏检率 52%（AP=0.542）——纹理弥散，与背景对比度低
+  - rolled-in_scale：漏检率 42%（AP=0.581）
+- 最佳类别：patches（AP=0.928）——块状纹理明显，易于区分
 
 
 ---
 
-## Exp2 Analysis (2026-03-25)
+## Exp1 分析（2026-03-24）
 
-**Config:** YOLOv8n, epochs=50, imgsz=800, batch=16, lr0=0.01, mosaic=1.0, RTX 3060
+**配置：** YOLOv8n，epochs=50，imgsz=512，batch=16，lr0=0.01，mosaic=1.0，RTX 3060
 
-**Key findings:**
-- Best checkpoint reached **mAP@0.5 = 0.742**, the highest among baseline/exp1/exp2 image-size experiments
-- Final validation on `best.pt` gave **mAP@0.5 = 0.741** and **mAP@50-95 = 0.384**
-- Training time increased from **9.4 min → 13.4 min**, about **43% slower** than baseline
-- Larger input size did help some classes:
-  - rolled-in_scale: **0.581 → 0.596**
-  - inclusion: **0.793 → 0.833**
-  - scratches: **0.731 → 0.815**
-- But the hardest class `crazing` did **not** improve:
-  - crazing: **0.542 → 0.476**
-- Practical interpretation: `imgsz=800` improves overall mAP50 and some texture classes, but does not solve the core `crazing` failure while costing noticeably more training time
+**主要发现：**
+- 最佳检查点达到 **mAP@0.5 = 0.733**，**mAP@50-95 = 0.391**，与基线在主指标上基本持平
+- 训练时间从 **9.4 min → 7.2 min**，缩短约 **23%**
+- 较小的输入尺寸损害了两个最难类别的性能：
+  - crazing：**0.542 → 0.476**
+  - rolled-in_scale：**0.581 → 0.520**
+- 部分易分辨类别有所提升或保持较高水平：
+  - inclusion：**0.793 → 0.835**
+  - scratches：**0.731 → 0.821**
+- 实际结论：`imgsz=512` 整体 mAP 接近基线，但在最难的工业缺陷类别上损失了细粒度纹理细节
 
-**Important note:**
-- This run still used `optimizer=auto`, so Ultralytics again selected **AdamW(lr=0.001)**
-- Therefore exp2 is a fair comparison against baseline/exp1 on the **imgsz** dimension, but not against fixed-SGD learning-rate experiments
-
-
----
-
-## Exp3 Analysis (2026-03-25)
-
-**Config design:** fix `optimizer=SGD`, keep `imgsz=640 / epochs=50 / batch=16 / mosaic=1.0` unchanged, compare only `lr0=0.01` vs `lr0=0.001`
-
-**Why this design matters:**
-- Previous baseline used `optimizer=auto`, so `lr0=0.01` was not a fair control
-- This time `args.yaml` confirms both runs actually used `SGD`, making the learning-rate ablation valid
-
-**Key findings:**
-- `exp3-lr01` reached **mAP@0.5 = 0.736** and **mAP@50-95 = 0.395**, slightly above baseline
-- `exp3-lr001` reached **mAP@0.5 = 0.711** and **mAP@50-95 = 0.387**, clearly below both `exp3-lr01` and baseline
-- Lower learning rate did **not** improve the hardest classes:
-  - crazing: **0.470 → 0.462**
-  - rolled-in_scale: **0.537 → 0.507**
-- Training also became a bit slower with smaller lr:
-  - `exp3-lr01`: **9.0 min**
-  - `exp3-lr001`: **10.1 min**
-- Practical interpretation: under the same 50-epoch budget, `lr0=0.001` is likely too conservative for this task and leads to under-training rather than better stability
-
-**Engineering note:**
-- While starting this experiment, `train.py` hit a Windows encoding issue because YAML was opened with the default locale codec
-- Fixed by reading config files with `encoding="utf-8"`, so future YAML files can safely contain Chinese comments
+**未来实验注意事项：**
+- Ultralytics 输出了 `optimizer=auto`，这**覆盖了 `lr0=0.01` 并自动选择了 AdamW(lr=0.001)**
+- 因此，在未设置固定优化器而非使用 `auto` 的情况下，未来针对"仅学习率"的消融实验**无效**
 
 
 ---
 
-## Exp4 Analysis (2026-03-25)
+## Exp2 分析（2026-03-25）
 
-**Config design:** use the current best full setup from `exp2` (`imgsz=800`, `optimizer=auto`) and add only `mixup=0.1` while keeping `mosaic=1.0`
+**配置：** YOLOv8n，epochs=50，imgsz=800，batch=16，lr0=0.01，mosaic=1.0，RTX 3060
 
-**How this experiment was set up:**
-- Step 1: take `exp2.yaml` as the base config because it had the best end-to-end mAP50 among the completed full runs
-- Step 2: keep `imgsz=800`, `epochs=50`, `batch=16`, `mosaic=1.0`, `optimizer=auto`
-- Step 3: change only `mixup: 0.0 -> 0.1`
-- Step 4: after training, verify in `runs/detect/exp4/args.yaml` that `mixup: 0.1` actually took effect
+**主要发现：**
+- 最佳检查点达到 **mAP@0.5 = 0.742**，是 baseline/exp1/exp2 图像尺寸实验中最高的
+- 对 `best.pt` 的最终验证结果为 **mAP@0.5 = 0.741**，**mAP@50-95 = 0.384**
+- 训练时间从 **9.4 min → 13.4 min**，比基线约**慢 43%**
+- 较大的输入尺寸确实改善了部分类别：
+  - rolled-in_scale：**0.581 → 0.596**
+  - inclusion：**0.793 → 0.833**
+  - scratches：**0.731 → 0.815**
+- 但最难的类别 `crazing` **并未**改善：
+  - crazing：**0.542 → 0.476**
+- 实际结论：`imgsz=800` 提升了整体 mAP50 和部分纹理类别，但未能解决 `crazing` 的核心失效问题，同时训练耗时明显增加
 
-**Key findings:**
-- Best checkpoint reached **mAP@0.5 = 0.741** and **mAP@50-95 = 0.384**, essentially flat to slightly below `exp2`
-- Final validation on `best.pt` gave **mAP@0.5 = 0.735** and **mAP@50-95 = 0.384**
-- Per-class AP did not show clear gains over `exp2`:
-  - crazing: **0.476 -> 0.464**
-  - rolled-in_scale: **0.596 -> 0.577**
-  - scratches: **0.815 -> 0.815** (roughly flat)
-- Training time stayed high at about **13.6 min**, similar to `exp2`
-- Practical interpretation: adding `mixup=0.1` on top of strong mosaic augmentation did not improve the project bottlenecks and may have made fine defect textures harder to preserve
-
-**Important note:**
-- This run still used `optimizer=auto`, so Ultralytics again selected **AdamW(lr=0.001)**
-- Therefore exp4 is best understood as an **augmentation-only** comparison against `exp2`
-
----
-
-## Exp5 Analysis (2026-03-26)
-
-**Config design:** use the same base as `exp2/exp4` (`imgsz=800`, `optimizer=auto`) and explicitly disable both sample-mixing augmentations: `mosaic=0.0`, `mixup=0.0`
-
-**How this experiment was set up:**
-- Step 1: keep the same base setup as `exp2/exp4`
-- Step 2: set `mosaic: 0.0` and `mixup: 0.0`
-- Step 3: after training, verify in `runs/detect/exp5/args.yaml` that both values actually became `0.0`
-
-**Key findings:**
-- Best checkpoint reached **mAP@0.5 = 0.740** and **mAP@50-95 = 0.387**
-- Final validation on `best.pt` gave **mAP@0.5 = 0.737** and **mAP@50-95 = 0.395**
-- Compared with `exp4`, turning off sample-mixing augmentation improved some difficult classes:
-  - inclusion: **0.812 -> 0.838**
-  - scratches: **0.815 -> 0.874**
-  - rolled-in_scale stayed weaker than `exp2` but was better than `exp4`: **0.577 -> 0.522** vs `exp2=0.596`
-- `crazing` remained difficult and stayed low at **0.462**
-- Practical interpretation: for this industrial defect task, completely removing mosaic/mixup did not hurt overall performance and may preserve natural texture cues better than stronger mixing augmentation
-
-**Important note:**
-- This run still used `optimizer=auto`, so Ultralytics again selected **AdamW(lr=0.001)**
-- Therefore exp5 should be compared mainly against `exp2` and `exp4` as an augmentation ablation family
+**重要说明：**
+- 本次训练仍使用 `optimizer=auto`，Ultralytics 再次选择了 **AdamW(lr=0.001)**
+- 因此 exp2 与 baseline/exp1 在 **imgsz** 维度上是公平对比，但与固定 SGD 学习率实验不可直接比较
 
 
 ---
 
-## Final Train Analysis (2026-03-26)
+## Exp3 分析（2026-03-25）
 
-**Config design:** start from the strongest full-run image-size family (`imgsz=800`), keep `optimizer=auto`, keep `mosaic=1.0`, remove `mixup` based on exp4/exp5, and extend training to **100 epochs** for a final longer-budget run
+**配置设计：** 固定 `optimizer=SGD`，保持 `imgsz=640 / epochs=50 / batch=16 / mosaic=1.0` 不变，仅对比 `lr0=0.01` 与 `lr0=0.001`
 
-**How this final run was set up:**
-- Step 1: choose the image-size direction from `exp2` because it gave the highest complete-run mAP@0.5
-- Step 2: keep `mixup=0.0` because `exp4` showed no benefit from `mixup=0.1`
-- Step 3: keep `mosaic=1.0` instead of fully disabling it, because `exp5` improved some classes but did not beat `exp2` overall
-- Step 4: increase only `epochs: 50 -> 100` and save as `configs/final_train.yaml`
-- Step 5: after training, validate `runs/detect/final_train/weights/best.pt` separately to record the final deployment-ready metrics
+**此设计的意义：**
+- 之前的基线使用 `optimizer=auto`，因此 `lr0=0.01` 并非公平对照
+- 本次 `args.yaml` 确认两次运行均实际使用了 `SGD`，使学习率消融实验有效
 
-**Key findings:**
-- Standalone validation on `best.pt` gave **mAP@0.5 = 0.729** and **mAP@50-95 = 0.379**
-- During training, the highest single-row `mAP@0.5` reached **0.736** at epoch 87, but that was **not** the final `best.pt`
-- This happened because Ultralytics selects `best.pt` by overall fitness centered on stricter metrics, not by `mAP@0.5` alone
-- Compared with `exp2`, extending training from **50 -> 100 epochs** did **not** improve the final best model:
-  - exp2 `best.pt`: **0.741 / 0.384**
-  - final_train `best.pt`: **0.729 / 0.379**
-- Hard classes still did not break through:
-  - crazing: **0.476 -> 0.468** (vs exp2)
-  - rolled-in_scale: **0.596 -> 0.544** (vs exp2)
-- Total training time increased to about **26.1 min**, almost double the 50-epoch `imgsz=800` runs
+**主要发现：**
+- `exp3-lr01` 达到 **mAP@0.5 = 0.736**，**mAP@50-95 = 0.395**，略高于基线
+- `exp3-lr001` 达到 **mAP@0.5 = 0.711**，**mAP@50-95 = 0.387**，明显低于 `exp3-lr01` 和基线
+- 较低的学习率并未改善最难类别：
+  - crazing：**0.470 → 0.462**
+  - rolled-in_scale：**0.537 → 0.507**
+- 较小的学习率还导致训练略有变慢：
+  - `exp3-lr01`：**9.0 min**
+  - `exp3-lr001`：**10.1 min**
+- 实际结论：在相同的 50 轮预算下，`lr0=0.001` 对该任务而言可能过于保守，导致欠拟合而非更好的稳定性
 
-**Important note:**
-- This run still used `optimizer=auto`, and `args.yaml` confirms Ultralytics kept **AdamW(lr=0.001)**
-- The final result is therefore best interpreted as a **longer-training verification** of the `imgsz=800` family, not as a new optimizer/lr conclusion
-- Practical takeaway: under the current augmentation + optimizer family, simply training longer did not solve the core industrial defect bottlenecks
+**工程说明：**
+- 启动本实验时，`train.py` 因 YAML 文件以默认区域编码打开而遇到 Windows 编码问题
+- 通过以 `encoding="utf-8"` 读取配置文件修复，未来的 YAML 文件可安全包含中文注释
 
 
 ---
 
-## Final Train 2 Analysis (2026-03-26)
+## Exp4 分析（2026-03-25）
 
-**Config design:** manually combine the strongest candidate settings across the completed experiments: `imgsz=800`, `optimizer=SGD`, `lr0=0.01`, `mosaic=1.0`, `mixup=0.0`, `epochs=100`
+**配置设计：** 以 `exp2` 的当前最优完整配置（`imgsz=800`，`optimizer=auto`）为基础，仅添加 `mixup=0.1`，保持 `mosaic=1.0`
 
-**How this final run was set up:**
-- Step 1: keep `imgsz=800` from the strongest image-size family
-- Step 2: use fixed `SGD + lr0=0.01` from the valid lr-ablation winner
-- Step 3: keep `mixup=0.0` because `mixup=0.1` did not help in exp4
-- Step 4: keep `mosaic=1.0` as the main augmentation baseline and extend training to 100 epochs
-- Step 5: the user manually created the config and launched training; evaluation and documentation were completed afterward
+**实验设置方式：**
+- 第 1 步：以 `exp2.yaml` 为基础配置，因为它在已完成的完整运行中具有最高的端到端 mAP50
+- 第 2 步：保持 `imgsz=800`，`epochs=50`，`batch=16`，`mosaic=1.0`，`optimizer=auto`
+- 第 3 步：仅修改 `mixup: 0.0 -> 0.1`
+- 第 4 步：训练后，在 `runs/detect/exp4/args.yaml` 中验证 `mixup: 0.1` 确实生效
 
-**Key findings:**
-- Standalone validation on `best.pt` gave **mAP@0.5 = 0.743** and **mAP@50-95 = 0.388**
-- This is now the **highest mAP@0.5** among all completed runs
-- The best epoch in `results.csv` was epoch **90**, with `mAP@0.5 = 0.743` and `mAP@50-95 = 0.388`, very close to the standalone validation result
-- Compared with previous top runs:
-  - vs exp2 `best.pt`: **0.741 / 0.384 → 0.743 / 0.388**
-  - vs exp3-lr01 `best.pt`: **0.736 / 0.395 → 0.743 / 0.388**
-- The hardest class `crazing` improved the most:
-  - crazing: **0.468 / 0.476 family results → 0.550**
-- But some classes did not become global bests:
-  - rolled-in_scale stayed below exp2 (**0.553 vs 0.596**)
-  - scratches stayed below exp5 (**0.803 vs 0.874**)
-- Total training time was about **25.9 min**
+**主要发现：**
+- 最佳检查点达到 **mAP@0.5 = 0.741**，**mAP@50-95 = 0.384**，与 `exp2` 基本持平或略低
+- 对 `best.pt` 的最终验证结果为 **mAP@0.5 = 0.735**，**mAP@50-95 = 0.384**
+- 各类别 AP 相对 `exp2` 未见明显提升：
+  - crazing：**0.476 -> 0.464**
+  - rolled-in_scale：**0.596 -> 0.577**
+  - scratches：**0.815 -> 0.815**（基本持平）
+- 训练时间仍高达约 **13.6 min**，与 `exp2` 相近
+- 实际结论：在强 mosaic 增强基础上添加 `mixup=0.1` 对项目瓶颈并无改善，甚至可能使细微缺陷纹理更难保留
 
-**Important note:**
-- This run is not inherited from one earlier experiment; it is a **new manually combined final candidate**
-- The result is useful exactly because it verifies that a cross-family combination can outperform the previous end-to-end winner on the headline metric
-- Practical takeaway: optimizer family matters, and longer training became valuable only after switching to the stronger manual combination
+**重要说明：**
+- 本次训练仍使用 `optimizer=auto`，Ultralytics 再次选择了 **AdamW(lr=0.001)**
+- 因此 exp4 最好理解为相对 `exp2` 的**纯增强对比**
 
 ---
 
-## Experiment Plans
+## Exp5 分析（2026-03-26）
 
-| Exp | Change | Hypothesis | Priority |
+**配置设计：** 以与 `exp2/exp4` 相同的基础（`imgsz=800`，`optimizer=auto`）显式禁用两种样本混合增强：`mosaic=0.0`，`mixup=0.0`
+
+**实验设置方式：**
+- 第 1 步：保持与 `exp2/exp4` 相同的基础配置
+- 第 2 步：设置 `mosaic: 0.0` 和 `mixup: 0.0`
+- 第 3 步：训练后，在 `runs/detect/exp5/args.yaml` 中验证两个值确实变为 `0.0`
+
+**主要发现：**
+- 最佳检查点达到 **mAP@0.5 = 0.740**，**mAP@50-95 = 0.387**
+- 对 `best.pt` 的最终验证结果为 **mAP@0.5 = 0.737**，**mAP@50-95 = 0.395**
+- 与 `exp4` 相比，关闭样本混合增强改善了部分困难类别：
+  - inclusion：**0.812 -> 0.838**
+  - scratches：**0.815 -> 0.874**
+  - rolled-in_scale 仍弱于 `exp2`，但优于 `exp4`：**0.577 -> 0.522**（exp2=0.596）
+- `crazing` 仍然困难，保持在较低水平 **0.462**
+- 实际结论：对于这一工业缺陷任务，完全去除 mosaic/mixup 并不损害整体性能，且可能比更强的混合增强更好地保留自然纹理特征
+
+**重要说明：**
+- 本次训练仍使用 `optimizer=auto`，Ultralytics 再次选择了 **AdamW(lr=0.001)**
+- 因此 exp5 主要应与 `exp2` 和 `exp4` 作为增强消融系列进行对比
+
+
+---
+
+## Final Train 分析（2026-03-26）
+
+**配置设计：** 从最强的完整运行图像尺寸系列（`imgsz=800`）出发，保持 `optimizer=auto`，保持 `mosaic=1.0`，根据 exp4/exp5 去除 `mixup`，并将训练延长至 **100 轮**，作为最终较长预算的运行
+
+**最终训练的设置方式：**
+- 第 1 步：从 `exp2` 选择图像尺寸方向，因为它在完整运行中具有最高的 mAP@0.5
+- 第 2 步：保持 `mixup=0.0`，因为 `exp4` 表明 `mixup=0.1` 无益
+- 第 3 步：保持 `mosaic=1.0` 而不完全禁用，因为 `exp5` 改善了部分类别但整体未超过 `exp2`
+- 第 4 步：仅将 `epochs: 50 -> 100`，保存为 `configs/final_train.yaml`
+- 第 5 步：训练后，单独验证 `runs/detect/final_train/weights/best.pt`，记录最终部署就绪的指标
+
+**主要发现：**
+- 对 `best.pt` 的单独验证结果为 **mAP@0.5 = 0.729**，**mAP@50-95 = 0.379**
+- 训练过程中，第 87 轮的单行最高 `mAP@0.5` 达到 **0.736**，但那**并非**最终的 `best.pt`
+- 这是因为 Ultralytics 基于以更严格指标为中心的整体适应度选择 `best.pt`，而非仅凭 `mAP@0.5`
+- 与 `exp2` 相比，将训练从 **50 → 100 轮**并**未**改善最终最佳模型：
+  - exp2 `best.pt`：**0.741 / 0.384**
+  - final_train `best.pt`：**0.729 / 0.379**
+- 困难类别仍未突破：
+  - crazing：**0.476 -> 0.468**（对比 exp2）
+  - rolled-in_scale：**0.596 -> 0.544**（对比 exp2）
+- 总训练时间增加至约 **26.1 min**，几乎是 50 轮 `imgsz=800` 运行的两倍
+
+**重要说明：**
+- 本次训练仍使用 `optimizer=auto`，`args.yaml` 确认 Ultralytics 保持了 **AdamW(lr=0.001)**
+- 最终结果最好理解为对 `imgsz=800` 系列的**更长训练验证**，而非新的优化器/学习率结论
+- 实际结论：在当前增强 + 优化器系列下，单纯延长训练并未解决核心工业缺陷瓶颈
+
+
+---
+
+## Final Train 2 分析（2026-03-26）
+
+**配置设计：** 手动组合已完成实验中最强的候选参数：`imgsz=800`，`optimizer=SGD`，`lr0=0.01`，`mosaic=1.0`，`mixup=0.0`，`epochs=100`
+
+**最终训练的设置方式：**
+- 第 1 步：从最强图像尺寸系列保持 `imgsz=800`
+- 第 2 步：使用有效学习率消融实验的胜者——固定 `SGD + lr0=0.01`
+- 第 3 步：保持 `mixup=0.0`，因为 `mixup=0.1` 在 exp4 中无益
+- 第 4 步：保持 `mosaic=1.0` 作为主要增强基线，并将训练延长至 100 轮
+- 第 5 步：用户手动创建配置并启动训练，之后完成评估和记录
+
+**主要发现：**
+- 对 `best.pt` 的单独验证结果为 **mAP@0.5 = 0.743**，**mAP@50-95 = 0.388**
+- 这是目前所有已完成运行中**最高的 mAP@0.5**
+- `results.csv` 中最佳 epoch 为第 **90** 轮，`mAP@0.5 = 0.743`，`mAP@50-95 = 0.388`，与单独验证结果非常接近
+- 与之前最优运行对比：
+  - vs exp2 `best.pt`：**0.741 / 0.384 → 0.743 / 0.388**
+  - vs exp3-lr01 `best.pt`：**0.736 / 0.395 → 0.743 / 0.388**
+- 最难类别 `crazing` 改善最为显著：
+  - crazing：**0.468 / 0.476（系列结果） → 0.550**
+- 但部分类别未成为全局最优：
+  - rolled-in_scale 仍低于 exp2（**0.553 vs 0.596**）
+  - scratches 仍低于 exp5（**0.803 vs 0.874**）
+- 总训练时间约为 **25.9 min**
+
+**重要说明：**
+- 本次运行并非继承自某一个早期实验，而是一个**全新手动组合的最终候选**
+- 此结果的价值在于验证了跨系列组合可在头部指标上超越之前端到端的胜者
+- 实际结论：优化器系列至关重要，只有在切换到更强的手动组合之后，延长训练才真正发挥了作用
+
+---
+
+## 实验计划
+
+| 实验 | 变更 | 假设 | 优先级 |
 |-----|--------|------------|----------|
-| exp1 | imgsz: 640→512 | Faster training, but may lose fine texture detail | Done |
-| exp2 | imgsz: 640→800 | More spatial detail may help hard classes | Done |
-| exp3 | fixed SGD + lr0: 0.01→0.001 | Lower lr may be steadier, but can underfit within 50 epochs | Done |
-| exp4 | mixup: 0.0→0.1 on top of exp2 | Stronger mixing may improve generalization | Done |
-| exp5 | mosaic: 1.0→0.0, mixup: 0.0 | No-mix augmentation control on top of exp2 family | Done |
-| final_train | use current best full setup + epochs: 100 | Verify whether longer training improves the deployment candidate | Done |
-| final_train_2 | manually combine imgsz=800 + SGD + lr0=0.01 + mixup=0.0 + epochs=100 | Validate the “all current best knobs together” candidate | Done |
-| exp6 | epochs: 50→150 | Loss not converged, more epochs may still help | Optional |
+| exp1 | imgsz: 640→512 | 训练更快，但可能损失细粒度纹理细节 | 已完成 |
+| exp2 | imgsz: 640→800 | 更多空间细节可能有助于困难类别 | 已完成 |
+| exp3 | 固定 SGD + lr0: 0.01→0.001 | 较低学习率可能更稳定，但 50 轮内可能欠拟合 | 已完成 |
+| exp4 | mixup: 0.0→0.1，在 exp2 基础上 | 更强的混合可能改善泛化 | 已完成 |
+| exp5 | mosaic: 1.0→0.0，mixup: 0.0，在 exp2 系列基础上 | 无混合增强的对照组 | 已完成 |
+| final_train | 使用当前最优完整配置 + epochs: 100 | 验证更长训练是否改善部署候选 | 已完成 |
+| final_train_2 | 手动组合 imgsz=800 + SGD + lr0=0.01 + mixup=0.0 + epochs=100 | 验证"所有当前最优参数组合"的候选 | 已完成 |
+| exp6 | epochs: 50→150 | Loss 未收敛，更多轮次可能仍有帮助 | 可选 |
 
 ---
 
-## Conclusions & Next Steps
+## 结论与下一步计划
 
-- By **mAP@0.5**, the strongest run is now **final_train_2** (`0.743` on `best.pt`)
-- By **mAP@50-95**, the strongest result remains **exp3-lr01** (`0.395` on `best.pt`) under a cleaner fixed-SGD design
-- The `final_train` run shows that longer training alone is not enough; the improved `final_train_2` result came from a better overall parameter combination
-- Recommended deployment/reporting choice for now:
-  - If headline metric is `mAP@0.5`, use **final_train_2**
-  - If you want the cleanest lr-ablation methodology and strongest `mAP@50-95`, keep **exp3-lr01** as an important comparison model
--  next priority should move to **ONNX export, inference verification, and service packaging**
+- 按 **mAP@0.5**，目前最强的运行为 **final_train_2**（`best.pt` 上 `0.743`）
+- 按 **mAP@50-95**，最强结果仍为 **exp3-lr01**（`best.pt` 上 `0.395`，设计更简洁的固定 SGD）
+- `final_train` 的结果表明单纯延长训练远远不够；`final_train_2` 的改进来自更优的整体参数组合
+- 当前推荐的部署/报告选择：
+  - 若以 `mAP@0.5` 为主指标，使用 **final_train_2**
+  - 若追求最简洁的学习率消融方法论并且重视最强 `mAP@50-95`，保留 **exp3-lr01** 作为重要对比模型
+- 下一步优先任务应转向 **ONNX 导出、推理验证与服务打包**
