@@ -1,0 +1,13 @@
+{
+  "weights": "D:\\Base\\CodingSpace\\yolo_defect\\scripts\\..\\runs\\detect\\final_train_2\\weights\\best.pt",
+  "device": "0",
+  "imgsz": 800,
+  "conf_thresh": 0.25,
+  "iou_thresh": 0.45,
+  "warmup_images": 5,
+  "timed_images": 100,
+  "avg_time_ms": 9.027078999999995,
+  "fps": 110.77780531221678,
+  "avg_detections_per_image": 2.66,
+  "cuda_synchronized": true
+}

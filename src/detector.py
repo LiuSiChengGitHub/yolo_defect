@@ -43,20 +43,22 @@ class YOLODetector:
     # 推理流程：preprocess → ONNX Runtime 推理 → 后处理（NMS）→ 可视化
 
 
-    def __init__(self, model_path, conf_thresh=0.25, iou_thresh=0.45):
+    def __init__(self, model_path, conf_thresh=0.25, iou_thresh=0.45, providers=None):
         """Initialize detector with ONNX model.
 
         Args:
             model_path: ONNX 模型文件路径
             conf_thresh: 置信度阈值（默认 0.25，即只保留 >25% 把握的检测）
             iou_thresh: NMS 的 IoU 阈值（默认 0.45，重叠 >45% 的框只保留最高分的）
+            providers: ONNX Runtime provider 列表；默认优先尝试 CUDA，再回退到 CPU
         """
         self.conf_thresh = conf_thresh
         self.iou_thresh = iou_thresh
 
         # 加载 ONNX 模型
         # providers 列表定义推理后端的优先级：先尝试 GPU（CUDA），不行就用 CPU
-        providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        if providers is None:
+            providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
         self.session = ort.InferenceSession(model_path, providers=providers)
 
         # 获取模型输入信息

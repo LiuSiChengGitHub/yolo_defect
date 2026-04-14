@@ -14,7 +14,7 @@
 
 - **当前最佳实验结果** — 当前最佳模型 `final_train_2` 达到 **mAP@0.5 = 0.743**
 - **PyTorch / ONNX 一致性抽查** — 50 张图全部检测框数量完全一致（**50/50**），总检测框数 **146 vs 146**
-- **推理速度基准测试** — PyTorch CPU **8.43 FPS**；ONNX CPU **24.1 FPS**；ONNX GPU（RTX 3060）**56.4 FPS**，均在 100 张计时图片（5 张预热）上测量
+- **推理速度基准测试** — PyTorch CPU **8.43 FPS**；PyTorch GPU（RTX 3060）**110.8 FPS**；ONNX CPU **24.4 FPS**；ONNX GPU（RTX 3060）**72.1 FPS**，均在 100 张计时图片（5 张预热）上测量
 - **Docker 已验证** — `python:3.9-slim` 镜像已成功跑通 `/health` 和 `/detect`
 - **克隆即用** — 数据集（28MB）已包含在仓库内，无需额外下载
 
@@ -28,8 +28,9 @@
 | PT/ONNX 检测框数一致率 | **50 / 50**（**100%**） |
 | 平均检测框数差值 | **0.000** |
 | PyTorch CPU 基准测试 | **8.43 FPS** / **118.66 ms** 每张 |
-| ONNX CPU 基准测试 | **24.1 FPS** / **41.4 ms** 每张 |
-| ONNX GPU 基准测试（RTX 3060） | **56.4 FPS** / **17.7 ms** 每张 |
+| PyTorch GPU 基准测试（RTX 3060） | **110.8 FPS** / **9.0 ms** 每张 |
+| ONNX CPU 基准测试 | **24.4 FPS** / **40.9 ms** 每张 |
+| ONNX GPU 基准测试（RTX 3060） | **72.1 FPS** / **13.9 ms** 每张 |
 | 模型大小（`best.pt` / `best.onnx`） | ~6.0 MiB / ~11.8 MiB |
 
 ## 快速开始
@@ -363,8 +364,9 @@ python scripts/inference_onnx.py --model models/best.onnx --image-dir data/image
 |--------|------|----------|
 | 最佳 PyTorch 验证结果 | **mAP@0.5 = 0.7433**，**mAP@50-95 = 0.3880** | `docs/experiment_log.md` |
 | PyTorch CPU 基准测试 | **8.43 FPS**，**118.66 ms/张**，共 **100** 张计时图片 | `results/pytorch_benchmark_100.json` |
-| ONNX CPU 基准测试 | **24.1 FPS**，**41.4 ms/张**，共 **100** 张计时图片 | `results/onnx_benchmark_cpu.json` |
-| ONNX GPU 基准测试（RTX 3060） | **56.4 FPS**，**17.7 ms/张**，共 **100** 张计时图片 | `results/onnx_benchmark_gpu.json` |
+| PyTorch GPU 基准测试（RTX 3060） | **110.8 FPS**，**9.0 ms/张**，共 **100** 张计时图片 | `results/pytorch_benchmark_gpu.json` |
+| ONNX CPU 基准测试 | **24.4 FPS**，**40.9 ms/张**，共 **100** 张计时图片 | `results/onnx_benchmark_cpu.json` |
+| ONNX GPU 基准测试（RTX 3060） | **72.1 FPS**，**13.9 ms/张**，共 **100** 张计时图片 | `results/onnx_benchmark_gpu.json` |
 | PT / ONNX 检测框数一致率 | **50 / 50**（**100%**） | `results/pt_onnx_compare/compare_50_summary.json` |
 | PT / ONNX 总检测框数 | **146 vs 146** | `results/pt_onnx_compare/compare_50_summary.json` |
 | 平均绝对检测框数差值 | **0.000** | `results/pt_onnx_compare/compare_50_summary.json` |
@@ -534,7 +536,8 @@ yolo_defect/
 │   ├── export_onnx.py            #   ONNX 模型导出
 │   ├── debug_detector.py         #   中间值打印 / ONNX 输出观察
 │   ├── compare_pt_onnx.py        #   PyTorch vs ONNX 50张近似对比
-│   ├── benchmark_pytorch.py      #   PyTorch 100张 CPU FPS 测试
+│   ├── benchmark_pytorch.py      #   PyTorch 100张 CPU/GPU FPS 测试
+│   ├── benchmark_onnx.py         #   ONNX 100张 CPU/GPU FPS 测试
 │   ├── benchmark_api.py          #   POST /detect 并发压测脚本
 │   ├── analyze_failures.py       #   误检 / 漏检案例分析
 │   ├── select_representative_examples.py # README 代表样本筛选

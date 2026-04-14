@@ -1,0 +1,15 @@
+{
+  "model": "D:\\Base\\CodingSpace\\yolo_defect\\scripts\\..\\models\\best.onnx",
+  "requested_provider": "CPUExecutionProvider",
+  "session_providers": [
+    "CPUExecutionProvider"
+  ],
+  "benchmark_scope": "preprocess + session.run + postprocess/NMS, excluding image file IO and drawing",
+  "conf_thresh": 0.25,
+  "iou_thresh": 0.45,
+  "warmup_images": 5,
+  "timed_images": 100,
+  "avg_time_ms": 40.91551000000001,
+  "fps": 24.44060944126078,
+  "avg_detections_per_image": 2.66
+}

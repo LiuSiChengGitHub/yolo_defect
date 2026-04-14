@@ -53,7 +53,10 @@ sam_vit_*.pth
 *.tar
 
 # ---------- temp  outputs ----------
-results/
+results/*
+!results/onnx_benchmark_cpu.json
+!results/onnx_benchmark_gpu.json
+!results/pytorch_benchmark_gpu.json
 temp_eval*/
 .claude/
 docs/me/
@@ -65,6 +68,3 @@ docs/me/
 # ---------- Misc ----------
 *.bak
 *.tmp
-
-
-

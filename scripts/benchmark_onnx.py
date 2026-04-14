@@ -1,31 +1,34 @@
-"""PyTorch 推理速度测试：在固定图片子集上测量 FPS。"""
+"""ONNX 推理速度测试：在固定图片子集上测量端到端 FPS。"""
 
 import argparse
 import json
 import os
+import sys
 import time
 
 import cv2
-import torch
-from ultralytics import YOLO
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.join(script_dir, "..")
+sys.path.insert(0, project_root)
+
+from src.detector import YOLODetector  # noqa: E402
 
 
-def sync_cuda(enabled):
-    if enabled:
-        torch.cuda.synchronize()
+def provider_list(provider):
+    if provider == "cuda":
+        return ["CUDAExecutionProvider", "CPUExecutionProvider"]
+    return ["CPUExecutionProvider"]
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Benchmark PyTorch YOLO inference speed"
+        description="Benchmark ONNX YOLO inference speed"
     )
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.join(script_dir, "..")
-
     parser.add_argument(
-        "--weights",
-        default=os.path.join(project_root, "runs", "detect", "final_train_2", "weights", "best.pt"),
-        help="Path to PyTorch weights (.pt)",
+        "--model",
+        default=os.path.join(project_root, "models", "best.onnx"),
+        help="Path to ONNX model",
     )
     parser.add_argument(
         "--image-dir",
@@ -45,10 +48,10 @@ def main():
         help="Number of warmup images before timing (default: 5)",
     )
     parser.add_argument(
-        "--imgsz",
-        type=int,
-        default=800,
-        help="Inference image size (default: 800)",
+        "--provider",
+        choices=("cpu", "cuda"),
+        default="cuda",
+        help="ONNX Runtime provider to benchmark (default: cuda)",
     )
     parser.add_argument(
         "--conf",
@@ -63,13 +66,7 @@ def main():
         help="IoU threshold for NMS (default: 0.45)",
     )
     parser.add_argument(
-        "--device",
-        default="cpu",
-        help="Inference device, e.g. cpu or 0 (default: cpu)",
-    )
-    parser.add_argument(
         "--output",
-        default=os.path.join(project_root, "results", "pytorch_benchmark_100.json"),
         help="Path to save benchmark summary JSON",
     )
     args = parser.parse_args()
@@ -88,11 +85,20 @@ def main():
             f"Need at least {total_needed} images, but found only {len(image_paths)}"
         )
 
-    print(f"Loading model: {args.weights}")
-    model = YOLO(args.weights)
-    cuda_sync = args.device.lower() != "cpu" and torch.cuda.is_available()
+    print(f"Loading model: {args.model}")
+    detector = YOLODetector(
+        model_path=args.model,
+        conf_thresh=args.conf,
+        iou_thresh=args.iou,
+        providers=provider_list(args.provider),
+    )
+    session_providers = detector.session.get_providers()
+    requested_provider = "CUDAExecutionProvider" if args.provider == "cuda" else "CPUExecutionProvider"
+    if requested_provider not in session_providers:
+        raise RuntimeError(
+            f"Requested {requested_provider}, but session providers are {session_providers}"
+        )
 
-    # 先把图读进内存，避免磁盘 IO 影响 FPS 结果
     images = []
     for path in image_paths:
         image = cv2.imread(path)
@@ -103,50 +109,35 @@ def main():
     warmup_images = images[:args.warmup]
     timed_images = images[args.warmup:]
 
+    print(f"Providers: {session_providers}")
     print(f"Warmup: {len(warmup_images)} image(s)")
     for _, image in warmup_images:
-        model.predict(
-            source=image,
-            imgsz=args.imgsz,
-            conf=args.conf,
-            iou=args.iou,
-            device=args.device,
-            verbose=False,
-        )
-    sync_cuda(cuda_sync)
+        detector.predict(image)
 
     print(f"Timing: {len(timed_images)} image(s)")
     total_time = 0.0
     total_detections = 0
 
     for idx, (name, image) in enumerate(timed_images, start=1):
-        sync_cuda(cuda_sync)
         start = time.perf_counter()
-        results = model.predict(
-            source=image,
-            imgsz=args.imgsz,
-            conf=args.conf,
-            iou=args.iou,
-            device=args.device,
-            verbose=False,
-        )
-        sync_cuda(cuda_sync)
+        detections = detector.predict(image)
         elapsed = time.perf_counter() - start
         total_time += elapsed
-
-        boxes = results[0].boxes
-        det_count = len(boxes) if boxes is not None else 0
-        total_detections += det_count
-
-        print(f"[{idx}/{len(timed_images)}] {name}: {elapsed * 1000:.1f} ms, {det_count} detection(s)")
+        total_detections += len(detections)
+        print(f"[{idx}/{len(timed_images)}] {name}: {elapsed * 1000:.1f} ms, {len(detections)} detection(s)")
 
     avg_time = total_time / len(timed_images)
     fps = 1.0 / avg_time if avg_time > 0 else 0.0
+    output = args.output
+    if output is None:
+        suffix = "gpu" if args.provider == "cuda" else "cpu"
+        output = os.path.join(project_root, "results", f"onnx_benchmark_{suffix}.json")
 
     summary = {
-        "weights": args.weights,
-        "device": args.device,
-        "imgsz": args.imgsz,
+        "model": args.model,
+        "requested_provider": requested_provider,
+        "session_providers": session_providers,
+        "benchmark_scope": "preprocess + session.run + postprocess/NMS, excluding image file IO and drawing",
         "conf_thresh": args.conf,
         "iou_thresh": args.iou,
         "warmup_images": args.warmup,
@@ -154,23 +145,22 @@ def main():
         "avg_time_ms": avg_time * 1000.0,
         "fps": fps,
         "avg_detections_per_image": total_detections / len(timed_images),
-        "cuda_synchronized": cuda_sync,
     }
 
-    output_path = os.path.abspath(args.output)
+    output_path = os.path.abspath(output)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
 
     print("\n" + "=" * 60)
-    print("PyTorch Benchmark Summary")
+    print("ONNX Benchmark Summary")
     print("=" * 60)
-    print(f"Device:                    {args.device}")
+    print(f"Provider:                  {requested_provider}")
+    print(f"Session providers:         {session_providers}")
     print(f"Timed images:              {len(timed_images)}")
     print(f"Average latency:           {summary['avg_time_ms']:.1f} ms/image")
     print(f"Average FPS:               {summary['fps']:.2f}")
     print(f"Average detections/image:  {summary['avg_detections_per_image']:.2f}")
-    print(f"CUDA synchronized timing:  {summary['cuda_synchronized']}")
     print(f"Saved JSON:                {output_path}")
 
 
