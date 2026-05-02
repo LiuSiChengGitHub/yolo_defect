@@ -460,6 +460,82 @@ Current Docker verification:
 - `POST /detect` on `crazing_241.jpg` returned `count=3`
 - Numeric Docker benchmark logs are not committed yet, so only endpoint-level verification is reported here
 
+## Research Repository Coordination
+
+This repository now works together with `paper_detect` instead of duplicating it.
+
+| Repository | Role | Responsibilities |
+|------------|------|------------------|
+| `paper_detect` | Research and paper repository | Dataset splits, baselines, method changes, ablations, formal evaluation, formal ONNX export, PyTorch/ONNX consistency checks, Python ORT benchmark, paper tables and figures |
+| `yolo_defect` | Portfolio and deployment engineering repository | Stable demo, ONNX/Python/C++ inference, OpenCV preprocessing, CMake, GTest, deployment benchmark, FastAPI/Docker, README and interview-facing documentation |
+
+In short, `paper_detect` proves why the model is better; `yolo_defect` proves how the model runs reliably.
+
+The two repositories should exchange artifacts, benchmark logs, commit/tag references, environment notes, and result tables. They should not copy entire codebases back and forth.
+
+### Artifact Contract
+
+An artifact is not just one model file. It is a small evidence package that explains, reproduces, and validates a model:
+
+```text
+artifacts/2026-06-20_method_v1/
+├── best.pt
+├── best.onnx
+├── train_config.yaml
+├── export_config.yaml
+├── input_spec.json
+├── class_map.json
+├── metrics.json
+├── per_class_ap.csv
+├── complexity.json
+├── compare_pt_onnx.json
+├── latency_python_ort.json
+└── result_card.md
+```
+
+Formal training, evaluation, and paper ONNX export are owned by `paper_detect`. This repository consumes the exported artifact, especially `best.onnx`, `input_spec.json`, `class_map.json`, and `result_card.md`, then runs deployment-oriented validation and benchmarks.
+
+If this repository re-exports ONNX, that export is only for portfolio reproduction or sanity checks. It is not the source of formal paper results.
+
+### Benchmark Feedback
+
+Deployment logs generated here can flow back into `paper_detect` for paper tables, for example:
+
+```text
+results/cpp_benchmark/
+├── 2026-06-20_method_v1_cpp_ort_cpu.json
+├── 2026-06-20_method_v1_cpp_ort_gpu.json
+└── 2026-06-20_method_v1_consistency.json
+```
+
+Each benchmark log should record:
+
+- the artifact/model used;
+- the `yolo_defect` commit or tag;
+- the command line;
+- hardware and operating system;
+- ONNX Runtime version and execution provider;
+- whether preprocessing and postprocessing/NMS are included;
+- warmup, repeat count, mean latency, P50/P90/P99 latency, and FPS.
+
+As long as the experiment really runs, the logs are traceable, and the paper describes the measurement scope honestly, this is a valid cross-repository experiment organization.
+
+### Smoke Tests
+
+Smoke tests prove that a chain runs without crashing. They are not final accuracy or performance claims.
+
+Required smoke tests:
+
+- train smoke test: one short training run in `paper_detect`;
+- export smoke test: one temporary ONNX export in `paper_detect`;
+- Python ORT smoke test: load ONNX and print output shapes;
+- C++ ORT smoke test: compile, load ONNX, print input/output shapes and basic latency in `yolo_defect`.
+
+Current repository versioning:
+
+- `v0.1-intern0`: stable internship/portfolio baseline before C++ deployment work;
+- `deploy-cpp`: branch for C++ ONNX Runtime, OpenCV, CMake, GTest, and benchmark development.
+
 ## Project Structure
 
 ```

@@ -511,6 +511,82 @@ curl -X POST http://127.0.0.1:8000/detect \
 - `POST /detect` 对 `crazing_241.jpg` 返回 `count=3`
 - 目前只保留接口级验证结论；Docker benchmark 原始日志暂未随仓库提交
 
+## 与论文仓库的协作方式
+
+本仓库后续与 `paper_detect` 协作，而不是把两个仓库做成重复项目。
+
+| 仓库 | 定位 | 主要职责 |
+|---|---|---|
+| `paper_detect` | 论文研究主仓库 | 数据划分、baseline、方法改进、消融实验、正式评估、正式 ONNX 导出、PyTorch/ONNX 一致性、Python ORT benchmark、论文图表和表格 |
+| `yolo_defect` | 简历作品集与部署工程主仓库 | 稳定 demo、ONNX/Python/C++ 推理、OpenCV 预处理、CMake、GTest、部署 benchmark、FastAPI/Docker、README 和面试展示 |
+
+一句话：`paper_detect` 负责证明“模型为什么更好”，`yolo_defect` 负责证明“模型怎么稳定跑起来”。
+
+两个仓库通过 artifact、benchmark 原始日志、commit/tag、环境说明和结果表格协作，不复制整份代码互相污染。
+
+### Artifact 协议
+
+artifact 不是单独一个模型文件，而是能解释、复现、验证这个模型的一组证据文件：
+
+```text
+artifacts/2026-06-20_method_v1/
+├── best.pt
+├── best.onnx
+├── train_config.yaml
+├── export_config.yaml
+├── input_spec.json
+├── class_map.json
+├── metrics.json
+├── per_class_ap.csv
+├── complexity.json
+├── compare_pt_onnx.json
+├── latency_python_ort.json
+└── result_card.md
+```
+
+正式训练、正式评估和论文正式 ONNX 导出由 `paper_detect` 负责。本仓库接收完整 artifact，重点消费其中的 `best.onnx`、`input_spec.json`、`class_map.json` 和 `result_card.md`，然后做部署侧验证和 benchmark。
+
+如果本仓库重新导出 ONNX，只能作为作品集复现或 sanity check，不作为论文主结果来源。
+
+### Benchmark 回流
+
+本仓库负责真实运行部署工程实验，并输出 benchmark 原始日志。后续这些日志可以回流到 `paper_detect`，用于生成论文部署表格：
+
+```text
+results/cpp_benchmark/
+├── 2026-06-20_method_v1_cpp_ort_cpu.json
+├── 2026-06-20_method_v1_cpp_ort_gpu.json
+└── 2026-06-20_method_v1_consistency.json
+```
+
+每份 benchmark 日志必须记录：
+
+- 使用哪个 artifact / 模型；
+- 使用哪个 `yolo_defect` commit 或 tag；
+- 运行命令；
+- 硬件和操作系统；
+- ONNX Runtime 版本和 Execution Provider；
+- 是否包含 preprocess 和 postprocess/NMS；
+- warmup、repeat、mean latency、P50/P90/P99 latency 和 FPS。
+
+只要实验真实运行、日志可追溯、论文中如实描述环境和统计口径，这就是合理的跨仓库实验组织方式。
+
+### Smoke Test
+
+smoke test 是最低成本的冒烟测试，只证明链路能跑通，不证明最终指标最优。
+
+必须保留四类 smoke test：
+
+- train smoke test：在 `paper_detect` 跑一个短训练；
+- export smoke test：在 `paper_detect` 用临时权重导出 ONNX；
+- Python ORT smoke test：加载 ONNX 并打印输出 shape；
+- C++ ORT smoke test：在 `yolo_defect` 编译、加载 ONNX、打印输入输出 shape 和基础 latency。
+
+当前仓库版本约定：
+
+- `v0.1-intern0`：C++ 部署前的稳定实习/简历作品集快照；
+- `deploy-cpp`：后续开发 C++ ONNX Runtime、OpenCV、CMake、GTest 和 benchmark 的分支。
+
 ## 项目结构
 
 ```
