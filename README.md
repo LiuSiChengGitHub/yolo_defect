@@ -1,16 +1,228 @@
-# Steel Surface Defect Detection with YOLOv8
+# Industrial Vision AI Runtime for Steel Surface Defect Detection
 
 [中文版](README_zh.md)
 
 ![Python](https://img.shields.io/badge/Python-3.9-blue?logo=python)
+![C++](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0-red?logo=pytorch)
 ![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-green)
 ![ONNX](https://img.shields.io/badge/ONNX-Runtime-orange?logo=onnx)
+![OpenCV](https://img.shields.io/badge/OpenCV-C%2B%2B-green)
+![CMake](https://img.shields.io/badge/CMake-planned-lightgrey)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-End-to-end industrial defect detection pipeline: from data preparation to ONNX deployment, built on the NEU-DET steel surface dataset with YOLOv8.
+V2 positioning: this repository is being upgraded from a YOLOv8 defect-detection demo into an industrial vision AI inference runtime and C++ engineering project.
+
+YOLOv8 and NEU-DET are the model and dataset carriers. The autumn-recruiting story is not "I trained a detector"; it is "I turned a vision model into a deployable runtime with C++ / ONNX Runtime C++ / OpenCV / CMake / GTest / benchmark evidence and deployment-optimization analysis."
+
+Current V1 assets remain valuable: training, ONNX export, PyTorch-vs-ONNX consistency checks, Python ONNX Runtime inference, FastAPI, Docker, and benchmark scripts. V2 builds on these assets through `cpp_infer/` instead of rewriting them.
+
+The project entry is intentionally concentrated in this README and `README_zh.md`. `AGENTS.md` only records Codex collaboration boundaries; task queue and change notes live in the README to keep the project easy to review before interviews.
 
 ![Inference Demo](docs/assets/demo_inference_result.gif)
+
+## Project 1 Runtime Blueprint
+
+### 1. Project Positioning and Top-Level Design
+
+This repository is **Project 1: Industrial Vision Edge AI Runtime and C++ Engineering System**. Its core value is not to retrain a detector inside this repo, but to turn industrial defect-detection model artifacts into a runnable, testable, benchmarkable, and interview-explainable C++ runtime.
+
+Two model sources are planned:
+
+- **YOLOv8 + NEU-DET:** the stable P0 runtime baseline. It is used to finish the C++ deployment chain quickly because its output format is simple and the existing repo already has training, ONNX export, Python inference, FastAPI, Docker, and benchmark evidence.
+- **`paper_detect` D010 / D-FINE-S + DeepPCB:** the later research-side artifact source. `paper_detect` owns training, validation, ablation, official test, result cards, and qualitative figures; this repo consumes those artifacts through a contract and, when ready, adapts them into the runtime.
+
+The top-level design follows this rule: **training and research artifacts flow into Project 1; Project 1 owns deployment, runtime behavior, testing, benchmark evidence, and runtime event output.**
+
+### 2. Problem Solved
+
+Project 1 solves the gap between "a detector exists" and "a detector can be deployed and explained as engineering software":
+
+- Convert images and model artifacts into a reproducible C++ inference path.
+- Make preprocessing, inference, postprocessing, NMS, benchmark, and output writing observable as separate modules.
+- Record commands, sample outputs, failures, and trade-offs so the project can be reproduced during autumn recruiting.
+- Prepare `inference_event` output for Project 2, where industrial runtime events become backend incidents and Agent-assisted diagnosis input.
+
+### 3. End-to-End Runtime Link
+
+Planned full chain:
+
+```text
+model artifact
+-> artifact contract / model card
+-> RuntimeConfig
+-> OpenCV image read
+-> letterbox preprocess / RGB / float32 / NCHW tensor
+-> ONNX Runtime C++ session
+-> raw output shape check
+-> postprocess / score filter / NMS / coordinate restore
+-> detection JSON
+-> visualization
+-> benchmark report
+-> optional INT8 PTQ / TensorRT attempt
+-> sample inference_event for Project 2
+```
+
+Current verified chain through P1-03:
+
+```text
+cpp_infer/configs/default_config.txt
+-> RuntimeConfig
+-> data/images/val/crazing_241.jpg
+-> OpenCV BGR image
+-> letterbox preprocess
+-> RGB float32 NCHW tensor
+-> stable CLI summary
+-> CTest smoke
+```
+
+### 4. Core Module Responsibilities
+
+| Module | Responsibility | Current Status |
+|--------|----------------|----------------|
+| `ConfigLoader` | Parse runtime config such as input size, class names, thresholds, and backend. | P1-02 verified |
+| `ImagePreprocessor` | Read images with OpenCV, letterbox, BGR->RGB, normalize, and produce NCHW float tensor. | P1-03 verified |
+| `OnnxRunner` | Load ONNX Runtime session, inspect input/output names and shapes, build input tensor, run inference. | Placeholder for P1-04 |
+| `PostProcessor` | Decode raw model outputs, filter scores, restore coordinates to the original image. | Placeholder for P1-05 |
+| `NmsProcessor` | Provide testable IoU and NMS logic; this is a good code-practice candidate. | Placeholder for P1-05/P1-07 |
+| `ResultWriter / Visualizer` | Write detection JSON and visualization images for demo evidence. | Placeholder |
+| `BenchmarkRunner` | Measure preprocess, inference, postprocess, and end-to-end latency with warmup/repeat. | Placeholder for P1-06 |
+| `ArtifactRegistry / ModelCard` | Record artifact source, model family, dataset, metrics, config, postprocess type, runtime status, and paths. | Placeholder for D010 L1 |
+| `Tests` | Use CTest smoke now; add GTest groups for config, preprocess, NMS, postprocess, and artifact schema later. | CTest smoke now, GTest placeholder |
+
+### 5. Quick Start
+
+Current C++ runtime smoke path:
+
+```cmd
+:: Run from a Visual Studio 2026 Developer Command Prompt.
+set BUILD_DIR=%TEMP%\yolo_defect_cpp_p1_03
+set PATH=D:\01_Base\Tools\opencv\build\x64\vc16\bin;%PATH%
+
+cmake -S cpp_infer -B "%BUILD_DIR%" -G "NMake Makefiles" -DOpenCV_DIR=D:\01_Base\Tools\opencv\build\x64\vc16\lib
+cmake --build "%BUILD_DIR%"
+
+"%BUILD_DIR%\bin\yolo_defect_cpp.exe" --config cpp_infer\configs\default_config.txt --image data\images\val\crazing_241.jpg
+ctest --test-dir "%BUILD_DIR%" --output-on-failure
+```
+
+The older Python/YOLO quick start remains below for V1 baseline reproduction. The C++ path above is the V2 deployment entry.
+
+### 6. Demo Input and Output
+
+Current demo input:
+
+```text
+config: cpp_infer/configs/default_config.txt
+image:  data/images/val/crazing_241.jpg
+```
+
+Current P1-03 demo output summary:
+
+```text
+P1-03 Preprocess summary
+original_size: 200x200
+channels: 3
+input_size: 800x800
+resized_size: 800x800
+scale: 4.000000
+padding: left=0, top=0, right=0, bottom=0
+color: BGR->RGB
+normalization: float32 [0, 1]
+layout: NCHW
+tensor_shape: 1x3x800x800
+tensor_elements: 1920000
+```
+
+Future demo output placeholders:
+
+```text
+detection_json: samples/outputs/crazing_241_detections.json
+visualization:   samples/outputs/crazing_241_vis.jpg
+benchmark_json:  samples/outputs/benchmark_yolo_fp32.json
+event_json:      samples/outputs/inference_event_sample.json
+```
+
+### 7. Test Commands
+
+Current CTest smoke:
+
+```cmd
+ctest --test-dir "%BUILD_DIR%" --output-on-failure
+```
+
+Expected current result:
+
+```text
+100% tests passed, 0 tests failed out of 3
+```
+
+Future GTest placeholder:
+
+```cmd
+"%BUILD_DIR%\bin\yolo_defect_cpp_tests.exe" --gtest_filter=*
+```
+
+### 8. Key Data and Artifact Results
+
+| Item | Current Record |
+|------|----------------|
+| P0 dataset | NEU-DET steel surface defects, 1,800 images, 6 classes, 200x200 pixels |
+| P0 model | YOLOv8n baseline and tuned variants |
+| Best current YOLO result | `final_train_2`, mAP@0.5 = 0.743, mAP@50-95 = 0.388 |
+| ONNX/PyTorch alignment | 50/50 images have identical detection-count matches; total detections 146 vs 146 |
+| Existing ONNX benchmark | ONNX CPU 24.4 FPS, ONNX GPU 72.1 FPS on RTX 3060 |
+| Current C++ runtime state | P1-03 config + OpenCV preprocess + CTest smoke verified |
+| Incoming research artifact | `paper_detect` D010, D-FINE-S architecture, DeepPCB dataset |
+| D010 reported result from route plan | formal validation AP50-95 = 0.847057; official test AP50-95 = 0.830385 |
+| D010 relationship | D010 is the proposed artifact; D003 is the reference/ancestor; D010 improves all 6 classes over D003 in formal and official-test deltas |
+| D010 integration level | L0 result card first, L1 model artifact contract second, L2 ONNX/runtime adapter only when artifact stability is confirmed |
+
+Pending artifact paths:
+
+```text
+artifacts/paper_detect_d010/result_card.md        # placeholder
+artifacts/paper_detect_d010/model_artifact.yaml   # placeholder
+artifacts/paper_detect_d010/metrics_table.csv     # placeholder
+artifacts/paper_detect_d010/qualitative/          # placeholder
+```
+
+### 9. Key Design Trade-Offs
+
+- **Runtime first, training second:** this repo keeps old training assets but does not make training the V2 main story.
+- **YOLO baseline before D010 adapter:** YOLO/ONNX is the quickest stable path to finish C++ preprocess, inference, postprocess, JSON, benchmark, and tests.
+- **Layered D010 adoption:** D010 starts as artifact evidence; C++ D-FINE postprocess is not allowed to block the runtime baseline.
+- **Simple C++ over broad framework work:** C++17, CMake, OpenCV, ONNX Runtime C++, GTest, and benchmark output are enough for the interview target.
+- **Smoke tests before full unit tests:** CTest smoke keeps each small stage runnable; GTest comes when there is stable logic worth testing deeply.
+- **Failure records matter:** TensorRT, INT8, or D-FINE runtime failures are acceptable if commands, errors, root causes, and fallback decisions are documented.
+
+### 10. Task Queue
+
+The detailed P1 queue is maintained in the Roadmap section below. At the phase level:
+
+| Phase | Goal | Project 1 Focus |
+|-------|------|-----------------|
+| Phase 0: plan freeze | Align README and engineering entry | Position Project 1 as C++ edge runtime; record paper_detect D010 artifact path |
+| Phase 1: C++ Runtime P0 | Make the model run in C++ | Config, preprocess, ONNX Runtime, postprocess/NMS, JSON, visualization, benchmark |
+| Phase 2: deployment evaluation | Add engineering evidence | benchmark protocol, GTest, error handling, INT8 PTQ attempt |
+| Phase 3: paper_detect artifact adapter | Add research-side artifact credibility | D010 result card, model_artifact contract, optional D-FINE runtime adapter |
+| Phase 4: cloud-edge collaboration | Connect Project 1 to Project 2 | sample inference_event JSON |
+| Phase 5: resume freeze | Stop adding big features | README, demo, tests, reports, FAQ, interview script |
+
+### 11. Version Changes and Progress Records
+
+Current state: P1-00 to P1-03 are complete and verified. The next implementation stage is still P1-04 ONNX Runtime session smoke unless the user explicitly asks for a documentation or artifact-contract step first.
+
+The chronological V2 entry log is kept in the Roadmap section below and must be updated after every small stage.
+
+### 12. Teaching Log From Project Start to Now
+
+| Stage | What Was Done | Purpose | Implementation / Evidence | Issue and Debugging Lesson |
+|-------|---------------|---------|----------------------------|----------------------------|
+| P1-00 | Froze V2 positioning, protected legacy assets, created `cpp_infer/` entry. | Stop the repo from drifting between training demo and runtime project. | README/README_zh/AGENTS plus C++ workspace skeleton. | Keep README as the main story; avoid scattering tasks into many docs. |
+| P1-01 | Added minimal C++17/CMake executable and CTest help smoke. | Prove the repo can build a C++ runtime target. | `yolo_defect_cpp --help` and CTest smoke. | Visual Studio multi-config builds need `ctest -C Debug`. |
+| P1-02 | Added no-dependency ConfigLoader and `--config` CLI path. | Make runtime behavior config-driven before adding image/model code. | Parsed input size, class names, thresholds, backend; printed stable summary. | CLI argument errors became the first useful smoke-test failure signal. |
+| P1-03 | Added OpenCV image read and YOLO-style preprocess. | Convert a real image into the model-ready tensor format. | `original_size`, `scale`, `padding`, `BGR->RGB`, `[0,1]`, `NCHW`, `1x3x800x800`; CTest 3/3 passed. | OpenCV Windows pack required `OpenCV_DIR=...\x64\vc16\lib` and `PATH=...\x64\vc16\bin`. |
 
 ## Highlights
 
@@ -35,7 +247,7 @@ End-to-end industrial defect detection pipeline: from data preparation to ONNX d
 | ONNX GPU benchmark (RTX 3060) | **72.1 FPS** / **13.9 ms** per image |
 | Model size (`best.pt` / `best.onnx`) | ~6.0 MiB / ~11.8 MiB |
 
-## Quick Start
+## V1 Python Baseline Quick Start
 
 ```bash
 # Clone (dataset included, ~28MB)
@@ -541,6 +753,7 @@ Current repository versioning:
 ```
 yolo_defect/
 ├── Dockerfile                    # Docker image for FastAPI deployment
+├── AGENTS.md                     # Codex collaboration boundaries for V2 work
 ├── README.md                     # This file (English)
 ├── README_zh.md                  # Chinese version
 ├── LICENSE                       # MIT License
@@ -572,6 +785,12 @@ yolo_defect/
 │   └── detector.py               # YOLODetector class (ONNX inference, FastAPI reuse)
 ├── api/
 │   └── app.py                    # FastAPI service (`GET /health`, `POST /detect`)
+├── cpp_infer/                    # V2 C++ runtime workspace
+│   ├── README.md                 # C++ runtime scope and planned layout
+│   ├── configs/                  # Future C++ runtime config files
+│   ├── include/yolo_defect_cpp/  # Future public headers
+│   ├── src/                      # Future C++ implementation files
+│   └── tests/                    # Future GTest cases
 ├── configs/
 │   ├── train_config.yaml         # Baseline training hyperparameters
 │   └── exp*.yaml                 # Experiment configs (imgsz/lr/augment/final runs)
@@ -587,6 +806,7 @@ yolo_defect/
 
 - **`scripts/`** — One-off scripts for data processing, training, evaluation, export. Run from command line with argparse.
 - **`src/`** — Reusable modules. `detector.py` is imported by both `inference_onnx.py` and the FastAPI service.
+- **`cpp_infer/`** — V2 C++ deployment workspace. It will own CMake, OpenCV preprocessing, ONNX Runtime C++ inference, postprocessing, benchmark, and GTest.
 - **`configs/`** — Separated hyperparameters. Easy to track experiments by diffing config files.
 
 ## Tech Stack
@@ -594,11 +814,14 @@ yolo_defect/
 | Tool | Purpose | Version |
 |------|---------|---------|
 | Python | Language | 3.9 |
+| C++ | V2 runtime language | C++17 |
 | PyTorch | Deep learning framework | 2.0.0 |
 | Ultralytics | YOLOv8 training & inference | latest |
 | ONNX | Model interchange format | latest |
-| ONNX Runtime | Optimized inference engine | latest (GPU) |
-| OpenCV | Image processing | (via ultralytics) |
+| ONNX Runtime | Python baseline and planned C++ inference engine | latest (GPU) |
+| OpenCV | Python image utilities and planned C++ preprocessing/visualization | (via ultralytics) / planned C++ |
+| CMake | Planned C++ build system | planned |
+| GTest | Planned C++ unit tests | planned |
 | Matplotlib | Visualization & plotting | (via ultralytics) |
 | FastAPI | REST API service | latest |
 | Conda | Environment management | — |
@@ -633,6 +856,8 @@ The NEU-DET dataset is only 28MB. Including it means:
 
 ## Roadmap
 
+### V1 Baseline Already Done
+
 - [x] Baseline training and experiment tracking
 - [x] Hyperparameter tuning (imgsz / lr / augment comparisons)
 - [x] Bad sample analysis (misdetections, class confusion)
@@ -641,8 +866,119 @@ The NEU-DET dataset is only 28MB. Including it means:
 - [x] FastAPI service with file upload endpoint
 - [x] Docker containerization for deployment
 - [x] Demo GIF for inference walkthrough
-- [ ] TensorRT / C++ ONNX Runtime optimization (V2 scope)
-- [ ] CI/CD pipeline with automated testing
+
+### V2 P1 Task Queue
+
+The V2 queue follows `docs/路线0628.md`, especially sections 5.3, 5.5, and 6.1-6.8. README is the task and change-log entry point; standalone task documents are intentionally avoided unless a future module becomes too large for README. Small-stage plans are created dynamically after each completed stage instead of being fully frozen up front.
+
+| ID | Status | Task | Scope | Acceptance |
+|----|--------|------|-------|------------|
+| P1-00 | Done | README / AGENTS / C++ workspace entry | Freeze V2 positioning, Codex boundaries, task queue, and `cpp_infer/` skeleton | README/README_zh explain that YOLO/NEU-DET are carriers and C++ Runtime is the core; `AGENTS.md` protects legacy assets; `cpp_infer/` exists without full inference implementation |
+| P1-01 | Verified with VS Developer Command Prompt | CMake skeleton | Add the first minimal CMake project and executable target | `cpp_infer` has a minimal C++17 CMake target, executable target, and CTest smoke test. Configure/build/run pass in the Visual Studio 2026 Developer Command Prompt; Visual Studio multi-config builds require `ctest -C Debug` |
+| P1-02 | Verified with NMake CTest smoke | ConfigLoader | Load `input_width`, `input_height`, `class_names`, `score_threshold`, `nms_threshold`, and `backend` | `cpp_infer/configs/default_config.txt` is parsed into a typed `RuntimeConfig`; `yolo_defect_cpp --config ...` prints a stable config summary; CTest covers the config smoke path without OpenCV, ONNX Runtime, GTest, preprocessing, postprocessing, NMS, or benchmark wiring |
+| P1-03 | Verified with OpenCV CTest smoke | OpenCV preprocess | Read an image, print shape/channels, letterbox, BGR to RGB, normalize, HWC to CHW | `--config ... --image ...` reads a real validation image and prints original shape, target input size, scale, padding, color conversion, normalization, NCHW tensor shape, and tensor element count |
+| P1-04 | Pending | ONNX Runtime session smoke | Load `models/best.onnx`, create a session, print input/output names and shapes | Model loading works and failure paths explain missing model/runtime/provider issues |
+| P1-05 | Pending | Postprocess / NMS | Decode model output into boxes, map coordinates back to the original image, filter and NMS | Single-image detection JSON is produced with class, confidence, and box fields |
+| P1-06 | Pending | Benchmark | Measure preprocess / infer / postprocess / end-to-end latency with warmup and repeat | Benchmark output includes mean, P50, P95, FPS, repeat count, and model/image metadata |
+| P1-07 | Pending | GTest | Add focused tests for config, preprocess, NMS, and postprocess | At least three meaningful C++ test groups can run from a documented command |
+| P1-08 | Pending | INT8 PTQ | Try post-training quantization and compare FP32 vs INT8 | A comparison table records model size, latency/FPS, detection consistency, and any accuracy or compatibility trade-off |
+| P1-09 | Pending | TensorRT attempt | Try TensorRT FP16/INT8 conversion or document the blocked path | Report records engine build command, benchmark if successful, or clear failure reason if unsupported |
+| P1-10 | Placeholder | paper_detect D010 L0 result-card sync | Add lightweight D010/D003/D001 result card, metrics, per-class delta, qualitative figure, and config summary placeholders under `artifacts/paper_detect_d010/` | README explains D010 as a research-side artifact source without making this repo responsible for D-FINE training |
+| P1-11 | Placeholder | model_artifact contract | Define a minimal artifact contract for YOLO baseline and paper_detect D010: source repo, branch/commit, method, dataset, metrics, preprocess, postprocess type, runtime status, and paths | `model_artifact.yaml` style schema can be explained and later consumed by C++/Python tooling |
+| P1-12 | Placeholder | inference_event sample | Define sample output event for Project 2: asset/image/model artifact id, detections, runtime timings, benchmark profile, warning flags, and timestamp | Project 1 can explain how edge runtime output becomes Project 2 incident input |
+
+### P1-01 CMake Skeleton Commands
+
+P1-01 only establishes a C++17/CMake entry point. It intentionally does not include OpenCV, ONNX Runtime, GTest, preprocessing, postprocessing, or NMS.
+
+```powershell
+# Configure
+cmake -S cpp_infer -B cpp_infer\build
+
+# Build
+cmake --build cpp_infer\build
+
+# Run: Visual Studio multi-config generators usually place the executable here
+.\cpp_infer\build\bin\Debug\yolo_defect_cpp.exe --help
+
+# Run: single-config generators usually place the executable here
+.\cpp_infer\build\bin\yolo_defect_cpp.exe --help
+
+# Smoke test for Visual Studio multi-config generators
+ctest --test-dir cpp_infer\build -C Debug --output-on-failure
+```
+
+Local verification on 2026-06-05: configure and build passed in the Visual Studio 2026 Developer Command Prompt. `ctest --test-dir cpp_infer\build --output-on-failure` failed because Visual Studio is a multi-config generator and needs a configuration name. `ctest --test-dir cpp_infer\build -C Debug --output-on-failure` passed, and `cpp_infer\build\bin\Debug\yolo_defect_cpp.exe --help` printed the P1-01 skeleton help text.
+
+### P1-02 ConfigLoader Commands
+
+P1-02 adds a no-third-party-dependency `key = value` config parser and a `--config` CLI path. It intentionally does not connect OpenCV, ONNX Runtime, GTest, preprocessing, postprocessing, NMS, or benchmark logic.
+
+```cmd
+:: Run from a Visual Studio 2026 Developer Command Prompt.
+set BUILD_DIR=%TEMP%\yolo_defect_cpp_p1_02
+cmake -S cpp_infer -B "%BUILD_DIR%" -G "NMake Makefiles"
+cmake --build "%BUILD_DIR%"
+
+"%BUILD_DIR%\bin\yolo_defect_cpp.exe" --config cpp_infer\configs\default_config.txt
+
+ctest --test-dir "%BUILD_DIR%" --output-on-failure
+```
+
+Expected config summary fields:
+
+- `input_width: 800`
+- `input_height: 800`
+- `class_count: 6`
+- `class_names: crazing, inclusion, patches, pitted_surface, rolled-in_scale, scratches`
+- `score_threshold: 0.25`
+- `nms_threshold: 0.45`
+- `backend: cpu`
+
+Local verification on 2026-06-10: configure/build/run/CTest passed in a Visual Studio 2026 Developer Command Prompt with the NMake build tree under `%TEMP%`. The config smoke test first failed against the P1-01 skeleton with `Unknown argument: --config`, then passed after the ConfigLoader implementation. After P1-03, use the P1-03 configure command because the executable target now links OpenCV.
+
+### P1-03 OpenCV Preprocess Commands
+
+P1-03 adds OpenCV image reading and YOLO-style letterbox preprocessing. It intentionally does not connect ONNX Runtime, inference, postprocessing, NMS, benchmark, or GTest.
+
+```cmd
+:: Run from a Visual Studio 2026 Developer Command Prompt.
+set BUILD_DIR=%TEMP%\yolo_defect_cpp_p1_03
+set PATH=D:\01_Base\Tools\opencv\build\x64\vc16\bin;%PATH%
+
+cmake -S cpp_infer -B "%BUILD_DIR%" -G "NMake Makefiles" -DOpenCV_DIR=D:\01_Base\Tools\opencv\build\x64\vc16\lib
+cmake --build "%BUILD_DIR%"
+
+"%BUILD_DIR%\bin\yolo_defect_cpp.exe" --config cpp_infer\configs\default_config.txt --image data\images\val\crazing_241.jpg
+
+ctest --test-dir "%BUILD_DIR%" --output-on-failure
+```
+
+Expected preprocess summary fields:
+
+- `original_size: 200x200`
+- `channels: 3`
+- `input_size: 800x800`
+- `resized_size: 800x800`
+- `scale: 4.000000`
+- `padding: left=0, top=0, right=0, bottom=0`
+- `color: BGR->RGB`
+- `normalization: float32 [0, 1]`
+- `layout: NCHW`
+- `tensor_shape: 1x3x800x800`
+- `tensor_elements: 1920000`
+
+Local verification on 2026-06-13: the P1-03 smoke test first failed against the P1-02 CLI with `--config expects exactly one config file path.` Configure/build/run/CTest then passed after adding OpenCV and `ImagePreprocessor`. The local OpenCV Windows pack requires `OpenCV_DIR=D:\01_Base\Tools\opencv\build\x64\vc16\lib`; pointing to the top-level `D:\01_Base\Tools\opencv\build` was not sufficient for this NMake build.
+
+### V2 Entry Log
+
+| Date | Change | Purpose |
+|------|--------|---------|
+| 2026-06-04 | Established P1-00 V2 entry: README positioning, Codex boundary file, and `cpp_infer/` skeleton | Make the project explainable as an industrial vision AI Runtime project before deeper C++ implementation starts |
+| 2026-06-05 | Verified P1-01 CMake skeleton in the Visual Studio 2026 Developer Command Prompt | Confirmed configure/build/run/CTest smoke test; documented the `ctest -C Debug` requirement for Visual Studio multi-config builds |
+| 2026-06-10 | Added P1-02 ConfigLoader and `--config` smoke path | Introduced a typed no-dependency runtime config parser and documented the build/run/CTest evidence before moving toward OpenCV preprocessing |
+| 2026-06-13 | Added P1-03 OpenCV read-image and letterbox preprocess smoke path | Confirmed real-image preprocessing output, including original shape, RGB conversion, normalization, NCHW layout, scale, padding, and tensor shape before ONNX Runtime integration |
+| 2026-06-29 | Aligned README with `docs/路线0628.md` Project 1 plan | Recorded top-level design, D010/paper_detect artifact path, required README sections, phase queue placeholders, and teaching log so later work stays on the C++ Runtime route |
 
 ## License
 

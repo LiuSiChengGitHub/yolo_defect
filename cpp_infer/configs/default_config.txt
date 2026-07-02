@@ -1,0 +1,7 @@
+# Default P1-02 runtime config for the C++ smoke path.
+input_width = 800
+input_height = 800
+class_names = crazing, inclusion, patches, pitted_surface, rolled-in_scale, scratches
+score_threshold = 0.25
+nms_threshold = 0.45
+backend = cpu

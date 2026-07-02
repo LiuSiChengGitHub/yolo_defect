@@ -1,14 +1,226 @@
-# 钢材表面缺陷检测 — 基于 YOLOv8
+# 工业视觉 AI 推理 Runtime — 钢材表面缺陷检测
 
 ![Python](https://img.shields.io/badge/Python-3.9-blue?logo=python)
+![C++](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0-red?logo=pytorch)
 ![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-green)
 ![ONNX](https://img.shields.io/badge/ONNX-Runtime-orange?logo=onnx)
+![OpenCV](https://img.shields.io/badge/OpenCV-C%2B%2B-green)
+![CMake](https://img.shields.io/badge/CMake-planned-lightgrey)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-端到端工业缺陷检测流水线：从数据准备到 ONNX 部署，基于 NEU-DET 钢材表面数据集与 YOLOv8 构建。
+V2 定位：本仓库正在从“YOLOv8 缺陷检测 demo”升级为“工业视觉 AI 推理 Runtime 与 C++ 工程化系统”。
+
+YOLOv8 和 NEU-DET 是模型与数据集载体。秋招主线不是“我训练了一个检测模型”，而是“我把视觉模型通过 C++ / ONNX Runtime C++ / OpenCV / CMake / GTest / benchmark 变成可部署、可测试、可评测、可解释的工程化 Runtime”。
+
+当前 V1 资产仍然保留价值：训练、ONNX 导出、PyTorch-vs-ONNX 一致性验证、Python ONNX Runtime 推理、FastAPI、Docker 和 benchmark 脚本。V2 在这些资产之上通过 `cpp_infer/` 推进，而不是重写旧代码。
+
+项目入口刻意集中在本 README 和 `README_zh.md`。`AGENTS.md` 只记录 Codex 协作边界；任务队列和变更记录放在 README 中，方便秋招前统一复盘。
 
 ![推理演示](docs/assets/demo_inference_result.gif)
+
+## 项目1 Runtime 总入口蓝图
+
+### 1. 项目定位和顶层设计
+
+本仓库是**项目1：工业视觉边缘 AI Runtime 与 C++ 工程化系统**。它的核心价值不是在这个仓库里重新训练模型，而是把工业缺陷检测模型 artifact 变成可运行、可测试、可评测、可复盘、可面试讲清楚的 C++ Runtime。
+
+项目1计划支持两类模型来源：
+
+- **YOLOv8 + NEU-DET：** 稳定的 P0 Runtime baseline。它输出结构简单，仓库已有训练、ONNX 导出、Python 推理、FastAPI、Docker 和 benchmark 证据，适合先打通 C++ 部署主链路。
+- **`paper_detect` D010 / D-FINE-S + DeepPCB：** 后续研究侧 artifact 来源。`paper_detect` 负责训练、验证、消融、official test、result card 和定性图；本仓库通过 artifact contract 消费这些产物，并在 artifact 稳定后尝试接入 Runtime。
+
+顶层设计原则：**训练侧和研究侧产物进入项目1；项目1负责部署链路、Runtime 行为、测试、benchmark 证据和推理事件输出。**
+
+### 2. 解决的问题
+
+项目1解决的是“有一个检测模型”和“能把模型作为工程软件部署、测试、评测、讲清楚”之间的断层：
+
+- 把图片和模型 artifact 变成可复现的 C++ 推理链路。
+- 将 preprocess、inference、postprocess、NMS、benchmark、输出写入拆成可观察模块。
+- 记录命令、样例输出、失败原因和取舍，让项目能服务秋招复盘与面试追问。
+- 为项目2准备 `inference_event` 输出，让边缘推理结果能进入后端 incident 和 Agent 诊断链路。
+
+### 3. 总体架构链路
+
+计划完整链路：
+
+```text
+model artifact
+-> artifact contract / model card
+-> RuntimeConfig
+-> OpenCV image read
+-> letterbox preprocess / RGB / float32 / NCHW tensor
+-> ONNX Runtime C++ session
+-> raw output shape check
+-> postprocess / score filter / NMS / coordinate restore
+-> detection JSON
+-> visualization
+-> benchmark report
+-> optional INT8 PTQ / TensorRT attempt
+-> sample inference_event for Project 2
+```
+
+当前 P1-03 已验证链路：
+
+```text
+cpp_infer/configs/default_config.txt
+-> RuntimeConfig
+-> data/images/val/crazing_241.jpg
+-> OpenCV BGR image
+-> letterbox preprocess
+-> RGB float32 NCHW tensor
+-> stable CLI summary
+-> CTest smoke
+```
+
+### 4. 核心模块职责
+
+| 模块 | 职责 | 当前状态 |
+|------|------|----------|
+| `ConfigLoader` | 解析输入尺寸、类别名、阈值、NMS 阈值、backend 等 Runtime 配置。 | P1-02 已验证 |
+| `ImagePreprocessor` | 用 OpenCV 读图、letterbox、BGR->RGB、normalize，并输出 NCHW float tensor。 | P1-03 已验证 |
+| `OnnxRunner` | 加载 ONNX Runtime session，检查 input/output 名称与 shape，构造 tensor 并执行推理。 | P1-04 占位 |
+| `PostProcessor` | 解析 raw output，做 score filter，把坐标还原回原图。 | P1-05 占位 |
+| `NmsProcessor` | 提供可测试的 IoU / NMS 最小实现，也是后续代码练习候选模块。 | P1-05/P1-07 占位 |
+| `ResultWriter / Visualizer` | 输出 detection JSON 和可视化图片，形成 demo 证据。 | 占位 |
+| `BenchmarkRunner` | 统计 preprocess、infer、postprocess、end-to-end 的 warmup/repeat latency。 | P1-06 占位 |
+| `ArtifactRegistry / ModelCard` | 记录 artifact 来源、模型族、数据集、指标、配置、后处理类型、runtime 状态和路径。 | D010 L1 占位 |
+| `Tests` | 当前用 CTest smoke；后续补 GTest 覆盖 config、preprocess、NMS、postprocess、artifact schema。 | 目前 CTest，GTest 占位 |
+
+### 5. 快速启动
+
+当前 C++ Runtime smoke 路径：
+
+```cmd
+:: 在 Visual Studio 2026 Developer Command Prompt 中运行
+set BUILD_DIR=%TEMP%\yolo_defect_cpp_p1_03
+set PATH=D:\01_Base\Tools\opencv\build\x64\vc16\bin;%PATH%
+
+cmake -S cpp_infer -B "%BUILD_DIR%" -G "NMake Makefiles" -DOpenCV_DIR=D:\01_Base\Tools\opencv\build\x64\vc16\lib
+cmake --build "%BUILD_DIR%"
+
+"%BUILD_DIR%\bin\yolo_defect_cpp.exe" --config cpp_infer\configs\default_config.txt --image data\images\val\crazing_241.jpg
+ctest --test-dir "%BUILD_DIR%" --output-on-failure
+```
+
+下方旧 Python/YOLO 快速开始仍保留，用于复现 V1 baseline。上面的 C++ 命令是 V2 部署主入口。
+
+### 6. Demo 输入输出
+
+当前 demo 输入：
+
+```text
+config: cpp_infer/configs/default_config.txt
+image:  data/images/val/crazing_241.jpg
+```
+
+当前 P1-03 demo 输出摘要：
+
+```text
+P1-03 Preprocess summary
+original_size: 200x200
+channels: 3
+input_size: 800x800
+resized_size: 800x800
+scale: 4.000000
+padding: left=0, top=0, right=0, bottom=0
+color: BGR->RGB
+normalization: float32 [0, 1]
+layout: NCHW
+tensor_shape: 1x3x800x800
+tensor_elements: 1920000
+```
+
+后续 demo 输出占位：
+
+```text
+detection_json: samples/outputs/crazing_241_detections.json
+visualization:   samples/outputs/crazing_241_vis.jpg
+benchmark_json:  samples/outputs/benchmark_yolo_fp32.json
+event_json:      samples/outputs/inference_event_sample.json
+```
+
+### 7. 测试命令
+
+当前 CTest smoke：
+
+```cmd
+ctest --test-dir "%BUILD_DIR%" --output-on-failure
+```
+
+当前预期结果：
+
+```text
+100% tests passed, 0 tests failed out of 3
+```
+
+后续 GTest 占位：
+
+```cmd
+"%BUILD_DIR%\bin\yolo_defect_cpp_tests.exe" --gtest_filter=*
+```
+
+### 8. 关键数据与产物结果
+
+| 项 | 当前记录 |
+|----|----------|
+| P0 数据集 | NEU-DET 钢材表面缺陷，1,800 张图，6 类，200x200 像素 |
+| P0 模型 | YOLOv8n baseline 与调参版本 |
+| 当前最佳 YOLO 结果 | `final_train_2`，mAP@0.5 = 0.743，mAP@50-95 = 0.388 |
+| ONNX/PyTorch 对齐 | 50/50 张图检测框数量完全一致；总检测数 146 vs 146 |
+| 既有 ONNX benchmark | ONNX CPU 24.4 FPS，ONNX GPU 72.1 FPS（RTX 3060） |
+| 当前 C++ Runtime 状态 | P1-03 config + OpenCV preprocess + CTest smoke 已验证 |
+| 后续研究侧 artifact | `paper_detect` D010，D-FINE-S 架构，DeepPCB 数据集 |
+| 路线中记录的 D010 结果 | formal validation AP50-95 = 0.847057；official test AP50-95 = 0.830385 |
+| D010 关系 | D010 是 proposed artifact；D003 是 reference/ancestor；D010 在 formal 和 official-test 的 6 类 delta 全部优于 D003 |
+| D010 接入层级 | L0 result card，L1 model artifact contract，L2 ONNX/runtime adapter 只在 artifact 稳定后推进 |
+
+待补 artifact 路径：
+
+```text
+artifacts/paper_detect_d010/result_card.md        # placeholder
+artifacts/paper_detect_d010/model_artifact.yaml   # placeholder
+artifacts/paper_detect_d010/metrics_table.csv     # placeholder
+artifacts/paper_detect_d010/qualitative/          # placeholder
+```
+
+### 9. 关键设计取舍
+
+- **Runtime 优先，训练其次：** 保留旧训练资产，但 V2 主线不是继续包装训练。
+- **先 YOLO baseline，再 D010 adapter：** YOLO/ONNX 是最快完成 C++ preprocess、infer、postprocess、JSON、benchmark、测试的稳定路线。
+- **D010 分层接入：** D010 先作为 artifact 证据进入 README 和 model card；D-FINE C++ 后处理不阻塞 Runtime baseline。
+- **简单 C++ 工程优先：** C++17、CMake、OpenCV、ONNX Runtime C++、GTest、benchmark 输出已经足够匹配秋招目标。
+- **先 smoke test，再补 GTest：** 每个小阶段先保证能跑通；当 NMS、postprocess、artifact schema 稳定后再深测。
+- **失败也要记录：** TensorRT、INT8、D-FINE runtime 即使失败，只要命令、错误、原因、回退路径记录清楚，也能成为工程取舍证据。
+
+### 10. 任务队列
+
+详细 P1 队列维护在下方“路线图”部分。按大阶段看：
+
+| 阶段 | 目标 | 项目1重点 |
+|------|------|-----------|
+| 阶段0：口径冻结 | 对齐 README 和工程入口 | 把项目1定位为 C++ 边缘 Runtime；记录 paper_detect D010 artifact 接入路线 |
+| 阶段1：C++ Runtime P0 | 让模型在 C++ 中跑起来 | Config、preprocess、ONNX Runtime、postprocess/NMS、JSON、可视化、benchmark |
+| 阶段2：部署评测加固 | 增加工程证据 | benchmark protocol、GTest、错误处理、INT8 PTQ 尝试 |
+| 阶段3：paper_detect artifact adapter | 补研究侧 artifact 可信度 | D010 result card、model_artifact contract、可选 D-FINE runtime adapter |
+| 阶段4：云边端协同 | 连接项目1和项目2 | sample inference_event JSON |
+| 阶段5：秋招版本冻结 | 停止新增大功能 | README、demo、测试、报告、FAQ、面试讲解稿 |
+
+### 11. 版本变化与进度记录
+
+当前状态：P1-00 到 P1-03 已完成并验证。除非用户明确要求先做文档或 artifact contract，下一步实现阶段仍然是 P1-04 ONNX Runtime session smoke。
+
+时间线式 V2 入口记录维护在下方“路线图”部分，每完成一个小阶段必须更新。
+
+### 12. 从项目起点到现在的教学式记录
+
+| 阶段 | 做了什么 | 目的 | 实现方式 / 证据 | 问题与排查经验 |
+|------|----------|------|-----------------|----------------|
+| P1-00 | 冻结 V2 定位，保护旧资产，建立 `cpp_infer/` 入口。 | 防止项目在训练 demo 和 Runtime 工程之间跑偏。 | README/README_zh/AGENTS 与 C++ 工作区骨架。 | README 要作为主线入口，不要把任务拆成很多碎片文档。 |
+| P1-01 | 新增最小 C++17/CMake 可执行文件和 CTest help smoke。 | 证明仓库可以构建 C++ Runtime target。 | `yolo_defect_cpp --help` 和 CTest smoke。 | Visual Studio 多配置构建需要 `ctest -C Debug`。 |
+| P1-02 | 新增无第三方依赖 ConfigLoader 和 `--config` CLI。 | 在接图像和模型前，先让 Runtime 行为配置化。 | 解析输入尺寸、类别、阈值、backend 并打印稳定摘要。 | CLI 参数错误成为第一类可用 smoke-test 失败信号。 |
+| P1-03 | 新增 OpenCV 读图和 YOLO 风格 preprocess。 | 把真实图片转换成模型可吃的 tensor 格式。 | 打印 `original_size`、`scale`、`padding`、`BGR->RGB`、`[0,1]`、`NCHW`、`1x3x800x800`；CTest 3/3 通过。 | OpenCV Windows pack 需要 `OpenCV_DIR=...\x64\vc16\lib`，运行时还要把 `...\x64\vc16\bin` 放进 `PATH`。 |
 
 ## 项目亮点
 
@@ -33,7 +245,7 @@
 | ONNX GPU 基准测试（RTX 3060） | **72.1 FPS** / **13.9 ms** 每张 |
 | 模型大小（`best.pt` / `best.onnx`） | ~6.0 MiB / ~11.8 MiB |
 
-## 快速开始
+## V1 Python Baseline 快速开始
 
 ```bash
 # 克隆（数据集已包含，约 28MB）
@@ -592,6 +804,7 @@ smoke test 是最低成本的冒烟测试，只证明链路能跑通，不证明
 ```
 yolo_defect/
 ├── Dockerfile                    # FastAPI 部署镜像
+├── AGENTS.md                     # Codex 后续协作边界
 ├── README.md                     # 项目说明（英文版）
 ├── README_zh.md                  # 项目说明（中文版）
 ├── LICENSE                       # MIT 开源协议
@@ -623,6 +836,12 @@ yolo_defect/
 │   └── detector.py               #   YOLODetector 类（ONNX 推理，FastAPI 复用）
 ├── api/                          # FastAPI 服务
 │   └── app.py                    #   `GET /health` + `POST /detect`
+├── cpp_infer/                    # V2 C++ Runtime 工作区
+│   ├── README.md                 #   C++ Runtime 范围和计划结构
+│   ├── configs/                  #   后续 C++ 运行配置
+│   ├── include/yolo_defect_cpp/  #   后续公开头文件
+│   ├── src/                      #   后续 C++ 实现文件
+│   └── tests/                    #   后续 GTest 测试
 ├── configs/
 │   ├── train_config.yaml         # baseline 训练超参数配置
 │   └── exp*.yaml                 # 各组实验配置（imgsz / lr / augment / final）
@@ -638,6 +857,7 @@ yolo_defect/
 
 - **`scripts/`**：一次性脚本，用 argparse 接收参数，从命令行运行。每个脚本独立，做一件事。
 - **`src/`**：可复用模块。`detector.py` 同时被推理脚本和 FastAPI 服务 import，避免代码重复。
+- **`cpp_infer/`**：V2 C++ 部署工作区，后续承载 CMake、OpenCV 预处理、ONNX Runtime C++ 推理、后处理、benchmark 和 GTest。
 - **`configs/`**：超参数与代码分离。调参时改配置文件，不用改代码。用 git diff 可以对比两次实验的参数差异。
 
 ## 技术栈
@@ -645,11 +865,14 @@ yolo_defect/
 | 工具 | 用途 | 版本 |
 |------|------|------|
 | Python | 编程语言 | 3.9 |
+| C++ | V2 Runtime 主语言 | C++17 |
 | PyTorch | 深度学习框架 | 2.0.0 |
 | Ultralytics | YOLOv8 训练和推理 | latest |
 | ONNX | 开放神经网络格式 | latest |
-| ONNX Runtime | 优化推理引擎 | latest (GPU) |
-| OpenCV | 图像处理 | (via ultralytics) |
+| ONNX Runtime | Python baseline 与后续 C++ 推理引擎 | latest (GPU) |
+| OpenCV | Python 图像工具与后续 C++ 预处理/可视化 | (via ultralytics) / planned C++ |
+| CMake | 后续 C++ 构建系统 | planned |
+| GTest | 后续 C++ 单元测试 | planned |
 | Matplotlib | 可视化绘图 | (via ultralytics) |
 | FastAPI | REST API 服务 | latest |
 | Conda | 环境管理 | — |
@@ -683,6 +906,8 @@ NEU-DET 数据集只有 28MB（远小于 GitHub 的 100MB 单文件限制）。�
 
 ## 路线图
 
+### V1 Baseline 已完成
+
 - [x] 基线训练与实验记录
 - [x] 超参数调优（imgsz / lr / augment 对比）
 - [x] 坏样本分析（误检/漏检案例）
@@ -691,8 +916,119 @@ NEU-DET 数据集只有 28MB（远小于 GitHub 的 100MB 单文件限制）。�
 - [x] FastAPI 服务化（`POST /detect` 上传图片返回 JSON）
 - [x] Docker 容器化部署
 - [x] Demo GIF 推理演示
-- [ ] TensorRT / C++ ONNX Runtime 优化（V2）
-- [ ] CI/CD 流程与自动化测试
+
+### V2 P1 任务队列
+
+V2 队列来自 `docs/路线0628.md`，尤其是 5.3、5.5、6.1-6.8。README 是任务队列和变更记录入口；除非后续模块复杂到放进 README 会降低可读性，否则不额外新建任务文档。小阶段方案不在一开始静态写死，而是在每个小阶段完成后，结合当前状态动态拆下一个小阶段。
+
+| ID | 状态 | 任务 | 范围 | 验收标准 |
+|----|------|------|------|----------|
+| P1-00 | 已完成 | README / AGENTS / C++ 工作区入口 | 冻结 V2 定位、Codex 边界、任务队列和 `cpp_infer/` 骨架 | README/README_zh 说明 YOLO/NEU-DET 是载体、C++ Runtime 是核心；`AGENTS.md` 保护旧资产；`cpp_infer/` 存在但不实现完整推理 |
+| P1-01 | 已在 VS Developer Command Prompt 验证 | CMake 骨架 | 建立最小 CMake 工程和可执行目标 | `cpp_infer` 已有最小 C++17 CMake target、可执行目标和 CTest smoke test。Visual Studio 2026 Developer Command Prompt 中 configure/build/run 通过；Visual Studio 多配置构建需要 `ctest -C Debug` |
+| P1-02 | 已通过 NMake CTest smoke 验证 | ConfigLoader | 读取 `input_width`、`input_height`、`class_names`、`score_threshold`、`nms_threshold`、`backend` | `cpp_infer/configs/default_config.txt` 会被解析为类型化 `RuntimeConfig`；`yolo_defect_cpp --config ...` 会打印稳定配置摘要；CTest 覆盖 config smoke 路径，但仍不接入 OpenCV、ONNX Runtime、GTest、预处理、后处理、NMS 或 benchmark |
+| P1-03 | 已通过 OpenCV CTest smoke 验证 | OpenCV preprocess | 读图、打印 shape/channels、letterbox、BGR 转 RGB、normalize、HWC 转 CHW | `--config ... --image ...` 会读取真实验证图片，并打印原图尺寸、目标输入尺寸、缩放比例、padding、颜色转换、归一化、NCHW tensor shape 和 tensor 元素数量 |
+| P1-04 | 待推进 | ONNX Runtime session smoke | 加载 `models/best.onnx`，创建 session，打印 input/output name 和 shape | 模型能加载；失败时能解释缺模型、缺 runtime、provider 不可用等原因 |
+| P1-05 | 待推进 | Postprocess / NMS | 将模型输出 decode 成检测框，坐标映射回原图，按置信度过滤并做 NMS | 单张图能输出 detection JSON，包含 class、confidence、box 字段 |
+| P1-06 | 待推进 | Benchmark | 拆分统计 preprocess / infer / postprocess / end-to-end latency，支持 warmup 和 repeat | benchmark 输出 mean、P50、P95、FPS、repeat count、模型和图片元信息 |
+| P1-07 | 待推进 | GTest | 补 config、preprocess、NMS、postprocess 的聚焦测试 | 至少 3 类有意义的 C++ 测试组可以通过文档命令运行 |
+| P1-08 | 待推进 | INT8 PTQ | 尝试后训练量化，对比 FP32 vs INT8 | 对比表记录模型大小、latency/FPS、检测一致性，以及精度或兼容性取舍 |
+| P1-09 | 待推进 | TensorRT 尝试 | 尝试 TensorRT FP16/INT8 转换，或记录被阻塞路径 | 报告记录 engine 构建命令；成功则有 benchmark，失败则有清晰原因 |
+| P1-10 | 占位 | paper_detect D010 L0 result-card 同步 | 在 `artifacts/paper_detect_d010/` 下加入 D010/D003/D001 的 result card、metrics、per-class delta、定性图和配置摘要占位 | README 能说明 D010 是研究侧 artifact 来源，而不是本仓库负责 D-FINE 训练 |
+| P1-11 | 占位 | model_artifact contract | 为 YOLO baseline 和 paper_detect D010 定义最小 artifact contract：source repo、branch/commit、method、dataset、metrics、preprocess、postprocess type、runtime status、paths | `model_artifact.yaml` 风格 schema 能被解释，后续可被 C++/Python 工具消费 |
+| P1-12 | 占位 | inference_event sample | 定义给项目2使用的样例事件：asset/image/model artifact id、detections、runtime timings、benchmark profile、warning flags、timestamp | 项目1能解释边缘 Runtime 输出如何成为项目2 incident 输入 |
+
+### P1-01 CMake 骨架命令
+
+P1-01 只建立 C++17/CMake 入口。它刻意不包含 OpenCV、ONNX Runtime、GTest、预处理、后处理或 NMS。
+
+```powershell
+# Configure
+cmake -S cpp_infer -B cpp_infer\build
+
+# Build
+cmake --build cpp_infer\build
+
+# Run：Visual Studio 多配置生成器通常在这里输出可执行文件
+.\cpp_infer\build\bin\Debug\yolo_defect_cpp.exe --help
+
+# Run：单配置生成器通常在这里输出可执行文件
+.\cpp_infer\build\bin\yolo_defect_cpp.exe --help
+
+# Smoke test：Visual Studio 多配置生成器需要指定配置
+ctest --test-dir cpp_infer\build -C Debug --output-on-failure
+```
+
+2026-06-05 本机验证：在 Visual Studio 2026 Developer Command Prompt 中 configure 和 build 已通过。`ctest --test-dir cpp_infer\build --output-on-failure` 失败原因是 Visual Studio 属于多配置生成器，需要指定配置名。`ctest --test-dir cpp_infer\build -C Debug --output-on-failure` 已通过，`cpp_infer\build\bin\Debug\yolo_defect_cpp.exe --help` 能打印 P1-01 skeleton help 文本。
+
+### P1-02 ConfigLoader 命令
+
+P1-02 新增无第三方依赖的 `key = value` 配置解析器和 `--config` CLI 路径。它仍然刻意不接入 OpenCV、ONNX Runtime、GTest、预处理、后处理、NMS 或 benchmark。
+
+```cmd
+:: 在 Visual Studio 2026 Developer Command Prompt 中运行
+set BUILD_DIR=%TEMP%\yolo_defect_cpp_p1_02
+cmake -S cpp_infer -B "%BUILD_DIR%" -G "NMake Makefiles"
+cmake --build "%BUILD_DIR%"
+
+"%BUILD_DIR%\bin\yolo_defect_cpp.exe" --config cpp_infer\configs\default_config.txt
+
+ctest --test-dir "%BUILD_DIR%" --output-on-failure
+```
+
+预期配置摘要字段：
+
+- `input_width: 800`
+- `input_height: 800`
+- `class_count: 6`
+- `class_names: crazing, inclusion, patches, pitted_surface, rolled-in_scale, scratches`
+- `score_threshold: 0.25`
+- `nms_threshold: 0.45`
+- `backend: cpu`
+
+2026-06-10 本机验证：在 Visual Studio 2026 Developer Command Prompt 中使用 `%TEMP%` 下的 NMake build tree 完成 configure/build/run/CTest。config smoke test 先在 P1-01 skeleton 上因 `Unknown argument: --config` 失败，随后在 ConfigLoader 实现后通过。P1-03 之后，可执行目标已经链接 OpenCV，因此后续 configure/build 以 P1-03 命令为准。
+
+### P1-03 OpenCV Preprocess 命令
+
+P1-03 新增 OpenCV 读图和 YOLO 风格 letterbox 预处理。它仍然刻意不接入 ONNX Runtime、推理、后处理、NMS、benchmark 或 GTest。
+
+```cmd
+:: 在 Visual Studio 2026 Developer Command Prompt 中运行
+set BUILD_DIR=%TEMP%\yolo_defect_cpp_p1_03
+set PATH=D:\01_Base\Tools\opencv\build\x64\vc16\bin;%PATH%
+
+cmake -S cpp_infer -B "%BUILD_DIR%" -G "NMake Makefiles" -DOpenCV_DIR=D:\01_Base\Tools\opencv\build\x64\vc16\lib
+cmake --build "%BUILD_DIR%"
+
+"%BUILD_DIR%\bin\yolo_defect_cpp.exe" --config cpp_infer\configs\default_config.txt --image data\images\val\crazing_241.jpg
+
+ctest --test-dir "%BUILD_DIR%" --output-on-failure
+```
+
+预期 preprocess 摘要字段：
+
+- `original_size: 200x200`
+- `channels: 3`
+- `input_size: 800x800`
+- `resized_size: 800x800`
+- `scale: 4.000000`
+- `padding: left=0, top=0, right=0, bottom=0`
+- `color: BGR->RGB`
+- `normalization: float32 [0, 1]`
+- `layout: NCHW`
+- `tensor_shape: 1x3x800x800`
+- `tensor_elements: 1920000`
+
+2026-06-13 本机验证：P1-03 smoke test 先在 P1-02 CLI 上因 `--config expects exactly one config file path.` 失败；加入 OpenCV 和 `ImagePreprocessor` 后，configure/build/run/CTest 通过。本机 OpenCV Windows pack 需要使用 `OpenCV_DIR=D:\01_Base\Tools\opencv\build\x64\vc16\lib`；只指向顶层 `D:\01_Base\Tools\opencv\build` 不足以完成 NMake 构建。
+
+### V2 入口记录
+
+| 日期 | 变更 | 目的 |
+|------|------|------|
+| 2026-06-04 | 建立 P1-00 V2 入口：README 定位、Codex 边界文件、`cpp_infer/` 骨架 | 在深入 C++ 实现前，先让项目能被解释为工业视觉 AI Runtime 工程项目 |
+| 2026-06-05 | 在 Visual Studio 2026 Developer Command Prompt 中验证 P1-01 CMake 骨架 | 确认 configure/build/run/CTest smoke test；记录 Visual Studio 多配置构建需要 `ctest -C Debug` |
+| 2026-06-10 | 新增 P1-02 ConfigLoader 和 `--config` smoke 路径 | 引入类型化、无第三方依赖的 runtime 配置解析器，并在进入 OpenCV 预处理前记录 build/run/CTest 证据 |
+| 2026-06-13 | 新增 P1-03 OpenCV 读图和 letterbox preprocess smoke 路径 | 在接入 ONNX Runtime 前，确认真实图片预处理输出，包括原图 shape、RGB 转换、归一化、NCHW 布局、scale、padding 和 tensor shape |
+| 2026-06-29 | 按 `docs/路线0628.md` 校准项目1 README 主线 | 记录顶层设计、D010/paper_detect artifact 接入路线、README 必备栏目、阶段队列占位和教学式进度日志，防止后续偏离 C++ Runtime 主线 |
 
 ## 许可证
 
