@@ -8,7 +8,7 @@
 ![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-green)
 ![ONNX](https://img.shields.io/badge/ONNX-Runtime-orange?logo=onnx)
 ![OpenCV](https://img.shields.io/badge/OpenCV-C%2B%2B-green)
-![CMake](https://img.shields.io/badge/CMake-planned-lightgrey)
+![CMake](https://img.shields.io/badge/CMake-enabled-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 V2 positioning: this repository is being upgraded from a YOLOv8 defect-detection demo into an industrial vision AI inference runtime and C++ engineering project.
@@ -17,7 +17,7 @@ YOLOv8 and NEU-DET are the model and dataset carriers. The autumn-recruiting sto
 
 Current V1 assets remain valuable: training, ONNX export, PyTorch-vs-ONNX consistency checks, Python ONNX Runtime inference, FastAPI, Docker, and benchmark scripts. V2 builds on these assets through `cpp_infer/` instead of rewriting them.
 
-The project entry is intentionally concentrated in this README and `README_zh.md`. `AGENTS.md` only records Codex collaboration boundaries; task queue and change notes live in the README to keep the project easy to review before interviews.
+The project entry is intentionally concentrated in this README and `README_zh.md`. `docs/PLAN.md` is the latest planning source, `AGENTS.md` turns it into repository-wide collaboration rules, and task/status/change evidence stays in the two READMEs. Long execution detail is split into `docs/` only when it would make the entry point harder to use.
 
 ![Inference Demo](docs/assets/demo_inference_result.gif)
 
@@ -27,12 +27,23 @@ The project entry is intentionally concentrated in this README and `README_zh.md
 
 This repository is **Project 1: Industrial Vision Edge AI Runtime and C++ Engineering System**. Its core value is not to retrain a detector inside this repo, but to turn industrial defect-detection model artifacts into a runnable, testable, benchmarkable, and interview-explainable C++ runtime.
 
-Two model sources are planned:
+Two model sources are admitted through explicit artifact gates:
 
 - **YOLOv8 + NEU-DET:** the stable P0 runtime baseline. It is used to finish the C++ deployment chain quickly because its output format is simple and the existing repo already has training, ONNX export, Python inference, FastAPI, Docker, and benchmark evidence.
-- **`paper_detect` D010 / D-FINE-S + DeepPCB:** the later research-side artifact source. `paper_detect` owns training, validation, ablation, official test, result cards, and qualitative figures; this repo consumes those artifacts through a contract and, when ready, adapts them into the runtime.
+- **`paper_detect` D010 / D-FINE-S + DeepPCB:** the later research-side artifact source. D010 is Template-Counterfactual Defect Denoising: it keeps the D003 inference path, adds training-time erase/replay samples, and does not introduce D009 feature-pyramid injection. `paper_detect` owns training, validation, ablation, official test, result cards, and qualitative figures; this repo may report D010 as a Runtime result only after stable ONNX export, a deployment contract, actual Runtime integration, and consistency validation.
 
 The top-level design follows this rule: **training and research artifacts flow into Project 1; Project 1 owns deployment, runtime behavior, testing, benchmark evidence, and runtime event output.**
+
+The authoritative P0 design is broader than “make one inference call”:
+
+- **Engineering contract:** C++17/CMake multi-target structure, header/source separation, explicit dependencies, and validated runtime/artifact schemas for the model, input, classes, thresholds, preprocess, and postprocess.
+- **Inference chain:** OpenCV letterbox/RGB/normalize/NCHW, ONNX Runtime C++ with RAII and name/shape/dtype/provider checks, then model-family decode, filtering, NMS, and coordinate restoration.
+- **Observable outputs:** fixed-sample detection JSON and visualization with a reproducible command.
+- **Correctness evidence:** Python/ONNX/C++ comparison with declared tolerances for detection count, class, confidence, and coordinates.
+- **Performance evidence:** warmup/repeat plus preprocess/infer/postprocess/end-to-end P50/P95, throughput, environment metadata, and peak memory/RSS where feasible.
+- **Engineering evidence:** GTest, invalid-input and fault-injection paths, INT8 PTQ comparison, limitations, raw evidence paths, and reproducible README commands.
+
+Large stage one builds the first deliverable vertical slice; large stage two completes the full P0 evidence and INT8 hardening. Later P1 extensions are gated: batch/concurrent processing is interview-value driven; TensorRT/Jetson/ARM requires real hardware; Qt and gRPC/Triton require repeated demand from high-priority job descriptions; D010 requires a stable artifact.
 
 ### 2. Problem Solved
 
@@ -41,7 +52,7 @@ Project 1 solves the gap between "a detector exists" and "a detector can be depl
 - Convert images and model artifacts into a reproducible C++ inference path.
 - Make preprocessing, inference, postprocessing, NMS, benchmark, and output writing observable as separate modules.
 - Record commands, sample outputs, failures, and trade-offs so the project can be reproduced during autumn recruiting.
-- Prepare `inference_event` output for Project 2, where industrial runtime events become backend incidents and Agent-assisted diagnosis input.
+- Preserve an optional future `inference_event` bridge for Project 2 after the Project 1 P0 chain is stable; it is not a large-stage-one acceptance item.
 
 ### 3. End-to-End Runtime Link
 
@@ -50,17 +61,19 @@ Planned full chain:
 ```text
 model artifact
 -> artifact contract / model card
--> RuntimeConfig
+-> artifact schema + RuntimeConfig validation
 -> OpenCV image read
 -> letterbox preprocess / RGB / float32 / NCHW tensor
 -> ONNX Runtime C++ session
--> raw output shape check
+-> input/output name / shape / dtype / provider checks
 -> postprocess / score filter / NMS / coordinate restore
 -> detection JSON
 -> visualization
+-> fixed-sample Python / ONNX / C++ consistency
 -> benchmark report
--> optional INT8 PTQ / TensorRT attempt
--> sample inference_event for Project 2
+-> INT8 PTQ comparison
+-> tests / failure injection / README evidence
+-> optional real-device deployment and Project 2 inference_event bridge
 ```
 
 Current verified chain through P1-03:
@@ -80,15 +93,15 @@ cpp_infer/configs/default_config.txt
 
 | Module | Responsibility | Current Status |
 |--------|----------------|----------------|
-| `ConfigLoader` | Parse runtime config such as input size, class names, thresholds, and backend. | P1-02 verified |
-| `ImagePreprocessor` | Read images with OpenCV, letterbox, BGR->RGB, normalize, and produce NCHW float tensor. | P1-03 verified |
-| `OnnxRunner` | Load ONNX Runtime session, inspect input/output names and shapes, build input tensor, run inference. | Placeholder for P1-04 |
-| `PostProcessor` | Decode raw model outputs, filter scores, restore coordinates to the original image. | Placeholder for P1-05 |
-| `NmsProcessor` | Provide testable IoU and NMS logic; this is a good code-practice candidate. | Placeholder for P1-05/P1-07 |
-| `ResultWriter / Visualizer` | Write detection JSON and visualization images for demo evidence. | Placeholder |
-| `BenchmarkRunner` | Measure preprocess, inference, postprocess, and end-to-end latency with warmup/repeat. | Placeholder for P1-06 |
-| `ArtifactRegistry / ModelCard` | Record artifact source, model family, dataset, metrics, config, postprocess type, runtime status, and paths. | Placeholder for D010 L1 |
-| `Tests` | Use CTest smoke now; add GTest groups for config, preprocess, NMS, postprocess, and artifact schema later. | CTest smoke now, GTest placeholder |
+| `RuntimeConfig` / artifact contract | Validate model path, model family, input, classes, thresholds, provider, preprocess, postprocess, and output expectations. | Basic config verified; contract expansion is S1-01 |
+| `ImagePreprocessor` | Read images with OpenCV, letterbox, BGR->RGB, normalize, and produce NCHW float tensor plus inverse-transform metadata. | P1-03 verified; non-square evidence is pending |
+| `OnnxRunner` | Own the ONNX Runtime objects through RAII; check names, shapes, dtypes, and providers; create tensors and return raw outputs. | S1-02/S1-03 pending |
+| `PostProcessor` / `NmsProcessor` | Decode YOLO output, filter scores, apply testable IoU/NMS, clip and restore coordinates. | S1-04 pending; core code-practice candidate |
+| `ResultWriter` / `Visualizer` | Write schema-stable detection JSON and visualization images for fixed-sample demo evidence. | S1-05 pending |
+| `ConsistencyValidator` | Compare fixed Python ORT and C++ results by count, class, confidence, and box tolerance. | S1-07 pending |
+| `BenchmarkRunner` | Measure warmup/repeat preprocess, inference, postprocess, end-to-end latency, throughput, and memory metadata. | S1-08 pending |
+| `ArtifactRegistry` / `ModelCard` | Record artifact source, model family, dataset, metrics, config, postprocess type, runtime status, and paths. | YOLO contract starts in S1-01; D010 remains gated |
+| `Tests` | Keep CTest integration smoke and add GTest units/negative paths incrementally; complete the P0 matrix in large stage two. | Current CTest 3/3; S1-06 gate pending |
 
 ### 5. Quick Start
 
@@ -107,6 +120,8 @@ ctest --test-dir "%BUILD_DIR%" --output-on-failure
 ```
 
 The older Python/YOLO quick start remains below for V1 baseline reproduction. The C++ path above is the V2 deployment entry.
+
+Use a fresh out-of-tree build as shown. The ignored `cpp_infer/build` executable was confirmed on 2026-07-15 to be a stale P1-01 artifact and rejects the newer `--config/--image` CLI; it is not current-source evidence.
 
 ### 6. Demo Input and Output
 
@@ -140,7 +155,7 @@ Future demo output placeholders:
 detection_json: samples/outputs/crazing_241_detections.json
 visualization:   samples/outputs/crazing_241_vis.jpg
 benchmark_json:  samples/outputs/benchmark_yolo_fp32.json
-event_json:      samples/outputs/inference_event_sample.json
+event_json:      samples/outputs/inference_event_sample.json  # optional later bridge
 ```
 
 ### 7. Test Commands
@@ -170,13 +185,16 @@ Future GTest placeholder:
 | P0 dataset | NEU-DET steel surface defects, 1,800 images, 6 classes, 200x200 pixels |
 | P0 model | YOLOv8n baseline and tuned variants |
 | Best current YOLO result | `final_train_2`, mAP@0.5 = 0.743, mAP@50-95 = 0.388 |
-| ONNX/PyTorch alignment | 50/50 images have identical detection-count matches; total detections 146 vs 146 |
-| Existing ONNX benchmark | ONNX CPU 24.4 FPS, ONNX GPU 72.1 FPS on RTX 3060 |
-| Current C++ runtime state | P1-03 config + OpenCV preprocess + CTest smoke verified |
-| Incoming research artifact | `paper_detect` D010, D-FINE-S architecture, DeepPCB dataset |
-| D010 reported result from route plan | formal validation AP50-95 = 0.847057; official test AP50-95 = 0.830385 |
-| D010 relationship | D010 is the proposed artifact; D003 is the reference/ancestor; D010 improves all 6 classes over D003 in formal and official-test deltas |
-| D010 integration level | L0 result card first, L1 model artifact contract second, L2 ONNX/runtime adapter only when artifact stability is confirmed |
+| Historical ONNX/PyTorch alignment | 50/50 detection-count matches and 146 vs 146 total detections, but the sorted subset is all `crazing` and records counts/confidence summaries rather than class/box tolerances |
+| Baseline ONNX artifact preflight | Tracked `models/best.onnx`, 12,336,935 bytes, opset 17, SHA-256 `7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68`; metadata says `nms=False` |
+| Baseline ONNX I/O preflight | Python ORT 1.19.2 confirms input `images` = float32 `[1,3,800,800]`; output `output0` = float32 `[1,10,13125]` |
+| Historical Python ORT benchmark | ONNX CPU 24.4 FPS, ONNX GPU 72.1 FPS on RTX 3060; **not C++ Runtime performance** |
+| Current C++ runtime state | Fresh out-of-tree MSVC 19.50/OpenCV 4.8.0 build passed 3/3 CTest smokes; config + preprocess only, no ORT C++ yet |
+| Artifact license checkpoint | ONNX metadata reports `AGPL-3.0`, while repository source is MIT; model provenance/distribution compatibility must be reviewed before a release claim |
+| Incoming research artifact | `paper_detect` D010 method on the D-FINE-S/DeepPCB research line; not a new Runtime architecture claim |
+| External D010 research evidence | Formal-validation AP50-95 = 0.847057; official-test AP50-95 = 0.830385; these are not Project 1 Runtime results |
+| D010 relationship and ablation | D003 is the ancestor/ablation anchor; all 6 D010 class deltas over D003 are positive on formal and official test; D010A erase-only and D010B replay-only each beat D003 but trail full D010 |
+| D010 integration gate | Stable ONNX + result/model card + deployment contract + real Runtime adapter + consistency validation; it must not block the YOLO P0 closure |
 
 Pending artifact paths:
 
@@ -187,31 +205,37 @@ artifacts/paper_detect_d010/metrics_table.csv     # placeholder
 artifacts/paper_detect_d010/qualitative/          # placeholder
 ```
 
+The consolidated C++ result table is still pending. It must eventually record machine/OS/compiler/build type, model/input/sample set, correctness tolerances, segmented and end-to-end P50/P95, throughput, memory/RSS, any extension comparison, failure cases, conclusions, evidence paths, and reproduction commands. The model-license checkpoint is a provenance risk to resolve, not a C++ implementation blocker to hide.
+
 ### 9. Key Design Trade-Offs
 
 - **Runtime first, training second:** this repo keeps old training assets but does not make training the V2 main story.
 - **YOLO baseline before D010 adapter:** YOLO/ONNX is the quickest stable path to finish C++ preprocess, inference, postprocess, JSON, benchmark, and tests.
-- **Layered D010 adoption:** D010 starts as artifact evidence; C++ D-FINE postprocess is not allowed to block the runtime baseline.
+- **Artifact gate before D010 claims:** external D010 research metrics may be cited as source evidence, but a C++ D-FINE result requires stable export, contract, adapter, and consistency evidence.
 - **Simple C++ over broad framework work:** C++17, CMake, OpenCV, ONNX Runtime C++, GTest, and benchmark output are enough for the interview target.
-- **Smoke tests before full unit tests:** CTest smoke keeps each small stage runnable; GTest comes when there is stable logic worth testing deeply.
-- **Failure records matter:** TensorRT, INT8, or D-FINE runtime failures are acceptable if commands, errors, root causes, and fallback decisions are documented.
+- **Tests grow with stable seams:** CTest keeps integrated smoke paths runnable; GTest begins when the runtime library and postprocess seams exist, then large stage two completes the full P0 matrix.
+- **Conditional extensions:** INT8 PTQ belongs to P0 evidence hardening; TensorRT/Jetson/ARM is a later real-hardware extension, while Qt and gRPC/Triton are job-description gated.
+- **Failure records matter:** INT8, D-FINE, or eligible real-device attempts may fail, but commands, errors, root causes, and fallback decisions must be documented without promoting the attempt to a result.
 
 ### 10. Task Queue
 
-The detailed P1 queue is maintained in the Roadmap section below. At the phase level:
+The latest roadmap follows `docs/PLAN.md`. The top-level design fills any detail omitted by a short stage summary:
 
-| Phase | Goal | Project 1 Focus |
-|-------|------|-----------------|
-| Phase 0: plan freeze | Align README and engineering entry | Position Project 1 as C++ edge runtime; record paper_detect D010 artifact path |
-| Phase 1: C++ Runtime P0 | Make the model run in C++ | Config, preprocess, ONNX Runtime, postprocess/NMS, JSON, visualization, benchmark |
-| Phase 2: deployment evaluation | Add engineering evidence | benchmark protocol, GTest, error handling, INT8 PTQ attempt |
-| Phase 3: paper_detect artifact adapter | Add research-side artifact credibility | D010 result card, model_artifact contract, optional D-FINE runtime adapter |
-| Phase 4: cloud-edge collaboration | Connect Project 1 to Project 2 | sample inference_event JSON |
-| Phase 5: resume freeze | Stop adding big features | README, demo, tests, reports, FAQ, interview script |
+| Large Stage | Target / Gate | Project 1 Exit |
+|-------------|---------------|----------------|
+| Completed baseline and engineering skeleton | Through 2026-07-12 | Training/export/Python assets plus C++17/CMake/CTest, typed config, and real-image OpenCV preprocessing; no C++ inference claim |
+| **1. Deliverable loop (current)** | 2026-07-13 to 2026-07-27 | Fixed config/image/model command reaches ORT, decode/filter/NMS/restore, JSON/visualization; fixed-sample Python ORT/C++ consistency; segmented P50/P95; core errors and automated tests; five-minute explanation and one behavior-plus-test modification |
+| 2. Evidence hardening | 2026-07-28 to 2026-08-10 | Complete the P0 test/fault matrix, reproducible performance/memory evidence, FP32-vs-INT8 PTQ comparison, final result table, resume bullets, interview set, and focused mock; QAT only if justified |
+| 3. P1 extensions | After stable P0; condition gated | Batch/worker/backpressure work by interview value; real TensorRT/Jetson/ARM only with hardware; Qt or gRPC/Triton only with repeated high-priority JD demand; D010 only after its artifact gate |
+| 4. Freeze and interview priority | From 2026-08-25 | Freeze P0 features; allow correctness/demo/reproduction fixes, tests/evidence, small JD-specific patches, interview-feedback updates, and non-disruptive P1 work |
+
+Large stage one's detailed, one-step-at-a-time execution plan is in [`docs/STAGE1_EXECUTION_PLAN.md`](docs/STAGE1_EXECUTION_PLAN.md). It is a justified long-form artifact, while this README remains the status and evidence source of truth.
 
 ### 11. Version Changes and Progress Records
 
-Current state: P1-00 to P1-03 are complete and verified. The next implementation stage is still P1-04 ONNX Runtime session smoke unless the user explicitly asks for a documentation or artifact-contract step first.
+Current state: historical Project 1 tasks P1-00 through P1-03 are complete and verified. The repository has **not** drifted from the new design: those tasks establish the intended engineering skeleton, typed config, and OpenCV preprocess baseline.
+
+The next implementation step is **S1-01: baseline Runtime/artifact contract, multi-target CMake boundary, and ORT/GTest dependency preflight**. This deliberately precedes the ORT session so model-family assumptions and test seams are explicit. `S1-*` means “large stage one small stage” and avoids confusing the old Project 1 `P1-*` history with the top-level P1 extension category.
 
 The chronological V2 entry log is kept in the Roadmap section below and must be updated after every small stage.
 
@@ -223,12 +247,13 @@ The chronological V2 entry log is kept in the Roadmap section below and must be 
 | P1-01 | Added minimal C++17/CMake executable and CTest help smoke. | Prove the repo can build a C++ runtime target. | `yolo_defect_cpp --help` and CTest smoke. | Visual Studio multi-config builds need `ctest -C Debug`. |
 | P1-02 | Added no-dependency ConfigLoader and `--config` CLI path. | Make runtime behavior config-driven before adding image/model code. | Parsed input size, class names, thresholds, backend; printed stable summary. | CLI argument errors became the first useful smoke-test failure signal. |
 | P1-03 | Added OpenCV image read and YOLO-style preprocess. | Convert a real image into the model-ready tensor format. | `original_size`, `scale`, `padding`, `BGR->RGB`, `[0,1]`, `NCHW`, `1x3x800x800`; CTest 3/3 passed. | OpenCV Windows pack required `OpenCV_DIR=...\x64\vc16\lib` and `PATH=...\x64\vc16\bin`. |
+| PLAN-20260715 | Aligned repository rules and the bilingual entry points to the latest top-level design; created the long-form large-stage-one plan. | Preserve the verified baseline while preventing the short stage summary from dropping contract, correctness, test, failure, and evidence requirements. | `docs/PLAN.md` -> `AGENTS.md` rules -> README stage/status summary -> `docs/STAGE1_EXECUTION_PLAN.md` one-step plan. | Historical Python metrics, external D010 metrics, and future C++ results must stay explicitly separated. |
 
 ## Highlights
 
 - **Best Experimental Result** — Best checkpoint `final_train_2` reaches **mAP@0.5 = 0.743** on NEU-DET
-- **PyTorch vs ONNX Consistency Check** — 50-image comparison shows **50/50** identical detection-count matches, with total detections **146 vs 146**
-- **Inference Speed Benchmark** — PyTorch CPU **8.43 FPS**; PyTorch GPU (RTX 3060) **110.8 FPS**; ONNX CPU **24.4 FPS**; ONNX GPU (RTX 3060) **72.1 FPS** — all measured on 100 timed images (5 warmup)
+- **Historical PyTorch vs ONNX Count Check** — **50/50** count matches and **146 vs 146** detections, but the sorted sample is all `crazing` and does not prove class/box tolerance
+- **Historical V1 Python Benchmarks** — PyTorch CPU **8.43 FPS**; PyTorch GPU (RTX 3060) **110.8 FPS**; Python ORT CPU **24.4 FPS**; Python ORT GPU **72.1 FPS** — all measured on 100 timed images (5 warmup), not C++ results
 - **Docker Verified** — `python:3.9-slim` image has been tested with `/health` and `/detect`
 - **Clone & Run** — Dataset (28MB) included in the repo, no external downloads needed
 
@@ -239,13 +264,13 @@ The chronological V2 entry log is kept in the Roadmap section below and must be 
 | Best model | `final_train_2` |
 | mAP@0.5 | **0.743** |
 | mAP@50-95 | **0.388** |
-| PT/ONNX same-count ratio | **50 / 50** images (**100%**) |
+| Historical PT/ONNX same-count ratio | **50 / 50** all-`crazing` images (**100%**, count only) |
 | Mean abs count diff | **0.000** |
-| PyTorch CPU benchmark | **8.43 FPS** / **118.66 ms** per image |
-| PyTorch GPU benchmark (RTX 3060) | **110.8 FPS** / **9.0 ms** per image |
-| ONNX CPU benchmark | **24.4 FPS** / **40.9 ms** per image |
-| ONNX GPU benchmark (RTX 3060) | **72.1 FPS** / **13.9 ms** per image |
-| Model size (`best.pt` / `best.onnx`) | ~6.0 MiB / ~11.8 MiB |
+| Historical PyTorch CPU benchmark | **8.43 FPS** / **118.66 ms** per image |
+| Historical PyTorch GPU benchmark (RTX 3060) | **110.8 FPS** / **9.0 ms** per image |
+| Historical Python ORT CPU benchmark | **24.4 FPS** / **40.9 ms** per image |
+| Historical Python ORT GPU benchmark (RTX 3060) | **72.1 FPS** / **13.9 ms** per image |
+| Historical model-size record (`best.pt` / current `best.onnx`) | ~6.0 MiB / ~11.8 MiB; matching `.pt` is not currently present |
 
 ## V1 Python Baseline Quick Start
 
@@ -538,15 +563,17 @@ The current ONNX deployment target is exported with `imgsz=800`, so the model in
 
 | Check | Value | Evidence |
 |-------|-------|----------|
-| Best PyTorch validation result | **mAP@0.5 = 0.7433**, **mAP@50-95 = 0.3880** | `docs/experiment_log.md` |
-| PyTorch CPU benchmark | **8.43 FPS**, **118.66 ms/image** over **100** timed images | `results/pytorch_benchmark_100.json` |
-| PyTorch GPU benchmark (RTX 3060) | **110.8 FPS**, **9.0 ms/image** over **100** timed images | `results/pytorch_benchmark_gpu.json` |
-| ONNX CPU benchmark | **24.4 FPS**, **40.9 ms/image** over **100** timed images | `results/onnx_benchmark_cpu.json` |
-| ONNX GPU benchmark (RTX 3060) | **72.1 FPS**, **13.9 ms/image** over **100** timed images | `results/onnx_benchmark_gpu.json` |
-| PT vs ONNX detection-count match | **50 / 50** images (**100%**) | `results/pt_onnx_compare/compare_50_summary.json` |
-| Total detections in PT vs ONNX check | **146 vs 146** | `results/pt_onnx_compare/compare_50_summary.json` |
-| Mean absolute detection-count difference | **0.000** | `results/pt_onnx_compare/compare_50_summary.json` |
-| Current local model sizes | `best.pt = 6,286,072 bytes`, `best.onnx = 12,336,935 bytes` | local artifacts |
+| Best historical PyTorch validation result | **mAP@0.5 = 0.7433**, **mAP@50-95 = 0.3880** | `docs/archive/experiment_log.md` |
+| Historical PyTorch CPU benchmark | **8.43 FPS**, **118.66 ms/image** over **100** timed images | `results/pytorch_benchmark_100.json` |
+| Historical PyTorch GPU benchmark (RTX 3060) | **110.8 FPS**, **9.0 ms/image** over **100** timed images | `results/pytorch_benchmark_gpu.json` |
+| Historical Python ORT CPU benchmark | **24.4 FPS**, **40.9 ms/image** over **100** timed images | `results/onnx_benchmark_cpu.json` |
+| Historical Python ORT GPU benchmark (RTX 3060) | **72.1 FPS**, **13.9 ms/image** over **100** timed images | `results/onnx_benchmark_gpu.json` |
+| Historical PT vs ONNX detection-count match | **50 / 50** all-`crazing` images (**100%**, count only) | `results/pt_onnx_compare/compare_50_summary.json` |
+| Historical PT vs ONNX total detections | **146 vs 146** | `results/pt_onnx_compare/compare_50_summary.json` |
+| Historical mean absolute count difference | **0.000** | `results/pt_onnx_compare/compare_50_summary.json` |
+| Model-size record | Historical `best.pt = 6,286,072 bytes`; current tracked `best.onnx = 12,336,935 bytes`; matching `.pt` is absent | artifact/evidence audit |
+
+All latency rows above are V1 Python/Python-ORT evidence. The first C++ Runtime latency table will be created in S1-08 and must use a separately documented protocol.
 
 ### YOLODetector Class (`src/detector.py`)
 
@@ -753,7 +780,7 @@ Current repository versioning:
 ```
 yolo_defect/
 ├── Dockerfile                    # Docker image for FastAPI deployment
-├── AGENTS.md                     # Codex collaboration boundaries for V2 work
+├── AGENTS.md                     # Latest PLAN-derived collaboration and advancement rules
 ├── README.md                     # This file (English)
 ├── README_zh.md                  # Chinese version
 ├── LICENSE                       # MIT License
@@ -786,18 +813,21 @@ yolo_defect/
 ├── api/
 │   └── app.py                    # FastAPI service (`GET /health`, `POST /detect`)
 ├── cpp_infer/                    # V2 C++ runtime workspace
-│   ├── README.md                 # C++ runtime scope and planned layout
-│   ├── configs/                  # Future C++ runtime config files
-│   ├── include/yolo_defect_cpp/  # Future public headers
-│   ├── src/                      # Future C++ implementation files
-│   └── tests/                    # Future GTest cases
+│   ├── CMakeLists.txt            # Current C++17 executable/CTest build; multi-target split is S1-01
+│   ├── README.md                 # C++ build/run scope and verified commands
+│   ├── configs/default_config.txt# Typed Runtime config used by current smoke path
+│   ├── include/yolo_defect_cpp/  # ConfigLoader and ImagePreprocessor public headers
+│   ├── src/                      # Config, preprocess, and CLI implementations
+│   └── tests/                    # Added incrementally from S1-04 (not present yet)
 ├── configs/
 │   ├── train_config.yaml         # Baseline training hyperparameters
 │   └── exp*.yaml                 # Experiment configs (imgsz/lr/augment/final runs)
 ├── models/
-│   └── .gitkeep                  # Exported ONNX models (gitignored)
+│   └── best.onnx                 # Tracked YOLOv8/NEU-DET P0 artifact
 ├── docs/
-│   ├── experiment_log.md         # Experiment tracking template
+│   ├── PLAN.md                   # Latest project design, advancement rules, and large stages
+│   ├── STAGE1_EXECUTION_PLAN.md  # Current large-stage-one dynamic small-stage plan
+│   ├── archive/                  # Historical route/experiment documents
 │   └── assets/                   # PR curves, demo GIFs, plots
 └── runs/                         # YOLO training outputs (gitignored)
 ```
@@ -806,7 +836,7 @@ yolo_defect/
 
 - **`scripts/`** — One-off scripts for data processing, training, evaluation, export. Run from command line with argparse.
 - **`src/`** — Reusable modules. `detector.py` is imported by both `inference_onnx.py` and the FastAPI service.
-- **`cpp_infer/`** — V2 C++ deployment workspace. It will own CMake, OpenCV preprocessing, ONNX Runtime C++ inference, postprocessing, benchmark, and GTest.
+- **`cpp_infer/`** — V2 C++ deployment workspace. It already owns CMake/CTest, typed config, and OpenCV preprocessing; large stage one adds the Runtime library boundary, ONNX Runtime C++, postprocess, outputs, consistency, benchmark, and GTest.
 - **`configs/`** — Separated hyperparameters. Easy to track experiments by diffing config files.
 
 ## Tech Stack
@@ -818,10 +848,10 @@ yolo_defect/
 | PyTorch | Deep learning framework | 2.0.0 |
 | Ultralytics | YOLOv8 training & inference | latest |
 | ONNX | Model interchange format | latest |
-| ONNX Runtime | Python baseline and planned C++ inference engine | latest (GPU) |
-| OpenCV | Python image utilities and planned C++ preprocessing/visualization | (via ultralytics) / planned C++ |
-| CMake | Planned C++ build system | planned |
-| GTest | Planned C++ unit tests | planned |
+| ONNX Runtime | Python baseline; C++ inference engine enters in S1-02 | Python 1.19.2 locally; C++ SDK pending preflight |
+| OpenCV | Python utilities and verified C++ preprocessing; visualization in S1-05 | Local Windows C++ pack verified |
+| CMake | Active C++ build system and CTest entry | enabled |
+| GTest | Incremental C++ unit tests from S1-04 | pending dependency preflight |
 | Matplotlib | Visualization & plotting | (via ultralytics) |
 | FastAPI | REST API service | latest |
 | Conda | Environment management | — |
@@ -867,9 +897,9 @@ The NEU-DET dataset is only 28MB. Including it means:
 - [x] Docker containerization for deployment
 - [x] Demo GIF for inference walkthrough
 
-### V2 P1 Task Queue
+### V2 Project 1 Task Queue
 
-The V2 queue follows `docs/路线0628.md`, especially sections 5.3, 5.5, and 6.1-6.8. README is the task and change-log entry point; standalone task documents are intentionally avoided unless a future module becomes too large for README. Small-stage plans are created dynamically after each completed stage instead of being fully frozen up front.
+The V2 queue follows `docs/PLAN.md`. Before entering each large stage, Codex reads the current repository and creates that large stage's small-stage plan; only one small stage is executed at a time, then work pauses for acceptance and the remaining plan is revalidated. `docs/STAGE1_EXECUTION_PLAN.md` is the current justified long-form plan. README remains the task/status/evidence entry point.
 
 | ID | Status | Task | Scope | Acceptance |
 |----|--------|------|-------|------------|
@@ -877,15 +907,17 @@ The V2 queue follows `docs/路线0628.md`, especially sections 5.3, 5.5, and 6.1
 | P1-01 | Verified with VS Developer Command Prompt | CMake skeleton | Add the first minimal CMake project and executable target | `cpp_infer` has a minimal C++17 CMake target, executable target, and CTest smoke test. Configure/build/run pass in the Visual Studio 2026 Developer Command Prompt; Visual Studio multi-config builds require `ctest -C Debug` |
 | P1-02 | Verified with NMake CTest smoke | ConfigLoader | Load `input_width`, `input_height`, `class_names`, `score_threshold`, `nms_threshold`, and `backend` | `cpp_infer/configs/default_config.txt` is parsed into a typed `RuntimeConfig`; `yolo_defect_cpp --config ...` prints a stable config summary; CTest covers the config smoke path without OpenCV, ONNX Runtime, GTest, preprocessing, postprocessing, NMS, or benchmark wiring |
 | P1-03 | Verified with OpenCV CTest smoke | OpenCV preprocess | Read an image, print shape/channels, letterbox, BGR to RGB, normalize, HWC to CHW | `--config ... --image ...` reads a real validation image and prints original shape, target input size, scale, padding, color conversion, normalization, NCHW tensor shape, and tensor element count |
-| P1-04 | Pending | ONNX Runtime session smoke | Load `models/best.onnx`, create a session, print input/output names and shapes | Model loading works and failure paths explain missing model/runtime/provider issues |
-| P1-05 | Pending | Postprocess / NMS | Decode model output into boxes, map coordinates back to the original image, filter and NMS | Single-image detection JSON is produced with class, confidence, and box fields |
-| P1-06 | Pending | Benchmark | Measure preprocess / infer / postprocess / end-to-end latency with warmup and repeat | Benchmark output includes mean, P50, P95, FPS, repeat count, and model/image metadata |
-| P1-07 | Pending | GTest | Add focused tests for config, preprocess, NMS, and postprocess | At least three meaningful C++ test groups can run from a documented command |
-| P1-08 | Pending | INT8 PTQ | Try post-training quantization and compare FP32 vs INT8 | A comparison table records model size, latency/FPS, detection consistency, and any accuracy or compatibility trade-off |
-| P1-09 | Pending | TensorRT attempt | Try TensorRT FP16/INT8 conversion or document the blocked path | Report records engine build command, benchmark if successful, or clear failure reason if unsupported |
-| P1-10 | Placeholder | paper_detect D010 L0 result-card sync | Add lightweight D010/D003/D001 result card, metrics, per-class delta, qualitative figure, and config summary placeholders under `artifacts/paper_detect_d010/` | README explains D010 as a research-side artifact source without making this repo responsible for D-FINE training |
-| P1-11 | Placeholder | model_artifact contract | Define a minimal artifact contract for YOLO baseline and paper_detect D010: source repo, branch/commit, method, dataset, metrics, preprocess, postprocess type, runtime status, and paths | `model_artifact.yaml` style schema can be explained and later consumed by C++/Python tooling |
-| P1-12 | Placeholder | inference_event sample | Define sample output event for Project 2: asset/image/model artifact id, detections, runtime timings, benchmark profile, warning flags, and timestamp | Project 1 can explain how edge runtime output becomes Project 2 incident input |
+| S1-01 | **Next** | Baseline contract and engineering boundary | Expand the executable runtime/artifact contract, split Runtime library and CLI targets, preflight ORT/GTest dependencies | Schema failures are actionable; paths are deterministic; library/CLI build; dependency source/version/path is known; no inference yet |
+| S1-02 | Pending | ORT session and metadata validation | Add RAII session plus provider/name/shape/dtype/class-contract inspection | `models/best.onnx` loads and actual float32 `[1,3,800,800] -> [1,10,13125]` metadata is validated; negative contract paths fail clearly |
+| S1-03 | Pending | Tensor wiring and raw inference | Convert the preprocess vector to an ORT tensor, run the fixed image, own and validate raw output | Fixed image reaches finite raw output with the expected shape/elements; no decode yet |
+| S1-04 | Pending | YOLO decode/filter/NMS/coordinate restore | Implement pure, model-specific postprocess functions and synthetic GTest cases | Threshold semantics, class-agnostic NMS, empty output, clipping, and non-square inverse letterbox are deterministic and tested |
+| S1-05 | Pending | End-to-end CLI, JSON, and visualization | Orchestrate the single-image vertical slice and write schema-stable machine/visual outputs | Fixed command creates parseable detection JSON and a readable visualization; empty detections remain valid output |
+| S1-06 | Pending | Automated and failure-path gate | Expand GTest/CTest across contract, preprocess, metadata, postprocess, integration, and core failures | Tests cover missing model, shape/dtype/class mismatch, damaged image, and empty output with nonzero actionable errors where appropriate |
+| S1-07 | Pending | Fixed-sample Python ORT/C++ consistency | Compare a committed six-class manifest under the same CPU provider and postprocess semantics | Count/class match and predeclared confidence/box/IoU tolerances pass or produce per-image diagnostics; no unsupported direct PT rerun claim |
+| S1-08 | Pending | Reproducible Release benchmark | Measure decode/preprocess/infer/postprocess/pipeline with warmup/repeat and environment/memory metadata | JSON contains mean/P50/P95, throughput, build/provider/model/sample metadata, and Windows Peak Working Set or an explicit unsupported value |
+| S1-09 | Pending | Large-stage-one closure | Clean-build all gates, align documentation/evidence, and complete L2 interview acceptance | Fixed demo/tests/consistency/benchmark pass; user can explain for five minutes, handle follow-ups/failures, and change one behavior plus its test |
+
+Large stage two will be decomposed only when S1-09 is accepted. Its fixed boundary is P0 evidence hardening and INT8 PTQ (QAT only if justified). Large stage three then chooses condition-gated P1 extensions. TensorRT is not an unconditional queue item, and a Project 2 `inference_event` is an optional bridge rather than a large-stage-one acceptance item.
 
 ### P1-01 CMake Skeleton Commands
 
@@ -978,7 +1010,8 @@ Local verification on 2026-06-13: the P1-03 smoke test first failed against the 
 | 2026-06-05 | Verified P1-01 CMake skeleton in the Visual Studio 2026 Developer Command Prompt | Confirmed configure/build/run/CTest smoke test; documented the `ctest -C Debug` requirement for Visual Studio multi-config builds |
 | 2026-06-10 | Added P1-02 ConfigLoader and `--config` smoke path | Introduced a typed no-dependency runtime config parser and documented the build/run/CTest evidence before moving toward OpenCV preprocessing |
 | 2026-06-13 | Added P1-03 OpenCV read-image and letterbox preprocess smoke path | Confirmed real-image preprocessing output, including original shape, RGB conversion, normalization, NCHW layout, scale, padding, and tensor shape before ONNX Runtime integration |
-| 2026-06-29 | Aligned README with `docs/路线0628.md` Project 1 plan | Recorded top-level design, D010/paper_detect artifact path, required README sections, phase queue placeholders, and teaching log so later work stays on the C++ Runtime route |
+| 2026-06-29 | Aligned README with the then-current route, now archived as `docs/archive/路线0628.md` | Recorded top-level design, D010/paper_detect artifact path, required README sections, phase queue placeholders, and teaching log so later work stays on the C++ Runtime route |
+| 2026-07-15 | Replaced the active route source with `docs/PLAN.md`, updated AGENTS and both entry READMEs, and added `docs/STAGE1_EXECUTION_PLAN.md` | Adopted the latest nine-part teaching closure, authoritative P0/P1 boundaries, artifact gates, four large stages, verified no current direction drift, and dynamically planned S1-01 through S1-09 |
 
 ## License
 
