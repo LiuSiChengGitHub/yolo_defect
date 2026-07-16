@@ -187,10 +187,12 @@ Future GTest placeholder:
 | Best current YOLO result | `final_train_2`, mAP@0.5 = 0.743, mAP@50-95 = 0.388 |
 | Historical ONNX/PyTorch alignment | 50/50 detection-count matches and 146 vs 146 total detections, but the sorted subset is all `crazing` and records counts/confidence summaries rather than class/box tolerances |
 | Baseline ONNX artifact preflight | Tracked `models/best.onnx`, 12,336,935 bytes, opset 17, SHA-256 `7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68`; metadata says `nms=False` |
+| Model lineage status | The project owner confirms the current ONNX was personally exported from `runs/detect/final_train_2/weights/best.pt`; that `.pt` is absent from the workspace and Git history, so the lineage is owner-confirmed but not currently re-exportable |
 | Baseline ONNX I/O preflight | Python ORT 1.19.2 confirms input `images` = float32 `[1,3,800,800]`; output `output0` = float32 `[1,10,13125]` |
 | Historical Python ORT benchmark | ONNX CPU 24.4 FPS, ONNX GPU 72.1 FPS on RTX 3060; **not C++ Runtime performance** |
 | Current C++ runtime state | Fresh out-of-tree MSVC 19.50/OpenCV 4.8.0 build passed 3/3 CTest smokes; config + preprocess only, no ORT C++ yet |
-| Artifact license checkpoint | ONNX metadata reports `AGPL-3.0`, while repository source is MIT; model provenance/distribution compatibility must be reviewed before a release claim |
+| Pre-stage dependency readiness | ORT C++ SDK 1.19.2 header/lib/DLL verified outside the repository; VS x64 tools found; a second clean 3/3 CTest passed; GTest v1.17.0 commit/archive/hash frozen but not integrated; see `docs/PRE_STAGE1_READINESS.md` |
+| Artifact license checkpoint | Current use is personal learning and does not make Enterprise licensing a startup prerequisite; because the owner chose to keep publicly distributing the ONNX and NEU-DET, the model's AGPL notice and the dataset's unspecified redistribution terms remain release checkpoints separate from the MIT source license |
 | Incoming research artifact | `paper_detect` D010 method on the D-FINE-S/DeepPCB research line; not a new Runtime architecture claim |
 | External D010 research evidence | Formal-validation AP50-95 = 0.847057; official-test AP50-95 = 0.830385; these are not Project 1 Runtime results |
 | D010 relationship and ablation | D003 is the ancestor/ablation anchor; all 6 D010 class deltas over D003 are positive on formal and official test; D010A erase-only and D010B replay-only each beat D003 but trail full D010 |
@@ -235,7 +237,9 @@ Large stage one's detailed, one-step-at-a-time execution plan is in [`docs/STAGE
 
 Current state: historical Project 1 tasks P1-00 through P1-03 are complete and verified. The repository has **not** drifted from the new design: those tasks establish the intended engineering skeleton, typed config, and OpenCV preprocess baseline.
 
-The next implementation step is **S1-01: baseline Runtime/artifact contract, multi-target CMake boundary, and ORT/GTest dependency preflight**. This deliberately precedes the ORT session so model-family assumptions and test seams are explicit. `S1-*` means “large stage one small stage” and avoids confusing the old Project 1 `P1-*` history with the top-level P1 extension category.
+The 2026-07-16 pre-stage readiness pass is also complete: the ORT C++ 1.19.2 SDK is present and verified, the VS x64 toolchain is discoverable, a new `%TEMP%` Release/NMake build passes 3/3 CTest, and the future GTest dependency is pinned. The owner also confirmed the current ONNX was personally exported from the `final_train_2` best checkpoint; the checkpoint is not in this workspace or Git history. The durable commands, evidence, GTest hash, model-lineage audit, and unresolved public-distribution license checkpoints are in [`docs/PRE_STAGE1_READINESS.md`](docs/PRE_STAGE1_READINESS.md). This preparation did not start S1-01 or change Runtime behavior.
+
+The next implementation step remains **S1-01: baseline Runtime/artifact contract, multi-target CMake boundary, and consumption of the preflighted ORT/GTest dependency plan**. This deliberately precedes the ORT session so model-family assumptions and test seams are explicit. `S1-*` means “large stage one small stage” and avoids confusing the old Project 1 `P1-*` history with the top-level P1 extension category.
 
 The chronological V2 entry log is kept in the Roadmap section below and must be updated after every small stage.
 
@@ -270,7 +274,7 @@ The chronological V2 entry log is kept in the Roadmap section below and must be 
 | Historical PyTorch GPU benchmark (RTX 3060) | **110.8 FPS** / **9.0 ms** per image |
 | Historical Python ORT CPU benchmark | **24.4 FPS** / **40.9 ms** per image |
 | Historical Python ORT GPU benchmark (RTX 3060) | **72.1 FPS** / **13.9 ms** per image |
-| Historical model-size record (`best.pt` / current `best.onnx`) | ~6.0 MiB / ~11.8 MiB; matching `.pt` is not currently present |
+| Historical model-size record (`best.pt` / current `best.onnx`) | ~6.0 MiB / ~11.8 MiB; the matching `.pt` was not found in the current workspace or Git history |
 
 ## V1 Python Baseline Quick Start
 
@@ -571,7 +575,7 @@ The current ONNX deployment target is exported with `imgsz=800`, so the model in
 | Historical PT vs ONNX detection-count match | **50 / 50** all-`crazing` images (**100%**, count only) | `results/pt_onnx_compare/compare_50_summary.json` |
 | Historical PT vs ONNX total detections | **146 vs 146** | `results/pt_onnx_compare/compare_50_summary.json` |
 | Historical mean absolute count difference | **0.000** | `results/pt_onnx_compare/compare_50_summary.json` |
-| Model-size record | Historical `best.pt = 6,286,072 bytes`; current tracked `best.onnx = 12,336,935 bytes`; matching `.pt` is absent | artifact/evidence audit |
+| Model-size record | Historical `best.pt = 6,286,072 bytes`; current tracked `best.onnx = 12,336,935 bytes`; the matching `.pt` was not found in the current workspace or Git history | artifact/evidence audit |
 
 All latency rows above are V1 Python/Python-ORT evidence. The first C++ Runtime latency table will be created in S1-08 and must use a separately documented protocol.
 
@@ -843,15 +847,15 @@ yolo_defect/
 
 | Tool | Purpose | Version |
 |------|---------|---------|
-| Python | Language | 3.9 |
+| Python | Language | 3.9.25 |
 | C++ | V2 runtime language | C++17 |
 | PyTorch | Deep learning framework | 2.0.0 |
-| Ultralytics | YOLOv8 training & inference | latest |
-| ONNX | Model interchange format | latest |
-| ONNX Runtime | Python baseline; C++ inference engine enters in S1-02 | Python 1.19.2 locally; C++ SDK pending preflight |
-| OpenCV | Python utilities and verified C++ preprocessing; visualization in S1-05 | Local Windows C++ pack verified |
-| CMake | Active C++ build system and CTest entry | enabled |
-| GTest | Incremental C++ unit tests from S1-04 | pending dependency preflight |
+| Ultralytics | YOLOv8 training & inference | 8.4.24 locally and in artifact metadata |
+| ONNX | Model interchange format | Python package 1.19.1; artifact opset 17 |
+| ONNX Runtime | Python baseline; C++ inference engine enters in S1-02 | Python 1.19.2 and verified Windows x64 CPU C++ SDK 1.19.2; not integrated yet |
+| OpenCV | Python utilities and verified C++ preprocessing; visualization in S1-05 | Windows C++ 4.8.0 x64 vc16 |
+| CMake | Active C++ build system and CTest entry | 4.1.1-msvc1 |
+| GTest | Incremental C++ unit tests from S1-04 | v1.17.0 full commit/archive/SHA-256 pinned; not integrated yet |
 | Matplotlib | Visualization & plotting | (via ultralytics) |
 | FastAPI | REST API service | latest |
 | Conda | Environment management | — |
@@ -907,7 +911,7 @@ The V2 queue follows `docs/PLAN.md`. Before entering each large stage, Codex rea
 | P1-01 | Verified with VS Developer Command Prompt | CMake skeleton | Add the first minimal CMake project and executable target | `cpp_infer` has a minimal C++17 CMake target, executable target, and CTest smoke test. Configure/build/run pass in the Visual Studio 2026 Developer Command Prompt; Visual Studio multi-config builds require `ctest -C Debug` |
 | P1-02 | Verified with NMake CTest smoke | ConfigLoader | Load `input_width`, `input_height`, `class_names`, `score_threshold`, `nms_threshold`, and `backend` | `cpp_infer/configs/default_config.txt` is parsed into a typed `RuntimeConfig`; `yolo_defect_cpp --config ...` prints a stable config summary; CTest covers the config smoke path without OpenCV, ONNX Runtime, GTest, preprocessing, postprocessing, NMS, or benchmark wiring |
 | P1-03 | Verified with OpenCV CTest smoke | OpenCV preprocess | Read an image, print shape/channels, letterbox, BGR to RGB, normalize, HWC to CHW | `--config ... --image ...` reads a real validation image and prints original shape, target input size, scale, padding, color conversion, normalization, NCHW tensor shape, and tensor element count |
-| S1-01 | **Next** | Baseline contract and engineering boundary | Expand the executable runtime/artifact contract, split Runtime library and CLI targets, preflight ORT/GTest dependencies | Schema failures are actionable; paths are deterministic; library/CLI build; dependency source/version/path is known; no inference yet |
+| S1-01 | **Next** | Baseline contract and engineering boundary | Expand the executable runtime/artifact contract, split Runtime library and CLI targets, and consume the preflighted ORT/GTest dependency plan | Schema failures are actionable; paths are deterministic; library/CLI build; dependency source/version/path is known; no inference yet |
 | S1-02 | Pending | ORT session and metadata validation | Add RAII session plus provider/name/shape/dtype/class-contract inspection | `models/best.onnx` loads and actual float32 `[1,3,800,800] -> [1,10,13125]` metadata is validated; negative contract paths fail clearly |
 | S1-03 | Pending | Tensor wiring and raw inference | Convert the preprocess vector to an ORT tensor, run the fixed image, own and validate raw output | Fixed image reaches finite raw output with the expected shape/elements; no decode yet |
 | S1-04 | Pending | YOLO decode/filter/NMS/coordinate restore | Implement pure, model-specific postprocess functions and synthetic GTest cases | Threshold semantics, class-agnostic NMS, empty output, clipping, and non-square inverse letterbox are deterministic and tested |
@@ -1012,10 +1016,15 @@ Local verification on 2026-06-13: the P1-03 smoke test first failed against the 
 | 2026-06-13 | Added P1-03 OpenCV read-image and letterbox preprocess smoke path | Confirmed real-image preprocessing output, including original shape, RGB conversion, normalization, NCHW layout, scale, padding, and tensor shape before ONNX Runtime integration |
 | 2026-06-29 | Aligned README with the then-current route, now archived as `docs/archive/路线0628.md` | Recorded top-level design, D010/paper_detect artifact path, required README sections, phase queue placeholders, and teaching log so later work stays on the C++ Runtime route |
 | 2026-07-15 | Replaced the active route source with `docs/PLAN.md`, updated AGENTS and both entry READMEs, and added `docs/STAGE1_EXECUTION_PLAN.md` | Adopted the latest nine-part teaching closure, authoritative P0/P1 boundaries, artifact gates, four large stages, verified no current direction drift, and dynamically planned S1-01 through S1-09 |
+| 2026-07-16 | Completed pre-stage-one readiness without starting S1-01 | Verified the x64 VS terminal and ORT C++ SDK, passed a new clean 3/3 CTest, froze a SHA-256-pinned GTest v1.17.0 FetchContent plan, and recorded the owner-confirmed model lineage plus public-distribution license checkpoints in `docs/PRE_STAGE1_READINESS.md` |
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+Repository-authored source code is licensed under the MIT License — see [LICENSE](LICENSE). This statement does not automatically cover `models/best.onnx` or the NEU-DET dataset.
+
+The tracked ONNX metadata declares `AGPL-3.0`. [Ultralytics' official licensing guidance](https://www.ultralytics.com/license) states that Ultralytics-trained models use AGPL-3.0 by default unless an applicable commercial license is obtained. The [official NEU dataset page](https://faculty.neu.edu.cn/songkc/en/zdylm/263265) provides downloads and citation guidance, but this audit did not find an explicit redistribution license there. These are provenance/distribution checkpoints rather than a legal conclusion; see [`docs/PRE_STAGE1_READINESS.md`](docs/PRE_STAGE1_READINESS.md).
+
+The declared use is personal learning, so an Enterprise license is not a prerequisite for local development. The owner selected option A—continue public distribution of the ONNX and NEU-DET—so noncommercial intent does not remove the need to preserve the model's license notice and verify the dataset's redistribution basis before the release position is frozen.
 
 The NEU-DET dataset is provided by Northeastern University (NEU). Please cite the original paper if you use this dataset in academic work:
 

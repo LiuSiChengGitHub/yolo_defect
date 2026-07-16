@@ -187,10 +187,12 @@ ctest --test-dir "%BUILD_DIR%" --output-on-failure
 | 当前最佳 YOLO 结果 | `final_train_2`，mAP@0.5 = 0.743，mAP@50-95 = 0.388 |
 | 历史 ONNX/PyTorch 对齐 | 50/50 检测数量一致、总检测数 146 vs 146；但排序后的子集全是 `crazing`，且只记录数量/置信度摘要，没有类别/框坐标容差 |
 | Baseline ONNX artifact 预检 | 已跟踪 `models/best.onnx`，12,336,935 bytes，opset 17，SHA-256 `7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68`；metadata 为 `nms=False` |
+| 模型 lineage 状态 | 项目所有者确认当前 ONNX 是本人从 `runs/detect/final_train_2/weights/best.pt` 导出的；该 `.pt` 不在当前工作区或 Git 历史中，因此 lineage 已由所有者确认，但目前不能重新导出复核 |
 | Baseline ONNX I/O 预检 | Python ORT 1.19.2 确认输入 `images` = float32 `[1,3,800,800]`；输出 `output0` = float32 `[1,10,13125]` |
 | 历史 Python ORT benchmark | ONNX CPU 24.4 FPS，ONNX GPU 72.1 FPS（RTX 3060）；**不是 C++ Runtime 性能** |
 | 当前 C++ Runtime 状态 | 全新 out-of-tree MSVC 19.50/OpenCV 4.8.0 构建通过 3/3 CTest；目前只有 config + preprocess，尚无 ORT C++ |
-| Artifact 许可证检查点 | ONNX metadata 标记 `AGPL-3.0`，仓库源码为 MIT；在对外发布成果前必须复核模型来源与分发兼容性 |
+| 大阶段一前置依赖状态 | 仓库外 ORT C++ SDK 1.19.2 header/lib/DLL 已核验；VS x64 工具可发现；再次 clean 3/3 CTest 通过；GTest v1.17.0 commit/archive/hash 已冻结但尚未接入；详见 `docs/PRE_STAGE1_READINESS.md` |
+| Artifact 许可证检查点 | 当前用途是个人学习，不需要把 Enterprise 许可作为开工条件；但所有者已选择继续公开分发 ONNX 与 NEU-DET，因此模型 AGPL 声明和数据集未明确的再分发条款仍是与源码 MIT 分开的发布门禁 |
 | 后续研究侧 artifact | `paper_detect` D010 方法，位于 D-FINE-S/DeepPCB 研究线；不把它写成新的 Runtime 架构 |
 | 外部 D010 研究证据 | Formal-validation AP50-95 = 0.847057；official-test AP50-95 = 0.830385；这些不是项目1 Runtime 结果 |
 | D010 关系与消融 | D003 是 ancestor/消融锚点；D010 相对 D003 的 formal 与 official-test 6 类 delta 全部为正；D010A erase-only 和 D010B replay-only 都高于 D003、低于完整 D010 |
@@ -235,7 +237,9 @@ C++ 汇总结果表尚未完成。最终至少要记录机器/OS/编译器/构�
 
 当前状态：历史项目1任务 P1-00 到 P1-03 已完成并验证。现状**没有偏离**新顶层设计：它们正好建立了工程骨架、类型化配置和 OpenCV preprocess baseline。
 
-下一实现步骤调整为 **S1-01：baseline Runtime/artifact 契约、多 target CMake 边界、ORT/GTest 依赖预检**。它先于 ORT session，是为了把模型族假设和测试接缝显式化。`S1-*` 表示“大阶段一内部小阶段”，避免把旧项目1历史 ID `P1-*` 与顶层设计中的 P1 扩展类别混淆。
+2026-07-16 的大阶段一前置准备也已完成：ORT C++ 1.19.2 SDK 已存在并核验，VS x64 工具链可发现，全新 `%TEMP%` Release/NMake 构建通过 3/3 CTest，未来 GTest 依赖已固定版本。项目所有者也已确认当前 ONNX 是本人从 `final_train_2` best checkpoint 导出的；该 checkpoint 不在当前工作区或 Git 历史中。可复现命令、证据、GTest hash、模型 lineage 审计和未解决的公开分发许可检查点见 [`docs/PRE_STAGE1_READINESS.md`](docs/PRE_STAGE1_READINESS.md)。这些准备没有开始 S1-01，也没有改变 Runtime 行为。
+
+下一实现步骤仍为 **S1-01：baseline Runtime/artifact 契约、多 target CMake 边界，并消费已完成预检的 ORT/GTest 依赖方案**。它先于 ORT session，是为了把模型族假设和测试接缝显式化。`S1-*` 表示“大阶段一内部小阶段”，避免把旧项目1历史 ID `P1-*` 与顶层设计中的 P1 扩展类别混淆。
 
 时间线式 V2 入口记录维护在下方“路线图”部分，每完成一个小阶段必须更新。
 
@@ -270,7 +274,7 @@ C++ 汇总结果表尚未完成。最终至少要记录机器/OS/编译器/构�
 | 历史 PyTorch GPU 基准测试（RTX 3060） | **110.8 FPS** / **9.0 ms** 每张 |
 | 历史 Python ORT CPU 基准测试 | **24.4 FPS** / **40.9 ms** 每张 |
 | 历史 Python ORT GPU 基准测试（RTX 3060） | **72.1 FPS** / **13.9 ms** 每张 |
-| 历史模型大小记录（`best.pt` / 当前 `best.onnx`） | ~6.0 MiB / ~11.8 MiB；匹配的 `.pt` 当前不存在 |
+| 历史模型大小记录（`best.pt` / 当前 `best.onnx`） | ~6.0 MiB / ~11.8 MiB；当前工作区和 Git 历史中未找到匹配的 `.pt` |
 
 ## V1 Python Baseline 快速开始
 
@@ -609,7 +613,7 @@ python scripts/inference_onnx.py --model models/best.onnx --image-dir data/image
 | 历史 PT / ONNX 检测数量一致率 | 全为 `crazing` 的 **50 / 50**（**100%**，只比较数量） | `results/pt_onnx_compare/compare_50_summary.json` |
 | 历史 PT / ONNX 总检测数 | **146 vs 146** | `results/pt_onnx_compare/compare_50_summary.json` |
 | 历史平均绝对数量差 | **0.000** | `results/pt_onnx_compare/compare_50_summary.json` |
-| 模型大小记录 | 历史 `best.pt = 6,286,072 bytes`；当前已跟踪 `best.onnx = 12,336,935 bytes`；匹配 `.pt` 已不存在 | artifact/证据审计 |
+| 模型大小记录 | 历史 `best.pt = 6,286,072 bytes`；当前已跟踪 `best.onnx = 12,336,935 bytes`；当前工作区和 Git 历史中未找到匹配 `.pt` | artifact/证据审计 |
 
 上表所有 latency 都是 V1 Python/Python-ORT 证据。第一份 C++ Runtime latency 表将在 S1-08 使用独立、明确的协议生成。
 
@@ -896,15 +900,15 @@ yolo_defect/
 
 | 工具 | 用途 | 版本 |
 |------|------|------|
-| Python | 编程语言 | 3.9 |
+| Python | 编程语言 | 3.9.25 |
 | C++ | V2 Runtime 主语言 | C++17 |
 | PyTorch | 深度学习框架 | 2.0.0 |
-| Ultralytics | YOLOv8 训练和推理 | latest |
-| ONNX | 开放神经网络格式 | latest |
-| ONNX Runtime | Python baseline；S1-02 接入 C++ 推理引擎 | 本机 Python 1.19.2；C++ SDK 待预检 |
-| OpenCV | Python 工具与已验证 C++ 预处理；S1-05 增加可视化 | 本机 Windows C++ pack 已验证 |
-| CMake | 当前 C++ 构建系统与 CTest 入口 | enabled |
-| GTest | 从 S1-04 逐步加入 C++ 单元测试 | 依赖待预检 |
+| Ultralytics | YOLOv8 训练和推理 | 本机与 artifact metadata 均为 8.4.24 |
+| ONNX | 开放神经网络格式 | Python 包 1.19.1；artifact opset 17 |
+| ONNX Runtime | Python baseline；S1-02 接入 C++ 推理引擎 | Python 1.19.2 与已核验 Windows x64 CPU C++ SDK 1.19.2；尚未接入 |
+| OpenCV | Python 工具与已验证 C++ 预处理；S1-05 增加可视化 | Windows C++ 4.8.0 x64 vc16 |
+| CMake | 当前 C++ 构建系统与 CTest 入口 | 4.1.1-msvc1 |
+| GTest | 从 S1-04 逐步加入 C++ 单元测试 | v1.17.0 完整 commit/archive/SHA-256 已固定；尚未接入 |
 | Matplotlib | 可视化绘图 | (via ultralytics) |
 | FastAPI | REST API 服务 | latest |
 | Conda | 环境管理 | — |
@@ -959,7 +963,7 @@ V2 队列以 `docs/PLAN.md` 为准。进入每个大阶段前，Codex 先读取�
 | P1-01 | 已在 VS Developer Command Prompt 验证 | CMake 骨架 | 建立最小 CMake 工程和可执行目标 | `cpp_infer` 已有最小 C++17 CMake target、可执行目标和 CTest smoke test。Visual Studio 2026 Developer Command Prompt 中 configure/build/run 通过；Visual Studio 多配置构建需要 `ctest -C Debug` |
 | P1-02 | 已通过 NMake CTest smoke 验证 | ConfigLoader | 读取 `input_width`、`input_height`、`class_names`、`score_threshold`、`nms_threshold`、`backend` | `cpp_infer/configs/default_config.txt` 会被解析为类型化 `RuntimeConfig`；`yolo_defect_cpp --config ...` 会打印稳定配置摘要；CTest 覆盖 config smoke 路径，但仍不接入 OpenCV、ONNX Runtime、GTest、预处理、后处理、NMS 或 benchmark |
 | P1-03 | 已通过 OpenCV CTest smoke 验证 | OpenCV preprocess | 读图、打印 shape/channels、letterbox、BGR 转 RGB、normalize、HWC 转 CHW | `--config ... --image ...` 会读取真实验证图片，并打印原图尺寸、目标输入尺寸、缩放比例、padding、颜色转换、归一化、NCHW tensor shape 和 tensor 元素数量 |
-| S1-01 | **下一步** | Baseline 契约与工程边界 | 扩展可执行 Runtime/artifact 契约，拆 Runtime library 与 CLI target，预检 ORT/GTest | Schema 错误可行动、路径确定、library/CLI 可构建、依赖来源/版本/路径明确；本步不推理 |
+| S1-01 | **下一步** | Baseline 契约与工程边界 | 扩展可执行 Runtime/artifact 契约，拆 Runtime library 与 CLI target，并消费已完成预检的 ORT/GTest 依赖方案 | Schema 错误可行动、路径确定、library/CLI 可构建、依赖来源/版本/路径明确；本步不推理 |
 | S1-02 | 待推进 | ORT session 与 metadata 校验 | 加入 RAII session 和 provider/name/shape/dtype/class contract 检查 | `models/best.onnx` 能加载并验证真实 float32 `[1,3,800,800] -> [1,10,13125]`；负向契约清晰失败 |
 | S1-03 | 待推进 | Tensor 接线与 raw inference | 把预处理 vector 构造为 ORT tensor，运行固定图片，持有并校验 raw output | 固定图得到预期 shape/元素数且数值有限的 raw output；暂不 decode |
 | S1-04 | 待推进 | YOLO decode/filter/NMS/坐标还原 | 实现纯函数式模型后处理与 synthetic GTest | 阈值语义、class-agnostic NMS、空输出、裁剪和非正方形 letterbox 逆变换确定且有测试 |
@@ -1064,10 +1068,15 @@ ctest --test-dir "%BUILD_DIR%" --output-on-failure
 | 2026-06-13 | 新增 P1-03 OpenCV 读图和 letterbox preprocess smoke 路径 | 在接入 ONNX Runtime 前，确认真实图片预处理输出，包括原图 shape、RGB 转换、归一化、NCHW 布局、scale、padding 和 tensor shape |
 | 2026-06-29 | 按当时路线校准项目1主线；该路线现归档为 `docs/archive/路线0628.md` | 记录顶层设计、D010/paper_detect artifact 接入路线、README 必备栏目、阶段队列占位和教学式进度日志，防止后续偏离 C++ Runtime 主线 |
 | 2026-07-15 | 将现行路线源替换为 `docs/PLAN.md`，更新 AGENTS 与双语总入口，并新增 `docs/STAGE1_EXECUTION_PLAN.md` | 采用最新九部分教学闭环、权威 P0/P1 边界、artifact 门禁和四个大阶段；确认当前方向未偏，并动态规划 S1-01 至 S1-09 |
+| 2026-07-16 | 未开始 S1-01，先完成大阶段一开工前置准备 | 核验 VS x64 终端与 ORT C++ SDK，全新 clean build 通过 3/3 CTest，冻结 SHA-256 固定的 GTest v1.17.0 FetchContent 方案，并在 `docs/PRE_STAGE1_READINESS.md` 记录所有者确认的模型 lineage 与公开分发许可检查点 |
 
 ## 许可证
 
-本项目采用 MIT 许可证 — 详见 [LICENSE](LICENSE) 文件。
+仓库作者编写的源代码采用 MIT 许可证，详见 [LICENSE](LICENSE)。该声明不能自动覆盖 `models/best.onnx` 或 NEU-DET 数据集。
+
+当前 ONNX metadata 标注 `AGPL-3.0`。[Ultralytics 官方许可说明](https://www.ultralytics.com/license)称 Ultralytics 训练模型默认使用 AGPL-3.0，除非取得适用的商业许可。[东北大学 NEU 官方数据页](https://faculty.neu.edu.cn/songkc/en/zdylm/263265)提供下载和引用说明，但本次审计没有在该页面找到明确的再分发许可证。这些是 provenance/分发检查点，不是法律结论；详见 [`docs/PRE_STAGE1_READINESS.md`](docs/PRE_STAGE1_READINESS.md)。
+
+当前声明用途是个人学习，因此本地开发不需要把 Enterprise 许可作为前置条件。项目所有者选择 A——继续公开分发 ONNX 与 NEU-DET；非商业意图并不会自动免除分发义务，所以在冻结发布口径前仍须保留模型许可声明并核实数据集的再分发依据。
 
 NEU-DET 数据集由东北大学提供，学术引用请参考：
 

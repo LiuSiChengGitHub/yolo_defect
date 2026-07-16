@@ -3,6 +3,7 @@
 > - 规划来源：`docs/PLAN.md`
 > - 生成日期：2026-07-15
 > - 当前状态：方案已生成，下一步为 `S1-01`，尚未开始本大阶段的新增实现
+> - 前置准备：2026-07-16 已完成开发终端、ORT C++ SDK、clean 3/3 CTest、GTest 固定版本方案与 provenance/license 预审，详见 `docs/PRE_STAGE1_READINESS.md`；这不代表 S1-01 已开始
 > - 适用范围：`cpp_infer/`、`README.md`、`README_zh.md`，以及本方案明确允许的 `cpp_infer/` 内测试/工具/证据文件
 
 ## 1. 使用方式
@@ -37,9 +38,9 @@
 
 额外现实约束：
 
-- 当前没有找到可供 CMake/C++ 使用的 ONNX Runtime SDK header 和 import library；只发现 Python `onnxruntime-gpu 1.19.2` 及其 DLL。`S1-01` 必须先确定并准备可复现的 C++ SDK 来源。
-- 模型 metadata 报告 `AGPL-3.0`，而仓库源码使用 MIT。它不阻止本地 Runtime 技术验证，但在公开分发或简历演示口径冻结前必须核对模型来源、许可义务和 README 声明，不能默认模型继承仓库 MIT。
-- 当前没有 `runs/detect/final_train_2/weights/best.pt`。因此本阶段能直接重跑的是“同一 ONNX artifact 的 Python ORT 与 C++ ORT 严格一致性”；历史 PT/ONNX 结果作为另一段已有证据。除非后续合法恢复匹配 checkpoint，否则不能声称本次重新完成了 PyTorch/Python ORT/C++ 三方直接实跑。
+- 2026-07-15 审计时尚未找到可供 CMake/C++ 使用的 ONNX Runtime SDK；2026-07-16 前置准备已在仓库外确认官方 Windows x64 CPU SDK 1.19.2，并验证 header、import library 和 runtime DLL。S1-01 仍须通过可配置 `ONNXRUNTIME_ROOT` 接入并记录 DLL 策略，不能硬编码个人路径。
+- 模型 metadata 报告 `AGPL-3.0`，而仓库源码使用 MIT。项目所有者已声明当前用途是个人学习并选择继续公开分发模型与 NEU-DET 数据；个人学习不要求把 Enterprise 许可作为开工条件，但公开分发的模型/数据许可义务仍须分别核对，不能默认模型继承仓库 MIT。
+- 项目所有者已确认当前 ONNX 是本人从 `runs/detect/final_train_2/weights/best.pt` 导出的；但当前工作区和 Git 历史都没有该 `.pt`。因此本阶段能直接重跑的是“同一 ONNX artifact 的 Python ORT 与 C++ ORT 严格一致性”；历史 PT/ONNX 结果作为另一段已有证据。除非后续合法恢复匹配 checkpoint，否则不能声称本次重新完成了 PyTorch/Python ORT/C++ 三方直接实跑。
 - `cpp_infer/build/` 中可能残留旧 P1-01 构建产物，不能作为当前源码证据。所有验收都使用 `%TEMP%` 下的全新 out-of-tree Release build。
 
 ## 3. 顶层设计与大阶段边界对齐
@@ -151,7 +152,7 @@ P0 可以继续使用无外部解析依赖的 `key = value` 格式；逻辑上�
   - 后续 `yolo_defect_cpp_tests` 的清晰链接入口
 - 盘点并记录 OpenCV、ONNX Runtime C++ SDK、GTest、MSVC/CMake 的来源、版本与路径。
 - CMake 用 `ONNXRUNTIME_ROOT` 或等价可配置入口，不写死个人绝对路径；Windows runtime DLL 行为必须有明确方案。
-- 当前审计未找到 ORT C++ SDK。如果需要下载/安装或写到仓库外，按权限规则请求授权；不得静默下载、不得拿 Python wheel 的 DLL 冒充完整 C++ SDK。
+- 前置准备已验证仓库外 ORT C++ SDK 1.19.2 与 GTest v1.17.0 固定 archive 方案；本步负责把这些依赖变成可配置、可复现的 CMake 接入与记录，不再重复下载，也不得拿 Python wheel DLL 冒充 SDK。
 
 ### 预期文件变化
 
@@ -217,7 +218,7 @@ ctest --test-dir $BuildDir --output-on-failure
 
 本次只完成 S1-01：为 YOLOv8/NEU-DET baseline 建立可执行的 RuntimeConfig + ModelArtifactSpec 契约。契约至少覆盖 schema version、model id/family/path/SHA-256/opset、source/provenance、artifact license、input/output name/shape/dtype/layout、class names、score/NMS threshold、provider、preprocess_type、postprocess_type 和 nms_mode；相对路径必须相对声明它的文件解析。缺失字段、未知/重复字段、非法阈值、非法枚举和空类别必须给出可行动错误。记录 ONNX metadata 的 AGPL-3.0 与仓库 MIT 之间需要进一步复核的分发风险，但不要在没有来源证据时擅自改许可证。
 
-把 CMake 从单 executable 调整为 yolo_defect_runtime library + yolo_defect_cpp CLI，并为后续 GTest 保留清晰链接边界。盘点 OpenCV、ONNX Runtime C++ SDK、GTest、MSVC/CMake 的真实来源、版本和路径；CMake 不得硬编码个人 ORT 绝对路径。当前审计未找到 ORT C++ SDK，如果准备依赖需要下载或写到仓库外，按权限规则请求授权，不能静默安装，也不能把 Python wheel DLL 当成完整 SDK。
+把 CMake 从单 executable 调整为 yolo_defect_runtime library + yolo_defect_cpp CLI，并为后续 GTest 保留清晰链接边界。复核 `docs/PRE_STAGE1_READINESS.md` 已验证的 OpenCV、ONNX Runtime C++ SDK、GTest、MSVC/CMake 来源、版本和路径；CMake 不得硬编码个人 ORT 绝对路径。通过可配置 `ONNXRUNTIME_ROOT` 消费现有 SDK，并按已冻结的 GTest commit archive + SHA-256 方案接入；不能把 Python wheel DLL 当成完整 SDK。
 
 严格限制修改范围为 cpp_infer/、README.md、README_zh.md；不要修改受保护的 Python/训练/API/Docker/results 资产。本步不创建 ORT session、不运行推理。运行 clean Release configure/build、现有 CTest 和配置正反例；同步双语 README 的状态、命令、验收和教学记录。按 AGENTS.md 最新九部分格式完成闭环后停止，不要开始 S1-02。
 ```

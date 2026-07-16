@@ -101,6 +101,15 @@ The 2026-07-15 audit established these execution facts:
 - The historical 50-image PT/ONNX check contains the sorted first 50 files, all from `crazing`, and checks counts/confidence summaries rather than class/box tolerances. Keep it as weak historical evidence and create new six-class Python ORT/C++ evidence in large stage one.
 - The matching `best.pt` checkpoint is not currently present. Do not claim a newly rerun direct PT/Python-ORT/C++ three-way comparison unless that exact artifact is legitimately restored and verified.
 
+The 2026-07-16 pre-stage readiness pass resolved the dependency-preparation gap without starting S1-01:
+
+- The official Windows x64 CPU ONNX Runtime C++ SDK 1.19.2 is now present outside the repository at `D:\01_Base\Tools\onnxruntime-win-x64-1.19.2`; `onnxruntime_cxx_api.h`, `onnxruntime.lib`, and `onnxruntime.dll` were all verified. CMake must consume it through `ONNXRUNTIME_ROOT` or an equivalent configurable cache entry, never a committed personal absolute path.
+- `VsDevCmd.bat` successfully exposes x64 `cl`, `nmake`, CMake, and CTest. A new `%TEMP%` Release/NMake build with MSVC 19.50.35721.0 and OpenCV 4.8.0 again passes 3/3 CTest smokes.
+- The future GTest dependency is frozen to v1.17.0 commit `52eb8108c5bdec04579160ae17225d66034bd723` via a SHA-256-pinned HTTPS archive and `FetchContent`; it is not integrated until S1-01.
+- Model provenance and license evidence is recorded in `docs/PRE_STAGE1_READINESS.md`. The project owner confirms that the tracked ONNX was personally exported from `runs/detect/final_train_2/weights/best.pt`; the workspace and Git history contain no `.pt`, so this is owner-confirmed lineage rather than a newly reproducible re-export.
+- The declared use is personal learning, so an Enterprise license is not a prerequisite for local implementation. The owner chose to keep publicly distributing `models/best.onnx` and NEU-DET; the model's AGPL-3.0 metadata and the unspecified NEU-DET redistribution terms therefore remain explicit release checkpoints, separate from the MIT source license.
+- This readiness record changes no Runtime behavior and does not mark S1-01 as started.
+
 ### Large Stage One — Project 1 Deliverable Loop, 2026-07-13 to 2026-07-27
 
 Required exit:
