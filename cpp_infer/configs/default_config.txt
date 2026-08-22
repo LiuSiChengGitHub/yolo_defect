@@ -1,7 +1,7 @@
-# Default P1-02 runtime config for the C++ smoke path.
-input_width = 800
-input_height = 800
-class_names = crazing, inclusion, patches, pitted_surface, rolled-in_scale, scratches
+# S1-01 RuntimeConfig schema v1.
+# Relative paths are resolved from this declaration file.
+schema_version = 1
+artifact_spec_path = ../artifacts/yolov8_neu_det.artifact.txt
 score_threshold = 0.25
 nms_threshold = 0.45
-backend = cpu
+provider = cpu

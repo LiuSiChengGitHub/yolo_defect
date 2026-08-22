@@ -1,21 +1,38 @@
 #ifndef YOLO_DEFECT_CPP_CONFIG_LOADER_H_
 #define YOLO_DEFECT_CPP_CONFIG_LOADER_H_
 
+#include "yolo_defect_cpp/artifact_spec.h"
+
+#include <filesystem>
 #include <string>
-#include <vector>
 
 namespace yolo_defect_cpp {
 
-struct RuntimeConfig {
-  int input_width = 0;
-  int input_height = 0;
-  std::vector<std::string> class_names;
-  double score_threshold = 0.0;
-  double nms_threshold = 0.0;
-  std::string backend;
+enum class ExecutionProvider {
+  kCpu,
 };
 
-RuntimeConfig load_config(const std::string& config_path);
+struct RuntimeConfig {
+  int schema_version = 0;
+  std::filesystem::path declaration_path;
+  std::filesystem::path artifact_spec_path;
+  double score_threshold = 0.0;
+  double nms_threshold = 0.0;
+  ExecutionProvider provider = ExecutionProvider::kCpu;
+};
+
+struct RuntimeContract {
+  RuntimeConfig runtime;
+  ModelArtifactSpec artifact;
+};
+
+RuntimeConfig load_runtime_config(
+    const std::filesystem::path& config_path);
+
+RuntimeContract load_runtime_contract(
+    const std::filesystem::path& config_path);
+
+std::string to_string(ExecutionProvider value);
 
 }  // namespace yolo_defect_cpp
 

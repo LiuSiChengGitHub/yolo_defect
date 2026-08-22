@@ -17,6 +17,8 @@ YOLOv8 and NEU-DET are the model and dataset carriers. The autumn-recruiting sto
 
 Current V1 assets remain valuable: training, ONNX export, PyTorch-vs-ONNX consistency checks, Python ONNX Runtime inference, FastAPI, Docker, and benchmark scripts. V2 builds on these assets through `cpp_infer/` instead of rewriting them.
 
+Current V2 status: **S1-04 is L1 accepted; S1-05 is implemented and verified, awaiting L1 acceptance.** The fixed single-image C++ CLI now reaches contract loading, OpenCV preprocessing, ONNX Runtime CPU inference, deterministic YOLOv8 postprocess, schema-v1 detection JSON, and a headless OpenCV visualization. S1-06 is only the next step after acceptance; batch processing, consistency evidence, and C++ benchmark results do not exist yet.
+
 The project entry is intentionally concentrated in this README and `README_zh.md`. `docs/PLAN.md` is the latest planning source, `AGENTS.md` turns it into repository-wide collaboration rules, and task/status/change evidence stays in the two READMEs. Long execution detail is split into `docs/` only when it would make the entry point harder to use.
 
 ![Inference Demo](docs/assets/demo_inference_result.gif)
@@ -76,48 +78,105 @@ model artifact
 -> optional real-device deployment and Project 2 inference_event bridge
 ```
 
-Current verified chain through P1-03:
+Current verified chain through S1-05:
 
 ```text
 cpp_infer/configs/default_config.txt
 -> RuntimeConfig
--> data/images/val/crazing_241.jpg
--> OpenCV BGR image
--> letterbox preprocess
--> RGB float32 NCHW tensor
--> stable CLI summary
--> CTest smoke
+-> config-relative artifact_spec_path
+-> ModelArtifactSpec + TensorSpec
+-> artifact-relative model_path
+-> RuntimeContract cross-field validation
+-> OnnxRunner PImpl / Ort::Env / SessionOptions / Session RAII
+-> explicit CPUExecutionProvider registration
+-> actual ORT ModelMetadata inspection
+-> provider/count/name/shape/dtype/class-channel validation
+-> OpenCV preprocess -> contiguous float32 NCHW vector
+-> exact input shape/element/finite-value validation
+-> borrowed CPU Ort::Value -> synchronous Session::Run
+-> output count/shape/element/finite-value validation
+-> copy ORT output into owned InferenceOutput
+-> bounded raw-output summary
+-> pure YOLOv8 [1,4+C,N] BCN validation and decode
+-> maximum class score, no objectness, strict float32 confidence filter
+-> xywh-to-xyxy in model-input coordinates
+-> stable class-agnostic NMS in model-input coordinates
+-> subtract letterbox padding / divide by scale / source-bound clip
+-> owned SingleImageDetectionResult
+-> stable schema-v1 JSON with safe UTF-8/control-character escaping
+-> deterministic OpenCV rectangle/label visualization without a GUI
+-> explicit output-parent creation / fail-on-existing / --overwrite policy
+-> fixed sample: 3 crazing detections + parseable JSON + readable PNG
+-> 31 retained S1-04 GTests + 6 output GTests + integration/negative gates
+-> 78-case complete CTest gate
+-> no batch, Python/C++ consistency, or C++ benchmark yet
 ```
 
 ### 4. Core Module Responsibilities
 
 | Module | Responsibility | Current Status |
 |--------|----------------|----------------|
-| `RuntimeConfig` / artifact contract | Validate model path, model family, input, classes, thresholds, provider, preprocess, postprocess, and output expectations. | Basic config verified; contract expansion is S1-01 |
-| `ImagePreprocessor` | Read images with OpenCV, letterbox, BGR->RGB, normalize, and produce NCHW float tensor plus inverse-transform metadata. | P1-03 verified; non-square evidence is pending |
-| `OnnxRunner` | Own the ONNX Runtime objects through RAII; check names, shapes, dtypes, and providers; create tensors and return raw outputs. | S1-02/S1-03 pending |
-| `PostProcessor` / `NmsProcessor` | Decode YOLO output, filter scores, apply testable IoU/NMS, clip and restore coordinates. | S1-04 pending; core code-practice candidate |
-| `ResultWriter` / `Visualizer` | Write schema-stable detection JSON and visualization images for fixed-sample demo evidence. | S1-05 pending |
+| `RuntimeConfig` / `ModelArtifactSpec` / `TensorSpec` / `RuntimeContract` | Separate runtime policy from model identity/I/O/algorithm semantics, resolve declaration-relative paths, and enforce a strict schema with actionable errors. | S1-01 verified |
+| `ImagePreprocessor` | Read a file or accept a `CV_8UC3` `cv::Mat`, then letterbox, convert BGR->RGB, normalize, and produce an NCHW float tensor plus inverse-transform metadata. Both entry points share one implementation. | S1-04 synthetic landscape/portrait, odd-padding, non-square, color/layout, and invalid-input GTest verified |
+| `OnnxRunner` | Own ORT resources through RAII/PImpl; validate a borrowed contiguous float32 input vector, create a CPU `Ort::Value`, run synchronously, validate the raw output, and copy it before ORT ownership ends. | S1-03 raw inference verified |
+| `ModelMetadata` | Represent actual ORT version/provider and tensor count/name/shape/dtype facts, then compare them with `RuntimeContract` through a pure synthetic-testable validator. | S1-02 verified |
+| `InferenceOutput` | Own the returned raw tensor shape and float values independently of local ORT output values and the Runner lifetime, then provide the ORT-free input boundary for postprocess. | S1-03 verified and consumed by the S1-04 pure postprocessor |
+| `PostProcessor` / `NmsProcessor` | Validate/decode YOLOv8 BCN output, apply strict float32 score filtering, `xywh -> xyxy`, IoU, stable class-agnostic model-space NMS, then restore/clip source coordinates. | S1-04 verified and L1 accepted; core code-practice candidate |
+| `DetectorPipeline` | Hold a copied `RuntimeContract` plus an RAII `OnnxRunner` behind PImpl, validate one source image, and orchestrate preprocess -> synchronous Run -> postprocess -> output writing without exposing OpenCV or ORT in its public header. | S1-05 fixed single-image vertical slice verified |
+| `SingleImageDetectionResult` / `DetectionImageMetadata` | Own the model identity, source/input image metadata, session-provider evidence, thresholds/NMS mode, class contract, and restored detections needed by downstream writers after local inference objects end. | S1-05 self-contained result boundary verified |
+| `ResultWriter` / `Visualizer` | Validate result invariants, serialize stable JSON v1 with safe string escaping, create output parents, enforce protected/overwrite rules, and encode deterministic rectangles and labels through OpenCV without a GUI. | S1-05 JSON/Python parse and OpenCV read-back verified |
 | `ConsistencyValidator` | Compare fixed Python ORT and C++ results by count, class, confidence, and box tolerance. | S1-07 pending |
 | `BenchmarkRunner` | Measure warmup/repeat preprocess, inference, postprocess, end-to-end latency, throughput, and memory metadata. | S1-08 pending |
-| `ArtifactRegistry` / `ModelCard` | Record artifact source, model family, dataset, metrics, config, postprocess type, runtime status, and paths. | YOLO contract starts in S1-01; D010 remains gated |
-| `Tests` | Keep CTest integration smoke and add GTest units/negative paths incrementally; complete the P0 matrix in large stage two. | Current CTest 3/3; S1-06 gate pending |
+| `ArtifactRegistry` / `ModelCard` | Record artifact source, model family, dataset, metrics, config, postprocess type, runtime status, and paths. | YOLO baseline declaration established; D010 remains gated |
+| `Tests` | Preserve the 31 S1-04 synthetic postprocess/preprocess GTests, add isolated output-schema tests, and keep one fixed real-model CLI integration plus focused argument/output failures. Test targets link the Runtime boundary rather than `main.cpp`; OpenCV is explicit only where test source needs it. | S1-05: output GTest 6/6, `output` label 16/16, complete CTest 78/78 |
 
 ### 5. Quick Start
 
-Current C++ runtime smoke path:
+Current S1-05 clean Release build, complete single-image command, and test path:
 
-```cmd
-:: Run from a Visual Studio 2026 Developer Command Prompt.
-set BUILD_DIR=%TEMP%\yolo_defect_cpp_p1_03
-set PATH=D:\01_Base\Tools\opencv\build\x64\vc16\bin;%PATH%
+```powershell
+# Example verified tools root. From CMD first run VsDevCmd.bat under this
+# root, then start:
+# powershell.exe -NoProfile -NoExit
+# -NoProfile prevents the local Conda profile from replacing the VS PATH.
+$ToolsRoot = 'D:\01_Base\Tools'
+$PythonExe = (Get-Command python.exe -ErrorAction Stop).Source
+$env:ONNXRUNTIME_ROOT = Join-Path $ToolsRoot 'onnxruntime-win-x64-1.19.2'
+$env:PATH = (Join-Path $ToolsRoot 'VisualStudio_Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin') + ';' + `
+  (Join-Path $ToolsRoot 'opencv\build\x64\vc16\bin') + ';' + $env:PATH
+$BuildDir = Join-Path $env:TEMP `
+  ('yolo_defect_s1_05_' + [guid]::NewGuid().ToString('N'))
 
-cmake -S cpp_infer -B "%BUILD_DIR%" -G "NMake Makefiles" -DOpenCV_DIR=D:\01_Base\Tools\opencv\build\x64\vc16\lib
-cmake --build "%BUILD_DIR%"
+cmake -S cpp_infer -B $BuildDir -G 'NMake Makefiles' `
+  -DOpenCV_DIR="$ToolsRoot\opencv\build\x64\vc16\lib" `
+  -DONNXRUNTIME_ROOT="$env:ONNXRUNTIME_ROOT" `
+  -DPython3_EXECUTABLE="$PythonExe" `
+  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+cmake --build $BuildDir
 
-"%BUILD_DIR%\bin\yolo_defect_cpp.exe" --config cpp_infer\configs\default_config.txt --image data\images\val\crazing_241.jpg
-ctest --test-dir "%BUILD_DIR%" --output-on-failure
+$Config = (Resolve-Path 'cpp_infer\configs\default_config.txt').Path
+$Image = (Resolve-Path 'data\images\val\crazing_241.jpg').Path
+$DemoDir = Join-Path $BuildDir 'demo outputs'
+$OutputJson = Join-Path $DemoDir 'crazing_241.json'
+$OutputImage = Join-Path $DemoDir 'crazing_241.png'
+
+& "$BuildDir\bin\yolo_defect_cpp.exe" `
+  --config $Config `
+  --image $Image `
+  --output-json $OutputJson `
+  --output-image $OutputImage
+
+& $PythonExe -m json.tool $OutputJson
+& "$BuildDir\bin\yolo_defect_image_probe.exe" $OutputImage
+Get-Item $OutputJson, $OutputImage
+ctest --test-dir $BuildDir -L output --output-on-failure
+ctest --test-dir $BuildDir -L postprocess --output-on-failure
+ctest --test-dir $BuildDir -L preprocess --output-on-failure
+ctest --test-dir $BuildDir -N
+ctest --test-dir $BuildDir --output-on-failure
 ```
+
+With `BUILD_TESTING=ON`, CMake uses the official GoogleTest v1.17.0 archive at commit `52eb8108c5bdec04579160ae17225d66034bd723` and verifies SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84`. An offline clean configure may pass `-DFETCHCONTENT_SOURCE_DIR_GOOGLETEST='<verified-google-test-source>'`, but only after independently checking the pinned archive hash before extraction; no personal source path is committed.
 
 The older Python/YOLO quick start remains below for V1 baseline reproduction. The C++ path above is the V2 deployment entry.
 
@@ -129,54 +188,79 @@ Current demo input:
 
 ```text
 config: cpp_infer/configs/default_config.txt
+artifact: cpp_infer/artifacts/yolov8_neu_det.artifact.txt
 image:  data/images/val/crazing_241.jpg
 ```
 
-Current P1-03 demo output summary:
+Current committed S1-05 demo outputs:
 
 ```text
-P1-03 Preprocess summary
-original_size: 200x200
-channels: 3
-input_size: 800x800
-resized_size: 800x800
-scale: 4.000000
-padding: left=0, top=0, right=0, bottom=0
-color: BGR->RGB
-normalization: float32 [0, 1]
-layout: NCHW
-tensor_shape: 1x3x800x800
-tensor_elements: 1920000
+detection_json: cpp_infer/results/demo/crazing_241.detections.json
+visualization:   cpp_infer/results/demo/crazing_241.visualized.png
+
+fixed result: 3 detections, all class_id=0 / class_name=crazing
+JSON: 1,164 bytes; SHA-256 E8445BC92201307430A17B7B51B6CCEFC5A74D2D473617170F50AD921CCF9049
+PNG:  39,306 bytes; SHA-256 3A0C6C57EE977EE02762F05FCDE6928C8AACBD20883596D3622A6225942E2346
 ```
 
-Future demo output placeholders:
+The JSON document uses schema version 1 and fixed root objects for `model`, `image`, `runtime`, and `detections`. It records the model id and declared artifact SHA, source/original/input image metadata, session-level provider evidence, score/NMS thresholds and mode, then `class_id`, `class_name`, `confidence`, and `bbox_xyxy` for each detection. A valid no-detection result is represented as `"detections": []`, never `null` or an omitted field.
+
+Output parents are created recursively. Existing regular files fail by default; `--overwrite` is an explicit opt-in. JSON and image paths must differ, directories/symlinks are rejected as file targets, and the source image, Runtime config, artifact declaration, and ONNX model are protected from overwrite. Relative CLI image/output paths use the current working directory; declaration-internal paths keep their declaration-relative rules.
+
+The older S1-03 fixed-image raw-output regression remains available as a diagnostic command and historical evidence:
 
 ```text
-detection_json: samples/outputs/crazing_241_detections.json
-visualization:   samples/outputs/crazing_241_vis.jpg
-benchmark_json:  samples/outputs/benchmark_yolo_fp32.json
-event_json:      samples/outputs/inference_event_sample.json  # optional later bridge
+S1-03 raw output summary
+input_shape: [1,3,800,800]
+input_elements: 1920000
+input_finite_values: 1920000/1920000
+input_min: 0.278431386
+input_max: 1
+output_shape: [1,10,13125]
+output_elements: 131250
+output_finite_values: 131250/131250
+output_min: 0
+output_max: 795.04126
+session_run: completed
+raw_output_ownership: copied_to_InferenceOutput
+scope: raw inference only; no decode, NMS, JSON, visualization, or benchmark.
 ```
+
+The optional preprocess command still reports the verified `200x200 -> 800x800`, `BGR->RGB`, float32 `[0,1]`, NCHW tensor with 1,920,000 elements. No benchmark JSON or `inference_event` is produced by S1-05.
 
 ### 7. Test Commands
 
-Current CTest smoke:
+Current focused GTest and complete CTest gates:
 
-```cmd
-ctest --test-dir "%BUILD_DIR%" --output-on-failure
+```powershell
+ctest --test-dir $BuildDir -N
+ctest --test-dir $BuildDir -L output --output-on-failure
+ctest --test-dir $BuildDir -L postprocess --output-on-failure
+ctest --test-dir $BuildDir -L preprocess --output-on-failure
+ctest --test-dir $BuildDir --output-on-failure
 ```
 
 Expected current result:
 
 ```text
-100% tests passed, 0 tests failed out of 3
+postprocess-focused GTest: 24/24 passed
+cv::Mat preprocess GTest:   7/7 passed
+retained S1-04 GTest total: 31/31 passed
+output-focused GTest:        6/6 passed
+output-labeled CTest:       16/16 passed
+complete CTest:             78/78 passed
 ```
 
-Future GTest placeholder:
+The retained 24 postprocess and seven `cv::Mat` preprocess GTests continue to prove the S1-04 pure algorithms independently of a real model. Six output GTests freeze JSON field order, exact schema, empty arrays, quote/backslash/control-byte escaping, finite-number rejection, and locale-independent decimal formatting. The `output` label also includes the fixed real-model CLI run, Python `json.tool` plus semantic JSON validation, OpenCV image read-back, deterministic explicit overwrite, and focused argument/path protection failures. The fixed integration smoke proves the vertical slice and output contract; it does not replace the future S1-07 Python/C++ numerical-consistency evidence.
 
-```cmd
-"%BUILD_DIR%\bin\yolo_defect_cpp_tests.exe" --gtest_filter=*
-```
+#### Current S1-05 Limits
+
+- JSON records the artifact's **declared** SHA-256; S1-05 does not recompute the model hash at runtime.
+- `actual_provider` means the explicitly registered provider of the successfully created and executed session. It is session-level evidence, not per-node placement from ORT profiling.
+- JSON and image data are both prepared before writing, but the two files are not committed as one transaction and cross-process filesystem replacement is not guaranteed atomic.
+- The fixed ASCII Windows input path is verified. Arbitrary Unicode input image paths through the existing narrow-string OpenCV `imread` boundary are not yet claimed as supported; output path/JSON UTF-8 handling is separate.
+- The current six baseline labels are ASCII. OpenCV's Hershey text renderer is deterministic for them but is not a general Unicode font engine.
+- S1-05 is batch-1/single-image only. It adds no directory batch mode, concurrency, service, `inference_event`, Python/C++ consistency result, benchmark, INT8, or performance claim.
 
 ### 8. Key Data and Artifact Results
 
@@ -190,9 +274,13 @@ Future GTest placeholder:
 | Model lineage status | The project owner confirms the current ONNX was personally exported from `runs/detect/final_train_2/weights/best.pt`; that `.pt` is absent from the workspace and Git history, so the lineage is owner-confirmed but not currently re-exportable |
 | Baseline ONNX I/O preflight | Python ORT 1.19.2 confirms input `images` = float32 `[1,3,800,800]`; output `output0` = float32 `[1,10,13125]` |
 | Historical Python ORT benchmark | ONNX CPU 24.4 FPS, ONNX GPU 72.1 FPS on RTX 3060; **not C++ Runtime performance** |
-| Current C++ runtime state | Fresh out-of-tree MSVC 19.50/OpenCV 4.8.0 build passed 3/3 CTest smokes; config + preprocess only, no ORT C++ yet |
-| Pre-stage dependency readiness | ORT C++ SDK 1.19.2 header/lib/DLL verified outside the repository; VS x64 tools found; a second clean 3/3 CTest passed; GTest v1.17.0 commit/archive/hash frozen but not integrated; see `docs/PRE_STAGE1_READINESS.md` |
-| Artifact license checkpoint | Current use is personal learning and does not make Enterprise licensing a startup prerequisite; because the owner chose to keep publicly distributing the ONNX and NEU-DET, the model's AGPL notice and the dataset's unspecified redistribution terms remain release checkpoints separate from the MIT source license |
+| Current C++ Runtime state | S1-05 clean Release/NMake build with MSVC 19.50, OpenCV 4.8.0, and ORT 1.19.2 now completes the fixed single-image C++ vertical slice through JSON and headless visualization; output label 16/16 and complete CTest 78/78 pass. No Python/C++ consistency or C++ performance result exists yet |
+| C++ ORT actual metadata | Loaded `models/best.onnx`; available EP inventory `[AzureExecutionProvider,CPUExecutionProvider]`; explicitly registered session EP `CPUExecutionProvider`; input `images` tensor float32 `[1,3,800,800]`; output `output0` tensor float32 `[1,10,13125]`; contract passed |
+| S1-02 dependency/session boundary | CMake consumes the official external ORT C++ SDK 1.19.2 only through `ONNXRUNTIME_ROOT`, validates the version/C/C++/CPU-provider headers/import library/DLL and stages the matching DLL. Session policy is sequential, intra-op 1, inter-op 1 (unused by sequential mode), graph optimization all |
+| S1-03 raw-output evidence | Fixed `crazing_241.jpg`: input float32 `[1,3,800,800]`, 1,920,000 finite values, range `[0.278431386,1]`; owned output float32 `[1,10,13125]`, 131,250 finite values, range `[0,795.04126]`. These values prove finite raw execution, not decoded detection correctness or benchmark performance |
+| S1-04 postprocess evidence | ORT-free synthetic tests verify `[1,4+C,N]` BCN decode, maximum class score without objectness/sigmoid, float32-domain strict `confidence > threshold`, `xywh -> xyxy`, robust IoU, stable class-agnostic NMS before coordinate restore, and letterbox inverse transform/clip. Postprocess GTest 24/24, preprocess GTest 7/7, complete CTest 62/62 |
+| S1-05 single-image output evidence | Fixed `crazing_241.jpg` produces 3 `crazing` detections, a Python-parseable 1,164-byte JSON (`E8445BC92201307430A17B7B51B6CCEFC5A74D2D473617170F50AD921CCF9049`) and an OpenCV-readable 39,306-byte PNG (`3A0C6C57EE977EE02762F05FCDE6928C8AACBD20883596D3622A6225942E2346`). Six output GTests, 16 output-labeled CTests, and all 78 tests pass |
+| Artifact license checkpoint | The artifact declaration preserves the ONNX metadata text `AGPL-3.0 License (https://ultralytics.com/license)`. Source remains MIT; because the owner chose to keep publicly distributing the ONNX and NEU-DET, model obligations and the dataset's unspecified redistribution terms remain separate release checkpoints |
 | Incoming research artifact | `paper_detect` D010 method on the D-FINE-S/DeepPCB research line; not a new Runtime architecture claim |
 | External D010 research evidence | Formal-validation AP50-95 = 0.847057; official-test AP50-95 = 0.830385; these are not Project 1 Runtime results |
 | D010 relationship and ablation | D003 is the ancestor/ablation anchor; all 6 D010 class deltas over D003 are positive on formal and official test; D010A erase-only and D010B replay-only each beat D003 but trail full D010 |
@@ -215,7 +303,12 @@ The consolidated C++ result table is still pending. It must eventually record ma
 - **YOLO baseline before D010 adapter:** YOLO/ONNX is the quickest stable path to finish C++ preprocess, inference, postprocess, JSON, benchmark, and tests.
 - **Artifact gate before D010 claims:** external D010 research metrics may be cited as source evidence, but a C++ D-FINE result requires stable export, contract, adapter, and consistency evidence.
 - **Simple C++ over broad framework work:** C++17, CMake, OpenCV, ONNX Runtime C++, GTest, and benchmark output are enough for the interview target.
-- **Tests grow with stable seams:** CTest keeps integrated smoke paths runnable; GTest begins when the runtime library and postprocess seams exist, then large stage two completes the full P0 matrix.
+- **Tests grow with stable seams:** S1-01 tests declarations, S1-02 tests session metadata, S1-03 tests one real raw inference plus rejection before `Run`, and S1-04 uses synthetic tensors/boxes/images to test algorithms independently of model output.
+- **Pipeline versus algorithms:** `DetectorPipeline` owns only single-image orchestration; config loading, preprocess, ORT execution, postprocess, serialization, and drawing remain independently testable Runtime seams while `main.cpp` stays a CLI coordinator.
+- **Stable and defensive outputs:** JSON v1 has fixed field order, locale-independent finite numbers, escaped UTF-8 strings, and a legal empty `detections` array. Output directories are created, existing files fail by default, `--overwrite` is explicit, and source/config/artifact/model inputs remain protected.
+- **Explicit tensor ownership:** the CPU input `Ort::Value` borrows the preprocess vector only for synchronous `Run`, while the output is copied into an ORT-free `InferenceOutput` before local ORT values are destroyed.
+- **Frozen YOLOv8 semantics:** `[1,4+C,N]` is decoded without separate objectness or an extra sigmoid; class-score ties choose the lower class id, filtering uses float32-domain strict `>`, and NMS is class-agnostic in model-input space before restore/clip.
+- **Deterministic NMS ties:** equal-confidence candidates preserve original input order. This replaces the historical NumPy `argsort()[::-1]` ambiguity with an explicit, tested C++ rule.
 - **Conditional extensions:** INT8 PTQ belongs to P0 evidence hardening; TensorRT/Jetson/ARM is a later real-hardware extension, while Qt and gRPC/Triton are job-description gated.
 - **Failure records matter:** INT8, D-FINE, or eligible real-device attempts may fail, but commands, errors, root causes, and fallback decisions must be documented without promoting the attempt to a result.
 
@@ -235,11 +328,11 @@ Large stage one's detailed, one-step-at-a-time execution plan is in [`docs/STAGE
 
 ### 11. Version Changes and Progress Records
 
-Current state: historical Project 1 tasks P1-00 through P1-03 are complete and verified. The repository has **not** drifted from the new design: those tasks establish the intended engineering skeleton, typed config, and OpenCV preprocess baseline.
+Current state: historical Project 1 tasks P1-00 through P1-03 and large-stage-one tasks **S1-01 through S1-05** are implemented and verified. S1-04 is L1 accepted. S1-05 adds the fixed single-image CLI, self-contained detection result, stable JSON/visualization output boundary, six output GTests, and a 78-case complete gate; it is awaiting user L1 acceptance.
 
 The 2026-07-16 pre-stage readiness pass is also complete: the ORT C++ 1.19.2 SDK is present and verified, the VS x64 toolchain is discoverable, a new `%TEMP%` Release/NMake build passes 3/3 CTest, and the future GTest dependency is pinned. The owner also confirmed the current ONNX was personally exported from the `final_train_2` best checkpoint; the checkpoint is not in this workspace or Git history. The durable commands, evidence, GTest hash, model-lineage audit, and unresolved public-distribution license checkpoints are in [`docs/PRE_STAGE1_READINESS.md`](docs/PRE_STAGE1_READINESS.md). This preparation did not start S1-01 or change Runtime behavior.
 
-The next implementation step remains **S1-01: baseline Runtime/artifact contract, multi-target CMake boundary, and consumption of the preflighted ORT/GTest dependency plan**. This deliberately precedes the ORT session so model-family assumptions and test seams are explicit. `S1-*` means “large stage one small stage” and avoids confusing the old Project 1 `P1-*` history with the top-level P1 extension category.
+The next implementation step, only after user S1-05 L1 acceptance, is **S1-06: automated main-path and core failure-path hardening**. `S1-*` means “large stage one small stage” and avoids confusing the old Project 1 `P1-*` history with the top-level P1 extension category.
 
 The chronological V2 entry log is kept in the Roadmap section below and must be updated after every small stage.
 
@@ -251,6 +344,11 @@ The chronological V2 entry log is kept in the Roadmap section below and must be 
 | P1-01 | Added minimal C++17/CMake executable and CTest help smoke. | Prove the repo can build a C++ runtime target. | `yolo_defect_cpp --help` and CTest smoke. | Visual Studio multi-config builds need `ctest -C Debug`. |
 | P1-02 | Added no-dependency ConfigLoader and `--config` CLI path. | Make runtime behavior config-driven before adding image/model code. | Parsed input size, class names, thresholds, backend; printed stable summary. | CLI argument errors became the first useful smoke-test failure signal. |
 | P1-03 | Added OpenCV image read and YOLO-style preprocess. | Convert a real image into the model-ready tensor format. | `original_size`, `scale`, `padding`, `BGR->RGB`, `[0,1]`, `NCHW`, `1x3x800x800`; CTest 3/3 passed. | OpenCV Windows pack required `OpenCV_DIR=...\x64\vc16\lib` and `PATH=...\x64\vc16\bin`. |
+| S1-01 | Added strict `RuntimeConfig + ModelArtifactSpec`, tensor/enumeration validation, declaration-relative paths, and Runtime library/CLI targets. | Make model/runtime assumptions executable and testable before any ORT session. | Clean Release build, stable contract/preprocess summaries, two-working-directory path proof, SHA recheck, ORT SDK gate/DLL staging, and 15/15 CTest. | Keep “declared hash/configured provider” separate from actual metadata/provider; use nonzero+message wrappers for negative CLI tests; GTest waits for S1-04. |
+| S1-02 | Added `OnnxRunner` RAII/PImpl, owned `ModelMetadata`, pure actual-vs-declared validation, and `--inspect-model`. | Isolate dependency/session/model-contract failures before tensor wiring and algorithms. | Real ORT 1.19.2 CPU session loaded `best.onnx`; actual 1-in/1-out names, float32 shapes and class channels passed; real/synthetic failures and 29/29 CTest passed. | `GetAvailableProviders()` is inventory, not session assignment; record configured, available, and explicitly registered session provider separately. A profile-free PowerShell avoids Conda replacing the VS toolchain PATH. |
+| S1-03 | Added zero-copy CPU input tensor wiring, synchronous `OnnxRunner::run()`, owned `InferenceOutput`, and `--raw-output-summary`. | Isolate tensor shape/lifetime and raw model execution before postprocess algorithms. | Fixed image produced finite `[1,10,13125]` / 131,250-value raw output; invalid 1,919,999-value input failed before ORT tensor/Run; 31/31 CTest passed. | A user-buffer `Ort::Value` does not own the input vector; keep it stable through synchronous Run. ORT owns output only while its Value lives, so copy before return. |
+| S1-04 | Added `Detection`/`BoundingBox`, pure YOLOv8 raw-output validation/decode, strict score filtering, IoU, stable class-agnostic NMS, coordinate restore/clip, and a direct `cv::Mat` preprocess boundary. | Prove model-specific algorithms independently of ORT/model variability before connecting user-facing outputs. | Synthetic postprocess GTest 24/24, `cv::Mat` preprocess GTest 7/7, complete CTest 62/62; S1-03 raw regression retained. | Compare float32 scores/IoU in the float32 threshold domain; perform NMS before restore; preserve input order for equal confidence; reject non-`CV_8UC3` Mat input instead of silently applying the wrong normalization. |
+| S1-05 | Added the PImpl `DetectorPipeline`, self-contained `SingleImageDetectionResult`, schema-v1 JSON serializer, deterministic OpenCV visualizer, output safety rules, and `--output-json` / `--output-image` / `--overwrite`. | Turn the already-tested seams into the first reproducible, interview-demoable single-image C++ vertical slice while keeping algorithms out of `main.cpp`. | Fixed sample produced 3 `crazing` detections; Python parsed and semantically validated the 1,164-byte JSON; OpenCV read the 39,306-byte PNG; output GTest 6/6, output label 16/16, complete CTest 78/78. | Serialize only owned validated values; escape every JSON string; make overwrite opt-in and protect inputs. `actual_provider` is session-level evidence rather than per-node profiling, and a two-file write is not an atomic transaction. |
 | PLAN-20260715 | Aligned repository rules and the bilingual entry points to the latest top-level design; created the long-form large-stage-one plan. | Preserve the verified baseline while preventing the short stage summary from dropping contract, correctness, test, failure, and evidence requirements. | `docs/PLAN.md` -> `AGENTS.md` rules -> README stage/status summary -> `docs/STAGE1_EXECUTION_PLAN.md` one-step plan. | Historical Python metrics, external D010 metrics, and future C++ results must stay explicitly separated. |
 
 ## Highlights
@@ -817,12 +915,18 @@ yolo_defect/
 ├── api/
 │   └── app.py                    # FastAPI service (`GET /health`, `POST /detect`)
 ├── cpp_infer/                    # V2 C++ runtime workspace
-│   ├── CMakeLists.txt            # Current C++17 executable/CTest build; multi-target split is S1-01
-│   ├── README.md                 # C++ build/run scope and verified commands
-│   ├── configs/default_config.txt# Typed Runtime config used by current smoke path
-│   ├── include/yolo_defect_cpp/  # ConfigLoader and ImagePreprocessor public headers
-│   ├── src/                      # Config, preprocess, and CLI implementations
-│   └── tests/                    # Added incrementally from S1-04 (not present yet)
+│   ├── CMakeLists.txt            # yolo_defect_runtime library + yolo_defect_cpp CLI + CTest
+│   ├── README.md                 # C++ contract, dependencies, commands, and evidence
+│   ├── artifacts/                # ModelArtifactSpec declarations
+│   │   └── yolov8_neu_det.artifact.txt
+│   ├── configs/default_config.txt# RuntimeConfig policy and artifact path
+│   ├── include/yolo_defect_cpp/  # Public contract/preprocess/runner/postprocess/output value APIs
+│   │   ├── detector_pipeline.h   # PImpl single-image Runtime orchestration boundary
+│   │   ├── detection_result.h    # Self-contained result and image metadata
+│   │   └── result_writer.h       # Stable JSON/visualization output request API
+│   ├── src/                      # Parser, preprocess, ORT run, postprocess, pipeline, writers, thin CLI
+│   ├── results/demo/             # Verified S1-05 JSON and visualized PNG evidence
+│   └── tests/                    # GTest logic/output + CTest contract/session/integration/failure gates
 ├── configs/
 │   ├── train_config.yaml         # Baseline training hyperparameters
 │   └── exp*.yaml                 # Experiment configs (imgsz/lr/augment/final runs)
@@ -840,7 +944,7 @@ yolo_defect/
 
 - **`scripts/`** — One-off scripts for data processing, training, evaluation, export. Run from command line with argparse.
 - **`src/`** — Reusable modules. `detector.py` is imported by both `inference_onnx.py` and the FastAPI service.
-- **`cpp_infer/`** — V2 C++ deployment workspace. It already owns CMake/CTest, typed config, and OpenCV preprocessing; large stage one adds the Runtime library boundary, ONNX Runtime C++, postprocess, outputs, consistency, benchmark, and GTest.
+- **`cpp_infer/`** — V2 C++ deployment workspace. It now owns the Runtime library/CLI boundary, strict Runtime/artifact contract, OpenCV preprocessing, ORT RAII session, actual metadata validation, safe tensor ownership, pure YOLOv8 postprocess, the single-image Pipeline, stable JSON/visualization outputs, GTest, and the 78-case CTest gate; later S1 steps add broader failure hardening, consistency, and benchmark evidence.
 - **`configs/`** — Separated hyperparameters. Easy to track experiments by diffing config files.
 
 ## Tech Stack
@@ -849,13 +953,14 @@ yolo_defect/
 |------|---------|---------|
 | Python | Language | 3.9.25 |
 | C++ | V2 runtime language | C++17 |
+| MSVC | Verified x64 C++ compiler | 19.50.35721.0 |
 | PyTorch | Deep learning framework | 2.0.0 |
 | Ultralytics | YOLOv8 training & inference | 8.4.24 locally and in artifact metadata |
 | ONNX | Model interchange format | Python package 1.19.1; artifact opset 17 |
-| ONNX Runtime | Python baseline; C++ inference engine enters in S1-02 | Python 1.19.2 and verified Windows x64 CPU C++ SDK 1.19.2; not integrated yet |
-| OpenCV | Python utilities and verified C++ preprocessing; visualization in S1-05 | Windows C++ 4.8.0 x64 vc16 |
+| ONNX Runtime | Python baseline plus C++ RAII session, metadata validation, raw inference, and S1-05 single-image pipeline execution | Python 1.19.2 and official Windows x64 CPU C++ SDK 1.19.2; input is borrowed only through synchronous `Session::Run`, output is copied before ORT ownership ends, and output records session-level CPU provider evidence |
+| OpenCV | Python utilities, verified file/`CV_8UC3 cv::Mat` C++ preprocessing, deterministic headless drawing, image encoding, and output read-back | Windows C++ 4.8.0 x64 vc16 |
 | CMake | Active C++ build system and CTest entry | 4.1.1-msvc1 |
-| GTest | Incremental C++ unit tests from S1-04 | v1.17.0 full commit/archive/SHA-256 pinned; not integrated yet |
+| GTest | Synthetic postprocess/preprocess plus stable JSON-output unit tests linked to `yolo_defect_runtime` | Official GitHub v1.17.0 archive; commit `52eb8108c5bdec04579160ae17225d66034bd723` and SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84` pinned; verified 24 postprocess + 7 preprocess + 6 output cases; offline source override requires a separately hash-verified extraction |
 | Matplotlib | Visualization & plotting | (via ultralytics) |
 | FastAPI | REST API service | latest |
 | Conda | Environment management | — |
@@ -911,12 +1016,12 @@ The V2 queue follows `docs/PLAN.md`. Before entering each large stage, Codex rea
 | P1-01 | Verified with VS Developer Command Prompt | CMake skeleton | Add the first minimal CMake project and executable target | `cpp_infer` has a minimal C++17 CMake target, executable target, and CTest smoke test. Configure/build/run pass in the Visual Studio 2026 Developer Command Prompt; Visual Studio multi-config builds require `ctest -C Debug` |
 | P1-02 | Verified with NMake CTest smoke | ConfigLoader | Load `input_width`, `input_height`, `class_names`, `score_threshold`, `nms_threshold`, and `backend` | `cpp_infer/configs/default_config.txt` is parsed into a typed `RuntimeConfig`; `yolo_defect_cpp --config ...` prints a stable config summary; CTest covers the config smoke path without OpenCV, ONNX Runtime, GTest, preprocessing, postprocessing, NMS, or benchmark wiring |
 | P1-03 | Verified with OpenCV CTest smoke | OpenCV preprocess | Read an image, print shape/channels, letterbox, BGR to RGB, normalize, HWC to CHW | `--config ... --image ...` reads a real validation image and prints original shape, target input size, scale, padding, color conversion, normalization, NCHW tensor shape, and tensor element count |
-| S1-01 | **Next** | Baseline contract and engineering boundary | Expand the executable runtime/artifact contract, split Runtime library and CLI targets, and consume the preflighted ORT/GTest dependency plan | Schema failures are actionable; paths are deterministic; library/CLI build; dependency source/version/path is known; no inference yet |
-| S1-02 | Pending | ORT session and metadata validation | Add RAII session plus provider/name/shape/dtype/class-contract inspection | `models/best.onnx` loads and actual float32 `[1,3,800,800] -> [1,10,13125]` metadata is validated; negative contract paths fail clearly |
-| S1-03 | Pending | Tensor wiring and raw inference | Convert the preprocess vector to an ORT tensor, run the fixed image, own and validate raw output | Fixed image reaches finite raw output with the expected shape/elements; no decode yet |
-| S1-04 | Pending | YOLO decode/filter/NMS/coordinate restore | Implement pure, model-specific postprocess functions and synthetic GTest cases | Threshold semantics, class-agnostic NMS, empty output, clipping, and non-square inverse letterbox are deterministic and tested |
-| S1-05 | Pending | End-to-end CLI, JSON, and visualization | Orchestrate the single-image vertical slice and write schema-stable machine/visual outputs | Fixed command creates parseable detection JSON and a readable visualization; empty detections remain valid output |
-| S1-06 | Pending | Automated and failure-path gate | Expand GTest/CTest across contract, preprocess, metadata, postprocess, integration, and core failures | Tests cover missing model, shape/dtype/class mismatch, damaged image, and empty output with nonzero actionable errors where appropriate |
+| S1-01 | **Verified; L1 accepted** | Baseline contract and engineering boundary | Strict Runtime/artifact schemas, declaration-relative paths, Runtime library/CLI targets, configurable ORT SDK boundary, and CTest positive/negative paths; GTest remains deferred | Clean Release library/CLI build, stable summaries, path-independence proof, SHA recheck, actionable failures, and 15/15 CTest; no session/inference |
+| S1-02 | **Verified; L1 accepted** | ORT session and metadata validation | RAII/PImpl session, explicit CPU EP, actual version/provider/count/name/shape/dtype/class-contract inspection, and synthetic validator | `models/best.onnx` loads; actual float32 `[1,3,800,800] -> [1,10,13125]` metadata passes; real/synthetic negative paths and 29/29 CTest pass; no `Session::Run` |
+| S1-03 | **Verified; L1 accepted** | Tensor wiring and raw inference | Borrow the preprocess vector for a CPU ORT tensor, run synchronously, validate and copy raw output into independent storage | Fixed image produces finite owned `[1,10,13125]` / 131,250-value output; invalid length fails before Run; 31/31 CTest pass; no decode |
+| S1-04 | **Verified; L1 accepted** | YOLO decode/filter/NMS/coordinate restore | Pure model-specific postprocess functions, direct `CV_8UC3 cv::Mat` preprocess boundary, and synthetic GTest | Float32 strict thresholds, BCN decode, stable class-agnostic input-space NMS, empty output, clipping, odd/non-square inverse letterbox are deterministic; GTest 31/31 and complete CTest 62/62 pass |
+| S1-05 | **Implemented and verified; awaiting L1 acceptance** | End-to-end CLI, JSON, and visualization | `DetectorPipeline` orchestrates the single-image vertical slice; `DetectionResult` snapshots owned output metadata; `ResultWriter` emits stable JSON v1 and deterministic headless visualization with explicit file safety rules | Fixed command creates 3 `crazing` detections, Python-parseable JSON and an OpenCV-readable PNG; empty detections remain valid `[]`; output GTest 6/6, output label 16/16, complete CTest 78/78 |
+| S1-06 | **Next after S1-05 L1** | Automated and failure-path gate | Expand GTest/CTest across contract, preprocess, metadata, postprocess, integration, and core failures | Tests cover missing model, shape/dtype/class mismatch, damaged image, and empty output with nonzero actionable errors where appropriate |
 | S1-07 | Pending | Fixed-sample Python ORT/C++ consistency | Compare a committed six-class manifest under the same CPU provider and postprocess semantics | Count/class match and predeclared confidence/box/IoU tolerances pass or produce per-image diagnostics; no unsupported direct PT rerun claim |
 | S1-08 | Pending | Reproducible Release benchmark | Measure decode/preprocess/infer/postprocess/pipeline with warmup/repeat and environment/memory metadata | JSON contains mean/P50/P95, throughput, build/provider/model/sample metadata, and Windows Peak Working Set or an explicit unsupported value |
 | S1-09 | Pending | Large-stage-one closure | Clean-build all gates, align documentation/evidence, and complete L2 interview acceptance | Fixed demo/tests/consistency/benchmark pass; user can explain for five minutes, handle follow-ups/failures, and change one behavior plus its test |
@@ -971,7 +1076,7 @@ Expected config summary fields:
 - `nms_threshold: 0.45`
 - `backend: cpu`
 
-Local verification on 2026-06-10: configure/build/run/CTest passed in a Visual Studio 2026 Developer Command Prompt with the NMake build tree under `%TEMP%`. The config smoke test first failed against the P1-01 skeleton with `Unknown argument: --config`, then passed after the ConfigLoader implementation. After P1-03, use the P1-03 configure command because the executable target now links OpenCV.
+Local verification on 2026-06-10: configure/build/run/CTest passed in a Visual Studio 2026 Developer Command Prompt with the NMake build tree under `%TEMP%`. The config smoke test first failed against the P1-01 skeleton with `Unknown argument: --config`, then passed after the ConfigLoader implementation. This remains historical evidence; use the current S1-01 Quick Start above for the active schema and dependency boundary.
 
 ### P1-03 OpenCV Preprocess Commands
 
@@ -1006,6 +1111,163 @@ Expected preprocess summary fields:
 
 Local verification on 2026-06-13: the P1-03 smoke test first failed against the P1-02 CLI with `--config expects exactly one config file path.` Configure/build/run/CTest then passed after adding OpenCV and `ImagePreprocessor`. The local OpenCV Windows pack requires `OpenCV_DIR=D:\01_Base\Tools\opencv\build\x64\vc16\lib`; pointing to the top-level `D:\01_Base\Tools\opencv\build` was not sufficient for this NMake build.
 
+### S1-01 Contract and Build Boundary Commands
+
+S1-01 uses the current two-file schema and a fresh Release/NMake tree. It validates the external ORT C++ SDK boundary but does not create a session or run inference.
+
+```powershell
+$ToolsRoot = 'D:\01_Base\Tools'
+$env:ONNXRUNTIME_ROOT = Join-Path $ToolsRoot 'onnxruntime-win-x64-1.19.2'
+$env:PATH = 'D:\01_Base\Tools\VisualStudio_Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;' + `
+  'D:\01_Base\Tools\opencv\build\x64\vc16\bin;' + $env:PATH
+$BuildDir = Join-Path $env:TEMP 'yolo_defect_s1_01'
+
+cmake -S cpp_infer -B $BuildDir -G 'NMake Makefiles' `
+  -DOpenCV_DIR='D:\01_Base\Tools\opencv\build\x64\vc16\lib' `
+  -DONNXRUNTIME_ROOT="$env:ONNXRUNTIME_ROOT" `
+  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+cmake --build $BuildDir
+
+$Config = (Resolve-Path 'cpp_infer\configs\default_config.txt').Path
+& "$BuildDir\bin\yolo_defect_cpp.exe" --config $Config
+& "$BuildDir\bin\yolo_defect_cpp.exe" --config $Config --image `
+  (Resolve-Path 'data\images\val\crazing_241.jpg').Path
+& "$BuildDir\bin\yolo_defect_cpp.exe" --config `
+  (Resolve-Path 'cpp_infer\tests\fixtures\runtime\invalid_provider.txt').Path
+
+ctest --test-dir $BuildDir -N
+ctest --test-dir $BuildDir --output-on-failure
+(Get-FileHash models\best.onnx -Algorithm SHA256).Hash
+```
+
+Local verification on 2026-07-18: MSVC 19.50.35721.0/OpenCV 4.8.0 built `yolo_defect_runtime.lib` and `yolo_defect_cpp.exe`, staged the pinned 1.19.2 `onnxruntime.dll`, passed 15/15 CTest in 0.73 seconds, preserved the preprocess output, rejected `provider = cuda` with exit 1 and an expected/actual/action message, proved identical resolved artifact/model paths from two working directories, and rechecked the declared SHA-256. These are contract/build results, not ORT session or inference results.
+
+### S1-02 ORT Session and Metadata Inspection Commands
+
+S1-02 loads the real ONNX and validates actual metadata. It deliberately stops before input tensor construction and `Session::Run`.
+
+```bat
+call "D:\01_Base\Tools\VisualStudio_Community\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
+powershell.exe -NoProfile -NoExit
+```
+
+```powershell
+$ToolsRoot = 'D:\01_Base\Tools'
+$env:ONNXRUNTIME_ROOT = Join-Path $ToolsRoot 'onnxruntime-win-x64-1.19.2'
+$env:PATH = 'D:\01_Base\Tools\opencv\build\x64\vc16\bin;' + $env:PATH
+$BuildDir = Join-Path $env:TEMP `
+  ('yolo_defect_s1_02_' + [guid]::NewGuid().ToString('N'))
+
+cmake -S cpp_infer -B $BuildDir -G 'NMake Makefiles' `
+  -DOpenCV_DIR='D:\01_Base\Tools\opencv\build\x64\vc16\lib' `
+  -DONNXRUNTIME_ROOT="$env:ONNXRUNTIME_ROOT" `
+  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+cmake --build $BuildDir
+
+$Config = (Resolve-Path 'cpp_infer\configs\default_config.txt').Path
+& "$BuildDir\bin\yolo_defect_cpp.exe" --config $Config --inspect-model
+ctest --test-dir $BuildDir -N
+ctest --test-dir $BuildDir --output-on-failure
+```
+
+Local verification on 2026-07-26: ORT runtime 1.19.2 reported available providers `[AzureExecutionProvider,CPUExecutionProvider]`; `OnnxRunner` explicitly registered `CPUExecutionProvider` and created the session. Actual input was `images` tensor float32 `[1,3,800,800]`; actual output was `output0` tensor float32 `[1,10,13125]`; metadata contract validation passed. The 29-case CTest gate passed, including real input-size/class-count declaration mismatches and synthetic count/name/shape/dtype/provider failures. No input tensor or inference was executed.
+
+### S1-03 Input Tensor and Raw Inference Commands
+
+S1-03 connects the existing preprocess vector to one synchronous ORT run and copies the validated raw output into project-owned storage. It deliberately stops before decode, score filtering, NMS, JSON, visualization, and benchmark work.
+
+```powershell
+$ToolsRoot = 'D:\01_Base\Tools'
+$env:ONNXRUNTIME_ROOT = Join-Path $ToolsRoot 'onnxruntime-win-x64-1.19.2'
+$env:PATH = 'D:\01_Base\Tools\opencv\build\x64\vc16\bin;' + $env:PATH
+$BuildDir = Join-Path $env:TEMP `
+  ('yolo_defect_s1_03_' + [guid]::NewGuid().ToString('N'))
+
+cmake -S cpp_infer -B $BuildDir -G 'NMake Makefiles' `
+  -DOpenCV_DIR='D:\01_Base\Tools\opencv\build\x64\vc16\lib' `
+  -DONNXRUNTIME_ROOT="$env:ONNXRUNTIME_ROOT" `
+  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+cmake --build $BuildDir
+
+$Config = (Resolve-Path 'cpp_infer\configs\default_config.txt').Path
+$Image = (Resolve-Path 'data\images\val\crazing_241.jpg').Path
+& "$BuildDir\bin\yolo_defect_cpp.exe" --config $Config --image $Image `
+  --raw-output-summary
+ctest --test-dir $BuildDir -N
+ctest --test-dir $BuildDir --output-on-failure
+```
+
+Local verification on 2026-07-30: the fixed image produced input float32 `[1,3,800,800]` with 1,920,000/1,920,000 finite values and owned raw output float32 `[1,10,13125]` with 131,250/131,250 finite values. Output range was `[0,795.04126]`. The invalid 1,919,999-value path failed before `Ort::Value` construction/Run, and 31/31 CTest passed. This is raw-execution evidence, not decoded detection correctness or performance evidence.
+
+### S1-04 Pure YOLOv8 Postprocess and GTest Commands
+
+S1-04 keeps the CLI at the raw-output boundary and validates postprocess independently with synthetic tensors, boxes, and images. The Runtime target now contains the pure postprocessor; GTest executables link `yolo_defect::runtime`, never `main.cpp`, and do not need an ORT session or real model to prove algorithm behavior.
+
+```powershell
+$ToolsRoot = 'D:\01_Base\Tools'
+$env:ONNXRUNTIME_ROOT = Join-Path $ToolsRoot 'onnxruntime-win-x64-1.19.2'
+$env:PATH = 'D:\01_Base\Tools\VisualStudio_Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;' + `
+  'D:\01_Base\Tools\opencv\build\x64\vc16\bin;' + $env:PATH
+$BuildDir = Join-Path $env:TEMP `
+  ('yolo_defect_s1_04_' + [guid]::NewGuid().ToString('N'))
+
+cmake -S cpp_infer -B $BuildDir -G 'NMake Makefiles' `
+  -DOpenCV_DIR='D:\01_Base\Tools\opencv\build\x64\vc16\lib' `
+  -DONNXRUNTIME_ROOT="$env:ONNXRUNTIME_ROOT" `
+  -DCMAKE_BUILD_TYPE=Release `
+  -DBUILD_TESTING=ON
+cmake --build $BuildDir
+
+ctest --test-dir $BuildDir -L postprocess --output-on-failure
+ctest --test-dir $BuildDir -L preprocess --output-on-failure
+ctest --test-dir $BuildDir -N
+ctest --test-dir $BuildDir --output-on-failure
+```
+
+For an offline clean configure, add the following only after verifying that the extracted source came from the pinned v1.17.0 archive whose SHA-256 is `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84`:
+
+```powershell
+-DFETCHCONTENT_SOURCE_DIR_GOOGLETEST='<verified-google-test-source>'
+```
+
+Local verification on 2026-08-15: the 24-case postprocess GTest target and 7-case `cv::Mat` preprocess GTest target both passed, and the S1-04 gate passed 62/62. The tests freeze float32-domain strict score/NMS threshold equality, stable equal-score input order, class-agnostic NMS in model-input coordinates, restore/clip ordering, and `CV_8UC3` preprocessing behavior. This was the pure-algorithm evidence before S1-05 connected the accepted behavior to user-facing outputs.
+
+### S1-05 Single-Image CLI, JSON, and Visualization Commands
+
+S1-05 keeps `main.cpp` as a CLI coordinator and moves the vertical slice into `DetectorPipeline` plus owned detection/output value types. The first run creates parents and refuses existing files; the reproducible demo below passes `--overwrite` explicitly because the verified evidence files are already present.
+
+```powershell
+$ToolsRoot = 'D:\01_Base\Tools'
+$env:ONNXRUNTIME_ROOT = Join-Path $ToolsRoot 'onnxruntime-win-x64-1.19.2'
+$env:PATH = (Join-Path $ToolsRoot 'VisualStudio_Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin') + ';' + `
+  (Join-Path $ToolsRoot 'opencv\build\x64\vc16\bin') + ';' + $env:PATH
+$BuildDir = Join-Path $env:TEMP `
+  ('yolo_defect_s1_05_' + [guid]::NewGuid().ToString('N'))
+
+cmake -S cpp_infer -B $BuildDir -G 'NMake Makefiles' `
+  -DOpenCV_DIR="$ToolsRoot\opencv\build\x64\vc16\lib" `
+  -DONNXRUNTIME_ROOT="$env:ONNXRUNTIME_ROOT" `
+  -DCMAKE_BUILD_TYPE=Release `
+  -DBUILD_TESTING=ON
+cmake --build $BuildDir
+
+$Config = (Resolve-Path 'cpp_infer\configs\default_config.txt').Path
+$Image = (Resolve-Path 'data\images\val\crazing_241.jpg').Path
+$OutputJson = Join-Path (Get-Location) `
+  'cpp_infer\results\demo\crazing_241.detections.json'
+$OutputImage = Join-Path (Get-Location) `
+  'cpp_infer\results\demo\crazing_241.visualized.png'
+
+& "$BuildDir\bin\yolo_defect_cpp.exe" `
+  --config $Config --image $Image `
+  --output-json $OutputJson --output-image $OutputImage --overwrite
+python -m json.tool $OutputJson
+ctest --test-dir $BuildDir -L output --output-on-failure
+ctest --test-dir $BuildDir --output-on-failure
+```
+
+Local verification on 2026-08-16: the fixed command completed a real ORT CPU Run and emitted three `crazing` detections. Python's standard JSON module accepted the 1,164-byte schema-v1 document, and OpenCV read the 39,306-byte visualization as a `200x200` `CV_8UC3` image. The JSON and PNG SHA-256 values were respectively `E8445BC92201307430A17B7B51B6CCEFC5A74D2D473617170F50AD921CCF9049` and `3A0C6C57EE977EE02762F05FCDE6928C8AACBD20883596D3622A6225942E2346`. Output GTest passed 6/6, the `output` label passed 16/16, and the clean complete gate passed 78/78. These are single-image functionality and reproducibility results, not consistency or performance evidence.
+
 ### V2 Entry Log
 
 | Date | Change | Purpose |
@@ -1017,6 +1279,11 @@ Local verification on 2026-06-13: the P1-03 smoke test first failed against the 
 | 2026-06-29 | Aligned README with the then-current route, now archived as `docs/archive/路线0628.md` | Recorded top-level design, D010/paper_detect artifact path, required README sections, phase queue placeholders, and teaching log so later work stays on the C++ Runtime route |
 | 2026-07-15 | Replaced the active route source with `docs/PLAN.md`, updated AGENTS and both entry READMEs, and added `docs/STAGE1_EXECUTION_PLAN.md` | Adopted the latest nine-part teaching closure, authoritative P0/P1 boundaries, artifact gates, four large stages, verified no current direction drift, and dynamically planned S1-01 through S1-09 |
 | 2026-07-16 | Completed pre-stage-one readiness without starting S1-01 | Verified the x64 VS terminal and ORT C++ SDK, passed a new clean 3/3 CTest, froze a SHA-256-pinned GTest v1.17.0 FetchContent plan, and recorded the owner-confirmed model lineage plus public-distribution license checkpoints in `docs/PRE_STAGE1_READINESS.md` |
+| 2026-07-18 | Completed S1-01 Runtime/artifact contract and engineering boundary | Added strict two-file schemas, model/tensor/enumeration checks, declaration-relative paths, Runtime library/CLI targets, configurable ORT SDK validation/DLL staging, and 15-case CTest evidence; preserved AGPL metadata as a distribution checkpoint and stopped before ORT session/inference |
+| 2026-07-26 | Completed S1-02 ORT session and actual metadata validation | Added RAII/PImpl `OnnxRunner`, owned `ModelMetadata`, explicit CPU EP/session policy, `--inspect-model`, actual-vs-declared validation, and a 29-case real/synthetic CTest gate; stopped before input tensor construction and `Session::Run` |
+| 2026-07-30 | Completed S1-03 input tensor and owned raw output boundary | Added zero-copy borrowed CPU input, synchronous `Session::Run`, overflow/shape/count/finite checks, copied `InferenceOutput`, bounded CLI summary, invalid-length pre-Run failure, and a 31-case CTest gate; stopped before decode/NMS |
+| 2026-08-15 | Completed S1-04 pure YOLOv8 postprocess and `cv::Mat` test boundary | Added validated BCN decode, no-objectness class argmax, float32 strict filtering, `xywh -> xyxy`, robust IoU, stable class-agnostic model-space NMS, inverse letterbox/clip, direct `CV_8UC3` preprocessing, pinned GTest integration, and a 62-case CTest gate; stopped before detection CLI/JSON/visualization |
+| 2026-08-16 | Completed S1-05 fixed single-image CLI, JSON, and visualization vertical slice | Added PImpl pipeline orchestration, an owned detection result, stable escaped JSON v1, deterministic headless OpenCV drawing, parent/overwrite/protected-path rules, fixed demo artifacts and hashes, six output GTests, a 16-case output label, and a 78-case clean CTest gate; stopped before S1-06 failure hardening |
 
 ## License
 

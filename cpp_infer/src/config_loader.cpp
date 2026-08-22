@@ -1,179 +1,120 @@
 #include "yolo_defect_cpp/config_loader.h"
 
-#include <fstream>
-#include <map>
+#include "key_value_parser.h"
+
+#include <filesystem>
 #include <set>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 
 namespace yolo_defect_cpp {
 namespace {
 
-const std::set<std::string>& known_keys() {
-  static const std::set<std::string> keys = {
-      "input_width", "input_height", "class_names",
-      "score_threshold", "nms_threshold", "backend"};
-  return keys;
+constexpr int kSupportedSchemaVersion = 1;
+constexpr const char* kSchemaName = "RuntimeConfig";
+
+const std::set<std::string>& known_fields() {
+  static const std::set<std::string> fields = {
+      "schema_version", "artifact_spec_path", "score_threshold",
+      "nms_threshold", "provider"};
+  return fields;
 }
 
-std::string trim(const std::string& value) {
-  const std::string whitespace = " \t\r\n";
-  const std::size_t start = value.find_first_not_of(whitespace);
-  if (start == std::string::npos) {
-    return "";
-  }
-
-  const std::size_t end = value.find_last_not_of(whitespace);
-  return value.substr(start, end - start + 1);
-}
-
-std::string strip_comment(const std::string& line) {
-  const std::size_t comment_start = line.find('#');
-  if (comment_start == std::string::npos) {
-    return line;
-  }
-  return line.substr(0, comment_start);
-}
-
-std::string line_prefix(int line_number) {
-  return "Config line " + std::to_string(line_number) + ": ";
-}
-
-int parse_int(const std::string& key, const std::string& value) {
-  std::size_t parsed_chars = 0;
-  int parsed_value = 0;
-  try {
-    parsed_value = std::stoi(value, &parsed_chars);
-  } catch (const std::exception&) {
-    throw std::runtime_error("Config key '" + key + "' must be an integer.");
-  }
-
-  if (parsed_chars != value.size()) {
-    throw std::runtime_error("Config key '" + key + "' must be an integer.");
-  }
-  return parsed_value;
-}
-
-double parse_double(const std::string& key, const std::string& value) {
-  std::size_t parsed_chars = 0;
-  double parsed_value = 0.0;
-  try {
-    parsed_value = std::stod(value, &parsed_chars);
-  } catch (const std::exception&) {
-    throw std::runtime_error("Config key '" + key + "' must be a number.");
-  }
-
-  if (parsed_chars != value.size()) {
-    throw std::runtime_error("Config key '" + key + "' must be a number.");
-  }
-  return parsed_value;
-}
-
-std::vector<std::string> parse_class_names(const std::string& value) {
-  std::vector<std::string> names;
-  std::stringstream stream(value);
-  std::string item;
-  while (std::getline(stream, item, ',')) {
-    const std::string name = trim(item);
-    if (name.empty()) {
-      throw std::runtime_error("Config key 'class_names' contains an empty class name.");
-    }
-    names.push_back(name);
-  }
-
-  if (names.empty()) {
-    throw std::runtime_error("Config key 'class_names' must contain at least one class.");
-  }
-  return names;
-}
-
-void require_key(const std::map<std::string, std::string>& values,
-                 const std::string& key) {
-  if (values.find(key) == values.end()) {
-    throw std::runtime_error("Missing required config key: " + key);
+void validate_schema_version(const detail::ParsedKeyValueFile& parsed,
+                             int version) {
+  if (version != kSupportedSchemaVersion) {
+    detail::throw_field_error(
+        parsed, kSchemaName, "schema_version", "unsupported schema version",
+        std::to_string(kSupportedSchemaVersion), std::to_string(version),
+        "migrate the runtime config to the supported schema");
   }
 }
 
-void validate_positive_dimension(const std::string& key, int value) {
-  if (value <= 0) {
-    throw std::runtime_error("Config key '" + key + "' must be greater than 0.");
-  }
-}
-
-void validate_threshold(const std::string& key, double value) {
+void validate_threshold(const detail::ParsedKeyValueFile& parsed,
+                        const std::string& name,
+                        double value) {
   if (value < 0.0 || value > 1.0) {
-    throw std::runtime_error("Config key '" + key + "' must be in [0, 1].");
+    detail::throw_field_error(
+        parsed, kSchemaName, name, "threshold is outside the valid range",
+        "a finite value in [0, 1]", std::to_string(value),
+        "choose a threshold between 0 and 1 inclusive");
+  }
+}
+
+ExecutionProvider parse_provider(
+    const detail::ParsedKeyValueFile& parsed) {
+  const std::string& value =
+      detail::require_field(parsed, kSchemaName, "provider").value;
+  if (value != "cpu") {
+    detail::throw_field_error(
+        parsed, kSchemaName, "provider", "unsupported enum value", "[cpu]",
+        value,
+        "use cpu for the pinned Windows x64 CPU ONNX Runtime SDK");
+  }
+  return ExecutionProvider::kCpu;
+}
+
+void validate_artifact_spec_path(
+    const detail::ParsedKeyValueFile& parsed,
+    const std::filesystem::path& artifact_spec_path) {
+  std::error_code error;
+  const bool exists = std::filesystem::exists(artifact_spec_path, error);
+  if (error || !exists) {
+    detail::throw_field_error(
+        parsed, kSchemaName, "artifact_spec_path",
+        "artifact declaration does not exist", "an existing declaration file",
+        artifact_spec_path.string(),
+        "correct the path relative to the runtime config file");
+  }
+  if (!std::filesystem::is_regular_file(artifact_spec_path, error) || error) {
+    detail::throw_field_error(
+        parsed, kSchemaName, "artifact_spec_path",
+        "artifact declaration is not a regular file",
+        "a regular artifact declaration file", artifact_spec_path.string(),
+        "point artifact_spec_path to the model artifact declaration");
   }
 }
 
 }  // namespace
 
-RuntimeConfig load_config(const std::string& config_path) {
-  std::ifstream input(config_path);
-  if (!input) {
-    throw std::runtime_error("Failed to open config file: " + config_path);
-  }
-
-  std::map<std::string, std::string> values;
-  std::string line;
-  int line_number = 0;
-  while (std::getline(input, line)) {
-    ++line_number;
-    const std::string clean_line = trim(strip_comment(line));
-    if (clean_line.empty()) {
-      continue;
-    }
-
-    const std::size_t separator = clean_line.find('=');
-    if (separator == std::string::npos) {
-      throw std::runtime_error(line_prefix(line_number) +
-                               "expected 'key = value'.");
-    }
-
-    const std::string key = trim(clean_line.substr(0, separator));
-    const std::string value = trim(clean_line.substr(separator + 1));
-    if (key.empty() || value.empty()) {
-      throw std::runtime_error(line_prefix(line_number) +
-                               "expected non-empty key and value.");
-    }
-
-    if (known_keys().find(key) == known_keys().end()) {
-      throw std::runtime_error(line_prefix(line_number) +
-                               "unknown config key: " + key);
-    }
-
-    if (values.find(key) != values.end()) {
-      throw std::runtime_error(line_prefix(line_number) +
-                               "duplicate config key: " + key);
-    }
-    values[key] = value;
-  }
-
-  require_key(values, "input_width");
-  require_key(values, "input_height");
-  require_key(values, "class_names");
-  require_key(values, "score_threshold");
-  require_key(values, "nms_threshold");
-  require_key(values, "backend");
+RuntimeConfig load_runtime_config(
+    const std::filesystem::path& config_path) {
+  const detail::ParsedKeyValueFile parsed =
+      detail::parse_key_value_file(config_path, kSchemaName, known_fields());
 
   RuntimeConfig config;
-  config.input_width = parse_int("input_width", values.at("input_width"));
-  config.input_height = parse_int("input_height", values.at("input_height"));
-  config.class_names = parse_class_names(values.at("class_names"));
-  config.score_threshold = parse_double("score_threshold", values.at("score_threshold"));
-  config.nms_threshold = parse_double("nms_threshold", values.at("nms_threshold"));
-  config.backend = values.at("backend");
-
-  validate_positive_dimension("input_width", config.input_width);
-  validate_positive_dimension("input_height", config.input_height);
-  validate_threshold("score_threshold", config.score_threshold);
-  validate_threshold("nms_threshold", config.nms_threshold);
-  if (trim(config.backend).empty()) {
-    throw std::runtime_error("Config key 'backend' must be non-empty.");
-  }
-
+  config.declaration_path = parsed.declaration_path;
+  config.schema_version =
+      detail::parse_integer_field(parsed, kSchemaName, "schema_version");
+  validate_schema_version(parsed, config.schema_version);
+  config.artifact_spec_path = detail::resolve_declared_path(
+      parsed, kSchemaName, "artifact_spec_path");
+  validate_artifact_spec_path(parsed, config.artifact_spec_path);
+  config.score_threshold =
+      detail::parse_number_field(parsed, kSchemaName, "score_threshold");
+  config.nms_threshold =
+      detail::parse_number_field(parsed, kSchemaName, "nms_threshold");
+  validate_threshold(parsed, "score_threshold", config.score_threshold);
+  validate_threshold(parsed, "nms_threshold", config.nms_threshold);
+  config.provider = parse_provider(parsed);
   return config;
+}
+
+RuntimeContract load_runtime_contract(
+    const std::filesystem::path& config_path) {
+  RuntimeContract contract;
+  contract.runtime = load_runtime_config(config_path);
+  contract.artifact =
+      load_model_artifact_spec(contract.runtime.artifact_spec_path);
+  return contract;
+}
+
+std::string to_string(ExecutionProvider value) {
+  switch (value) {
+    case ExecutionProvider::kCpu:
+      return "cpu";
+  }
+  throw std::logic_error("Unknown ExecutionProvider enum value.");
 }
 
 }  // namespace yolo_defect_cpp

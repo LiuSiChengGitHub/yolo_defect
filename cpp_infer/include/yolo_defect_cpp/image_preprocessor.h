@@ -1,10 +1,14 @@
 #ifndef YOLO_DEFECT_CPP_IMAGE_PREPROCESSOR_H_
 #define YOLO_DEFECT_CPP_IMAGE_PREPROCESSOR_H_
 
-#include "yolo_defect_cpp/config_loader.h"
+#include "yolo_defect_cpp/artifact_spec.h"
 
 #include <string>
 #include <vector>
+
+namespace cv {
+class Mat;
+}
 
 namespace yolo_defect_cpp {
 
@@ -25,7 +29,10 @@ struct PreprocessResult {
 };
 
 PreprocessResult preprocess_image(const std::string& image_path,
-                                  const RuntimeConfig& config);
+                                   const ModelArtifactSpec& artifact);
+
+PreprocessResult preprocess_image(const cv::Mat& bgr_image,
+                                   const ModelArtifactSpec& artifact);
 
 }  // namespace yolo_defect_cpp
 

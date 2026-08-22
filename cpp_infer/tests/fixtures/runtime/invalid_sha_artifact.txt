@@ -1,0 +1,5 @@
+schema_version = 1
+artifact_spec_path = ../artifact/invalid_sha.artifact.txt
+score_threshold = 0.25
+nms_threshold = 0.45
+provider = cpu
