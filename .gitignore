@@ -61,6 +61,10 @@ temp_eval*/
 .claude/
 docs/me/
 
+# ---------- Machine-local C++ acceptance environment ----------
+cpp_infer/.stage1.local.psd1
+cpp_infer/results/manual/
+
 
 # ---------- YOLO cache ----------
 *.cache

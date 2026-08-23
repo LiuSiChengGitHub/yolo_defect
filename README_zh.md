@@ -147,6 +147,61 @@ cpp_infer/configs/default_config.txt
 
 ### 5. 快速启动
 
+Windows 的权威入口现在是统一任务脚本，不再要求手工复制 CMD、PowerShell 和 CMake 长命令。在仓库根目录的普通 PowerShell 或 CMD 中运行；不带参数时会安全显示 `help`，不会意外启动耗时构建：
+
+```powershell
+.\cpp_infer\tools\stage1.cmd help
+```
+
+| 动作 | 精确职责 |
+|---|---|
+| `help` | 不依赖 Visual Studio 或 SDK，直接显示命令说明 |
+| `doctor` | 只读核验 x64 MSVC、CMake/CTest、完整 ORT C++ SDK、OpenCV、Python CPU ORT、GTest 策略和解析后的工作流默认值 |
+| `build` | 增量构建；构建树不存在时先自动 configure |
+| `clean-build` | 只删除通过边界校验的 Stage-One TEMP 目录，再执行带测试的 NMake Release configure/build |
+| `test` | 构建当前源码并运行完整 106 项 CTest |
+| `detect` | 任意单图执行前处理 -> ORT -> 后处理 -> JSON/PNG；它不是目录批处理 |
+| `demo` | 构建并验证固定的 3 detection 样本 |
+| `consistency` | 构建并执行固定 30 图、六类别 Python ORT/C++ ORT 一致性 |
+| `benchmark` | 构建、重新执行 consistency，再按配置或本次覆盖的 warmup/repeat 测速 |
+| `all` | clean build -> 完整 CTest -> 固定 Demo -> 30 图一致性 -> 正式 10/100 benchmark |
+
+最常用命令现在是：
+
+```powershell
+.\cpp_infer\tools\stage1.cmd doctor
+.\cpp_infer\tools\stage1.cmd build
+.\cpp_infer\tools\stage1.cmd clean-build
+.\cpp_infer\tools\stage1.cmd test
+.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg"
+.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg" "D:\outputs"
+.\cpp_infer\tools\stage1.cmd demo
+.\cpp_infer\tools\stage1.cmd consistency
+.\cpp_infer\tools\stage1.cmd benchmark
+.\cpp_infer\tools\stage1.cmd all
+```
+
+只给图片时，`detect` 会在被 Git 忽略的 `cpp_infer/results/manual/` 下创建全新目录；再给第二个位置参数时，会在该目录生成 `<stem>.detections.json` 和 `<stem>.visualized.png`。已有输出默认受保护，只有显式传入 `-Overwrite` 才允许覆盖。命令会打印解析后的 Runtime config、输入、输出、actual provider、检测数量和文件路径；核心仍调用已有 `DetectorPipeline`，脚本没有复制推理逻辑。
+
+环境和配置按职责明确分开：
+
+| 项目 | 类型与职责 |
+|---|---|
+| `stage1.cmd` / `stage1.ps1` | 任务入口和调度器，不是模型配置 |
+| `vswhere` -> x64 `VsDevCmd.bat` -> `PowerShell -NoProfile` | 查找 Visual Studio、设置临时编译环境变量，并由干净子终端继承 |
+| Git 忽略的 `.stage1.local.psd1` | 本机 ORT/OpenCV/Python/GTest 路径和可选 detect 默认值 |
+| 仓库跟踪的 `stage1.defaults.psd1` | 与机器无关的 build/Demo/detect/consistency/benchmark 工作流默认值 |
+| `CMakeLists.txt` | 构建关系：Runtime library、CLI、tests 和依赖链接 |
+| RuntimeConfig -> ArtifactSpec | 声明运行策略 -> 模型身份、tensor 和前后处理契约 |
+| `ModelMetadata` | ORT 从真实 ONNX 观察到的实际信息；它是校验证据，不是配置文件 |
+| `CMakeCache.txt` / Makefiles | 自动生成的构建状态；用 `clean-build` 重建，不手工修改 |
+
+构建关系是 `CMake -> NMake -> cl/link -> library/CLI/test executables`；测试关系是 `CTest -> GTest executables 以及 CLI/Python/CMake tests`。`Release` 是构建模式，不是工具。命令行图片/输出相对调用者 CWD 解析，workflow/local/Runtime/artifact 路径相对各自声明文件解析。依赖路径优先级为命令参数 -> local 文件 -> 环境变量 -> portable fallback，detect 默认值优先级为命令参数 -> local 默认值 -> tracked workflow 默认值。
+
+`clean-build` 只重建受保护的 `%TEMP%\yolo_defect_stage1_manual_release`；其他动作会先构建当前源码，缺少构建树时自动 configure。`benchmark` 必定先重跑 consistency，`all` 使用仓库正式协议。正式证据进入全新的临时 GUID 目录；日常 `detect` 输出只是便捷结果。Python wheel 不会被当作 ORT C++ SDK，GTest 也不会在缺少显式 `-AllowGTestDownload` 时下载。
+
+下面的展开命令继续作为理解脚本内部行为的底层审计参考，不再是推荐的日常手动入口。
+
 当前 S1-09 clean Release 收口路径。顺序固定为 configure/build -> 完整 CTest -> 固定 Demo -> 30 图一致性 -> benchmark；每一步都立即检查 `$LASTEXITCODE`。所有新证据写到新的 `%TEMP%` build 下，验证器不会误读仓库里已有的历史 JSON：
 
 ```powershell
@@ -1693,6 +1748,7 @@ Fresh pipeline/end-to-end throughput 为 `7.078853/7.038151 images/s`，Windows 
 | 2026-08-22 | 完成 S1-07 固定六类 Python ORT/C++ ORT 一致性证据 | 冻结仓库内 6x5 manifest 与图片 SHA-256，新增显式 CPU Python reference、顺序无关的 class/最大-IoU matching、逐图/汇总 JSON 和 CTest；30/30 图片、62/62 detections 通过冻结门槛，完整 CTest 92/92；停在 S1-08 benchmark 之前 |
 | 2026-08-22 | 完成 S1-08 可复现 C++ Release benchmark 与内存基线 | 在 S1-07 consistency 通过后，新增六段 steady-clock timing、算术 mean 与 nearest-rank P50/P95、pipeline/end-to-end throughput、Windows Peak Working Set、稳定 benchmark JSON 和严格 validator；正式 warmup 10/repeat 100 结果与 106/106 CTest 通过，停在 S1-09 之前 |
 | 2026-08-22 | 完成 S1-09 自动收口复现，等待用户 L2 | 不新增产品功能；用全新临时 Release build 依次复现 106/106 CTest、固定 Demo、30 图一致性、10/100 benchmark、四个直接故障和两个合法空结果，并对齐双语总入口。自动门 PASS；用户完成 2/5 分钟讲解、追问/排错及可回滚行为+GTest 练习前，大阶段一仍未完成 |
+| 2026-08-23 | 在一次性 L2 练习分支统一 Windows 构建、推理与证据命令 | 将 `stage1.cmd`/`stage1.ps1` 扩展为十个可发现动作（`help/doctor/build/clean-build/test/detect/demo/consistency/benchmark/all`），增加严格的仓库 workflow 默认配置和 Git 忽略的 local 覆盖，并把任意单图检测缩短为来源加可选输出目录。help/doctor、跨 CWD 与特殊字符 detect、可行动负例和最终 fresh `all` 均通过；最终一次通过 106/106 CTest（20.48 秒）、3 框 Demo、30/30 与 62/62 一致性及正式 10/100 benchmark validator。产品推理语义不变，用户 L2 仍待完成 |
 
 ## 许可证
 

@@ -145,6 +145,61 @@ cpp_infer/configs/default_config.txt
 
 ### 5. Quick Start
 
+The canonical Windows entry is one task runner rather than a copied CMD/PowerShell/CMake command chain. Run it from an ordinary PowerShell or CMD at the repository root; no arguments safely show `help` rather than starting a long build:
+
+```powershell
+.\cpp_infer\tools\stage1.cmd help
+```
+
+| Action | Exact responsibility |
+|---|---|
+| `help` | Show commands without requiring Visual Studio or any SDK |
+| `doctor` | Read-only validation of x64 MSVC, CMake/CTest, full ORT C++ SDK, OpenCV, Python CPU ORT, GTest policy, and resolved workflow defaults |
+| `build` | Incremental build; configure the guarded build tree first if it does not exist |
+| `clean-build` | Delete only the validated Stage-One TEMP tree, then configure/build NMake Release with tests |
+| `test` | Build current sources and run the complete 106-case CTest gate |
+| `detect` | Run any one image through preprocess -> ORT -> postprocess -> JSON/PNG; this is not directory batch processing |
+| `demo` | Build and validate the fixed three-detection sample |
+| `consistency` | Build and run the frozen 30-image, six-class Python ORT/C++ ORT comparison |
+| `benchmark` | Build, rerun consistency, then benchmark with configured or explicitly overridden warmup/repeat |
+| `all` | Clean build -> complete CTest -> fixed Demo -> 30-image consistency -> formal 10/100 benchmark |
+
+The most common commands are now:
+
+```powershell
+.\cpp_infer\tools\stage1.cmd doctor
+.\cpp_infer\tools\stage1.cmd build
+.\cpp_infer\tools\stage1.cmd clean-build
+.\cpp_infer\tools\stage1.cmd test
+.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg"
+.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg" "D:\outputs"
+.\cpp_infer\tools\stage1.cmd demo
+.\cpp_infer\tools\stage1.cmd consistency
+.\cpp_infer\tools\stage1.cmd benchmark
+.\cpp_infer\tools\stage1.cmd all
+```
+
+With only an image, `detect` creates a fresh ignored directory below `cpp_infer/results/manual/`; with a second positional path it writes `<stem>.detections.json` and `<stem>.visualized.png` there. Existing outputs remain protected unless `-Overwrite` is explicitly supplied. The command prints the resolved Runtime config, input, output, actual provider, detection count, and files. Its core remains the existing `DetectorPipeline`; the wrapper adds no duplicate inference logic.
+
+The environment and configuration model is deliberately separated:
+
+| Item | Kind and authority |
+|---|---|
+| `stage1.cmd` / `stage1.ps1` | Task entry/orchestrator, not model configuration |
+| `vswhere` -> x64 `VsDevCmd.bat` -> `PowerShell -NoProfile` | Discover Visual Studio, set transient compiler environment variables, then preserve them in a clean child shell |
+| ignored `.stage1.local.psd1` | Per-machine ORT/OpenCV/Python/GTest paths and optional detect defaults |
+| tracked `stage1.defaults.psd1` | Machine-independent build/Demo/detect/consistency/benchmark workflow defaults |
+| `CMakeLists.txt` | Build graph: Runtime library, CLI, tests, and dependency links |
+| RuntimeConfig -> ArtifactSpec | Declared runtime policy -> model identity/tensor/preprocess/postprocess contract |
+| `ModelMetadata` | Actual ONNX information observed by ORT; validation evidence, not a config file |
+| `CMakeCache.txt` / Makefiles | Generated build state; recreate with `clean-build`, do not hand-edit |
+
+The build relationship is `CMake -> NMake -> cl/link -> library/CLI/test executables`; the test relationship is `CTest -> GTest executables plus CLI/Python/CMake tests`. `Release` is a build mode, not a tool. Command image/output paths resolve from the caller's CWD; workflow/local/Runtime/artifact paths resolve from their declaring files. Dependency paths use command parameter -> local file -> environment -> portable fallback, while detect defaults use command parameter -> local default -> tracked workflow default.
+
+`clean-build` recreates only the guarded `%TEMP%\yolo_defect_stage1_manual_release`; focused actions build current sources and configure automatically when needed. `benchmark` always reruns consistency first, and `all` uses the tracked formal protocol. Formal evidence goes to a fresh temporary GUID directory; daily `detect` outputs are convenience results. A Python wheel is never treated as the ORT C++ SDK, and GTest is never downloaded unless `-AllowGTestDownload` is explicit.
+
+The expanded commands below remain the low-level audit reference for understanding what the wrapper executes; they are no longer the recommended manual interface.
+
 S1-09 uses a new out-of-tree Release build and disposable evidence paths. Initialize the x64 compiler environment in CMD, then start a profile-free PowerShell in the same window:
 
 ```bat
@@ -1682,6 +1737,7 @@ The six latency intervals are `imread`, already-decoded `cv::Mat -> tensor`, onl
 | 2026-08-22 | Completed S1-07 fixed six-class Python ORT/C++ ORT consistency evidence | Created a repository-resident SHA-frozen 30-image manifest, independent explicit-CPU Python reference, deterministic class/maximum-IoU matcher, per-image/summary JSON, unchanged numerical gates, 30/30 image and 62/62 detection matches, and a 92-case complete CTest gate; stopped before S1-08 benchmark work |
 | 2026-08-22 | Completed S1-08 reproducible Release benchmark and memory evidence | Reconfirmed S1-07 correctness before performance; added six explicit timing boundaries, warmup/repeat statistics, throughput, full Release/CPU/thread/model/sample metadata, strict JSON validation, and Windows Peak Working Set; generated the repository-resident 10/100 result, passed benchmark 14/14 and complete CTest 106/106, and stopped before S1-09 closure |
 | 2026-08-22 | Passed the S1-09 automatic large-stage closure gate; user L2 remains pending | Added no product behavior. A fresh temporary Release build passed 106/106 CTests in 19.91 seconds, reproduced byte-identical Demo outputs, passed 30/30 consistency, generated/validated a fresh 10/100 benchmark, and reconfirmed four actionable exit-1 faults plus legal empty detections. The temporary inclusive-threshold practice has not been applied to product code; Large Stage One remains open until the user completes and restores that exercise |
+| 2026-08-23 | Unified Windows build, inference, and evidence commands on the disposable L2 practice branch | Extended `stage1.cmd`/`stage1.ps1` into ten discoverable actions (`help/doctor/build/clean-build/test/detect/demo/consistency/benchmark/all`), added strict tracked workflow defaults plus ignored local overrides, and reduced arbitrary single-image detection to source plus optional output directory. Help/doctor, cross-CWD and special-character detect paths, actionable negatives, and a final fresh `all` passed; the final run passed 106/106 CTest in 20.48 seconds, the 3-box Demo, 30/30 and 62/62 consistency, and the formal 10/100 benchmark validator. Product inference semantics and the pending user L2 gate are unchanged |
 
 ## License
 

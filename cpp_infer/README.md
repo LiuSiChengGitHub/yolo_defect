@@ -99,7 +99,11 @@ cpp_infer/
 ├── results/benchmark/
 │   └── yolov8_neu_det_cpu_release.json
 ├── tools/
-│   └── compare_consistency.py
+│   ├── compare_consistency.py
+│   ├── stage1.cmd
+│   ├── stage1.ps1
+│   ├── stage1.defaults.psd1
+│   └── stage1.local.example.psd1
 └── tests/
     ├── result_writer_test.cpp
     ├── image_file_probe.cpp
@@ -222,7 +226,77 @@ CMake fetches GoogleTest only with `BUILD_TESTING=ON`, verifies the pinned archi
 
 The source override bypasses archive download/hash checking during that configure, so verify the pinned archive before extraction. No personal GTest path is committed. ORT is located only through `ONNXRUNTIME_ROOT`, and its matching DLL is staged beside ORT-using executables. With `BUILD_TESTING=ON`, configure also checks that the selected Python can import the pinned ORT version plus OpenCV/NumPy and exposes `CPUExecutionProvider`; a different or incomplete Python environment fails with an actionable dependency error.
 
-## S1-09 clean Release reproduction and acceptance
+## Unified Windows task runner and S1-09 acceptance
+
+The recommended interface is the task runner from an ordinary PowerShell or CMD at the repository root. With no arguments it shows help and performs no environment preflight or build:
+
+```powershell
+.\cpp_infer\tools\stage1.cmd help
+```
+
+| Action | Behavior |
+|---|---|
+| `help` | Dependency-free command/configuration reference |
+| `doctor` | Read-only workflow schema, x64 toolchain, full ORT SDK, OpenCV, Python CPU ORT, GTest policy, and effective-default check |
+| `build` | Incremental Release build; safely configure first if the TEMP tree is absent |
+| `clean-build` | Guarded TEMP deletion followed by NMake Release configure/build with tests |
+| `test` | Current build plus complete CTest |
+| `detect <image> [output-dir]` | Arbitrary single-image `DetectorPipeline` with JSON/PNG validation |
+| `demo` | Fixed image, 3 detections, strict JSON validator, and OpenCV PNG probe |
+| `consistency` | Frozen 30-image comparison and strict summary checks |
+| `benchmark` | Fresh consistency gate, then benchmark; `-Warmup`/`-Repeat` may override this invocation |
+| `all` | Clean build, complete CTest, fixed Demo, consistency, and tracked formal 10/100 benchmark |
+
+Daily examples are:
+
+```powershell
+.\cpp_infer\tools\stage1.cmd doctor
+.\cpp_infer\tools\stage1.cmd build
+.\cpp_infer\tools\stage1.cmd clean-build
+.\cpp_infer\tools\stage1.cmd test
+.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg"
+.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg" "D:\outputs"
+.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg" "D:\outputs" -Overwrite
+.\cpp_infer\tools\stage1.cmd demo
+.\cpp_infer\tools\stage1.cmd consistency
+.\cpp_infer\tools\stage1.cmd benchmark
+.\cpp_infer\tools\stage1.cmd all
+```
+
+`detect` requires only the source. Without an output argument it creates a fresh ignored `results/manual/<timestamp>_<id>_<stem>/`; with an output directory it derives `<stem>.detections.json` and `<stem>.visualized.png` directly below it. Both formats are enabled by default, existing files are rejected unless `-Overwrite` is explicit, JSON is parsed, PNG is reopened through the C++ OpenCV probe, and the resolved config/input/output/provider/count are printed. It is a single-image convenience entry over the existing Runtime library, not a directory batch/concurrency implementation and not formal benchmark evidence.
+
+Configuration is intentionally layered:
+
+| File/input | Responsibility | Relative-path base |
+|---|---|---|
+| `tools/stage1.defaults.psd1` | Tracked NMake/Release/test protocol, default Runtime config, manual output root/formats, fixed Demo/manifest, formal warmup/repeat | The workflow file itself |
+| ignored `.stage1.local.psd1` | ORT/OpenCV/Python/GTest machine paths plus optional `DefaultRuntimeConfig`, `DefaultDetectOutputRoot`, and output-format overrides | The local file itself |
+| `CMakeLists.txt` | Build targets, sources, dependency discovery/linking, DLL staging, and CTest registration | Repository source file; not a runtime setting |
+| `configs/*.txt` | Runtime artifact selection, provider, score/NMS thresholds | The Runtime config itself |
+| `artifacts/*.txt` | Model path/identity/license/tensor and preprocess/postprocess semantics | The artifact file itself |
+| `ModelMetadata` | ORT-observed provider/input/output name, shape, and dtype used to validate the declarations | Runtime-owned C++ value, not a configuration file |
+| `tests/fixtures/consistency_manifest.json` | Frozen 30-image correctness sample and hashes | Test protocol only, not product configuration |
+| command arguments | One invocation's image, optional output directory/config, overwrite, or benchmark sample counts | The caller's CWD |
+
+Dependency path precedence is explicit parameter -> local file -> process environment -> portable fallback. Detect defaults are explicit parameter -> optional local value -> tracked workflow value. The literal PSD1 loader rejects executable expressions, missing/unknown workflow keys, wrong types, unsupported build protocol, invalid benchmark bounds, and disabling both outputs. It never writes configuration back. Machine-specific paths remain ignored; copy `tools/stage1.local.example.psd1` once. Network-backed pinned GTest FetchContent still requires explicit `-AllowGTestDownload`.
+
+The environment/build/test chain is:
+
+```text
+stage1.cmd
+-> vswhere locates Visual Studio
+-> x64 VsDevCmd.bat sets transient PATH/INCLUDE/LIB
+-> PowerShell -NoProfile inherits that environment and runs stage1.ps1
+-> CMake reads CMakeLists.txt and generates NMake rules
+-> NMake invokes cl/link to produce the Runtime library, CLI, and tests
+-> CTest launches discovered GTest cases plus CLI/Python/CMake tests
+```
+
+`Release` is the selected optimized build mode, not an executable. `CMakeCache.txt`, Makefiles, object files, binaries, and staged DLLs are generated build state under the guarded TEMP tree and must not become manually maintained configuration. The wrapper keeps delayed expansion disabled while forwarding arguments, resolves defaults independently of CWD, checks native exit codes and current-run outputs, and writes formal evidence to fresh GUID directories.
+
+The unified task/config layer was validated from an ordinary shell on 2026-08-23. Dependency-free help, read-only doctor, incremental build, default-output detect, explicit-output detect from another CWD, paths containing spaces/`!`, and actionable argument failures passed. A final `all` safely rebuilt from scratch, passed 106/106 CTest in 20.48 seconds, produced and validated the fixed 3-detection JSON/PNG, passed 30/30 images and 62/62 matches, and passed the strict formal warmup-10/repeat-100 benchmark validator. The disposable run recorded pipeline mean `144.609525 ms` and `6.915174 images/s`; it is a workflow regression smoke, not a replacement performance baseline.
+
+The expanded commands below are retained as the low-level audit specification implemented by the wrapper. They are not the recommended daily manual interface.
 
 From CMD, initialize the x64 MSVC environment and start a profile-free PowerShell:
 
