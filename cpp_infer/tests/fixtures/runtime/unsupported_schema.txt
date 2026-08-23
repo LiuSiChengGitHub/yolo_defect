@@ -1,0 +1,5 @@
+schema_version = 2
+artifact_spec_path = ../../../artifacts/yolov8_neu_det.artifact.txt
+score_threshold = 0.25
+nms_threshold = 0.45
+provider = cpu

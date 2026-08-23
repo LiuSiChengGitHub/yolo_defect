@@ -4,6 +4,7 @@
 #include <onnxruntime_cxx_api.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <filesystem>
@@ -398,7 +399,7 @@ class OnnxRunner::Impl {
 
   const ModelMetadata& metadata() const noexcept { return metadata_; }
 
-  InferenceOutput run(
+  TimedInferenceOutput run_with_session_timing(
       const std::vector<std::int64_t>& input_shape,
       std::vector<float>& input_values) {
     validate_input_values(input_shape, input_values,
@@ -415,10 +416,26 @@ class OnnxRunner::Impl {
       const char* output_names[] = {metadata_.outputs.front().name.c_str()};
       Ort::RunOptions run_options{nullptr};
 
+      const auto run_start = std::chrono::steady_clock::now();
       std::vector<Ort::Value> ort_outputs = session_.Run(
           run_options, input_names, &input_tensor, 1, output_names, 1);
-      return copy_and_validate_output(
+      const auto run_end = std::chrono::steady_clock::now();
+
+      TimedInferenceOutput result;
+      result.session_run_ms =
+          std::chrono::duration<double, std::milli>(
+              run_end - run_start).count();
+      if (!std::isfinite(result.session_run_ms) ||
+          result.session_run_ms < 0.0) {
+        throw_inference_error(
+            model_path_, "Session::Run.duration", "a finite non-negative "
+            "steady-clock duration", std::to_string(result.session_run_ms),
+            "verify the platform steady_clock implementation before "
+            "publishing benchmark evidence");
+      }
+      result.output = copy_and_validate_output(
           ort_outputs, metadata_.outputs.front(), model_path_);
+      return result;
     } catch (const Ort::Exception& error) {
       throw make_run_ort_error(model_path_, error);
     }
@@ -452,7 +469,13 @@ const ModelMetadata& OnnxRunner::metadata() const noexcept {
 InferenceOutput OnnxRunner::run(
     const std::vector<std::int64_t>& input_shape,
     std::vector<float>& input_values) {
-  return impl_->run(input_shape, input_values);
+  return impl_->run_with_session_timing(input_shape, input_values).output;
+}
+
+TimedInferenceOutput OnnxRunner::run_with_session_timing(
+    const std::vector<std::int64_t>& input_shape,
+    std::vector<float>& input_values) {
+  return impl_->run_with_session_timing(input_shape, input_values);
 }
 
 }  // namespace yolo_defect_cpp

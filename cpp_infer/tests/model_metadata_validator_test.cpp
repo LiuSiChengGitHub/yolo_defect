@@ -64,6 +64,11 @@ std::string mutate_for_case(
         yolo_defect_cpp::ObservedTensorDataType::kFloat16;
     return "input[0].dtype";
   }
+  if (case_name == "output_dtype_mismatch") {
+    metadata.outputs.front().dtype =
+        yolo_defect_cpp::ObservedTensorDataType::kFloat16;
+    return "output[0].dtype";
+  }
   if (case_name == "output_name_mismatch") {
     metadata.outputs.front().name = "wrong_output";
     return "output[0].name";
@@ -79,6 +84,10 @@ std::string mutate_for_case(
   if (case_name == "provider_unavailable") {
     metadata.available_providers.clear();
     return "runtime.available_providers";
+  }
+  if (case_name == "session_provider_mismatch") {
+    metadata.session_provider = "CUDAExecutionProvider";
+    return "session.provider";
   }
   throw std::runtime_error("Unknown synthetic metadata test case: " +
                            case_name);

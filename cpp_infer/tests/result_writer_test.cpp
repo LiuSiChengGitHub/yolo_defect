@@ -2,6 +2,9 @@
 
 #include <gtest/gtest.h>
 
+#include <chrono>
+#include <filesystem>
+#include <fstream>
 #include <limits>
 #include <locale>
 #include <stdexcept>
@@ -196,6 +199,46 @@ TEST(ResultWriterJsonTest, IgnoresTheProcessDecimalLocale) {
             std::string::npos)
       << json;
   EXPECT_EQ(json.find("0,25"), std::string::npos) << json;
+}
+
+TEST(ResultWriterFileTest, RejectsRegularFileUsedAsOutputParent) {
+  const auto unique_suffix = std::chrono::steady_clock::now()
+                                 .time_since_epoch()
+                                 .count();
+  const std::filesystem::path test_root =
+      std::filesystem::temp_directory_path() /
+      ("yolo_defect_s1_06_output_" + std::to_string(unique_suffix));
+  const std::filesystem::path source_image = test_root / "source_image.jpg";
+  const std::filesystem::path blocked_parent = test_root / "blocked_parent";
+  ASSERT_TRUE(std::filesystem::create_directories(test_root));
+  {
+    std::ofstream source(source_image, std::ios::binary);
+    ASSERT_TRUE(source.is_open());
+    source << "synthetic source placeholder";
+  }
+  {
+    std::ofstream blocker(blocked_parent, std::ios::binary);
+    ASSERT_TRUE(blocker.is_open());
+    blocker << "this regular file cannot be an output directory";
+  }
+
+  SingleImageDetectionResult result = make_valid_result();
+  result.image.source_path = source_image;
+  DetectionOutputRequest request;
+  request.json_path = blocked_parent / "detections.json";
+
+  const std::string message = capture_runtime_error([&] {
+    (void)write_detection_outputs(result, request, {});
+  });
+
+  EXPECT_NE(message.find("output.json_path"), std::string::npos) << message;
+  EXPECT_NE(message.find("expected"), std::string::npos) << message;
+  EXPECT_NE(message.find("actual"), std::string::npos) << message;
+  EXPECT_NE(message.find("action:"), std::string::npos) << message;
+
+  std::error_code cleanup_error;
+  std::filesystem::remove_all(test_root, cleanup_error);
+  EXPECT_FALSE(cleanup_error) << cleanup_error.message();
 }
 
 }  // namespace

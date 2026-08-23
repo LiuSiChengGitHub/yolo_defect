@@ -453,6 +453,26 @@ TEST(PostprocessOrderTest, RunsNmsBeforeCoordinateRestoreAndClip) {
   }
 }
 
+TEST(PostprocessEmptyTest, ValidTensorWithNoScoreAboveThresholdIsEmpty) {
+  const RuntimeContract contract = make_contract(2, {"defect"});
+  InferenceOutput output = make_output(1, 2);
+  set_bcn_value(output, 4, 0, 0.25F);
+  set_bcn_value(output, 4, 1, 0.1F);
+
+  PreprocessResult preprocess;
+  preprocess.original_width = 100;
+  preprocess.original_height = 100;
+  preprocess.original_channels = 3;
+  preprocess.input_width = 100;
+  preprocess.input_height = 100;
+  preprocess.resized_width = 100;
+  preprocess.resized_height = 100;
+  preprocess.scale = 1.0;
+
+  EXPECT_TRUE(
+      postprocess_yolov8_raw(output, contract, preprocess).empty());
+}
+
 TEST(PostprocessContractTest, RejectsPreprocessFromDifferentInputSize) {
   const RuntimeContract contract = make_contract(1, {"defect"});
   InferenceOutput output = make_output(1, 1);

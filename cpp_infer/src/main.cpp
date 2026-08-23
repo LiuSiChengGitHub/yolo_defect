@@ -1,12 +1,16 @@
+#include "yolo_defect_cpp/benchmark_runner.h"
+#include "yolo_defect_cpp/benchmark_writer.h"
 #include "yolo_defect_cpp/config_loader.h"
 #include "yolo_defect_cpp/detector_pipeline.h"
 #include "yolo_defect_cpp/image_preprocessor.h"
 #include "yolo_defect_cpp/onnx_runner.h"
 
 #include <algorithm>
+#include <charconv>
 #include <cmath>
 #include <cstdint>
 #include <exception>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -20,11 +24,17 @@ struct CliOptions {
   bool show_help = false;
   bool inspect_model = false;
   bool raw_output_summary = false;
+  bool benchmark = false;
   bool overwrite_existing = false;
+  bool warmup_provided = false;
+  bool repeat_provided = false;
+  std::size_t warmup = 10;
+  std::size_t repeat = 100;
   std::string config_path;
   std::string image_path;
   std::string output_json_path;
   std::string output_image_path;
+  std::string benchmark_json_path;
 };
 
 struct NumericSummary {
@@ -59,7 +69,7 @@ std::string format_class_names(const std::vector<std::string>& class_names) {
 
 void print_help(const char* program_name) {
   std::cout
-      << "yolo_defect_cpp - S1-05 single-image detection CLI\n"
+      << "yolo_defect_cpp - S1-08 reproducible CPU benchmark CLI\n"
       << "\n"
       << "Usage:\n"
       << "  " << program_name << " [--help]\n"
@@ -74,6 +84,10 @@ void print_help(const char* program_name) {
       << "  " << program_name
       << " --config <config_path> --image <image_path>"
          " [--output-json <path>] [--output-image <path>] [--overwrite]\n"
+      << "  " << program_name
+      << " --config <config_path> --image <image_path> --benchmark"
+         " --warmup <count> --repeat <count>"
+         " --benchmark-json <path> [--overwrite]\n"
       << "\n"
       << "Scope:\n"
       << "  Loads and validates RuntimeConfig + ModelArtifactSpec.\n"
@@ -84,22 +98,28 @@ void print_help(const char* program_name) {
       << "  raw inference, and prints only bounded tensor summaries.\n"
       << "  --output-json and --output-image run the S1-05 single-image\n"
       << "  pipeline: preprocess, ORT inference, tested postprocess, and files.\n"
+      << "  --benchmark runs the Release-only S1-08 batch-1 CPU protocol.\n"
+      << "  Defaults are --warmup 10 and --repeat 100. It reports mean/P50/P95\n"
+      << "  for image decode, preprocess, Session::Run, postprocess, pipeline,\n"
+      << "  and end-to-end, then writes machine-readable --benchmark-json.\n"
+      << "  Session/model initialization, statistics, JSON writing, and drawing\n"
+      << "  are outside repeated timing; drawing is not executed.\n"
       << "  Output parents are created recursively. Existing regular files are\n"
       << "  rejected unless --overwrite is explicit; paths matching protected\n"
       << "  inputs are rejected before writing. Relative CLI image/output paths\n"
-      << "  use the current working\n"
-      << "  directory. No GUI, batch, concurrency, service, or benchmark exists.\n";
+      << "  use the current working directory. No GUI, batch processing,\n"
+      << "  concurrency, service, INT8, or cross-platform matrix exists.\n";
 }
 
 void print_banner() {
   std::cout
-      << "yolo_defect_cpp - S1-05 single-image detection CLI\n"
+      << "yolo_defect_cpp - S1-08 reproducible CPU benchmark CLI\n"
       << "V2 Runtime: industrial vision AI deployment workspace\n"
-      << "Current scope: contract + preprocess + ORT + postprocess + stable "
-         "single-image JSON/visualization\n"
-      << "Run with --help for the reproducible single-image command.\n"
-      << "Batch, concurrency, service, consistency, and benchmark are not "
-         "part of S1-05.\n";
+      << "Current scope: validated single-image detection, S1-07 consistency "
+         "evidence, and S1-08 Release CPU benchmark evidence\n"
+      << "Run with --help for the fixed single-image and benchmark commands.\n"
+      << "Batch processing, concurrency, service, and INT8 are not part of "
+         "this Runtime scope.\n";
 }
 
 void print_contract_summary(
@@ -320,6 +340,84 @@ void print_single_image_summary(
          "GUI. No batch, concurrency, service, consistency, or benchmark.\n";
 }
 
+void print_latency_statistics(
+    const std::string& name,
+    const yolo_defect_cpp::LatencyStatistics& statistics) {
+  std::cout
+      << name << ".mean_ms: " << statistics.mean_ms << "\n"
+      << name << ".p50_ms: " << statistics.p50_ms << "\n"
+      << name << ".p95_ms: " << statistics.p95_ms << "\n";
+}
+
+void print_benchmark_summary(
+    const yolo_defect_cpp::BenchmarkResult& result,
+    const std::filesystem::path& output_path) {
+  std::cout
+      << "S1-08 reproducible Release benchmark completed\n"
+      << "benchmark_json: " << output_path.string() << "\n"
+      << "build_type: " << result.environment.build_type << "\n"
+      << "requested_provider: " << result.runtime.requested_provider << "\n"
+      << "actual_provider: " << result.runtime.actual_provider << "\n"
+      << "execution_mode: " << result.runtime.execution_mode << "\n"
+      << "intra_op_num_threads: "
+      << result.runtime.intra_op_num_threads << "\n"
+      << "inter_op_num_threads: "
+      << result.runtime.inter_op_num_threads << "\n"
+      << "batch_size: " << result.batch_size << "\n"
+      << "sample_count: " << result.sample_count << "\n"
+      << "warmup: " << result.warmup << "\n"
+      << "repeat: " << result.repeat << "\n"
+      << "detection_count: " << result.sample.detection_count << "\n"
+      << std::fixed << std::setprecision(6);
+  print_latency_statistics("image_decode", result.latency.image_decode);
+  print_latency_statistics("preprocess", result.latency.preprocess);
+  print_latency_statistics("session_run", result.latency.session_run);
+  print_latency_statistics("postprocess", result.latency.postprocess);
+  print_latency_statistics("pipeline", result.latency.pipeline);
+  print_latency_statistics("end_to_end", result.latency.end_to_end);
+  std::cout
+      << "pipeline.throughput_images_per_second: "
+      << result.latency.pipeline_throughput_images_per_second << "\n"
+      << "end_to_end.throughput_images_per_second: "
+      << result.latency.end_to_end_throughput_images_per_second << "\n"
+      << "memory.status: " << result.memory.status << "\n";
+  if (result.memory.supported) {
+    std::cout
+        << "memory.metric: " << result.memory.metric << "\n"
+        << "memory.bytes: " << result.memory.bytes << "\n"
+        << "memory.mebibytes: " << result.memory.mebibytes << "\n";
+  } else {
+    std::cout << "memory.reason: " << result.memory.reason << "\n";
+  }
+  std::cout
+      << "timing_exclusions: Runtime/session initialization, statistics, "
+         "benchmark JSON write, and visualization\n"
+      << "scope: fixed single image, batch=1, CPU, warm-cache Release "
+         "benchmark; see JSON limitations before comparison.\n";
+}
+
+std::size_t parse_count_value(const std::string& value,
+                              const std::string& option,
+                              std::size_t minimum) {
+  std::size_t parsed = 0;
+  const char* const begin = value.data();
+  const char* const end = begin + value.size();
+  const std::from_chars_result conversion =
+      std::from_chars(begin, end, parsed, 10);
+  constexpr std::size_t kMaximumIterations = 1000000;
+  if (value.empty() || conversion.ec != std::errc{} ||
+      conversion.ptr != end || parsed < minimum ||
+      parsed > kMaximumIterations) {
+    throw std::runtime_error(
+        "CLI argument error: object=" + option +
+        "; expected=an integer in [" + std::to_string(minimum) +
+        ",1000000]; actual='" + value +
+        "'; action=use --warmup 10 and --repeat 100 for the formal "
+        "S1-08 baseline.");
+  }
+  return parsed;
+}
+
 CliOptions parse_cli(int argc, char* argv[]) {
   CliOptions options;
   const auto read_path_value = [argc, argv](int& index,
@@ -382,6 +480,43 @@ CliOptions parse_cli(int argc, char* argv[]) {
       continue;
     }
 
+    if (argument == "--benchmark-json") {
+      if (!options.benchmark_json_path.empty()) {
+        throw std::runtime_error(
+            "--benchmark-json was provided more than once.");
+      }
+      options.benchmark_json_path = read_path_value(index, argument);
+      continue;
+    }
+
+    if (argument == "--benchmark") {
+      if (options.benchmark) {
+        throw std::runtime_error("--benchmark was provided more than once.");
+      }
+      options.benchmark = true;
+      continue;
+    }
+
+    if (argument == "--warmup") {
+      if (options.warmup_provided) {
+        throw std::runtime_error("--warmup was provided more than once.");
+      }
+      const std::string value = read_path_value(index, argument);
+      options.warmup = parse_count_value(value, argument, 0);
+      options.warmup_provided = true;
+      continue;
+    }
+
+    if (argument == "--repeat") {
+      if (options.repeat_provided) {
+        throw std::runtime_error("--repeat was provided more than once.");
+      }
+      const std::string value = read_path_value(index, argument);
+      options.repeat = parse_count_value(value, argument, 1);
+      options.repeat_provided = true;
+      continue;
+    }
+
     if (argument == "--overwrite") {
       if (options.overwrite_existing) {
         throw std::runtime_error("--overwrite was provided more than once.");
@@ -425,6 +560,37 @@ CliOptions parse_cli(int argc, char* argv[]) {
   }
   const bool output_requested = !options.output_json_path.empty() ||
                                 !options.output_image_path.empty();
+  if (!options.benchmark && !options.benchmark_json_path.empty()) {
+    throw std::runtime_error("--benchmark-json requires --benchmark.");
+  }
+  if (!options.benchmark && options.warmup_provided) {
+    throw std::runtime_error("--warmup requires --benchmark.");
+  }
+  if (!options.benchmark && options.repeat_provided) {
+    throw std::runtime_error("--repeat requires --benchmark.");
+  }
+  if (options.benchmark && options.config_path.empty()) {
+    throw std::runtime_error("--benchmark requires --config.");
+  }
+  if (options.benchmark && options.image_path.empty()) {
+    throw std::runtime_error("--benchmark requires --image.");
+  }
+  if (options.benchmark && options.benchmark_json_path.empty()) {
+    throw std::runtime_error("--benchmark requires --benchmark-json.");
+  }
+  if (options.benchmark && output_requested) {
+    throw std::runtime_error(
+        "--benchmark and --output-json/--output-image are mutually "
+        "exclusive.");
+  }
+  if (options.benchmark && options.inspect_model) {
+    throw std::runtime_error(
+        "--benchmark and --inspect-model are mutually exclusive.");
+  }
+  if (options.benchmark && options.raw_output_summary) {
+    throw std::runtime_error(
+        "--benchmark and --raw-output-summary are mutually exclusive.");
+  }
   if (output_requested && options.config_path.empty()) {
     throw std::runtime_error(
         "--output-json/--output-image require --config.");
@@ -443,9 +609,11 @@ CliOptions parse_cli(int argc, char* argv[]) {
     throw std::runtime_error(
         "--output-json/--output-image require --image.");
   }
-  if (options.overwrite_existing && !output_requested) {
+  if (options.overwrite_existing && !output_requested &&
+      options.benchmark_json_path.empty()) {
     throw std::runtime_error(
-        "--overwrite requires --output-json or --output-image.");
+        "--overwrite requires --output-json or --output-image, or "
+        "--benchmark-json.");
   }
   if (options.inspect_model && options.raw_output_summary) {
     throw std::runtime_error(
@@ -471,7 +639,29 @@ int main(int argc, char* argv[]) {
     if (!options.config_path.empty()) {
       const yolo_defect_cpp::RuntimeContract contract =
           yolo_defect_cpp::load_runtime_contract(options.config_path);
-      if (options.inspect_model) {
+      if (options.benchmark) {
+        yolo_defect_cpp::BenchmarkRequest request;
+        request.image_path = options.image_path;
+        request.warmup = options.warmup;
+        request.repeat = options.repeat;
+        request.command_arguments.reserve(static_cast<std::size_t>(argc));
+        for (int index = 0; index < argc; ++index) {
+          request.command_arguments.emplace_back(argv[index]);
+        }
+
+        yolo_defect_cpp::BenchmarkRunner runner(contract);
+        const yolo_defect_cpp::BenchmarkResult result = runner.run(request);
+        const std::vector<std::filesystem::path> protected_paths = {
+            contract.runtime.declaration_path,
+            contract.artifact.declaration_path,
+            contract.artifact.model_path,
+            std::filesystem::path(options.image_path)};
+        const std::filesystem::path written_path =
+            yolo_defect_cpp::write_benchmark_json(
+                result, options.benchmark_json_path,
+                options.overwrite_existing, protected_paths);
+        print_benchmark_summary(result, written_path);
+      } else if (options.inspect_model) {
         const yolo_defect_cpp::OnnxRunner runner(contract);
         print_model_metadata_summary(contract, runner.metadata());
       } else if (options.image_path.empty()) {

@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(yolo_defect_cpp
-  VERSION 0.6.0
-  DESCRIPTION "C++ ONNX single-image detection runtime and stable outputs"
+  VERSION 0.7.0
+  DESCRIPTION "C++ ONNX single-image runtime with reproducible CPU benchmark evidence"
   LANGUAGES CXX
 )
 
 if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   message(FATAL_ERROR
-    "S1-05 requires a 64-bit toolchain for the pinned Windows x64 "
-    "ONNX Runtime SDK. Re-enter the x64 Visual Studio developer environment.")
+    "The pinned Windows x64 ONNX Runtime SDK requires a 64-bit toolchain. "
+    "Re-enter the x64 Visual Studio developer environment.")
 endif()
 
 find_package(OpenCV 4.8 REQUIRED COMPONENTS core imgcodecs imgproc)
@@ -74,8 +74,12 @@ set_target_properties(onnxruntime::onnxruntime PROPERTIES
 
 add_library(yolo_defect_runtime STATIC
   src/artifact_spec.cpp
+  src/benchmark_result.cpp
+  src/benchmark_runner.cpp
+  src/benchmark_writer.cpp
   src/config_loader.cpp
   src/detector_pipeline.cpp
+  src/image_decoder.cpp
   src/image_preprocessor.cpp
   src/key_value_parser.cpp
   src/model_metadata.cpp
@@ -96,6 +100,15 @@ target_link_libraries(yolo_defect_runtime
   PRIVATE
     ${OpenCV_LIBS}
     onnxruntime::onnxruntime
+)
+if(WIN32)
+  target_link_libraries(yolo_defect_runtime PRIVATE Psapi)
+endif()
+target_compile_definitions(yolo_defect_runtime PRIVATE
+  "YOLO_DEFECT_BUILD_TYPE=\"$<CONFIG>\""
+  "YOLO_DEFECT_COMPILER_ID=\"${CMAKE_CXX_COMPILER_ID}\""
+  "YOLO_DEFECT_COMPILER_VERSION=\"${CMAKE_CXX_COMPILER_VERSION}\""
+  "YOLO_DEFECT_OPENCV_VERSION=\"${OpenCV_VERSION}\""
 )
 set_target_properties(yolo_defect_runtime PROPERTIES
   CXX_EXTENSIONS OFF
@@ -158,6 +171,26 @@ if(BUILD_TESTING)
   include(GoogleTest)
   find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)
 
+  execute_process(
+    COMMAND "${Python3_EXECUTABLE}" -c
+      "import cv2,numpy,onnxruntime as ort; assert ort.__version__ == '1.19.2', ort.__version__; assert 'CPUExecutionProvider' in ort.get_available_providers(), ort.get_available_providers(); print('Python consistency dependencies:', 'onnxruntime='+ort.__version__, 'opencv='+cv2.__version__, 'numpy='+numpy.__version__)"
+    RESULT_VARIABLE S1_07_PYTHON_DEPENDENCY_RESULT
+    OUTPUT_VARIABLE S1_07_PYTHON_DEPENDENCY_OUTPUT
+    ERROR_VARIABLE S1_07_PYTHON_DEPENDENCY_ERROR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_STRIP_TRAILING_WHITESPACE
+  )
+  if(NOT S1_07_PYTHON_DEPENDENCY_RESULT EQUAL 0)
+    message(FATAL_ERROR
+      "S1-07 Python consistency dependencies are unavailable from "
+      "Python3_EXECUTABLE='${Python3_EXECUTABLE}'. Expected importable "
+      "numpy, OpenCV Python, and onnxruntime 1.19.2 with "
+      "CPUExecutionProvider. Actual error: "
+      "${S1_07_PYTHON_DEPENDENCY_ERROR}. Select the documented Python "
+      "environment; CMake will not install packages automatically.")
+  endif()
+  message(STATUS "${S1_07_PYTHON_DEPENDENCY_OUTPUT}")
+
   set(DEFAULT_CONFIG
     "${CMAKE_CURRENT_SOURCE_DIR}/configs/default_config.txt")
   set(TEST_RUNTIME_FIXTURES
@@ -174,8 +207,29 @@ if(BUILD_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_single_image_outputs.cmake")
   set(TEST_DETECTION_JSON_VALIDATOR
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_detection_json.py")
+  set(TEST_BENCHMARK_SCRIPT
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_benchmark.cmake")
+  set(TEST_BENCHMARK_JSON_VALIDATOR
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_benchmark_json.py")
+  set(CONSISTENCY_MANIFEST
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consistency_manifest.json")
+  set(CONSISTENCY_TOOL
+    "${CMAKE_CURRENT_SOURCE_DIR}/tools/compare_consistency.py")
+  set(CONSISTENCY_UNIT_TEST
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_consistency.py")
   set(FIXED_IMAGE
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/images/val/crazing_241.jpg")
+  set(S1_06_FAULT_INPUT_ROOT
+    "${CMAKE_BINARY_DIR}/test_inputs/s1_06_faults")
+  file(MAKE_DIRECTORY "${S1_06_FAULT_INPUT_ROOT}")
+  set(DAMAGED_IMAGE
+    "${S1_06_FAULT_INPUT_ROOT}/damaged_image.jpg")
+  file(WRITE "${DAMAGED_IMAGE}"
+    "S1-06 synthetic damaged image: deliberately not encoded image bytes.\n")
+  set(BLOCKED_OUTPUT_PARENT
+    "${S1_06_FAULT_INPUT_ROOT}/blocked_output_parent")
+  file(WRITE "${BLOCKED_OUTPUT_PARENT}"
+    "S1-06 regular file that cannot be used as an output directory.\n")
 
   add_executable(yolo_defect_metadata_tests
     tests/model_metadata_validator_test.cpp
@@ -215,7 +269,7 @@ if(BUILD_TESTING)
   )
   gtest_discover_tests(yolo_defect_postprocess_tests
     TEST_PREFIX "postprocess."
-    PROPERTIES LABELS "postprocess"
+    PROPERTIES LABELS "postprocess\\;unit\\;quality_gate"
     DISCOVERY_TIMEOUT 30
   )
 
@@ -237,7 +291,7 @@ if(BUILD_TESTING)
   )
   gtest_discover_tests(yolo_defect_preprocessor_tests
     TEST_PREFIX "preprocess."
-    PROPERTIES LABELS "preprocess"
+    PROPERTIES LABELS "preprocess\\;unit\\;quality_gate"
     DISCOVERY_TIMEOUT 30
   )
 
@@ -256,7 +310,26 @@ if(BUILD_TESTING)
   )
   gtest_discover_tests(yolo_defect_output_tests
     TEST_PREFIX "output."
-    PROPERTIES LABELS "output"
+    PROPERTIES LABELS "output\\;unit\\;quality_gate"
+    DISCOVERY_TIMEOUT 30
+  )
+
+  add_executable(yolo_defect_benchmark_tests
+    tests/benchmark_test.cpp
+  )
+  target_compile_features(yolo_defect_benchmark_tests PRIVATE cxx_std_17)
+  target_link_libraries(yolo_defect_benchmark_tests
+    PRIVATE
+      yolo_defect::runtime
+      GTest::gtest_main
+  )
+  set_target_properties(yolo_defect_benchmark_tests PROPERTIES
+    CXX_EXTENSIONS OFF
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+  )
+  gtest_discover_tests(yolo_defect_benchmark_tests
+    TEST_PREFIX "benchmark."
+    PROPERTIES LABELS "benchmark\;unit\;quality_gate"
     DISCOVERY_TIMEOUT 30
   )
 
@@ -277,7 +350,8 @@ if(BUILD_TESTING)
     COMMAND $<TARGET_FILE:yolo_defect_cpp> --help
   )
   set_tests_properties(yolo_defect_cpp_help PROPERTIES
-    PASS_REGULAR_EXPRESSION "S1-05 single-image detection CLI"
+    LABELS "cli;smoke;quality_gate"
+    PASS_REGULAR_EXPRESSION "S1-08 reproducible CPU benchmark CLI"
   )
 
   add_test(
@@ -285,6 +359,7 @@ if(BUILD_TESTING)
     COMMAND $<TARGET_FILE:yolo_defect_cpp> --config "${DEFAULT_CONFIG}"
   )
   set_tests_properties(yolo_defect_cpp_config PROPERTIES
+    LABELS "contract;smoke;quality_gate"
     PASS_REGULAR_EXPRESSION "S1-01 Runtime/artifact contract summary"
   )
 
@@ -295,6 +370,7 @@ if(BUILD_TESTING)
       --image "${FIXED_IMAGE}"
   )
   set_tests_properties(yolo_defect_cpp_preprocess PROPERTIES
+    LABELS "preprocess;smoke;quality_gate"
     PASS_REGULAR_EXPRESSION "S1-01 Preprocess summary"
   )
 
@@ -310,6 +386,8 @@ if(BUILD_TESTING)
       "-DSECOND_CWD=${PATH_INDEPENDENCE_CWD}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_path_independence.cmake"
   )
+  set_tests_properties(yolo_defect_cpp_relative_paths PROPERTIES
+    LABELS "contract;quality_gate")
 
   add_test(
     NAME yolo_defect_cpp_inspect_model
@@ -318,6 +396,8 @@ if(BUILD_TESTING)
       "-DCONFIG=${DEFAULT_CONFIG}"
       -P "${TEST_INSPECTION_SCRIPT}"
   )
+  set_tests_properties(yolo_defect_cpp_inspect_model PROPERTIES
+    LABELS "metadata;integration;quality_gate")
 
   add_test(
     NAME yolo_defect_cpp_raw_output_summary
@@ -327,6 +407,8 @@ if(BUILD_TESTING)
       "-DIMAGE=${FIXED_IMAGE}"
       -P "${TEST_RAW_OUTPUT_SCRIPT}"
   )
+  set_tests_properties(yolo_defect_cpp_raw_output_summary PROPERTIES
+    LABELS "inference;integration;quality_gate")
 
   add_test(
     NAME yolo_defect_cpp_single_image_outputs
@@ -341,7 +423,46 @@ if(BUILD_TESTING)
       -P "${TEST_SINGLE_IMAGE_OUTPUT_SCRIPT}"
   )
   set_tests_properties(yolo_defect_cpp_single_image_outputs PROPERTIES
-    LABELS "output;integration"
+    LABELS "output;integration;quality_gate"
+  )
+
+  add_test(
+    NAME yolo_defect_consistency_unit
+    COMMAND "${Python3_EXECUTABLE}" "${CONSISTENCY_UNIT_TEST}" -v
+  )
+  set_tests_properties(yolo_defect_consistency_unit PROPERTIES
+    LABELS "consistency;unit;quality_gate"
+  )
+
+  add_test(
+    NAME yolo_defect_python_cpp_consistency
+    COMMAND "${Python3_EXECUTABLE}" "${CONSISTENCY_TOOL}"
+      --manifest "${CONSISTENCY_MANIFEST}"
+      --cpp-cli $<TARGET_FILE:yolo_defect_cpp>
+      --cpp-opencv-version "${OpenCV_VERSION}"
+      --output-dir "${CMAKE_BINARY_DIR}/test_outputs/consistency"
+  )
+  set_tests_properties(yolo_defect_python_cpp_consistency PROPERTIES
+    LABELS "consistency;integration;quality_gate"
+    PASS_REGULAR_EXPRESSION "Consistency summary: passed=True"
+    TIMEOUT 600
+  )
+
+  add_test(
+    NAME yolo_defect_cpp_benchmark_smoke
+    COMMAND "${CMAKE_COMMAND}"
+      "-DCLI=$<TARGET_FILE:yolo_defect_cpp>"
+      "-DCONFIG=${DEFAULT_CONFIG}"
+      "-DIMAGE=${FIXED_IMAGE}"
+      "-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/test_outputs/benchmark"
+      "-DPYTHON=${Python3_EXECUTABLE}"
+      "-DJSON_VALIDATOR=${TEST_BENCHMARK_JSON_VALIDATOR}"
+      -P "${TEST_BENCHMARK_SCRIPT}"
+  )
+  set_tests_properties(yolo_defect_cpp_benchmark_smoke PROPERTIES
+    LABELS "benchmark;integration;quality_gate"
+    DEPENDS yolo_defect_python_cpp_consistency
+    TIMEOUT 180
   )
 
   function(add_cli_argument_failure_test test_name expected_text)
@@ -354,7 +475,24 @@ if(BUILD_TESTING)
         "-DEXPECTED_TEXT=${expected_text}"
         -P "${TEST_CLI_ARGUMENT_FAILURE_SCRIPT}"
     )
-    set_tests_properties("${test_name}" PROPERTIES LABELS "output;negative")
+    set_tests_properties("${test_name}" PROPERTIES
+      LABELS "output;cli;negative;quality_gate")
+  endfunction()
+
+  function(add_cli_quality_failure_test
+      test_name expected_text required_texts)
+    string(JOIN "|" serialized_arguments ${ARGN})
+    add_test(
+      NAME "${test_name}"
+      COMMAND "${CMAKE_COMMAND}"
+        "-DCLI=$<TARGET_FILE:yolo_defect_cpp>"
+        "-DARGS=${serialized_arguments}"
+        "-DEXPECTED_TEXT=${expected_text}"
+        "-DREQUIRED_TEXTS=${required_texts}"
+        -P "${TEST_CLI_ARGUMENT_FAILURE_SCRIPT}"
+    )
+    set_tests_properties("${test_name}" PROPERTIES
+      LABELS "cli;negative;quality_gate")
   endfunction()
 
   set(CLI_FAILURE_OUTPUT_ROOT
@@ -417,11 +555,71 @@ if(BUILD_TESTING)
     --image "${FIXED_IMAGE}"
     --output-json "${CLI_FAILURE_DIRECTORY_TARGET}")
 
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_benchmark_json_requires_mode
+    "--benchmark-json requires --benchmark"
+    --benchmark-json "${CLI_FAILURE_OUTPUT_ROOT}/benchmark.json")
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_benchmark_requires_image
+    "--benchmark requires --image"
+    --config "${DEFAULT_CONFIG}"
+    --benchmark
+    --benchmark-json "${CLI_FAILURE_OUTPUT_ROOT}/benchmark.json")
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_benchmark_requires_json
+    "--benchmark requires --benchmark-json"
+    --config "${DEFAULT_CONFIG}"
+    --image "${FIXED_IMAGE}"
+    --benchmark)
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_benchmark_invalid_repeat
+    "object=--repeat"
+    --config "${DEFAULT_CONFIG}"
+    --image "${FIXED_IMAGE}"
+    --benchmark
+    --repeat 0
+    --benchmark-json "${CLI_FAILURE_OUTPUT_ROOT}/benchmark.json")
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_benchmark_output_conflict
+    "mutually exclusive"
+    --config "${DEFAULT_CONFIG}"
+    --image "${FIXED_IMAGE}"
+    --benchmark
+    --output-json "${CLI_FAILURE_OUTPUT_ROOT}/detections.json"
+    --benchmark-json "${CLI_FAILURE_OUTPUT_ROOT}/benchmark.json")
+  set_tests_properties(
+    yolo_defect_cpp_benchmark_json_requires_mode
+    yolo_defect_cpp_benchmark_requires_image
+    yolo_defect_cpp_benchmark_requires_json
+    yolo_defect_cpp_benchmark_invalid_repeat
+    yolo_defect_cpp_benchmark_output_conflict
+    PROPERTIES LABELS "benchmark;cli;negative;quality_gate")
+
+  add_cli_quality_failure_test(
+    yolo_defect_cpp_damaged_image
+    "OpenCV decoding returned an empty image"
+    "object image_path^expected^actual^action:"
+    --config "${DEFAULT_CONFIG}"
+    --image "${DAMAGED_IMAGE}")
+  add_cli_quality_failure_test(
+    yolo_defect_cpp_output_unwritable_parent
+    "output.json_path"
+    "expected^actual^action:"
+    --config "${DEFAULT_CONFIG}"
+    --image "${FIXED_IMAGE}"
+    --output-json "${BLOCKED_OUTPUT_PARENT}/detections.json")
+  set_tests_properties(yolo_defect_cpp_damaged_image PROPERTIES
+    LABELS "preprocess;cli;negative;quality_gate")
+  set_tests_properties(yolo_defect_cpp_output_unwritable_parent PROPERTIES
+    LABELS "output;cli;negative;quality_gate")
+
   add_test(
     NAME yolo_defect_runner_invalid_input_elements
     COMMAND $<TARGET_FILE:yolo_defect_inference_tests>
       "${DEFAULT_CONFIG}" "${FIXED_IMAGE}"
   )
+  set_tests_properties(yolo_defect_runner_invalid_input_elements PROPERTIES
+    LABELS "inference;negative;quality_gate")
 
   function(add_contract_failure_test test_name fixture_name expected_text)
     add_test(
@@ -432,6 +630,8 @@ if(BUILD_TESTING)
         "-DEXPECTED_TEXT=${expected_text}"
         -P "${TEST_FAILURE_SCRIPT}"
     )
+    set_tests_properties("${test_name}" PROPERTIES
+      LABELS "contract;negative;quality_gate")
   endfunction()
 
   function(add_inspection_failure_test
@@ -445,6 +645,8 @@ if(BUILD_TESTING)
         "-DINSPECT_MODEL=ON"
         -P "${TEST_FAILURE_SCRIPT}"
     )
+    set_tests_properties("${test_name}" PROPERTIES
+      LABELS "metadata;negative;quality_gate")
   endfunction()
 
   add_contract_failure_test(
@@ -459,6 +661,10 @@ if(BUILD_TESTING)
     yolo_defect_cpp_duplicate_field
     duplicate_field.txt
     "duplicate field")
+  add_contract_failure_test(
+    yolo_defect_cpp_unsupported_runtime_schema
+    unsupported_schema.txt
+    "unsupported schema version")
   add_contract_failure_test(
     yolo_defect_cpp_invalid_score_threshold
     invalid_score_threshold.txt
@@ -479,6 +685,26 @@ if(BUILD_TESTING)
     yolo_defect_cpp_invalid_artifact_enum
     invalid_enum_artifact.txt
     "unsupported enum value")
+  add_contract_failure_test(
+    yolo_defect_cpp_missing_artifact_field
+    missing_artifact_field.txt
+    "missing required field")
+  add_contract_failure_test(
+    yolo_defect_cpp_unknown_artifact_field
+    unknown_artifact_field.txt
+    "unknown field")
+  add_contract_failure_test(
+    yolo_defect_cpp_duplicate_artifact_field
+    duplicate_artifact_field.txt
+    "duplicate field")
+  add_contract_failure_test(
+    yolo_defect_cpp_unsupported_artifact_schema
+    unsupported_artifact_schema.txt
+    "unsupported schema version")
+  add_contract_failure_test(
+    yolo_defect_cpp_duplicate_artifact_class
+    duplicate_artifact_class.txt
+    "duplicate class name")
   add_contract_failure_test(
     yolo_defect_cpp_invalid_output_shape
     invalid_shape_artifact.txt
@@ -511,6 +737,8 @@ if(BUILD_TESTING)
       COMMAND $<TARGET_FILE:yolo_defect_metadata_tests>
         "${DEFAULT_CONFIG}" "${case_name}"
     )
+    set_tests_properties("yolo_defect_metadata_${case_name}" PROPERTIES
+      LABELS "metadata;unit;quality_gate")
   endfunction()
 
   add_metadata_validator_test(valid)
@@ -519,8 +747,10 @@ if(BUILD_TESTING)
   add_metadata_validator_test(input_name_mismatch)
   add_metadata_validator_test(input_shape_mismatch)
   add_metadata_validator_test(input_dtype_mismatch)
+  add_metadata_validator_test(output_dtype_mismatch)
   add_metadata_validator_test(output_name_mismatch)
   add_metadata_validator_test(output_shape_mismatch)
   add_metadata_validator_test(class_count_mismatch)
   add_metadata_validator_test(provider_unavailable)
+  add_metadata_validator_test(session_provider_mismatch)
 endif()

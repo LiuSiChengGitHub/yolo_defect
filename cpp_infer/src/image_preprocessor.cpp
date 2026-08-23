@@ -1,5 +1,7 @@
 #include "yolo_defect_cpp/image_preprocessor.h"
 
+#include "image_decoder.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -8,8 +10,6 @@
 #include <stdexcept>
 #include <string>
 
-#include <opencv2/core/utils/logger.hpp>
-#include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
 namespace yolo_defect_cpp {
@@ -97,14 +97,12 @@ std::vector<float> to_nchw_tensor(const cv::Mat& rgb_float) {
 
 PreprocessResult preprocess_image(const std::string& image_path,
                                    const ModelArtifactSpec& artifact) {
-  cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_ERROR);
-
-  cv::Mat bgr_image = cv::imread(image_path, cv::IMREAD_COLOR);
-  if (bgr_image.empty()) {
-    throw std::runtime_error("Failed to read image file: " + image_path);
-  }
-
-  return preprocess_image(bgr_image, artifact);
+  const std::filesystem::path normalized_path =
+      internal::normalize_image_file(image_path);
+  internal::initialize_image_decoder_logging();
+  internal::DecodedBgrImage decoded =
+      internal::decode_normalized_bgr_image(normalized_path);
+  return preprocess_image(decoded.image, artifact);
 }
 
 PreprocessResult preprocess_image(const cv::Mat& bgr_image,

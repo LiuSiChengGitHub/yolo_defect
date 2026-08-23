@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "manifest_id": "neu_det_val_6x5_v1",
+  "selection": {
+    "dataset_split": "NEU-DET validation images",
+    "rule": "For each artifact class, use fixed validation indices 241, 255, 270, 285, and 300; frozen before the first Python/C++ comparison run.",
+    "samples_per_class": 5
+  },
+  "config_path": "../../configs/default_config.txt",
+  "requirements": {
+    "python_provider": "CPUExecutionProvider",
+    "detection_count": "exact",
+    "class_id": "exact",
+    "confidence_abs_error_max": 0.0001,
+    "bbox_coordinate_abs_error_max_pixels": 0.01,
+    "matching_iou_min": 0.999,
+    "matching_strategy": "class_id_then_greedy_max_iou_with_canonical_value_tie_break"
+  },
+  "classes": [
+    {"class_id": 0, "class_name": "crazing"},
+    {"class_id": 1, "class_name": "inclusion"},
+    {"class_id": 2, "class_name": "patches"},
+    {"class_id": 3, "class_name": "pitted_surface"},
+    {"class_id": 4, "class_name": "rolled-in_scale"},
+    {"class_id": 5, "class_name": "scratches"}
+  ],
+  "samples": [
+    {"sample_id": "crazing_241", "source_class_id": 0, "source_class_name": "crazing", "image_path": "../../../data/images/val/crazing_241.jpg", "image_sha256": "1D65EF27EAA9BF27608D954DFE57B40E401FC1AED435884400F35E8000BBF98D"},
+    {"sample_id": "crazing_255", "source_class_id": 0, "source_class_name": "crazing", "image_path": "../../../data/images/val/crazing_255.jpg", "image_sha256": "A96B1FD4135862349A69A761E76DFBB3AF6FACCDC3EFB97E0D4E52A1F605076D"},
+    {"sample_id": "crazing_270", "source_class_id": 0, "source_class_name": "crazing", "image_path": "../../../data/images/val/crazing_270.jpg", "image_sha256": "4C67250C57703F8FABB6D97CC0AD72000B690E8412C071F0A63FC5A03BB2A5B7"},
+    {"sample_id": "crazing_285", "source_class_id": 0, "source_class_name": "crazing", "image_path": "../../../data/images/val/crazing_285.jpg", "image_sha256": "F93B867670DC0F2AC94CF98DB4FA8ABCAEC09BD2B3A22098BC46A20CDEA1C891"},
+    {"sample_id": "crazing_300", "source_class_id": 0, "source_class_name": "crazing", "image_path": "../../../data/images/val/crazing_300.jpg", "image_sha256": "87595C05D2A5F7792C219DFA245DCE2CFC26784E165A5172FECAAB73EAEE288D"},
+
+    {"sample_id": "inclusion_241", "source_class_id": 1, "source_class_name": "inclusion", "image_path": "../../../data/images/val/inclusion_241.jpg", "image_sha256": "5AF978330766FCF9ACD3823E99BCAC51352DCB5315F0E2D9D39109120C60DDC8"},
+    {"sample_id": "inclusion_255", "source_class_id": 1, "source_class_name": "inclusion", "image_path": "../../../data/images/val/inclusion_255.jpg", "image_sha256": "AA1149E239A31E679E30CC8B54CB5E7891F110AD1BEFDF8530CEF58A206D4188"},
+    {"sample_id": "inclusion_270", "source_class_id": 1, "source_class_name": "inclusion", "image_path": "../../../data/images/val/inclusion_270.jpg", "image_sha256": "3C3E1D109A401B6CB4ABEAA4DA07BF3D621794041C8B02E80768282614F5073A"},
+    {"sample_id": "inclusion_285", "source_class_id": 1, "source_class_name": "inclusion", "image_path": "../../../data/images/val/inclusion_285.jpg", "image_sha256": "7E4866042E496E3E7AF263172C498FF5A3D75584797CE827E4AD3DD869DE43EA"},
+    {"sample_id": "inclusion_300", "source_class_id": 1, "source_class_name": "inclusion", "image_path": "../../../data/images/val/inclusion_300.jpg", "image_sha256": "0AA52D34C0E0BAF7E5288F54CB48307C5C76492081BA736CBBDEA1EDFB94C47B"},
+
+    {"sample_id": "patches_241", "source_class_id": 2, "source_class_name": "patches", "image_path": "../../../data/images/val/patches_241.jpg", "image_sha256": "D8EE841AFE3D24B39A3F1F5656780B75CE9B1E1B6BB11CB6953A99D0CBAAFFDE"},
+    {"sample_id": "patches_255", "source_class_id": 2, "source_class_name": "patches", "image_path": "../../../data/images/val/patches_255.jpg", "image_sha256": "877905B79E570196B42D6E2BEFD56A28578A93CAAA1AD87ADCC64C6E7E2D887A"},
+    {"sample_id": "patches_270", "source_class_id": 2, "source_class_name": "patches", "image_path": "../../../data/images/val/patches_270.jpg", "image_sha256": "839E441D971B5032B74387B4C6AD73E4A763066AE091E72D34FF2D8F33B5CCDA"},
+    {"sample_id": "patches_285", "source_class_id": 2, "source_class_name": "patches", "image_path": "../../../data/images/val/patches_285.jpg", "image_sha256": "7DEF0954602B375C6D4A4C57DDF5A78851549F58F91F4B5E6370343815B029BA"},
+    {"sample_id": "patches_300", "source_class_id": 2, "source_class_name": "patches", "image_path": "../../../data/images/val/patches_300.jpg", "image_sha256": "C97E4426198AD6989DDF6C2CF1449E6231B1A6D05CC75443398C4CCC77C51D08"},
+
+    {"sample_id": "pitted_surface_241", "source_class_id": 3, "source_class_name": "pitted_surface", "image_path": "../../../data/images/val/pitted_surface_241.jpg", "image_sha256": "311893098116D7261E0B6A16E668067C7B6ABF509FC77286FAD3236EB66700F1"},
+    {"sample_id": "pitted_surface_255", "source_class_id": 3, "source_class_name": "pitted_surface", "image_path": "../../../data/images/val/pitted_surface_255.jpg", "image_sha256": "7D9A04EA3A7B664AE945103616F22EF85164B8A217A61890F02E26017C11AD05"},
+    {"sample_id": "pitted_surface_270", "source_class_id": 3, "source_class_name": "pitted_surface", "image_path": "../../../data/images/val/pitted_surface_270.jpg", "image_sha256": "4D4074AF862F2A649838D3E4EA4503D74DE1A05B3D242EEB3EFF323F9B2E1EBD"},
+    {"sample_id": "pitted_surface_285", "source_class_id": 3, "source_class_name": "pitted_surface", "image_path": "../../../data/images/val/pitted_surface_285.jpg", "image_sha256": "67BA9FBC2930C05BC1F4563F9124A711B16F1BE6424CF1DAB9278B9EDF45FEFE"},
+    {"sample_id": "pitted_surface_300", "source_class_id": 3, "source_class_name": "pitted_surface", "image_path": "../../../data/images/val/pitted_surface_300.jpg", "image_sha256": "8ED56DF34F6BCBCB5C60384C1C37B05D01365DFBB81B1A8855FBBE260718A32A"},
+
+    {"sample_id": "rolled-in_scale_241", "source_class_id": 4, "source_class_name": "rolled-in_scale", "image_path": "../../../data/images/val/rolled-in_scale_241.jpg", "image_sha256": "3AE0C8E0B0DDAB539BCB0AB86E04909543015FBBD4B0BF5EB12232E2274DEA2B"},
+    {"sample_id": "rolled-in_scale_255", "source_class_id": 4, "source_class_name": "rolled-in_scale", "image_path": "../../../data/images/val/rolled-in_scale_255.jpg", "image_sha256": "A72BCF50BDD2205F21E997197CFD9B4773F53CF38059D358C225AD7C88A140B2"},
+    {"sample_id": "rolled-in_scale_270", "source_class_id": 4, "source_class_name": "rolled-in_scale", "image_path": "../../../data/images/val/rolled-in_scale_270.jpg", "image_sha256": "5A93C2C21A0CE009675AAC1ED811CCBA0595C25EF5653BC1D3F915E8832C8741"},
+    {"sample_id": "rolled-in_scale_285", "source_class_id": 4, "source_class_name": "rolled-in_scale", "image_path": "../../../data/images/val/rolled-in_scale_285.jpg", "image_sha256": "A8CCA6D91EA7FB73283D88EFD2D30E067B6D09CE645E5E85438441683F134E99"},
+    {"sample_id": "rolled-in_scale_300", "source_class_id": 4, "source_class_name": "rolled-in_scale", "image_path": "../../../data/images/val/rolled-in_scale_300.jpg", "image_sha256": "2599551F47CDB8515D126969FE26A968F9519BF6A2EBEB7978FBEEDDD0DD9300"},
+
+    {"sample_id": "scratches_241", "source_class_id": 5, "source_class_name": "scratches", "image_path": "../../../data/images/val/scratches_241.jpg", "image_sha256": "808C8053268C526A8230DD0D1C286AF89A2F4D9E2FA015E64A9B3C0DEFC37F56"},
+    {"sample_id": "scratches_255", "source_class_id": 5, "source_class_name": "scratches", "image_path": "../../../data/images/val/scratches_255.jpg", "image_sha256": "CBCE8CEC9FCD71DD78F91976544B9544AF1C346172EFA4C335959F3FF6FD68B6"},
+    {"sample_id": "scratches_270", "source_class_id": 5, "source_class_name": "scratches", "image_path": "../../../data/images/val/scratches_270.jpg", "image_sha256": "CF07FC75C1B3FC8E03CE7EBFEB7E6881D3DAC5967012F06A1FAEC86BDB1D7A87"},
+    {"sample_id": "scratches_285", "source_class_id": 5, "source_class_name": "scratches", "image_path": "../../../data/images/val/scratches_285.jpg", "image_sha256": "5255774B455B8B94EEFA05C803D031A4F3AC8E2B7A3936D2D694B29935ACCB60"},
+    {"sample_id": "scratches_300", "source_class_id": 5, "source_class_name": "scratches", "image_path": "../../../data/images/val/scratches_300.jpg", "image_sha256": "16419BC0544FFE145AA39C786BE8AF7D45C1B740B144E4366429FB8C7912713E"}
+  ]
+}

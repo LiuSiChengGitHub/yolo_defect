@@ -15,6 +15,13 @@ struct InferenceOutput {
   std::vector<float> values;
 };
 
+struct TimedInferenceOutput {
+  InferenceOutput output;
+  // Measures only Ort::Session::Run. Input validation/tensor construction and
+  // output validation/copy are deliberately outside this interval.
+  double session_run_ms = 0.0;
+};
+
 class OnnxRunner {
  public:
   explicit OnnxRunner(const RuntimeContract& contract);
@@ -28,6 +35,9 @@ class OnnxRunner {
   const ModelMetadata& metadata() const noexcept;
   InferenceOutput run(const std::vector<std::int64_t>& input_shape,
                       std::vector<float>& input_values);
+  TimedInferenceOutput run_with_session_timing(
+      const std::vector<std::int64_t>& input_shape,
+      std::vector<float>& input_values);
 
  private:
   class Impl;

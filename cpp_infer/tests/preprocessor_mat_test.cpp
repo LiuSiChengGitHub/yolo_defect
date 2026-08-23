@@ -46,7 +46,11 @@ float tensor_value(const PreprocessResult& result, int channel,
 
 TEST(PreprocessMatTest, ConvertsKnownBgrPixelsToRgbFloatNchw) {
   const ModelArtifactSpec artifact = make_artifact(2, 2);
-  const cv::Mat bgr_image(2, 2, CV_8UC3, cv::Scalar(10, 20, 30));
+  cv::Mat bgr_image(2, 2, CV_8UC3);
+  bgr_image.at<cv::Vec3b>(0, 0) = cv::Vec3b(10, 20, 30);
+  bgr_image.at<cv::Vec3b>(0, 1) = cv::Vec3b(40, 50, 60);
+  bgr_image.at<cv::Vec3b>(1, 0) = cv::Vec3b(70, 80, 90);
+  bgr_image.at<cv::Vec3b>(1, 1) = cv::Vec3b(100, 110, 120);
 
   const PreprocessResult result = preprocess_image(bgr_image, artifact);
 
@@ -64,15 +68,14 @@ TEST(PreprocessMatTest, ConvertsKnownBgrPixelsToRgbFloatNchw) {
   EXPECT_EQ(result.pad_bottom, 0);
   ASSERT_EQ(result.tensor_nchw.size(), 12U);
 
-  for (int y = 0; y < 2; ++y) {
-    for (int x = 0; x < 2; ++x) {
-      EXPECT_NEAR(tensor_value(result, 0, y, x), 30.0F / 255.0F,
-                  1.0e-6F);
-      EXPECT_NEAR(tensor_value(result, 1, y, x), 20.0F / 255.0F,
-                  1.0e-6F);
-      EXPECT_NEAR(tensor_value(result, 2, y, x), 10.0F / 255.0F,
-                  1.0e-6F);
-    }
+  const float expected_nchw[] = {
+      30.0F, 60.0F, 90.0F, 120.0F,
+      20.0F, 50.0F, 80.0F, 110.0F,
+      10.0F, 40.0F, 70.0F, 100.0F};
+  for (std::size_t index = 0; index < result.tensor_nchw.size(); ++index) {
+    EXPECT_NEAR(result.tensor_nchw[index], expected_nchw[index] / 255.0F,
+                1.0e-6F)
+        << "flattened NCHW index=" << index;
   }
 }
 

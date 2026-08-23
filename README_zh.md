@@ -15,9 +15,9 @@ V2 定位：本仓库正在从“YOLOv8 缺陷检测 demo”升级为“工业�
 
 YOLOv8 和 NEU-DET 是模型与数据集载体。秋招主线不是“我训练了一个检测模型”，而是“我把视觉模型通过 C++ / ONNX Runtime C++ / OpenCV / CMake / GTest / benchmark 变成可部署、可测试、可评测、可解释的工程化 Runtime”。
 
-当前 V1 资产仍然保留价值：训练、ONNX 导出、PyTorch-vs-ONNX 一致性验证、Python ONNX Runtime 推理、FastAPI、Docker 和 benchmark 脚本。V2 在这些资产之上通过 `cpp_infer/` 推进，而不是重写旧代码。
+当前 V1 资产仍然保留价值：训练、ONNX 导出、历史 PyTorch-vs-ONNX **count-only** 抽查、Python ONNX Runtime 推理、FastAPI、Docker 和 benchmark 脚本。那次 50 图抽查没有验证类别与框坐标容差，不能称为本次严格一致性。V2 在这些资产之上通过 `cpp_infer/` 推进，而不是重写旧代码。
 
-当前 V2 状态：**S1-04 L1 已验收；S1-05 已实现并验证，等待 L1 验收。** 固定单图 CLI 已串通严格 Runtime/artifact 契约、OpenCV preprocess、ORT CPU session、自有 raw output、YOLOv8 postprocess、稳定 JSON v1 与无 GUI 可视化；result-writer JSON GTest 6/6、output 聚焦 CTest 16/16、完整 CTest 78/78。S1-06 只是验收后的下一步，尚未开始 batch、一致性或 benchmark。
+当前 V2 状态：**S1-08 L1 已验收；S1-09 自动门 PASS；用户 L2 待完成；大阶段一尚未完成；大阶段二未开始。** S1-09 没有新增产品功能，而是在全新临时 Release build 中依次复现 configure/build、完整 CTest 106/106（19.91 秒）、固定单图 Demo、六类 30 图 Python ORT/C++ ORT 一致性和 warmup 10/repeat 100 benchmark，并检查 JSON、PNG、核心非零错误和合法空检测。只有用户独立完成 2/5 分钟讲解、追问/排错以及一次“核心行为 + 对应 GTest”的可回滚练习后，才能宣布大阶段一完成；目录 batch、并发、INT8 和其他扩展均未开始。
 
 项目入口刻意集中在本 README 和 `README_zh.md`。`docs/PLAN.md` 是最新规划源，`AGENTS.md` 将其固化为仓库级协作准则，任务、状态和变更证据维护在中英文 README 中。只有当执行细节过长、会降低总入口可读性时，才拆入 `docs/`。
 
@@ -78,7 +78,7 @@ model artifact
 -> optional real-device deployment and Project 2 inference_event bridge
 ```
 
-当前 S1-05 已验证链路：
+当前 S1-09 fresh reproduction 已重新验证的链路：
 
 ```text
 cpp_infer/configs/default_config.txt
@@ -105,9 +105,26 @@ cpp_infer/configs/default_config.txt
 -> 固定字段顺序、UTF-8 安全 escaping、locale 无关的 detection JSON v1
 -> 确定性 OpenCV 颜色/标签 -> 无 GUI 可视化文件
 -> 默认拒绝覆盖、显式 --overwrite、父目录创建与输入路径保护
--> result-writer JSON GTest 6/6 + output 聚焦 CTest 16/16
--> 78 项完整 CTest gate
--> 尚无 batch、Python/C++ 一致性或 C++ benchmark
+-> 四个 GTest target：postprocess 25 + preprocess 7 + output 7 + benchmark 8
+-> synthetic metadata/contract 与专用 integration/negative CTest
+-> integration 与可行动故障注入 gate
+-> 106 项完整 CTest quality gate
+-> 固定六类 x 每类 5 张 manifest（索引 241/255/270/285/300）
+-> Python 复现同一 contract/preprocess/strict threshold/class-agnostic NMS/坐标语义
+-> Python 显式 CPUExecutionProvider + C++ 显式 CPUExecutionProvider
+-> 按 class_id 分组、最大 IoU 与确定性 tie-break 匹配，不依赖输出顺序
+-> 30/30 图片、62/62 detections 通过预声明门槛
+-> per_image.json + summary.json 机器可读正确性证据
+-> consistency 2/2 正确性前置门通过后才运行 benchmark
+-> Release-only、batch=1、CPU、sequential、intra/inter-op 1/1
+-> warmup 10 次不采样 + repeat 100 次正式采样
+-> image decode / preprocess / Session::Run / postprocess 分段计时
+-> pipeline 与 end-to-end 壁钟计时及 throughput
+-> Windows 进程生命周期 Peak Working Set
+-> 稳定 benchmark JSON + Python 严格 schema/protocol validator
+-> benchmark 14/14、完整 CTest 106/106
+-> S1-09 自动门 PASS，用户 L2 待完成
+-> 尚无目录 batch、并发或 INT8
 ```
 
 ### 4. 核心模块职责
@@ -121,61 +138,149 @@ cpp_infer/configs/default_config.txt
 | `InferenceOutput` | 独立持有返回的 raw tensor shape 和 float values，不依赖局部 ORT output value 或 Runner 生命周期，并作为纯后处理入口。 | S1-03 ownership 已验证；S1-04 synthetic decode 已验证 |
 | `Detection` / `Postprocessor` | 校验并解析 `[1,4+C,N]` BCN output；取最大类别分数、执行 float32 域严格 `confidence > threshold`、`xywh -> xyxy`、IoU、稳定 class-agnostic NMS，再做 letterbox 坐标还原和 clip。 | S1-04 已用 24 项纯 synthetic GTest 验证；不需要 ORT session 或真实模型 |
 | `SingleImageDetectionResult` / `DetectorPipeline` | 用自持有的结果对象记录模型、图片、session provider、阈值和 detections，并把已验证模块编排成严格单图纵切；`main.cpp` 只处理 CLI 与调用。 | S1-05 已完成固定单图端到端编排 |
-| `ResultWriter` / `Visualizer` | 严格校验输出结果，安全 escape UTF-8 JSON 字符串，使用稳定字段/数值格式，执行目录/覆盖/保护路径策略，并用固定颜色和标签输出无 GUI OpenCV 可视化。 | S1-05 已生成可解析 JSON v1 与可读 PNG；等待 L1 验收 |
-| `ConsistencyValidator` | 按检测数量、类别、置信度和框坐标容差比较 Python ORT 与 C++。 | S1-07 待推进 |
-| `BenchmarkRunner` | 统计 warmup/repeat 的 preprocess、infer、postprocess、end-to-end、throughput 与内存元数据。 | S1-08 待推进 |
+| `ResultWriter` / `Visualizer` | 严格校验输出结果，安全 escape UTF-8 JSON 字符串，使用稳定字段/数值格式，执行目录/覆盖/保护路径策略，并用固定颜色和标签输出无 GUI OpenCV 可视化。 | S1-05 已生成可解析 JSON v1 与可读 PNG，L1 已验收；S1-06 增加不可创建父路径故障 gate |
+| `ConsistencyManifest` / `compare_consistency.py` | 冻结六类 x 每类五张验证图及图片 SHA-256，从同一 Runtime/artifact 契约建立 Python ORT CPU reference，调用 C++ 单图 CLI，并按类别与最大 IoU 确定性匹配；输出逐图和汇总 JSON，失败时保留可行动诊断。 | S1-07 已验证并完成 L1 验收；S1-09 fresh reproduction 再次得到 30/30 图片、62/62 detections 通过冻结门槛，两份 JSON 均可解析 |
+| `BenchmarkResult` / `BenchmarkRunner` | 固定 Release、batch=1、CPU provider 和线程策略；session 只初始化一次，在完整 warmup 后采集六段 steady-clock 延迟，计算 nearest-rank P50/P95 与 throughput，并取得可披露作用域的内存证据。`OnnxRunner` 在内部只围绕 `Session::Run` 计时，pipeline 另含 tensor 构造、校验和输出复制等真实边界成本。 | S1-08 固定图 warmup 10/repeat 100 已完成；六段 mean/P50/P95、两项 throughput 与 Windows Peak Working Set 已记录 |
+| `BenchmarkWriter` | 严格校验 benchmark result，使用 classic locale、finite number 和 UTF-8 JSON escaping 输出稳定 schema；相对路径按 CWD 解析，创建父目录，并执行默认拒绝覆盖、普通文件限定和 config/artifact/model/image 保护。 | S1-08 仓库内历史 JSON 与 S1-09 临时 fresh JSON 分开记录；fresh JSON 通过 `json.tool` 与严格 validator，旧文件不能造成假阳性 |
 | `ArtifactRegistry` / `ModelCard` | 记录 artifact 来源、模型族、数据集、指标、配置、后处理类型、runtime 状态和路径。 | YOLO baseline 声明已建立；D010 继续受门禁约束 |
-| `Tests` | 保留契约、metadata、真实 raw inference 与 synthetic preprocess/postprocess gate；新增 JSON serializer GTest、固定真实模型输出集成、Python 标准库 JSON 检查、OpenCV 图片回读和 CLI/output 负例。 | result-writer JSON GTest 6/6、output 聚焦 CTest 16/16、完整 CTest 78/78 |
+| `Tests` | 四个 GTest target 分别承担 postprocess、`cv::Mat` preprocess、output 和 benchmark statistics；metadata/inference 使用独立测试 executable，另有 Python validator、CLI negative 与真实 integration CTest。CLI 故障同时断言非零退出和可行动诊断。 | S1-09 全新 Release：CTest 列出 106 项并完整通过 106/106（19.91 秒）；四个直接故障均 exit 1 且 actionable；两项合法 empty-detection 测试通过 |
 
 ### 5. 快速启动
 
-当前 S1-05 clean Release、固定单图 Demo 与完整验收路径：
+当前 S1-09 clean Release 收口路径。顺序固定为 configure/build -> 完整 CTest -> 固定 Demo -> 30 图一致性 -> benchmark；每一步都立即检查 `$LASTEXITCODE`。所有新证据写到新的 `%TEMP%` build 下，验证器不会误读仓库里已有的历史 JSON：
 
 ```powershell
 # 先在 CMD 运行 VsDevCmd.bat，再启动：
 # powershell.exe -NoProfile -NoExit
 # -NoProfile 防止本机 Conda profile 覆盖 VS 的 PATH。
+$Repo = 'D:\01_Base\CodingSpace\yolo_defect'
 $OrtRoot = 'D:\01_Base\Tools\onnxruntime-win-x64-1.19.2'
 $OpenCvDir = 'D:\01_Base\Tools\opencv\build\x64\vc16\lib'
 $OpenCvBin = 'D:\01_Base\Tools\opencv\build\x64\vc16\bin'
 $CMakeBin = 'D:\01_Base\Tools\VisualStudio_Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin'
-$PythonExe = (Get-Command python.exe -ErrorAction Stop).Source
+$PythonExe = 'C:\Users\Everbreath\.conda\envs\TestBase\python.exe'
 
+Set-Location $Repo
 $env:ONNXRUNTIME_ROOT = $OrtRoot
 $env:PATH = $CMakeBin + ';' + $OpenCvBin + ';' + $env:PATH
 $BuildDir = Join-Path $env:TEMP `
-  ('yolo_defect_s1_05_' + [guid]::NewGuid().ToString('N'))
+  ('yolo_defect_s1_09_' + [guid]::NewGuid().ToString('N'))
+$EvidenceDir = Join-Path $BuildDir 's1_09_closure'
 
 cmake -S cpp_infer -B $BuildDir -G 'NMake Makefiles' `
   -DOpenCV_DIR="$OpenCvDir" `
   -DONNXRUNTIME_ROOT="$OrtRoot" `
   -DPython3_EXECUTABLE="$PythonExe" `
   -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+if ($LASTEXITCODE -ne 0) { throw 'S1-09 configure 失败。' }
+
 cmake --build $BuildDir
+if ($LASTEXITCODE -ne 0) { throw 'S1-09 Release build 失败。' }
+
+ctest --test-dir $BuildDir -N
+if ($LASTEXITCODE -ne 0) { throw 'CTest 枚举失败。' }
+
+ctest --test-dir $BuildDir --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw '完整 CTest 失败；禁止继续收口。' }
 
 $Config = (Resolve-Path 'cpp_infer\configs\default_config.txt').Path
 $Image = (Resolve-Path 'data\images\val\crazing_241.jpg').Path
-$DemoDir = Join-Path $BuildDir 'demo outputs'
+$DemoDir = Join-Path $EvidenceDir 'demo'
 $JsonPath = Join-Path $DemoDir 'crazing_241.json'
 $VisualizationPath = Join-Path $DemoDir 'crazing_241.png'
+$DetectionValidator = (Resolve-Path `
+  'cpp_infer\tests\assert_detection_json.py').Path
 
 & "$BuildDir\bin\yolo_defect_cpp.exe" `
   --config $Config `
   --image $Image `
   --output-json $JsonPath `
   --output-image $VisualizationPath
+if ($LASTEXITCODE -ne 0) { throw '固定单图 Demo 失败。' }
+if (!(Test-Path -LiteralPath $JsonPath -PathType Leaf) -or
+    !(Test-Path -LiteralPath $VisualizationPath -PathType Leaf)) {
+  throw 'Demo 没有生成本次临时 JSON/PNG。'
+}
 
-& $PythonExe -m json.tool $JsonPath
+& $PythonExe -m json.tool $JsonPath > $null
+if ($LASTEXITCODE -ne 0) { throw '本次 Demo JSON 解析失败。' }
+& $PythonExe $DetectionValidator $JsonPath --expected-image $Image
+if ($LASTEXITCODE -ne 0) { throw '本次 Demo JSON 契约校验失败。' }
 & "$BuildDir\bin\yolo_defect_image_probe.exe" $VisualizationPath
+if ($LASTEXITCODE -ne 0) { throw '本次 Demo PNG 无法由 OpenCV 回读。' }
 Get-Item $JsonPath, $VisualizationPath
+Get-FileHash $JsonPath, $VisualizationPath -Algorithm SHA256
 
-ctest --test-dir $BuildDir -L output --output-on-failure
-ctest --test-dir $BuildDir -L postprocess --output-on-failure
-ctest --test-dir $BuildDir -L preprocess --output-on-failure
+$Manifest = (Resolve-Path `
+  'cpp_infer\tests\fixtures\consistency_manifest.json').Path
+$ConsistencyDir = Join-Path $EvidenceDir 'consistency'
+if (Test-Path -LiteralPath $ConsistencyDir) {
+  throw '本次 consistency 输出目录不应预先存在。'
+}
+& $PythonExe 'cpp_infer\tools\compare_consistency.py' `
+  --manifest $Manifest `
+  --cpp-cli "$BuildDir\bin\yolo_defect_cpp.exe" `
+  --cpp-opencv-version 4.8.0 `
+  --output-dir $ConsistencyDir
+if ($LASTEXITCODE -ne 0) {
+  throw 'S1-07 consistency 失败；禁止继续发布 benchmark。'
+}
+if (!(Test-Path -LiteralPath "$ConsistencyDir\per_image.json" -PathType Leaf) -or
+    !(Test-Path -LiteralPath "$ConsistencyDir\summary.json" -PathType Leaf)) {
+  throw '本次 consistency 没有生成两份 JSON。'
+}
+& $PythonExe -m json.tool `
+  "$ConsistencyDir\per_image.json" > $null
+if ($LASTEXITCODE -ne 0) { throw '本次 per_image.json 解析失败。' }
+& $PythonExe -m json.tool `
+  "$ConsistencyDir\summary.json" > $null
+if ($LASTEXITCODE -ne 0) { throw '本次 summary.json 解析失败。' }
+
+ctest --test-dir $BuildDir -L consistency --output-on-failure
+if ($LASTEXITCODE -ne 0) {
+  throw 'S1-07 consistency 失败；禁止继续发布 benchmark。'
+}
+
+$BenchmarkJson = Join-Path $EvidenceDir `
+  'benchmark\yolov8_neu_det_cpu_release.json'
+if (Test-Path -LiteralPath $BenchmarkJson) {
+  throw '本次 benchmark JSON 不应预先存在。'
+}
+& "$BuildDir\bin\yolo_defect_cpp.exe" `
+  --config $Config `
+  --image $Image `
+  --benchmark `
+  --warmup 10 `
+  --repeat 100 `
+  --benchmark-json $BenchmarkJson
+if ($LASTEXITCODE -ne 0) { throw 'S1-09 benchmark 失败。' }
+if (!(Test-Path -LiteralPath $BenchmarkJson -PathType Leaf)) {
+  throw '本次 benchmark 没有生成新 JSON。'
+}
+
+& $PythonExe -m json.tool $BenchmarkJson > $null
+if ($LASTEXITCODE -ne 0) { throw '本次 benchmark JSON 解析失败。' }
+& $PythonExe 'cpp_infer\tests\assert_benchmark_json.py' `
+  $BenchmarkJson `
+  --expected-image $Image `
+  --expected-warmup 10 `
+  --expected-repeat 100
+if ($LASTEXITCODE -ne 0) { throw '本次 benchmark 严格校验失败。' }
+Get-Item $BenchmarkJson
+Get-FileHash $BenchmarkJson -Algorithm SHA256
+
+ctest --test-dir $BuildDir -L benchmark --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw 'Benchmark CTest 失败。' }
+
 ctest --test-dir $BuildDir `
-  -R yolo_defect_cpp_single_image_outputs -V
-ctest --test-dir $BuildDir -N
-ctest --test-dir $BuildDir --output-on-failure
+  -R 'yolo_defect_cpp_(inspect_missing_model|damaged_image|output_unwritable_parent|benchmark_invalid_repeat)' `
+  --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw '核心故障注入 gate 失败。' }
+
+ctest --test-dir $BuildDir `
+  -R 'postprocess.PostprocessEmptyTest.ValidTensorWithNoScoreAboveThresholdIsEmpty|output.ResultWriterJsonTest.EmptyDetectionsSerializeAsAnEmptyArray' `
+  --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw '合法 empty-detection gate 失败。' }
 ```
 
 `BUILD_TESTING=ON` 时，CMake 才会获取固定的 GoogleTest v1.17.0 commit archive，并校验 SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84`。完全离线时，应先对同一 archive 执行 `Get-FileHash -Algorithm SHA256`，确认 hash 后解压，再在 configure 命令追加：
@@ -184,9 +289,11 @@ ctest --test-dir $BuildDir --output-on-failure
 -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST='<path-to-verified-googletest-source>'
 ```
 
-source-directory override 会绕过 FetchContent 的下载/hash 步骤，因此不能跳过解压前的手工 hash 复核。CMake 中没有提交个人 GTest 绝对路径。OpenCV 的 DLL 仍通过上面的 `PATH` 提供给 CLI 和 build-time GTest discovery。
+source-directory override 会绕过 FetchContent 的下载/hash 步骤，因此不能跳过解压前的手工 hash 复核。CMake 中不含个人 GTest 绝对路径。OpenCV 的 DLL 仍通过上面的 `PATH` 提供给 CLI 和 build-time GTest discovery。
 
-同一路径再次运行时默认以非零退出拒绝覆盖；只有明确希望替换已有普通输出文件时，才在完整 CLI 后追加 `--overwrite`。下方旧 Python/YOLO 快速开始仍保留，用于复现 V1 baseline。上面的 C++ 命令是 V2 部署主入口。
+S1-09 configure 继续用显式 `Python3_EXECUTABLE` 检查 NumPy、OpenCV Python、ONNX Runtime 1.19.2 和 `CPUExecutionProvider`，缺失时给出错误并停止；CMake、consistency 工具和 benchmark validator 都不会静默安装 Python 包。正式 benchmark 必须使用 Release build；Debug 或其他 build type 会被 Runtime 拒绝，不能发布成性能证据。
+
+同一路径再次运行时默认以非零退出拒绝覆盖；只有明确希望替换已有普通输出文件时，才在完整 CLI 后追加 `--overwrite`。S1-09 Quick Start 使用新的 GUID build 和临时 evidence 目录，刻意不覆盖仓库内 S1-05/S1-07/S1-08 历史证据。下方旧 Python/YOLO 快速开始仍保留，用于复现 V1 baseline；上面的 C++ 命令是 V2 部署主入口。
 
 请按上面命令使用全新的 out-of-tree build。2026-07-15 已确认被忽略的 `cpp_infer/build` 可执行文件仍是旧 P1-01 产物，会拒绝新 `--config/--image` 参数，不能作为当前源码证据。
 
@@ -200,7 +307,7 @@ artifact: cpp_infer/artifacts/yolov8_neu_det.artifact.txt
 image:  data/images/val/crazing_241.jpg
 ```
 
-当前 S1-05 固定单图 Demo 输出：
+S1-05 首次生成、S1-09 fresh reproduction 再次得到的固定单图 Demo 输出：
 
 ```text
 detection_json: cpp_infer/results/demo/crazing_241.detections.json
@@ -231,35 +338,73 @@ JSON v1 固定包含 `schema_version`、`model`、`image`、`runtime` 和 `detec
 
 CLI 相对图片/输出路径以当前 working directory 为基准；config/artifact 内部相对路径仍分别以声明文件为基准。缺失父目录会递归创建。已有输出默认拒绝并非零退出，只有 `--overwrite` 才允许替换普通输出文件；目录、符号/特殊文件、JSON/图片同径，以及 config、artifact、model、源图片等保护路径始终拒绝。
 
-S1-03 的 `--raw-output-summary` 和 S1-04 的纯算法测试仍作为回归入口保留，但当前可展示纵切已经到达 detection JSON 与可视化。benchmark JSON 和 `inference_event` 仍是后续能力，不能写成当前产物。
+S1-03 的 `--raw-output-summary` 和 S1-04 的纯算法测试仍作为回归入口保留；当前可展示纵切已经到达 detection JSON、可视化、严格一致性和 C++ benchmark JSON。`inference_event`、目录 batch、并发和 INT8 仍是后续能力，不能写成当前产物。
 
 ### 7. 测试命令
 
-当前 output 聚焦与完整 CTest gate：
+当前聚焦测试与完整 CTest quality gate：
 
 ```powershell
 ctest --test-dir $BuildDir -N
+ctest --test-dir $BuildDir -L unit --output-on-failure
+ctest --test-dir $BuildDir -L negative --output-on-failure
+ctest --test-dir $BuildDir -L integration --output-on-failure
+ctest --test-dir $BuildDir -L consistency --output-on-failure
+ctest --test-dir $BuildDir -L benchmark --output-on-failure
+ctest --test-dir $BuildDir -L quality_gate --output-on-failure
 ctest --test-dir $BuildDir -L output --output-on-failure
 ctest --test-dir $BuildDir -L postprocess --output-on-failure
 ctest --test-dir $BuildDir -L preprocess --output-on-failure
-ctest --test-dir $BuildDir `
-  -R yolo_defect_cpp_single_image_outputs -V
 ctest --test-dir $BuildDir --output-on-failure
 ```
 
-当前预期结果：
+S1-09 全新临时 Release build 的 fresh reproduction 结果：
 
 ```text
-result-writer JSON GTest: 6/6 passed
-output-focused CTest:    16/16 passed
-complete CTest:          78/78 passed
+consistency 前置门:     2/2 passed
+benchmark label:      14/14 passed
+CTest -N:                106 tests
+完整 CTest:           106/106 passed，19.91 s
 ```
 
-16 项 output 聚焦测试包括：6 项 JSON GTest，覆盖 golden 字段顺序、引号/反斜杠/控制字节 escaping、合法空 detections、非 finite detection/runtime 拒绝和 locale 无关小数格式；1 项固定真实模型集成测试，递归创建父目录，用 `python -m json.tool` 和严格语义检查器验证 JSON，并用 OpenCV 回读图片；另有 9 项 CLI/output 负例，覆盖参数缺失/重复、缺 image、模式冲突、无意义 overwrite、双输出同径、保护输入路径和目录目标。
+四个 GTest target 当前分别为 postprocess 25、preprocess 7、output 7、benchmark 8，共 47 项 discovered GTest；metadata 与 inference 是独立测试 executable，不应误写成 GTest target。S1-07 的 manifest/matching 与 30 图真实 integration 是 benchmark 前置正确性门；低 repeat 真实模型 smoke 与严格 Python validator 再共同覆盖 Release/provider/线程、六段统计、Windows memory、稳定 JSON、SHA、披露项和安全覆盖行为。CTest 标签存在重叠，不能把 consistency、benchmark、unit、negative、integration 等数量相加得到 106。
 
-集成测试还证明：第二次不带 `--overwrite` 运行会失败且不会改变两个文件，随后显式覆盖会重建字节一致的 JSON 和 PNG。S1-04 的 62 项契约、metadata、inference、preprocess 和 postprocess 测试继续保留，因此完整 gate 为 78/78。这里仍不把真实模型 smoke 当作纯 postprocess 算法唯一正确性证据。
+#### S1-06 故障排查
+
+- **Schema：** 从声明文件、行号/字段、expected、actual 和 action 开始；`artifact_spec_path` 相对 Runtime config，`model_path` 相对 artifact 声明文件，不相对进程 working directory。
+- **缺模型：** 查看 artifact 中的 `model_path` 和错误打印的规范化路径。
+- **Metadata mismatch：** 先运行 `--inspect-model`，再对照实际 name/shape/dtype/provider 与声明；synthetic mismatch 只测试纯 validator，不需要在仓库放入多个大型坏模型。
+- **损坏图片：** 区分“路径不存在”和“文件存在但 OpenCV decode 得到空图”，然后用已知正常图片复测。
+- **CLI/输出：** 先看 `--help`，检查缺值、重复/冲突参数、父路径类型与权限、保护输入以及显式覆盖策略。
+
+S1-09 全新构建上的四个直接故障证据分别是缺失模型、损坏图片、“普通文件被当成输出父目录”，以及 benchmark `repeat=0`；四条命令均返回退出码 1，且信息包含失败对象/路径、expected、actual 和修改建议。合法 `[1,4+C,N]` tensor 如果没有分数严格大于阈值，应成功得到 `detections: []`；`PostprocessEmptyTest.ValidTensorWithNoScoreAboveThresholdIsEmpty` 与 `ResultWriterJsonTest.EmptyDetectionsSerializeAsAnEmptyArray` 两项测试均通过。错误 rank/channel/count 或 non-finite raw output 必须报错，不能伪装成空检测。
+
+#### S1-07 一致性门槛、证据边界与排错
+
+S1-07 在第一次正式比较前冻结门槛：逐图 detection 数量和匹配后的 `class_id` 必须完全一致，confidence 绝对误差 `<= 1e-4`，四个 bbox 坐标的绝对误差都 `<= 1e-2` 像素，matching IoU `>= 0.999`。匹配先按类别分组，再按最大 IoU 和 canonical value tie-break 确定性配对，因此不依赖 Python/C++ JSON 的 detection 顺序。任何失败都应沿 `image decode/preprocess -> raw output -> strict threshold/NMS -> coordinate restore -> matching` 分层定位，不能为了全绿直接放宽门槛。
+
+实际调试中，Python 3.9 的 `Path.write_text()` 不支持 `newline` 参数；工具改用 `path.open("w", encoding="utf-8", newline="\n")` 写稳定 JSON。该问题属于证据文件写入兼容性，不是模型数值不一致，预声明容差没有调整。
+
+当前证据只证明同一个 ONNX artifact 在 Python ORT 与 C++ ORT 两套实现中的检测结果一致，不是数据集精度评估。匹配的 `best.pt` 当前不可用，所以没有重新完成 PyTorch/Python ORT/C++ 三方实测；session provider 也不是逐节点放置证据。30 张 manifest 图片全部为 200x200，缩放到 800x800 时没有 padding，因此本次跨语言比较没有覆盖非方图 letterbox；这部分只由 S1-06 synthetic 测试覆盖。30 张图片也都至少产生一个检测，没有提供跨语言 empty-detection 样本。
+
+#### S1-08 Benchmark 协议、边界与排错
+
+正式性能证据固定为 Release、batch=1、`CPUExecutionProvider`、sequential、intra-op 1、inter-op 1、graph optimization all、`crazing_241.jpg`、warmup 10 和 repeat 100。使用 `std::chrono::steady_clock`；P50/P95 采用 empirical nearest-rank ceiling。`image_decode` 只包含重复 `imread`，`preprocess` 从已解码 `cv::Mat` 到 NCHW tensor，`session_run` 只围绕 `Ort::Session::Run`，`postprocess` 从 raw output 到 detections；`pipeline` 是 preprocess+完整 runner 边界+postprocess 的壁钟时间，`end_to_end` 再包含 image decode。因此 pipeline 会额外包含输入校验/Ort tensor 构造和输出校验/复制，不应被强行解释成三个独立均值简单相加。
+
+Session/model 初始化、初始路径/文件大小检查、统计计算、Peak Working Set 查询、benchmark JSON 序列化/写盘和可视化不进入 100 次重复计时；可视化根本不执行。Windows Peak Working Set 在写 JSON 前查询，但它是整个进程生命周期峰值，包含 config/session 初始化、warmup、正式迭代、保留的样本向量、统计和 harness 状态，不是单次推理或某个阶段的增量内存。
+
+排错先确认 Release build、固定 CPU actual provider 和 1/1 线程策略，再检查 warmup/repeat 是否为合法整数、每次 detection count 是否稳定、六组 sample 是否 finite、throughput 是否等于 `1000/mean_ms`，最后检查 JSON 输出是否覆盖保护输入或指向目录/符号链接/特殊文件。`--benchmark` 与 detection JSON/PNG、`--inspect-model`、`--raw-output-summary` 互斥；错误必须非零退出并指出 object、expected、actual 和 action。
 
 ### 8. 关键数据与产物结果
+
+四类证据必须按实验问题和协议分栏，不能把“都涉及 ONNX”当作同一种结论：
+
+| 证据栏 | 证明什么 | 明确不证明什么 |
+|--------|----------|----------------|
+| 历史 PT/ONNX count-only 抽查 | 排序后前 50 张 `crazing` 图片的检测数量为 50/50、总数 146 vs 146 | 没有类别/框坐标容差；不是六类严格一致性；匹配 `.pt` 当前也无法重新复跑 |
+| 历史 Python ORT benchmark | 历史 Python 脚本在其 100 图、5 次预热协议下记录 CPU 24.4 FPS、GPU 72.1 FPS | 不是当前 C++ Runtime 性能，不能与单图 10/100 C++ 协议无条件比较 |
+| 当前 Python ORT/C++ ORT 严格证据 | 同一 ONNX、相同 contract、显式 CPU provider 下，六类 30 图的数量、类别、confidence、bbox 与 matching IoU 实现一致 | 不是 mAP/模型精度评估，也不是缺失 `.pt` 情况下的三方比较 |
+| 当前 C++ ORT Release benchmark | 固定机器、模型、单图、batch=1、CPU 单线程策略下的六段延迟、throughput 与进程 Peak Working Set | 不是跨设备结论、冷盘延迟、并发吞吐、逐节点 provider 放置或单阶段独占内存 |
 
 | 项 | 当前记录 |
 |----|----------|
@@ -271,13 +416,24 @@ complete CTest:          78/78 passed
 | 模型 lineage 状态 | 项目所有者确认当前 ONNX 是本人从 `runs/detect/final_train_2/weights/best.pt` 导出的；该 `.pt` 不在当前工作区或 Git 历史中，因此 lineage 已由所有者确认，但目前不能重新导出复核 |
 | Baseline ONNX I/O 预检 | Python ORT 1.19.2 确认输入 `images` = float32 `[1,3,800,800]`；输出 `output0` = float32 `[1,10,13125]` |
 | 历史 Python ORT benchmark | ONNX CPU 24.4 FPS，ONNX GPU 72.1 FPS（RTX 3060）；**不是 C++ Runtime 性能** |
-| 当前 C++ Runtime 状态 | S1-05 使用 MSVC 19.50/OpenCV 4.8.0/ORT 1.19.2 完成 clean Release/NMake 单图纵切：contract -> preprocess -> CPU `Session::Run` -> owned raw output -> postprocess -> JSON/可视化。result-writer JSON GTest 6/6、output 聚焦 CTest 16/16、完整 CTest 78/78；尚无 batch、一致性或 C++ 性能结果 |
+| 当前 C++ Runtime 状态 | S1-09 使用全新临时 NMake/Release build 复现 MSVC 19.50.35721.0、C++17、C++ OpenCV 4.8.0、C++ ORT 1.19.2 与显式 CPU session；完整 CTest 106/106 在 19.91 秒内通过，随后 Demo、一致性和 benchmark 全部通过。自动门 PASS，但用户 L2 尚未完成，所以大阶段一仍未宣布完成；大阶段二未开始 |
 | C++ ORT 实际 metadata | 已加载 `models/best.onnx`；实际 EP inventory 为 `[AzureExecutionProvider,CPUExecutionProvider]`；session 显式注册 `CPUExecutionProvider`；输入 `images` tensor float32 `[1,3,800,800]`；输出 `output0` tensor float32 `[1,10,13125]`；contract 通过 |
 | S1-02 依赖/session 边界 | CMake 只通过 `ONNXRUNTIME_ROOT` 消费官方 ORT C++ SDK 1.19.2，校验版本/C/C++/CPU-provider headers/import library/DLL 并复制匹配 DLL。Session 策略为 sequential、intra-op 1、inter-op 1（sequential 下不使用）、graph optimization all |
 | S1-03 raw-output 证据 | 固定 `crazing_241.jpg`：输入 float32 `[1,3,800,800]`，1,920,000 个 finite 值，范围 `[0.278431386,1]`；自有输出 float32 `[1,10,13125]`，131,250 个 finite 值，范围 `[0,795.04126]`。这些值只证明 finite raw execution，不证明 decoded detection 正确性或 benchmark 性能 |
 | S1-04 postprocess 证据 | 纯 synthetic `[1,4+C,N]` tensor/box 精确验证：无 objectness、最大类别分数、float32 `confidence > threshold`、稳定 class-agnostic input-space NMS、IoU 边界、空候选、letterbox 逆变换和原图 clip；不使用真实模型作为算法正确性的唯一证据 |
 | S1-04 GTest 依赖 | 官方 GoogleTest v1.17.0，commit `52eb8108c5bdec04579160ae17225d66034bd723`，archive SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84`；`BUILD_TESTING=ON` 才获取，离线 source override 前必须先复核 archive hash |
 | S1-05 固定 Demo 证据 | `crazing_241.jpg` 产生 3 个稳定降序的 `crazing` detections；JSON v1 可由 Python 标准库解析，PNG 可由 OpenCV 回读为 200x200 `CV_8UC3`。`cpp_infer/results/demo/crazing_241.detections.json` 为 1,164 bytes、SHA-256 `E8445BC92201307430A17B7B51B6CCEFC5A74D2D473617170F50AD921CCF9049`；`crazing_241.visualized.png` 为 39,306 bytes、SHA-256 `3A0C6C57EE977EE02762F05FCDE6928C8AACBD20883596D3622A6225942E2346` |
+| S1-06 quality gate 证据 | 全新 `%TEMP%` Release build 列出 90 项测试：unit 51、integration 3、negative 32、contract 19、metadata 16、preprocess 9、postprocess 25、output 18，全部通过。缺模型、损坏图片和不可创建的输出父路径均以 CLI exit 1 失败，并包含 object/path、expected、actual、action；没有增加大型 ONNX fixture |
+| S1-07 consistency manifest | `cpp_infer/tests/fixtures/consistency_manifest.json` 固定 NEU-DET 六类，每类使用验证集索引 241、255、270、285、300，共 30 张；记录 class id/name、声明文件相对路径和图片 SHA-256，并冻结 provider、matching 策略与门槛 |
+| S1-07 Python/C++ 一致性证据 | `cpp_infer/tools/compare_consistency.py` 使用 Python 3.9.25、ORT 1.19.2、OpenCV 4.13.0、NumPy 2.0.2，并显式只创建 `CPUExecutionProvider` session；C++ 侧为 ORT 1.19.2、OpenCV 4.8.0、显式 CPU session。30/30 图片、62/62 detections 匹配通过；最大 confidence 绝对误差 `8.049977111568296e-07`，最大 bbox 坐标绝对误差 `9.135351561440075e-05` 像素，最小 matching IoU `0.999998927116394`。机器可读证据为 `cpp_infer/results/consistency/per_image.json` 与 `summary.json` |
+| S1-08 历史环境与固定协议 | Windows 10.0.26200，`DESKTOP-6OGK71C`，AMD64 Family 25 Model 117、16 个逻辑 CPU；MSVC 19.50.35721.0 Release C++17，OpenCV 4.8.0，ORT 1.19.2。requested/actual provider 为 `cpu`/`CPUExecutionProvider`，sequential、intra/inter-op 1/1、graph optimization all。模型 12,336,935 bytes、输入 `[1,3,800,800]`；样本 `crazing_241.jpg` 为 23,845 bytes、200x200x3，batch/sample=1，score=0.25、NMS=0.45、class-agnostic，warmup=10、repeat=100，稳定得到 3 个框 |
+| S1-08 历史 C++ Release latency | mean / P50 / P95（ms）：image decode `0.991129 / 0.9649 / 1.3517`；preprocess `8.244569 / 7.5514 / 12.1265`；仅 `Session::Run` `165.555859 / 164.8985 / 186.2136`；postprocess `0.424115 / 0.4251 / 0.5636`；pipeline `175.560944 / 175.1058 / 195.1376`；end-to-end `176.553060 / 176.1357 / 196.6128` |
+| S1-08 历史 throughput 与内存 | pipeline `5.696028 images/s`，end-to-end `5.664020 images/s`；Windows Peak Working Set `160,133,120 bytes`（`152.714844 MiB`）。仓库内历史证据：`cpp_infer/results/benchmark/yolov8_neu_det_cpu_release.json`，不得被 S1-09 临时输出静默冒充 |
+| S1-09 fresh Demo | 同一固定图重新得到 3 个 detections；JSON 1,164 bytes、SHA-256 `E8445BC92201307430A17B7B51B6CCEFC5A74D2D473617170F50AD921CCF9049`；PNG 39,306 bytes、SHA-256 `3A0C6C57EE977EE02762F05FCDE6928C8AACBD20883596D3622A6225942E2346`；OpenCV probe 为 200x200 `CV_8UC3` |
+| S1-09 fresh consistency | 六类各 5 张，30/30 图片、62/62 matches；最大 confidence 误差 `8.049977111568296e-07`，最大 bbox 误差 `9.135351561440075e-05 px`，最小 matching IoU `0.999998927116394`；本次临时 `per_image.json` 和 `summary.json` 均可解析 |
+| S1-09 fresh C++ Release latency | mean / P50 / P95（ms）：image decode `0.816168 / 0.8182 / 0.9251`；preprocess `5.453755 / 5.4547 / 6.2128`；仅 `Session::Run` `134.419309 / 137.5882 / 142.5549`；postprocess `0.345302 / 0.3438 / 0.4424`；pipeline `141.265814 / 144.4673 / 149.8395`；end-to-end `142.082777 / 145.3222 / 150.7653` |
+| S1-09 fresh throughput 与内存 | pipeline `7.078853 images/s`，end-to-end `7.038151 images/s`；Windows Peak Working Set `152.578125 MiB`。本次临时 benchmark JSON 为 5,453 bytes、SHA-256 `F32C0DF3157897264F9BD2B9AE3F3DB7B240A3B641494E8D3E7C346FF64E9C6F` |
+| S1-09 fresh 故障/空结果 | 缺模型、损坏图片、不可创建输出和 benchmark `repeat=0` 四个直接故障均 exit 1 且 actionable；合法无候选 postprocess 与空数组 JSON 两项测试均通过 |
 | Artifact 许可证检查点 | Artifact 声明原样保留 ONNX metadata 文本 `AGPL-3.0 License (https://ultralytics.com/license)`。源码仍是 MIT；所有者选择继续公开分发 ONNX 与 NEU-DET，因此模型义务和数据集未明确的再分发条款仍是独立发布门禁 |
 | 后续研究侧 artifact | `paper_detect` D010 方法，位于 D-FINE-S/DeepPCB 研究线；不把它写成新的 Runtime 架构 |
 | 外部 D010 研究证据 | Formal-validation AP50-95 = 0.847057；official-test AP50-95 = 0.830385；这些不是项目1 Runtime 结果 |
@@ -293,9 +449,11 @@ artifacts/paper_detect_d010/metrics_table.csv     # placeholder
 artifacts/paper_detect_d010/qualitative/          # placeholder
 ```
 
-C++ 汇总结果表尚未完成。最终至少要记录机器/OS/编译器/构建类型、模型/输入/固定样本、正确性容差、分段与端到端 P50/P95、throughput、内存/RSS、已完成的扩展对比、失败案例、结论、证据路径和复现命令。模型许可证是必须解决的 provenance 风险，不能因为它不阻塞本地 C++ 实现就隐藏。
+C++ 汇总证据已经覆盖机器/OS/编译器/构建类型、模型/输入/固定样本、正确性门槛、六段 mean/P50/P95、pipeline/end-to-end throughput、Peak Working Set、限制、证据路径和复现命令；S1-09 自动门已经完成 fresh reproduction，但用户 L2 门尚未完成，不能提前宣布大阶段一结束，也不能把单机单图结果扩写成跨设备结论。模型许可证仍是必须解决的 provenance 风险，不能因为它不阻塞本地 C++ 实现就隐藏。
 
-S1-05 限制必须按证据理解：JSON 的 `model.declared_sha256` 是从已验证 artifact 声明复制的值，本次 CLI 不会每次重新计算模型 hash；`actual_provider` 证明显式 CPU EP 注册和 session 创建成功，是 session 级证据而不是逐节点 profiling。JSON 与 PNG 是两个文件，不构成跨文件事务，也不声称跨进程原子写入；写第二个文件发生磁盘错误时，第一个可能已经存在。当前已测 UTF-8 JSON/control escaping、Windows 分隔符、空格路径和固定本机路径，但没有穷尽所有 Windows locale/filesystem 的任意 Unicode 输入输出路径；OpenCV baseline 标签为 ASCII 六类。CLI 只支持单图，并未开始目录 batch、并发、Python/C++ 一致性、benchmark、INT8 或 `inference_event`。
+当前限制必须按证据理解：JSON 的 `model.declared_sha256` 是从已验证 artifact 声明复制的值，单图 detection CLI 不会每次重新计算模型 hash；S1-08 严格 validator 会在正式证据检查中重算固定模型/样本 hash。`actual_provider` 证明显式 CPU EP 注册和 session 创建成功，是 session 级证据而不是逐节点 profiling。JSON 与 PNG 是两个文件，不构成跨文件事务，也不声称跨进程原子写入。S1-07 是同一 ONNX 的 Python ORT/C++ ORT 固定 30 图实现一致性，不是模型精度评估或缺失 `best.pt` 情况下的三方复跑。
+
+S1-08 与 S1-09 两次 C++ benchmark 都只是单台 Windows CPU 机器、一个 200x200 图片、batch=1 的 warm-cache baseline：重复 `imread` 主要经过已预热的操作系统文件缓存，不代表冷盘延迟；没有锁定 CPU affinity、提升进程优先级或保证系统空闲，因此即使协议相同，两次运行也可能因系统状态得到不同数值。Peak Working Set 是进程生命周期峰值，不是按阶段或单次推理增量。历史 Python ORT CPU/GPU `24.4/72.1 FPS` 使用不同语言、硬件、样本与计时协议，只能分栏保留，不能据此无条件判断 C++ 更快或更慢。CLI 仍只支持单图，并未开始目录 batch、并发、INT8 或 `inference_event`。
 
 ### 9. 关键设计取舍
 
@@ -306,10 +464,14 @@ S1-05 限制必须按证据理解：JSON 的 `model.declared_sha256` 是从已�
 - **随稳定边界逐步加测试：** S1-01 测声明，S1-02 测 session metadata，S1-03 测一次真实 raw inference 和 Run 前拒绝；S1-04 用 31 项 synthetic GTest 独立证明 postprocess 与 `cv::Mat` preprocess 逻辑，而不是依赖一个真实模型 smoke 推断算法正确。
 - **显式 tensor ownership：** CPU input `Ort::Value` 只在同步 Run 期间借用 preprocess vector；局部 ORT values 销毁前，把输出复制进不含 ORT 类型的 `InferenceOutput`。
 - **冻结 YOLOv8 baseline 语义：** raw layout 是 `[1,4+C,N]` BCN，无独立 objectness；每个候选取最大类别分数，在 float32 域执行严格 `confidence > score_threshold`；先在模型输入空间做稳定 class-agnostic NMS，再减 padding、除 scale 并裁剪到原图边界。同 confidence 保留原候选顺序，同类别分数选择较小 class id。
-- **测试入口不污染产品入口：** 两个 GTest target 都链接 `yolo_defect::runtime`，不编译或复用 `main.cpp`；纯 postprocess 不创建 ORT session，`cv::Mat` 测试显式承担 OpenCV 测试依赖。
+- **测试入口不污染产品入口：** postprocess、preprocess、output 和 benchmark 四个 GTest target 都链接 `yolo_defect::runtime`，不编译或复用 `main.cpp`；metadata/inference 另有专用 CTest executable。纯 postprocess 不创建 ORT session，`cv::Mat` 测试显式承担 OpenCV 测试依赖。
 - **薄 CLI、厚 Runtime：** `main.cpp` 只解析参数和编排；`DetectorPipeline`、结果校验、JSON serialization、输出路径策略和无 GUI 可视化仍位于 `yolo_defect_runtime`，便于测试与后续复用。
 - **稳定机器输出：** JSON schema v1 固定字段顺序、类型和 `detections: []` 空结果；所有字符串先验证 UTF-8 并 escape，finite 数值用 classic locale 与稳定精度。新增/改变字段必须升级 schema，而不能悄悄破坏下游。
 - **安全输出策略：** CLI 输出路径相对当前 working directory 解析；父目录自动创建，已有文件默认拒绝，显式 `--overwrite` 才允许替换普通文件，输入 config/artifact/model/image 与目录、符号/特殊文件始终受到保护。
+- **一致性不依赖 detection 顺序：** Python 与 C++ detections 先按 `class_id` 分组，再按最大 IoU 与 canonical value tie-break 一对一匹配；数量/类别完全一致后，分别检查 confidence、四坐标和 matching IoU。容差在首次运行前写入 manifest，不因失败结果临时放宽。
+- **先正确再测性能：** 正式 benchmark 前必须先通过冻结的 S1-07 consistency gate；正确性失败时不能用性能数字掩盖，也不能先优化再发布结果。
+- **分段与总体时间分开：** `Session::Run` 在 `OnnxRunner` 内部精确计时；pipeline/end-to-end 另用壁钟覆盖真实模块边界。Session 初始化、JSON 写盘和绘图不混入 repeat，但都在 JSON 中明确披露；P50/P95 使用固定 nearest-rank 定义，避免只报告一次或平均值。
+- **内存证据不伪装精度：** Windows 记录真实 Peak Working Set；不支持的平台必须写 `unsupported` 而不是 0。该指标是进程生命周期峰值，不是单次 inference 增量。
 - **扩展受条件约束：** INT8 PTQ 属于 P0 证据加固；TensorRT/Jetson/ARM 是后续真实硬件扩展；Qt 与 gRPC/Triton 受 JD 需求门禁约束。
 - **失败也要记录：** INT8、D-FINE 或符合条件的真实设备尝试即使失败，也要记录命令、错误、原因和回退路径，但不能把“尝试过”升级成“已有成果”。
 
@@ -329,11 +491,11 @@ S1-05 限制必须按证据理解：JSON 的 `model.declared_sha256` 是从已�
 
 ### 11. 版本变化与进度记录
 
-当前状态：历史项目1任务 P1-00 到 P1-03，以及大阶段一小阶段 **S1-01 至 S1-05** 均已实现并验证。S1-04 L1 已验收；S1-05 已完成稳定单图 CLI、JSON v1、无 GUI 可视化和 78/78 CTest，正在等待用户 L1 验收。
+当前状态：历史项目1任务 P1-00 到 P1-03，以及大阶段一小阶段 **S1-01 至 S1-08** 均已实现、验证并完成相应 L1；S1-09 没有新增产品功能，自动 clean reproduction 门已经 PASS。用户 L2 讲解、追问/排错和行为+GTest 练习尚未完成，因此大阶段一仍未完成，大阶段二尚未开始。
 
 2026-07-16 的大阶段一前置准备也已完成：ORT C++ 1.19.2 SDK 已存在并核验，VS x64 工具链可发现，全新 `%TEMP%` Release/NMake 构建通过 3/3 CTest，未来 GTest 依赖已固定版本。项目所有者也已确认当前 ONNX 是本人从 `final_train_2` best checkpoint 导出的；该 checkpoint 不在当前工作区或 Git 历史中。可复现命令、证据、GTest hash、模型 lineage 审计和未解决的公开分发许可检查点见 [`docs/PRE_STAGE1_READINESS.md`](docs/PRE_STAGE1_READINESS.md)。这些准备没有开始 S1-01，也没有改变 Runtime 行为。
 
-只有用户完成 S1-05 L1 验收后，下一实现步骤才是 **S1-06：自动化主链路与核心故障注入 gate**。当前没有开始 S1-06，也没有开始一致性、benchmark、batch、服务或其他扩展。`S1-*` 表示“大阶段一内部小阶段”，避免把旧项目1历史 ID `P1-*` 与顶层设计中的 P1 扩展类别混淆。
+S1-09 的下一步不是继续写产品功能，而是由用户完成下面的 L2 门；完成后才能把大阶段一标记为完成。大阶段二继续承担 INT8 PTQ、FP32/INT8 正确性/精度/性能比较和完整证据加固，当前没有开始。`S1-*` 表示“大阶段一内部小阶段”，避免把旧项目1历史 ID `P1-*` 与顶层设计中的 P1 扩展类别混淆。
 
 时间线式 V2 入口记录维护在下方“路线图”部分，每完成一个小阶段必须更新。
 
@@ -350,11 +512,89 @@ S1-05 限制必须按证据理解：JSON 的 `model.declared_sha256` 是从已�
 | S1-03 | 新增零拷贝 CPU input tensor 接线、同步 `OnnxRunner::run()`、自有 `InferenceOutput` 和 `--raw-output-summary`。 | 在后处理算法前，单独隔离 tensor shape/生命周期与真实模型运行问题。 | 固定图得到 finite `[1,10,13125]` / 131,250-value raw output；错误的 1,919,999-value 输入在 ORT tensor/Run 前失败；31/31 CTest 通过。 | user-buffer `Ort::Value` 不拥有输入 vector，必须让它稳定存活到同步 Run 返回；ORT 只在 Value 存活期间拥有输出，所以返回前必须复制。 |
 | S1-04 | 新增 `Detection`/`BoundingBox`、YOLOv8 output 校验/decode、严格阈值、IoU、稳定 class-agnostic NMS、letterbox 还原/clip，以及 `cv::Mat` preprocess 入口和 GTest。 | 在接 CLI/JSON 前，用无 ORT、无真实模型依赖的纯函数边界固定后处理语义。 | 24/24 postprocess GTest、7/7 preprocessor GTest、62/62 完整 CTest；覆盖 float32 阈值边界、空候选、横竖图、奇数 padding 和非正方形输入。 | double 配置阈值必须先转成 float32 再与 float output 比较；同分稳定顺序必须显式定义；NMS 必须发生在坐标还原和 clip 之前。 |
 | S1-05 | 新增 `SingleImageDetectionResult`、`DetectorPipeline`、`ResultWriter`、JSON v1、确定性 OpenCV 可视化，以及 `--output-json`、`--output-image`、`--overwrite`。 | 第一次形成可展示、机器可读且保持模块边界的单图片 C++ 纵切。 | 固定图得到 3 个 `crazing` detections；JSON 1,164 bytes、PNG 39,306 bytes，Python/OpenCV 回读通过；result-writer 6/6、output 16/16、完整 CTest 78/78。 | 声明 SHA 不等于逐次重算；provider 是 session 级证据；默认拒绝覆盖并保护输入；JSON/PNG 双文件不是事务，任意 Unicode 路径尚未穷尽验证。 |
+| S1-06 | 将 Runtime/artifact、preprocess、metadata、postprocess、output、integration 和核心故障扩展成统一带标签的工程质量 gate。 | 在一致性阶段前，分开证明纯算法正确、真实纵切可运行以及错误可诊断。 | 四个不同像素精确 NCHW、横竖图奇数 padding、synthetic metadata、完整空结果、schema/坏图/不可创建输出故障；clean Release CTest 90/90，5.53 秒。 | 坏 metadata 应用 synthetic struct，不需要多个大模型；合法空 detection 与 malformed/异常 raw output 不同；错误要从 object/path 明确指向 expected、actual 和 action。 |
+| S1-07 | 新增固定六类 30 图 manifest、Python ORT CPU reference、确定性 class/IoU matching，以及逐图/汇总 JSON 证据。 | 用类别、confidence、坐标和 IoU 数值证明同一 ONNX 的 Python/C++ 实现一致，取代只比较检测数量的弱证据。 | 索引 241/255/270/285/300 各类 5 张；30/30 图片、62/62 detections 通过；最大 confidence 误差 `8.049977111568296e-07`、最大坐标误差 `9.135351561440075e-05` px、最小 IoU `0.999998927116394`；consistency CTest 2/2、完整 92/92。 | Detection 不能按数组顺序 zip；要按 class 和最大 IoU 确定性匹配。Python 3.9 的 `Path.write_text` 不支持 `newline`，改用 `open(..., newline='\n')`；没有调整门槛。该证据不是精度评估或缺失 `.pt` 下的三方复跑。 |
+| S1-08 | 新增 Release-only `BenchmarkRunner`、精确 `Session::Run` 计时、`BenchmarkResult/Writer`、`--benchmark/--warmup/--repeat/--benchmark-json`、严格 JSON validator 与 Windows Peak Working Set。 | 在正确性门通过后，为当前 C++ Runtime 建立独立、可复现、可解释的性能与内存基线。 | 固定图 warmup 10/repeat 100；六段 mean/P50/P95、pipeline `5.696028 images/s`、end-to-end `5.664020 images/s`、Peak Working Set `152.714844 MiB`；先 consistency 2/2，再 benchmark 14/14，完整 CTest 106/106。 | `Session::Run` 与 pipeline 边界不能混写；初始化/写盘/绘图要排除并披露。重复 imread 是 warm-cache；Peak Working Set 是进程生命周期峰值。旧 Python ORT 指标协议不同，不能做无条件快慢结论。 |
+| S1-09 | 不新增产品功能；用全新临时 Release build 顺序重跑完整 CTest、固定 Demo、六类 30 图一致性、10/100 benchmark、JSON/PNG 回读、故障和合法空结果，并系统对齐 README。 | 把“某次开发时通过”提升为可从干净环境复现的阶段出口，同时建立用户 L2 面试门。 | CTest 106/106（19.91 秒）；Demo 3 框及固定 JSON/PNG hash；一致性 30/30、62/62；fresh pipeline/end-to-end `7.078853/7.038151 images/s`、Peak Working Set `152.578125 MiB`；四个直接故障 exit 1、两个 empty 测试通过。 | 不能用仓库旧 JSON 造成假阳性；外部命令后必须立即检查 exit code。自动门通过不等于大阶段完成，用户还要完成讲解、追问/排错和一次可回滚的行为+GTest 练习。 |
 | PLAN-20260715 | 按最新顶层设计校准仓库规则和双语总入口，并建立大阶段一长版方案。 | 保留已验证 baseline，同时避免大阶段摘要过短而遗漏契约、正确性、测试、故障和证据要求。 | `docs/PLAN.md` -> `AGENTS.md` 准则 -> README 阶段/状态摘要 -> `docs/STAGE1_EXECUTION_PLAN.md` 单步方案。 | 历史 Python 指标、外部 D010 指标和未来 C++ 结果必须明确分开。 |
+
+### 13. 大阶段一 L2 面试收口材料
+
+#### 2 分钟自然口述提纲
+
+我把一个已有的 YOLOv8/NEU-DET ONNX 模型，改造成了面向边缘部署的 C++17 单图推理 Runtime。程序先用 RuntimeConfig 保存阈值和 provider 等运行策略，用 ModelArtifactSpec 保存模型路径、SHA、输入输出、类别和前后处理语义；加载时严格检查 schema，并把声明值与 ORT 从真实模型读到的 ModelMetadata 交叉验证。单图链路是 OpenCV 解码，执行 letterbox、BGR 转 RGB、归一化和 NCHW；OnnxRunner 用 RAII 管理 ORT session，校验输入后借用 vector 创建 CPU Ort::Value，同步 Run，再把输出复制到自持有的 InferenceOutput；后处理按 `[1,4+C,N]` 做类别 argmax、严格 `confidence > threshold`、稳定 class-agnostic NMS、坐标还原和裁剪，最后输出稳定 JSON 与无 GUI PNG。
+
+正确性方面，我用 synthetic GTest/CTest 覆盖契约、已知像素、横竖图奇数 padding、metadata、decode、IoU/NMS、空结果和错误注入；再用六类各 5 张固定图比较 Python ORT 与 C++ ORT，30/30 图片、62/62 detections 在预声明容差内匹配。性能方面，在正确性门通过后，用 Release、batch=1、CPU 单线程、固定单图、warmup 10/repeat 100 测六段 mean/P50/P95，S1-09 fresh end-to-end 平均 142.082777 ms、约 7.038151 images/s，进程 Peak Working Set 152.578125 MiB。它证明的是当前 ONNX 的 C++ 工程闭环和实现一致性，不是模型精度、跨设备性能、INT8 或真实硬件部署。
+
+#### 5 分钟口述结构
+
+1. **定位与问题（约 30 秒）：** 不是重新包装训练脚本，而是解决“有 ONNX 模型”和“有可配置、可测试、可复现的 C++ 部署软件”之间的断层。
+2. **工程与契约（约 40 秒）：** 讲 Runtime library/薄 CLI、RuntimeConfig、ModelArtifactSpec、ModelMetadata，以及为什么声明文件相对路径和 actual-vs-declared 校验能防止加载错模型。
+3. **前处理（约 40 秒）：** 讲 `image path -> cv::Mat -> letterbox -> RGB -> float32/255 -> NCHW vector`，以及 scale/padding 如何服务坐标逆变换。
+4. **ORT 与生命周期（约 45 秒）：** 讲 PImpl/RAII、显式 CPU session、metadata gate、输入 Ort::Value 借用 vector 到同步 Run 返回，以及输出为什么必须复制。
+5. **后处理与输出（约 45 秒）：** 讲无独立 objectness 的 BCN decode、类别 argmax、严格阈值、IoU、稳定 class-agnostic NMS、先 NMS 后 restore/clip，以及 JSON/PNG 的稳定和安全输出策略。
+6. **测试和故障（约 40 秒）：** 区分 pure synthetic unit、真实模型 integration 和 CLI negative；举 schema、metadata、坏图、不可写输出及合法空 detection。
+7. **正确性和性能证据（约 35 秒）：** 讲 30 图按 class/最大 IoU 匹配及冻结容差，再讲六段 benchmark 边界、warmup、P50/P95、throughput 和 Peak Working Set。
+8. **限制和后续（约 25 秒）：** 说明不是 mAP、不是 `.pt` 三方复跑、provider 不是逐节点证据、benchmark 是单机 warm-cache；大阶段二继续 INT8 PTQ 与 FP32/INT8 证据加固。
+
+#### 面试追问与口述要点
+
+1. **为什么 RuntimeConfig 与 ModelArtifactSpec 要拆开？** 前者是可调运行策略，后者是模型固有身份和 tensor 契约；调阈值不应被误认为模型 artifact 改变。
+2. **为什么还需要 ModelMetadata？** ArtifactSpec 是声明，ModelMetadata 是 ORT 从实际 ONNX 读取的值；交叉校验能在 Run 前发现加载错模型或 name/shape/dtype 不匹配。
+3. **为什么相对路径不依赖 current working directory？** config 到 artifact、artifact 到 model 都相对各自声明文件，确保从仓库根、build 目录或其他目录启动仍定位同一资源。
+4. **为什么前处理保存 scale 和四边 padding？** 模型框位于 letterbox 空间，必须减 padding 再除 scale 才能还原原图坐标；奇数 padding 还要求明确左右/上下分配。
+5. **为什么输入 Ort::Value 可以借用 vector，输出却要复制？** 同步 Run 返回前输入 vector 地址有效；局部 ORT output 析构后其数据指针会失效，所以返回前复制到自持有 vector。
+6. **输出 10 个 channel 是什么？** 4 个 xywh 参数加 6 类分数；当前导出没有独立 objectness，也不额外 sigmoid。
+7. **为什么 NMS 使用 stable sort？** 分数相同时保留原候选顺序，形成确定性 tie-break，使 JSON、测试和重复 benchmark 可稳定复现。
+8. **一致性为什么不能按数组下标比较？** 两端检测顺序可能不同；工具先按 class_id 分组，再按最大 IoU 和 canonical value tie-break 一对一匹配同一目标。
+9. **一致性通过为什么不等于模型准确率高？** 它证明同一 ONNX 的两套实现一致；mAP 需要与人工标注比较，是不同评估问题。
+10. **为什么 benchmark 前必须先过 consistency？** 性能只说明快慢，不能证明结果正确；正确性失败时发布延迟没有意义。
+11. **`Session::Run`、pipeline 和 end-to-end 有什么区别？** Run 只测 ORT；pipeline 还包含前处理、tensor/输出校验复制和后处理；end-to-end 再包含图片解码。
+12. **actual provider 与 Peak Working Set 的证据边界是什么？** actual provider 是 session 级 CPU EP 证据，不是逐节点 profiling；Peak Working Set 是整个进程生命周期峰值，不是单次推理独占内存。
+13. **为什么历史 Python benchmark 不能和 C++ 数字直接比？** 语言、provider、图片集合、预热次数和计时边界不同；只能分栏保留，不能无条件声称谁更快。
+14. **MIT、ONNX AGPL metadata 和数据集许可为什么分开？** 它们分别描述源码、模型 artifact 和数据集分发，不能在没有来源证据时互相覆盖。
+
+#### 至少三个错误排查案例
+
+1. **`provider expected [cpu], actual cuda`：** 这是 schema 加载失败，session 尚未创建，更不表示 GPU 被实际使用。先定位声明文件/行号/字段；当前 v1 只支持 CPU，恢复 `cpu`，未来扩展 CUDA 必须同步 SDK、session 注册、actual provider 和测试。
+2. **声明输入 `[1,3,800,800]`，实际 metadata `[1,3,640,640]`：** 先用 `--inspect-model` 核对 model path、SHA、name、shape 和 dtype，判断是否误换 ONNX。不能只修改 artifact 掩盖错误；应使用匹配契约或重新导出并重新做一致性。
+3. **文件存在但 OpenCV 报 damaged/empty image：** “路径存在”不等于“codec 能解码”。用 image probe/`imread` 检查文件内容和格式，再确认 preprocess 输入必须是非空 `CV_8UC3`。
+4. **输出父路径是普通文件：** 程序无法在普通文件下创建目录。检查输出路径每一层并更换目录；该错误应 exit 1，不能误报成模型推理失败。
+5. **consistency 失败后 benchmark 被阻止：** 先区分 count/class、unmatched box、confidence、bbox 或 IoU 失败，再依次核对 manifest/config/artifact/model SHA、provider/版本、前处理、strict threshold、NMS 和坐标还原；禁止为全绿无依据放宽容差。
+
+#### 简历 bullet 候选
+
+- 基于 C++17、CMake、OpenCV 与 ONNX Runtime 实现 YOLOv8/NEU-DET 单图工业缺陷 Runtime，完成严格 config/artifact schema、ORT RAII session、letterbox/NCHW、YOLO decode/NMS/坐标还原、稳定 JSON/可视化，并以 GTest/CTest 覆盖核心算法与故障注入。
+- 建立可复现正确性与性能证据：六类 30 图 Python ORT/C++ ORT 共 62 个 detection 的数量/类别完全一致，最大 confidence 误差 `8.05e-7`、最大坐标误差 `9.14e-5 px`；记录 Release CPU 单图六段 P50/P95、约 `7.04 images/s` end-to-end 与 `152.58 MiB` 进程峰值内存。
+
+第二条必须保留“同一 ONNX 实现一致性”和“固定单图 CPU 协议”的语境，不能改写成 mAP、通用 FPS 或真实设备部署结果。
+
+#### 核心代码练习清单
+
+- `cpp_infer/src/image_preprocessor.cpp:57` 与 `:108`：RGB float HWC 展平到 NCHW、letterbox/normalize；对应 `cpp_infer/tests/preprocessor_mat_test.cpp:47`、`:82`、`:108`。
+- `cpp_infer/src/onnx_runner.cpp:338`、`:402`、`:419`：PImpl/RAII、CPU Ort::Value、同步 Run、输出 ownership 和纯 Run 计时；输入/输出校验位于 `:209`、`:245`。
+- `cpp_infer/src/postprocessor.cpp:269`、`:280`、`:311`、`:360`、`:405`、`:450`：xywh/xyxy、IoU、BCN decode、NMS、restore/clip 和完整顺序；对应 `cpp_infer/tests/postprocessor_test.cpp:173`、`:305`、`:328`、`:355`、`:393`、`:411`。
+- `cpp_infer/src/model_metadata.cpp:149`：actual-vs-declared metadata 总校验入口。
+- `cpp_infer/tools/compare_consistency.py:619`、`:801`、`:922`、`:1435`：Python reference preprocess/postprocess、确定性 matching 和 30 图编排。
+- `cpp_infer/src/benchmark_result.cpp:66` 与 `cpp_infer/src/benchmark_runner.cpp:327`、`:371`、`:520`：mean/P50/P95、六段计时、重复结果稳定性和 warmup/repeat；对应 `cpp_infer/tests/benchmark_test.cpp:31`。
+- 需要读懂但不优先手写：`cpp_infer/src/key_value_parser.cpp:76`、`:281`，`cpp_infer/src/detector_pipeline.cpp:135`，`cpp_infer/src/result_writer.cpp:764`、`:856`，以及薄 CLI `cpp_infer/src/main.cpp:631`。
+
+#### 用户必须完成的 L2“核心行为 + 对应 GTest”练习
+
+练习目标是在**一次性练习分支**中，临时把 score filter 从严格 `confidence > threshold` 改成 inclusive `>=`，完成 RED -> GREEN -> 恢复。必须先为当前 S1-09 状态建立用户确认的 checkpoint；工作区有未提交改动时不要直接做恢复操作，练习分支绝不能合并回产品分支。
+
+1. **RED：** 先修改 `cpp_infer/tests/postprocessor_test.cpp:173` 的 synthetic 阈值用例，使 `0.25` 在 threshold=0.25 时也应保留；不改产品代码。先运行 `cmake --build $BuildDir --target yolo_defect_postprocess_tests` 重新编译测试，再运行 `yolo_defect_postprocess_tests.exe --gtest_filter='YoloDecodeTest.*Threshold*'`，应看到测试失败。
+2. **GREEN：** 在练习分支临时修改 `cpp_infer/src/postprocessor.cpp:344` 为 inclusive 边界，并同步处理 `postprocessor_test.cpp:192` 与 `:456` 受影响的 exact-threshold 用例；重新构建同一测试 target 后，聚焦 GTest 应以退出码 0 通过。
+3. **口述：** 说明为什么边界会改变 detection count、为什么可能破坏 Python/C++ consistency，以及产品协议变化为何要同步 Python reference、manifest 语义和 README。
+4. **恢复：** 切回 S1-09 checkpoint，不合并练习分支；确认产品仍是严格 `>`，重新构建测试 target，原测试仍证明等于阈值会被拒绝，再运行聚焦 GTest 和完整 CTest。
+
+只有用户能独立完成 2/5 分钟讲解、至少 10 个追问、至少 3 个错误案例，以及上述 RED/GREEN/恢复练习，并且恢复后完整自动门仍通过，才能把“大阶段一尚未完成”改成“大阶段一完成”。
 
 ## 项目亮点
 
-- **C++ 单图纵切已验证** — 固定样本完成 contract -> OpenCV -> ORT CPU -> YOLO postprocess -> JSON/PNG；3 个 `crazing` detections，output 聚焦 16/16、完整 CTest 78/78
+- **Python ORT/C++ ORT 严格一致性已验证** — 固定六类 30 图、62/62 detections 在 count/class exact、confidence `<=1e-4`、bbox `<=1e-2 px`、IoU `>=0.999` 门槛下全部通过
+- **C++ Release 性能与内存证据已 fresh reproduction** — S1-09 固定 CPU/线程/模型/单图 10/100 协议下，pipeline/end-to-end 为 **7.078853/7.038151 images/s**，Peak Working Set 为 **152.578125 MiB**；S1-08 旧数值另作历史记录，不做无条件快慢结论
+- **C++ 单图纵切与质量 gate 已验证** — 固定样本完成 contract -> OpenCV -> ORT CPU -> YOLO postprocess -> JSON/PNG；3 个 `crazing` detections，S1-06 的 90 项 schema/算法/integration/故障测试继续保留
 - **当前最佳实验结果** — 当前最佳模型 `final_train_2` 达到 **mAP@0.5 = 0.743**
 - **历史 PyTorch / ONNX 数量抽查** — **50/50** 数量一致、总检测数 **146 vs 146**；但排序样本全是 `crazing`，没有证明类别/框坐标容差
 - **历史 V1 Python Benchmark** — PyTorch CPU **8.43 FPS**；PyTorch GPU（RTX 3060）**110.8 FPS**；Python ORT CPU **24.4 FPS**；Python ORT GPU **72.1 FPS**，均为 100 张计时图片（5 张预热），不是 C++ 结果
@@ -369,12 +609,18 @@ S1-05 限制必须按证据理解：JSON 的 `model.declared_sha256` 是从已�
 | mAP@0.5 | **0.743** |
 | mAP@50-95 | **0.388** |
 | 历史 PT/ONNX 检测数量一致率 | 全为 `crazing` 的 **50 / 50**（**100%**，只比较数量） |
+| 当前 Python ORT/C++ ORT 固定样本一致性 | **30/30 图片、62/62 detections**；最大 confidence 误差 `8.049977111568296e-07`，最大 bbox 误差 `9.135351561440075e-05 px`，最小 IoU `0.999998927116394` |
 | 平均检测框数差值 | **0.000** |
 | 历史 PyTorch CPU 基准测试 | **8.43 FPS** / **118.66 ms** 每张 |
 | 历史 PyTorch GPU 基准测试（RTX 3060） | **110.8 FPS** / **9.0 ms** 每张 |
 | 历史 Python ORT CPU 基准测试 | **24.4 FPS** / **40.9 ms** 每张 |
 | 历史 Python ORT GPU 基准测试（RTX 3060） | **72.1 FPS** / **13.9 ms** 每张 |
+| S1-09 fresh C++ ORT CPU pipeline | **7.078853 images/s** / **141.265814 ms mean**，P50/P95 **144.4673/149.8395 ms**，固定单图 10/100 协议 |
+| S1-09 fresh C++ ORT CPU end-to-end | **7.038151 images/s** / **142.082777 ms mean**，P50/P95 **145.3222/150.7653 ms** |
+| S1-09 fresh C++ 进程 Peak Working Set | **152.578125 MiB**，进程生命周期作用域 |
 | 历史模型大小记录（`best.pt` / 当前 `best.onnx`） | ~6.0 MiB / ~11.8 MiB；当前工作区和 Git 历史中未找到匹配的 `.pt` |
+
+历史 Python 行与当前 C++ 行的样本、实现、硬件/provider 和计时边界不同，不应直接排序或据此声称 C++ 比 Python 更快/更慢。
 
 ## V1 Python Baseline 快速开始
 
@@ -710,12 +956,14 @@ python scripts/inference_onnx.py --model models/best.onnx --image-dir data/image
 | 历史 PyTorch GPU 基准测试（RTX 3060） | **110.8 FPS**，**9.0 ms/张**，共 **100** 张计时图片 | `results/pytorch_benchmark_gpu.json` |
 | 历史 Python ORT CPU 基准测试 | **24.4 FPS**，**40.9 ms/张**，共 **100** 张计时图片 | `results/onnx_benchmark_cpu.json` |
 | 历史 Python ORT GPU 基准测试（RTX 3060） | **72.1 FPS**，**13.9 ms/张**，共 **100** 张计时图片 | `results/onnx_benchmark_gpu.json` |
+| S1-08 历史 C++ ORT CPU Release baseline | pipeline **5.696028 images/s**，end-to-end **5.664020 images/s**；单张固定图 warmup 10/repeat 100 | `cpp_infer/results/benchmark/yolov8_neu_det_cpu_release.json` |
+| S1-09 fresh C++ ORT CPU Release reproduction | pipeline **7.078853 images/s**，end-to-end **7.038151 images/s**；单张固定图 warmup 10/repeat 100 | 本次全新 `%TEMP%` build 的 `s1_09_closure/benchmark/yolov8_neu_det_cpu_release.json` |
 | 历史 PT / ONNX 检测数量一致率 | 全为 `crazing` 的 **50 / 50**（**100%**，只比较数量） | `results/pt_onnx_compare/compare_50_summary.json` |
 | 历史 PT / ONNX 总检测数 | **146 vs 146** | `results/pt_onnx_compare/compare_50_summary.json` |
 | 历史平均绝对数量差 | **0.000** | `results/pt_onnx_compare/compare_50_summary.json` |
 | 模型大小记录 | 历史 `best.pt = 6,286,072 bytes`；当前已跟踪 `best.onnx = 12,336,935 bytes`；当前工作区和 Git 历史中未找到匹配 `.pt` | artifact/证据审计 |
 
-上表所有 latency 都是 V1 Python/Python-ORT 证据。第一份 C++ Runtime latency 表将在 S1-08 使用独立、明确的协议生成。
+历史 PyTorch/Python ORT 行与 C++ Runtime 行来自不同协议：历史行使用 100 张计时图片与 5 次预热，S1-08/S1-09 C++ 使用一张固定图片、warmup 10/repeat 100，并分开记录 decode/preprocess/Run/postprocess/pipeline/end-to-end。历史 Python、S1-08 C++ 历史基线和 S1-09 fresh reproduction 只能分别保留，不能无条件比较快慢；S1-08 与 S1-09 即使协议相同，也没有锁定整个机器状态。
 
 ### YOLODetector 类（`src/detector.py`）
 
@@ -975,17 +1223,26 @@ yolo_defect/
 │   ├── artifacts/                #   ModelArtifactSpec 声明
 │   │   └── yolov8_neu_det.artifact.txt
 │   ├── configs/default_config.txt#   RuntimeConfig 策略与 artifact 路径
-│   ├── include/yolo_defect_cpp/  #   契约、preprocess/runner/postprocess 公共接口
+│   ├── include/yolo_defect_cpp/  #   契约、preprocess/runner/postprocess/benchmark 公共接口
 │   │   ├── detection_result.h    #   自有单图输出数据契约
 │   │   ├── detector_pipeline.h   #   单图纵切编排边界
-│   │   └── result_writer.h       #   JSON/图片输出请求与返回契约
-│   ├── src/                      #   parser、预处理、ORT run、postprocess 与薄 CLI
+│   │   ├── result_writer.h       #   detection JSON/图片输出请求与返回契约
+│   │   ├── benchmark_result.h    #   latency/environment/memory 证据结构与统计
+│   │   ├── benchmark_runner.h    #   固定 Release benchmark 请求与执行边界
+│   │   └── benchmark_writer.h    #   benchmark JSON 与安全输出接口
+│   ├── src/                      #   parser、预处理、ORT run、postprocess、benchmark 与薄 CLI
 │   │   ├── detector_pipeline.cpp #   contract -> preprocess -> Run -> postprocess
-│   │   └── result_writer.cpp     #   JSON escaping/序列化、路径策略和 OpenCV 绘图
-│   ├── tests/                    #   synthetic GTest、output/CLI wrappers、Python JSON 与 OpenCV 回读 probe
-│   └── results/demo/             #   固定 S1-05 证据
-│       ├── crazing_241.detections.json
-│       └── crazing_241.visualized.png
+│   │   ├── result_writer.cpp     #   detection JSON、路径策略和 OpenCV 绘图
+│   │   ├── benchmark_runner.cpp  #   六段计时、环境与 Peak Working Set 采集
+│   │   └── benchmark_writer.cpp  #   benchmark JSON schema、escaping 与安全写盘
+│   ├── tools/
+│   │   └── compare_consistency.py#   Python ORT reference、确定性 matching 与证据输出
+│   ├── tests/                    #   synthetic GTest/CTest、故障、一致性与 benchmark validator
+│   │   └── fixtures/consistency_manifest.json # 六类 x 5 固定图片及 SHA-256
+│   └── results/
+│       ├── demo/                 #   固定 S1-05 JSON/PNG 证据
+│       ├── consistency/          #   S1-07 per-image 与 summary JSON
+│       └── benchmark/            #   S1-08 C++ Release latency/memory JSON
 ├── configs/
 │   ├── train_config.yaml         # baseline 训练超参数配置
 │   └── exp*.yaml                 # 各组实验配置（imgsz / lr / augment / final）
@@ -1003,7 +1260,7 @@ yolo_defect/
 
 - **`scripts/`**：一次性脚本，用 argparse 接收参数，从命令行运行。每个脚本独立，做一件事。
 - **`src/`**：可复用模块。`detector.py` 同时被推理脚本和 FastAPI 服务 import，避免代码重复。
-- **`cpp_infer/`**：V2 C++ 部署工作区，现已承载 Runtime library/薄 CLI、严格 Runtime/artifact 契约、OpenCV 预处理、ORT RAII session、实际 metadata 校验、安全 input tensor、自有 raw output、纯 YOLOv8 postprocess、单图 `DetectorPipeline`、稳定 JSON v1、无 GUI 可视化，以及 78 项 GTest/CTest gate；后续再做 S1-06 故障 gate、一致性和 benchmark。
+- **`cpp_infer/`**：V2 C++ 部署工作区，现已承载 Runtime library/薄 CLI、严格 Runtime/artifact 契约、OpenCV 预处理、ORT RAII session、实际 metadata 校验、安全 input tensor、自有 raw output、纯 YOLOv8 postprocess、单图 `DetectorPipeline`、稳定 JSON v1、无 GUI 可视化、S1-06 quality gate、S1-07 固定六类 Python ORT/C++ ORT consistency、S1-08 benchmark/Peak Working Set，以及 S1-09 fresh reproduction；当前完整 CTest 106/106（19.91 秒）。
 - **`configs/`**：超参数与代码分离。调参时改配置文件，不用改代码。用 git diff 可以对比两次实验的参数差异。
 
 ## 技术栈
@@ -1016,10 +1273,11 @@ yolo_defect/
 | PyTorch | 深度学习框架 | 2.0.0 |
 | Ultralytics | YOLOv8 训练和推理 | 本机与 artifact metadata 均为 8.4.24 |
 | ONNX | 开放神经网络格式 | Python 包 1.19.1；artifact opset 17 |
-| ONNX Runtime | Python baseline 加 C++ RAII session、metadata/raw inference 与单图 pipeline | Python 1.19.2 与官方 Windows x64 CPU C++ SDK 1.19.2；同步 `Session::Run` 后复制 raw output，S1-05 继续串到 Detection JSON/PNG；provider 仍只作 session 级证据 |
-| OpenCV | Python 工具、C++ `CV_8UC3` preprocess 与无 GUI detection 可视化/回读 | Windows C++ 4.8.0 x64 vc16；固定颜色/ASCII baseline 标签，PNG 回读为 200x200 `CV_8UC3` |
-| CMake | 当前 C++ 构建系统与 CTest 入口 | 4.1.1-msvc1；Runtime/CLI、GTest、Python JSON checker 与 OpenCV image probe 边界清晰 |
-| GTest | synthetic postprocess/preprocess 与 S1-05 result-writer JSON 单元测试 | 官方 GitHub v1.17.0 archive；固定 commit `52eb8108c5bdec04579160ae17225d66034bd723` 和 SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84`；S1-05 新增 result-writer 6/6，完整 CTest 78/78；离线覆盖只使用标准 `FETCHCONTENT_SOURCE_DIR_GOOGLETEST` 和另行校验的源码 |
+| ONNX Runtime | Python baseline、Python consistency reference，加 C++ RAII session、metadata/raw inference、单图 pipeline 与精确 Run 计时 | Python 1.19.2 与官方 Windows x64 CPU C++ SDK 1.19.2；S1-07/S1-08 显式使用 `CPUExecutionProvider`；provider 仍只作 session 级证据 |
+| OpenCV | Python consistency preprocess、C++ `CV_8UC3` preprocess 与无 GUI detection 可视化/回读 | Python 4.13.0；Windows C++ 4.8.0 x64 vc16；版本差异已写入一致性 summary，冻结门槛没有调整 |
+| NumPy | Python consistency 的 float32 NCHW、BCN decode 与数值计算 | 2.0.2 |
+| CMake | 当前 C++ 构建系统与 CTest 入口 | 4.1.1-msvc1；Runtime/CLI、GTest、Python detection/consistency/benchmark validator 与 OpenCV image probe 边界清晰 |
+| GTest / CTest | 四个 GTest target：postprocess 25、preprocess 7、output 7、benchmark 8；另有 synthetic metadata/inference executable、Python matching/JSON validator、CLI negative 与真实 integration | GTest 官方 v1.17.0 archive，固定 commit `52eb8108c5bdec04579160ae17225d66034bd723` 和 SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84`；S1-09 全新 Release 完整 CTest 106/106（19.91 秒）；离线覆盖只使用标准 `FETCHCONTENT_SOURCE_DIR_GOOGLETEST` 和另行校验的源码 |
 | Matplotlib | 可视化绘图 | (via ultralytics) |
 | FastAPI | REST API 服务 | latest |
 | Conda | 环境管理 | — |
@@ -1078,13 +1336,13 @@ V2 队列以 `docs/PLAN.md` 为准。进入每个大阶段前，Codex 先读取�
 | S1-02 | **已验证，L1 已验收** | ORT session 与 metadata 校验 | RAII/PImpl session、显式 CPU EP、实际 version/provider/count/name/shape/dtype/class contract 检查与 synthetic validator | `models/best.onnx` 加载成功；实际 float32 `[1,3,800,800] -> [1,10,13125]` metadata 通过；真实/synthetic 负例和 29/29 CTest 通过；没有 `Session::Run` |
 | S1-03 | **已验证，L1 已验收** | Tensor 接线与 raw inference | 借用 preprocess vector 构造 CPU ORT tensor，同步运行，校验并复制 raw output 到独立存储 | 固定图得到 finite、自有 `[1,10,13125]` / 131,250-value 输出；错误长度在 Run 前失败；31/31 CTest 通过；没有 decode |
 | S1-04 | **已验证，L1 已验收** | YOLO decode/filter/NMS/坐标还原 | 纯函数校验/decode、float32 strict threshold、稳定 class-agnostic input-space NMS、restore/clip；增加 `cv::Mat` preprocess 测试边界和固定 GTest | postprocess 24/24、preprocess 7/7、完整 CTest 62/62；不依赖真实模型证明纯算法 |
-| S1-05 | **已实现并验证，等待 L1 验收** | 端到端 CLI、JSON 与可视化 | `DetectorPipeline` 编排单图纵切，输出稳定 JSON v1 与确定性无 GUI 可视化，并实施父目录/覆盖/保护路径策略 | 固定图 3 个 `crazing`；JSON/Python 与 PNG/OpenCV 回读通过；result-writer 6/6、output 16/16、完整 CTest 78/78；空 detection 是合法 `[]` |
-| S1-06 | **S1-05 L1 后下一步** | 自动化与失败路径 gate | 扩展 GTest/CTest，覆盖契约、预处理、metadata、后处理、集成和核心错误 | 覆盖缺模型、shape/dtype/class mismatch、损坏图片、空输出；应失败场景返回非零且信息可行动 |
-| S1-07 | 待推进 | 固定样本 Python ORT/C++ 一致性 | 在相同 CPU provider 与后处理语义下比较提交的六类 manifest | 数量/类别一致并通过预声明 confidence/box/IoU 容差，否则有逐图诊断；不声称未重跑的直接 PT 对比 |
-| S1-08 | 待推进 | 可复现 Release benchmark | 用 warmup/repeat 测 image decode/preprocess/infer/postprocess/pipeline，并记录环境/内存 | JSON 含 mean/P50/P95、throughput、构建/provider/模型/样本元数据，以及 Windows Peak Working Set 或明确 unsupported |
-| S1-09 | 待推进 | 大阶段一收口 | clean build 全 gate、对齐文档证据并完成 L2 面试验收 | 固定 demo/测试/一致性/benchmark 通过；用户可讲 5 分钟、回答追问/故障，并修改一个行为及其测试 |
+| S1-05 | **已验证，L1 已验收** | 端到端 CLI、JSON 与可视化 | `DetectorPipeline` 编排单图纵切，输出稳定 JSON v1 与确定性无 GUI 可视化，并实施父目录/覆盖/保护路径策略 | 固定图 3 个 `crazing`；JSON/Python 与 PNG/OpenCV 回读通过；result-writer 6/6、output 16/16、完整 CTest 78/78；空 detection 是合法 `[]` |
+| S1-06 | **已验证，L1 已验收** | 自动化与失败路径 gate | 为严格 Runtime/artifact schema、精确 preprocess layout、synthetic metadata、postprocess、output、integration 和核心故障建立带标签的 GTest/CTest gate | Clean Release 90/90、5.53 秒；unit 51、integration 3、negative 32；缺模型、坏图和不可创建输出均非零并给出可行动错误 |
+| S1-07 | **已验证，L1 已验收** | 固定样本 Python ORT/C++ 一致性 | 在相同 artifact/config、显式 CPU provider 与后处理语义下，比较仓库内冻结的六类 30 图 manifest；按 class 与最大 IoU 确定性匹配并输出逐图/汇总 JSON | 30/30 图片、62/62 detections 通过 count/class exact、confidence `<=1e-4`、bbox `<=1e-2 px`、IoU `>=0.999`；consistency 2/2，完整 CTest 92/92；不声称缺失 `.pt` 下的三方复跑 |
+| S1-08 | **已验证，L1 已验收** | 可复现 Release benchmark | 用 warmup/repeat 测 image decode、preprocess、仅 `Session::Run`、postprocess、pipeline、end-to-end，并记录环境、throughput 与内存 | 历史固定图 warmup 10/repeat 100；pipeline/end-to-end `5.696028/5.664020 images/s`；Peak Working Set `152.714844 MiB`；先 consistency 2/2，再 benchmark 14/14，完整 CTest 106/106 |
+| S1-09 | **自动门 PASS，用户 L2 待完成** | 大阶段一收口 | 不新增产品功能；用全新临时 Release build 重跑完整 gate、Demo、30 图一致性和 benchmark，对齐双语文档，并安排 L2 口述/排错/行为+GTest 练习 | CTest 106/106（19.91 秒）；Demo/JSON/PNG、一致性、benchmark、四个直接故障与两个合法空结果均通过。用户练习完成前大阶段一仍未完成 |
 
-只有 S1-09 验收后才动态拆解大阶段二；其固定边界是 P0 证据加固和 INT8 PTQ（QAT 仅在有依据时启动）。大阶段三再按条件选择 P1 扩展。TensorRT 不是无条件任务，项目2 `inference_event` 也是可选桥接，不属于大阶段一验收项。
+只有用户 L2 门也通过后才宣布大阶段一完成并进入大阶段二；大阶段二固定边界是 P0 证据加固和至少一次 INT8 PTQ，以及 FP32/INT8 正确性、精度、性能与内存对比（QAT 仅在 PTQ 退化明显且时间允许时启动）。大阶段三再按条件选择 P1 扩展。TensorRT 不是无条件任务，项目2 `inference_event` 也是可选桥接，不属于大阶段一验收项。
 
 ### P1-01 CMake 骨架命令
 
@@ -1323,6 +1581,98 @@ ctest --test-dir $BuildDir --output-on-failure
 
 默认不加 `--overwrite` 时，已有输出会以非零退出和可行动错误拒绝；父目录缺失会自动创建，但目录、符号/特殊文件、同一 JSON/图片目标和保护输入路径不能被覆盖。JSON/PNG 是两个文件而非跨文件事务，CLI 也未证明跨进程原子写入；这些边界不能因固定 Demo 成功而省略。
 
+### S1-07 Python ORT/C++ ORT 一致性命令
+
+S1-07 不修改训练或历史 Python 推理资产，而是在 `cpp_infer/` 内建立独立 reference/comparison 工具。Manifest 固定每类验证集索引 241、255、270、285、300，并记录每张图的 SHA-256；Python 与 C++ 都从同一 RuntimeConfig/ModelArtifactSpec 取得模型、输入、类别、阈值和 NMS 语义。Python 解释器刻意写成 TestBase 的绝对路径，避免任意 Conda/base 环境悄悄改变 ORT、OpenCV、NumPy 或 provider；`--cpp-opencv-version 4.8.0` 记录独立核验的 C++ 构建依赖，不会假装它与 Python OpenCV 4.13.0 相同。下面命令会重新生成仓库内机器可读证据：
+
+```powershell
+$PythonExe = 'C:\Users\Everbreath\.conda\envs\TestBase\python.exe'
+$Manifest = (Resolve-Path `
+  'cpp_infer\tests\fixtures\consistency_manifest.json').Path
+$ConsistencyDir = (Resolve-Path `
+  'cpp_infer\results\consistency').Path
+
+& $PythonExe 'cpp_infer\tools\compare_consistency.py' `
+  --manifest $Manifest `
+  --cpp-cli "$BuildDir\bin\yolo_defect_cpp.exe" `
+  --cpp-opencv-version 4.8.0 `
+  --output-dir $ConsistencyDir
+
+& $PythonExe -m json.tool `
+  "$ConsistencyDir\per_image.json" > $null
+& $PythonExe -m json.tool `
+  "$ConsistencyDir\summary.json" > $null
+ctest --test-dir $BuildDir -L consistency --output-on-failure
+ctest --test-dir $BuildDir --output-on-failure
+```
+
+2026-08-22 clean Release 验证：Python 显式 session provider 为 `CPUExecutionProvider`；30/30 图片、62/62 Python/C++ detections 匹配通过。最大 confidence 绝对误差为 `8.049977111568296e-07`，最大 bbox 坐标绝对误差为 `9.135351561440075e-05` 像素，最小 matching IoU 为 `0.999998927116394`。聚焦 consistency CTest 2/2 在 12.58 秒内通过，完整 CTest 92/92 在 17.28 秒内通过。该结果是同一 ONNX 的双实现正确性证据，不是模型精度或新的 PyTorch/ONNX/C++ 三方实验。
+
+### S1-08 C++ Release Benchmark 与内存命令
+
+S1-08 只在 S1-07 正确性门通过后发布性能证据。以下是已有 clean Release build 上重新生成正式 JSON 的最简命令；仓库文件已经存在，因此明确追加 `--overwrite`：
+
+```powershell
+$PythonExe = 'C:\Users\Everbreath\.conda\envs\TestBase\python.exe'
+$Config = (Resolve-Path 'cpp_infer\configs\default_config.txt').Path
+$Image = (Resolve-Path 'data\images\val\crazing_241.jpg').Path
+$BenchmarkJson = Join-Path (Get-Location) `
+  'cpp_infer\results\benchmark\yolov8_neu_det_cpu_release.json'
+
+ctest --test-dir $BuildDir -L consistency --output-on-failure
+if ($LASTEXITCODE -ne 0) {
+  throw 'S1-07 consistency 失败；禁止继续发布 benchmark。'
+}
+
+& "$BuildDir\bin\yolo_defect_cpp.exe" `
+  --config $Config --image $Image `
+  --benchmark --warmup 10 --repeat 100 `
+  --benchmark-json $BenchmarkJson --overwrite
+
+& $PythonExe -m json.tool $BenchmarkJson > $null
+& $PythonExe 'cpp_infer\tests\assert_benchmark_json.py' `
+  $BenchmarkJson --expected-image $Image `
+  --expected-warmup 10 --expected-repeat 100
+
+ctest --test-dir $BuildDir -L benchmark --output-on-failure
+ctest --test-dir $BuildDir -N
+ctest --test-dir $BuildDir --output-on-failure
+```
+
+正式环境为 Windows 10.0.26200、`DESKTOP-6OGK71C`、AMD64 Family 25 Model 117、16 个逻辑 CPU、MSVC 19.50.35721.0 Release C++17、OpenCV 4.8.0 和 ORT 1.19.2。Session 实际使用 `CPUExecutionProvider`，策略为 sequential、intra/inter-op 1/1、graph optimization all。模型为 12,336,935 bytes、输入 `[1,3,800,800]`；固定图片为 23,845 bytes、200x200x3，batch/sample=1，score 0.25、NMS 0.45、class-agnostic，100 次均得到 3 个 detections。
+
+| 段 | Mean ms | P50 ms | P95 ms |
+|----|---------|--------|--------|
+| Image decode | 0.991129 | 0.9649 | 1.3517 |
+| Preprocess (`cv::Mat -> tensor`) | 8.244569 | 7.5514 | 12.1265 |
+| `Session::Run` | 165.555859 | 164.8985 | 186.2136 |
+| Postprocess | 0.424115 | 0.4251 | 0.5636 |
+| Pipeline | 175.560944 | 175.1058 | 195.1376 |
+| End-to-end | 176.553060 | 176.1357 | 196.6128 |
+
+Pipeline throughput 为 `5.696028 images/s`，end-to-end throughput 为 `5.664020 images/s`；Windows Peak Working Set 为 `160,133,120 bytes`（`152.714844 MiB`）。正式顺序先通过 consistency 2/2，再通过 benchmark 14/14；`ctest -N` 列出 106 项，完整 CTest 106/106 在 18.44 秒内通过。
+
+Session/model 初始化、初始路径和大小检查、统计计算、Peak Working Set 查询、JSON 序列化/写盘以及绘图均不进入重复计时，绘图没有执行。结果是 warm-cache、单图、单机 CPU baseline；没有 CPU affinity/priority/idle lock，Peak Working Set 是进程生命周期峰值，actual provider 不是逐节点 profiling。历史 Python ORT 24.4/72.1 FPS 协议不同，不能与该 C++ 结果做无条件优劣比较。
+
+### S1-09 大阶段一自动收口复现
+
+S1-09 不修改产品语义，而是在新的 `%TEMP%` NMake/Release build 中，按 configure/build -> 完整 CTest -> Demo -> consistency -> benchmark 顺序重新执行整个大阶段一出口。Quick Start 将所有 S1-09 输出写入 `$BuildDir\s1_09_closure`，每个外部程序返回后立即检查 exit code，并要求目标 JSON 在本次运行前不存在，因此不会因仓库中的旧 S1-05/S1-07/S1-08 证据而假通过。
+
+2026-08-22 fresh reproduction：完整 CTest 106/106 在 19.91 秒内通过。固定 Demo 仍得到 3 个 detections；JSON 为 1,164 bytes、SHA-256 `E8445BC92201307430A17B7B51B6CCEFC5A74D2D473617170F50AD921CCF9049`，PNG 为 39,306 bytes、SHA-256 `3A0C6C57EE977EE02762F05FCDE6928C8AACBD20883596D3622A6225942E2346`，OpenCV probe 为 200x200 `CV_8UC3`。六类各 5 张的一致性再次通过 30/30 图片和 62/62 matches；最大 confidence 误差 `8.049977111568296e-07`、最大 bbox 误差 `9.135351561440075e-05 px`、最小 matching IoU `0.999998927116394`，本次 `per_image.json` 与 `summary.json` 均通过标准 JSON parser。
+
+| S1-09 fresh 段 | Mean ms | P50 ms | P95 ms |
+|-----------------|---------|--------|--------|
+| Image decode | 0.816168 | 0.8182 | 0.9251 |
+| Preprocess (`cv::Mat -> tensor`) | 5.453755 | 5.4547 | 6.2128 |
+| `Session::Run` | 134.419309 | 137.5882 | 142.5549 |
+| Postprocess | 0.345302 | 0.3438 | 0.4424 |
+| Pipeline | 141.265814 | 144.4673 | 149.8395 |
+| End-to-end | 142.082777 | 145.3222 | 150.7653 |
+
+Fresh pipeline/end-to-end throughput 为 `7.078853/7.038151 images/s`，Windows Peak Working Set 为 `152.578125 MiB`。本次临时 benchmark JSON 为 5,453 bytes、SHA-256 `F32C0DF3157897264F9BD2B9AE3F3DB7B240A3B641494E8D3E7C346FF64E9C6F`。这次数字与上面的 S1-08 历史数字使用相同代码协议，但系统状态没有被完全锁定，因此两次证据都保留，不把差异无条件归因于代码优化。
+
+直接执行的缺模型、损坏图片、不可创建输出和 benchmark `repeat=0` 四个故障均 exit 1，并包含可行动信息；合法无候选 postprocess 与 empty-array JSON 两项测试通过。当前状态仍是：**S1-08 L1 已验收；S1-09 自动门 PASS；用户 L2 待完成；大阶段一尚未完成；大阶段二未开始。**
+
 ### V2 入口记录
 
 | 日期 | 变更 | 目的 |
@@ -1339,6 +1689,10 @@ ctest --test-dir $BuildDir --output-on-failure
 | 2026-07-30 | 完成 S1-03 input tensor 与自有 raw output 边界 | 新增零拷贝借用 CPU input、同步 `Session::Run`、overflow/shape/count/finite 校验、复制式 `InferenceOutput`、有限 CLI 摘要、错误长度 Run 前失败和 31 项 CTest gate；停在 decode/NMS 之前 |
 | 2026-08-15 | 完成 S1-04 纯 YOLOv8 postprocess 与 synthetic GTest 边界 | 新增 `Detection`、BCN decode、float32 strict threshold、稳定 class-agnostic input-space NMS、letterbox restore/clip、`CV_8UC3 cv::Mat` preprocess 入口和固定 GTest 依赖；24+7 项 GTest、62/62 CTest 通过，停在 CLI detection/JSON/可视化之前 |
 | 2026-08-16 | 完成 S1-05 固定单图 CLI、JSON v1 与无 GUI 可视化 | 新增自有 detection result、薄 `DetectorPipeline`、安全 JSON/路径/覆盖契约与确定性 OpenCV 绘图；固定图生成 3 个 `crazing` detections、1,164-byte JSON 和 39,306-byte PNG，Python/OpenCV 回读及 78/78 CTest 通过；停在 batch、一致性与 benchmark 之前 |
+| 2026-08-22 | 完成 S1-06 自动化质量 gate 与核心故障注入 | 扩展 schema、精确 NCHW、synthetic metadata、完整 postprocess 空结果、输出路径和 CLI 故障证据；全新 Release build 的 90 项命名测试全部通过，缺模型/坏图/不可创建输出均给出可行动非零失败；停在 S1-07 一致性之前 |
+| 2026-08-22 | 完成 S1-07 固定六类 Python ORT/C++ ORT 一致性证据 | 冻结仓库内 6x5 manifest 与图片 SHA-256，新增显式 CPU Python reference、顺序无关的 class/最大-IoU matching、逐图/汇总 JSON 和 CTest；30/30 图片、62/62 detections 通过冻结门槛，完整 CTest 92/92；停在 S1-08 benchmark 之前 |
+| 2026-08-22 | 完成 S1-08 可复现 C++ Release benchmark 与内存基线 | 在 S1-07 consistency 通过后，新增六段 steady-clock timing、算术 mean 与 nearest-rank P50/P95、pipeline/end-to-end throughput、Windows Peak Working Set、稳定 benchmark JSON 和严格 validator；正式 warmup 10/repeat 100 结果与 106/106 CTest 通过，停在 S1-09 之前 |
+| 2026-08-22 | 完成 S1-09 自动收口复现，等待用户 L2 | 不新增产品功能；用全新临时 Release build 依次复现 106/106 CTest、固定 Demo、30 图一致性、10/100 benchmark、四个直接故障和两个合法空结果，并对齐双语总入口。自动门 PASS；用户完成 2/5 分钟讲解、追问/排错及可回滚行为+GTest 练习前，大阶段一仍未完成 |
 
 ## 许可证
 

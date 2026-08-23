@@ -51,6 +51,22 @@ if(expected_position EQUAL -1)
     "stderr:\n${child_stderr}")
 endif()
 
+if(DEFINED REQUIRED_TEXTS AND NOT "${REQUIRED_TEXTS}" STREQUAL "")
+  string(REPLACE "^" ";" required_text_list "${REQUIRED_TEXTS}")
+  foreach(required_text IN LISTS required_text_list)
+    string(FIND "${combined_output}" "${required_text}" required_position)
+    if(required_position EQUAL -1)
+      message(FATAL_ERROR
+        "CLI failed, but output did not contain required text "
+        "'${required_text}'.\n"
+        "exit=${child_result}\n"
+        "arguments='${ARGS}'\n"
+        "stdout:\n${child_stdout}\n"
+        "stderr:\n${child_stderr}")
+    endif()
+  endforeach()
+endif()
+
 message(STATUS
   "Observed expected nonzero exit ${child_result} and text "
   "'${EXPECTED_TEXT}' for arguments '${ARGS}'.")

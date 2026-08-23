@@ -15,9 +15,9 @@ V2 positioning: this repository is being upgraded from a YOLOv8 defect-detection
 
 YOLOv8 and NEU-DET are the model and dataset carriers. The autumn-recruiting story is not "I trained a detector"; it is "I turned a vision model into a deployable runtime with C++ / ONNX Runtime C++ / OpenCV / CMake / GTest / benchmark evidence and deployment-optimization analysis."
 
-Current V1 assets remain valuable: training, ONNX export, PyTorch-vs-ONNX consistency checks, Python ONNX Runtime inference, FastAPI, Docker, and benchmark scripts. V2 builds on these assets through `cpp_infer/` instead of rewriting them.
+Current V1 assets remain valuable: training, ONNX export, the historical 50-image PyTorch/ONNX detection-count check, Python ONNX Runtime inference, FastAPI, Docker, and benchmark scripts. V2 builds on these assets through `cpp_infer/` instead of rewriting them.
 
-Current V2 status: **S1-04 is L1 accepted; S1-05 is implemented and verified, awaiting L1 acceptance.** The fixed single-image C++ CLI now reaches contract loading, OpenCV preprocessing, ONNX Runtime CPU inference, deterministic YOLOv8 postprocess, schema-v1 detection JSON, and a headless OpenCV visualization. S1-06 is only the next step after acceptance; batch processing, consistency evidence, and C++ benchmark results do not exist yet.
+Current V2 status: **S1-08 is L1 accepted. The S1-09 automatic gate passes; the user L2 gate is pending. Large Stage One is therefore not yet complete, and Large Stage Two has not started.** A fresh temporary Release build passed 106/106 CTests in 19.91 seconds, reproduced the fixed three-detection JSON/PNG demo, passed the repository-resident six-class 30-image Python ORT/C++ ORT gate, reran the warmup-10/repeat-100 CPU benchmark, and reconfirmed four actionable nonzero CLI failures. S1-09 adds no product behavior; it closes automated reproducibility and prepares the user-owned explanation and modification exercise.
 
 The project entry is intentionally concentrated in this README and `README_zh.md`. `docs/PLAN.md` is the latest planning source, `AGENTS.md` turns it into repository-wide collaboration rules, and task/status/change evidence stays in the two READMEs. Long execution detail is split into `docs/` only when it would make the entry point harder to use.
 
@@ -78,7 +78,7 @@ model artifact
 -> optional real-device deployment and Project 2 inference_event bridge
 ```
 
-Current verified chain through S1-05:
+Current verified chain through the S1-09 automatic gate:
 
 ```text
 cpp_infer/configs/default_config.txt
@@ -107,9 +107,22 @@ cpp_infer/configs/default_config.txt
 -> deterministic OpenCV rectangle/label visualization without a GUI
 -> explicit output-parent creation / fail-on-existing / --overwrite policy
 -> fixed sample: 3 crazing detections + parseable JSON + readable PNG
--> 31 retained S1-04 GTests + 6 output GTests + integration/negative gates
--> 78-case complete CTest gate
--> no batch, Python/C++ consistency, or C++ benchmark yet
+-> four GTest targets: postprocess 25 + preprocess 7 + output 7 + benchmark 8
+-> integration and actionable failure-injection gates
+-> 106-case complete CTest quality gate
+-> repository-resident six-class / 30-image consistency manifest with frozen image hashes
+-> Python CPUExecutionProvider reference using the same config/artifact semantics
+-> deterministic class-first / maximum-IoU matching independent of output order
+-> machine-readable per-image and summary consistency evidence
+-> 30/30 images and 62/62 detections pass the predeclared numerical gates
+-> correctness gate confirmed again before performance publication
+-> Release-only batch-1 CPU benchmark, warmup 10 / repeat 100
+-> image decode / preprocess / Session::Run / postprocess timing boundaries
+-> pipeline and end-to-end P50/P95 plus throughput
+-> Windows process-lifetime Peak Working Set and machine-readable benchmark JSON
+-> fresh S1-09 reproduction: 106/106 CTest, Demo, consistency, benchmark, and faults
+-> user L2 explanation/modification gate still pending
+-> no batch directory processing, concurrency, service, or INT8
 ```
 
 ### 4. Core Module Responsibilities
@@ -125,55 +138,160 @@ cpp_infer/configs/default_config.txt
 | `DetectorPipeline` | Hold a copied `RuntimeContract` plus an RAII `OnnxRunner` behind PImpl, validate one source image, and orchestrate preprocess -> synchronous Run -> postprocess -> output writing without exposing OpenCV or ORT in its public header. | S1-05 fixed single-image vertical slice verified |
 | `SingleImageDetectionResult` / `DetectionImageMetadata` | Own the model identity, source/input image metadata, session-provider evidence, thresholds/NMS mode, class contract, and restored detections needed by downstream writers after local inference objects end. | S1-05 self-contained result boundary verified |
 | `ResultWriter` / `Visualizer` | Validate result invariants, serialize stable JSON v1 with safe string escaping, create output parents, enforce protected/overwrite rules, and encode deterministic rectangles and labels through OpenCV without a GUI. | S1-05 JSON/Python parse and OpenCV read-back verified |
-| `ConsistencyValidator` | Compare fixed Python ORT and C++ results by count, class, confidence, and box tolerance. | S1-07 pending |
-| `BenchmarkRunner` | Measure warmup/repeat preprocess, inference, postprocess, end-to-end latency, throughput, and memory metadata. | S1-08 pending |
+| `ConsistencyManifest` / `compare_consistency.py` | Freeze six classes x five validation images plus image hashes, run a Python `CPUExecutionProvider` reference under the same Runtime/artifact contract, invoke the C++ CLI, match detections by class and deterministic maximum IoU rather than array order, enforce predeclared thresholds, and emit per-image/summary JSON. | S1-07 L1 accepted: 30/30 images and 62/62 matched detections passed |
+| `BenchmarkRunner` / `BenchmarkResult` / `BenchmarkWriter` | Keep one validated CPU session alive across warmup/repeat; time `imread`, `cv::Mat -> tensor`, only `Ort::Session::Run`, postprocess, pipeline, and end-to-end with `steady_clock`; calculate the arithmetic mean plus empirical nearest-rank P50/P95 and throughput; capture Release/provider/thread/model/sample/environment/Peak-Working-Set evidence; then safely write JSON outside the repeated timing. | S1-08 L1 accepted; the S1-09 fresh reproduction passed the same fixed 10/100 protocol without changing benchmark behavior |
 | `ArtifactRegistry` / `ModelCard` | Record artifact source, model family, dataset, metrics, config, postprocess type, runtime status, and paths. | YOLO baseline declaration established; D010 remains gated |
-| `Tests` | Preserve the 31 S1-04 synthetic postprocess/preprocess GTests, add isolated output-schema tests, and keep one fixed real-model CLI integration plus focused argument/output failures. Test targets link the Runtime boundary rather than `main.cpp`; OpenCV is explicit only where test source needs it. | S1-05: output GTest 6/6, `output` label 16/16, complete CTest 78/78 |
+| `Tests` | Use synthetic data at pure seams for Runtime/artifact schema, `cv::Mat` preprocess, model metadata, postprocess, JSON, output paths, deterministic consistency matching, and latency statistics; use a short real-model benchmark plus the strict Python validator for the complete benchmark-result schema. Test targets link the Runtime boundary rather than `main.cpp`; CLI faults assert nonzero exit and actionable diagnostics. | S1-09 fresh Release gate: 106/106 in 19.91 seconds; direct missing-model/damaged-image/unwritable-parent/repeat-zero failures returned exit 1 with actionable diagnostics |
 
 ### 5. Quick Start
 
-Current S1-05 clean Release build, complete single-image command, and test path:
+S1-09 uses a new out-of-tree Release build and disposable evidence paths. Initialize the x64 compiler environment in CMD, then start a profile-free PowerShell in the same window:
+
+```bat
+call "D:\01_Base\Tools\VisualStudio_Community\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
+powershell.exe -NoProfile -NoExit
+```
+
+Run the following from that PowerShell. The order is deliberate: build, complete CTest, Demo, consistency, benchmark, and direct fault evidence. Every native command is checked immediately so an old JSON file cannot turn a failed run into a false pass.
 
 ```powershell
-# Example verified tools root. From CMD first run VsDevCmd.bat under this
-# root, then start:
-# powershell.exe -NoProfile -NoExit
-# -NoProfile prevents the local Conda profile from replacing the VS PATH.
+$Repo = 'D:\01_Base\CodingSpace\yolo_defect'
 $ToolsRoot = 'D:\01_Base\Tools'
-$PythonExe = (Get-Command python.exe -ErrorAction Stop).Source
-$env:ONNXRUNTIME_ROOT = Join-Path $ToolsRoot 'onnxruntime-win-x64-1.19.2'
-$env:PATH = (Join-Path $ToolsRoot 'VisualStudio_Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin') + ';' + `
-  (Join-Path $ToolsRoot 'opencv\build\x64\vc16\bin') + ';' + $env:PATH
+$PythonExe = 'C:\Users\Everbreath\.conda\envs\TestBase\python.exe'
+$OrtRoot = Join-Path $ToolsRoot 'onnxruntime-win-x64-1.19.2'
+$OpenCvDir = Join-Path $ToolsRoot 'opencv\build\x64\vc16\lib'
+$OpenCvBin = Join-Path $ToolsRoot 'opencv\build\x64\vc16\bin'
+$CMakeBin = Join-Path $ToolsRoot `
+  'VisualStudio_Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin'
+
+Set-Location $Repo
+$env:ONNXRUNTIME_ROOT = $OrtRoot
+$env:PATH = $CMakeBin + ';' + $OpenCvBin + ';' + $env:PATH
 $BuildDir = Join-Path $env:TEMP `
-  ('yolo_defect_s1_05_' + [guid]::NewGuid().ToString('N'))
+  ('yolo_defect_s1_09_' + [guid]::NewGuid().ToString('N'))
+$EvidenceDir = Join-Path $BuildDir 's1_09_evidence'
 
+function Assert-NativeSuccess([string]$Step) {
+  if ($LASTEXITCODE -ne 0) {
+    throw "$Step failed with native exit code $LASTEXITCODE."
+  }
+}
+
+# 1. Fresh Release configure and build.
 cmake -S cpp_infer -B $BuildDir -G 'NMake Makefiles' `
-  -DOpenCV_DIR="$ToolsRoot\opencv\build\x64\vc16\lib" `
-  -DONNXRUNTIME_ROOT="$env:ONNXRUNTIME_ROOT" `
+  -DOpenCV_DIR="$OpenCvDir" `
+  -DONNXRUNTIME_ROOT="$OrtRoot" `
   -DPython3_EXECUTABLE="$PythonExe" `
-  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
-cmake --build $BuildDir
+  -DCMAKE_BUILD_TYPE=Release `
+  -DBUILD_TESTING=ON
+Assert-NativeSuccess 'CMake configure'
 
+cmake --build $BuildDir
+Assert-NativeSuccess 'Release build'
+
+# 2. Complete automated gate before any manual evidence command.
+ctest --test-dir $BuildDir -N
+Assert-NativeSuccess 'CTest enumeration'
+ctest --test-dir $BuildDir --output-on-failure
+Assert-NativeSuccess 'Complete CTest'
+
+# 3. Fixed end-to-end Demo; outputs remain outside the repository.
 $Config = (Resolve-Path 'cpp_infer\configs\default_config.txt').Path
 $Image = (Resolve-Path 'data\images\val\crazing_241.jpg').Path
-$DemoDir = Join-Path $BuildDir 'demo outputs'
+$DemoDir = Join-Path $EvidenceDir 'demo'
 $OutputJson = Join-Path $DemoDir 'crazing_241.json'
 $OutputImage = Join-Path $DemoDir 'crazing_241.png'
+$Cli = "$BuildDir\bin\yolo_defect_cpp.exe"
+$DetectionValidator = (Resolve-Path `
+  'cpp_infer\tests\assert_detection_json.py').Path
 
-& "$BuildDir\bin\yolo_defect_cpp.exe" `
-  --config $Config `
-  --image $Image `
-  --output-json $OutputJson `
-  --output-image $OutputImage
-
-& $PythonExe -m json.tool $OutputJson
+& $Cli --config $Config --image $Image `
+  --output-json $OutputJson --output-image $OutputImage
+Assert-NativeSuccess 'Fixed Demo'
+& $PythonExe -m json.tool $OutputJson *> $null
+Assert-NativeSuccess 'Demo JSON parse'
+& $PythonExe $DetectionValidator $OutputJson --expected-image $Image
+Assert-NativeSuccess 'Demo JSON contract validation'
 & "$BuildDir\bin\yolo_defect_image_probe.exe" $OutputImage
+Assert-NativeSuccess 'Visualization OpenCV probe'
 Get-Item $OutputJson, $OutputImage
-ctest --test-dir $BuildDir -L output --output-on-failure
-ctest --test-dir $BuildDir -L postprocess --output-on-failure
-ctest --test-dir $BuildDir -L preprocess --output-on-failure
-ctest --test-dir $BuildDir -N
-ctest --test-dir $BuildDir --output-on-failure
+Get-FileHash $OutputJson, $OutputImage -Algorithm SHA256
+
+# 4. Six classes x five images, using the frozen S1-07 requirements.
+$Manifest = (Resolve-Path `
+  'cpp_infer\tests\fixtures\consistency_manifest.json').Path
+$ConsistencyDir = Join-Path $EvidenceDir 'consistency'
+& $PythonExe cpp_infer\tools\compare_consistency.py `
+  --manifest $Manifest --cpp-cli $Cli `
+  --output-dir $ConsistencyDir --cpp-opencv-version 4.8.0
+Assert-NativeSuccess '30-image consistency comparison'
+& $PythonExe -m json.tool "$ConsistencyDir\per_image.json" *> $null
+Assert-NativeSuccess 'Per-image consistency JSON parse'
+& $PythonExe -m json.tool "$ConsistencyDir\summary.json" *> $null
+Assert-NativeSuccess 'Consistency summary JSON parse'
+
+# 5. Correctness is green, so run the fixed 10/100 protocol.
+$BenchmarkJson = Join-Path $EvidenceDir 'benchmark.json'
+& $Cli --config $Config --image $Image `
+  --benchmark --warmup 10 --repeat 100 `
+  --benchmark-json $BenchmarkJson
+Assert-NativeSuccess 'Formal benchmark'
+& $PythonExe -m json.tool $BenchmarkJson *> $null
+Assert-NativeSuccess 'Benchmark JSON parse'
+& $PythonExe cpp_infer\tests\assert_benchmark_json.py $BenchmarkJson `
+  --expected-image $Image --expected-warmup 10 --expected-repeat 100
+Assert-NativeSuccess 'Strict benchmark validator'
+Get-Item $BenchmarkJson
+Get-FileHash $BenchmarkJson -Algorithm SHA256
+
+# 6. Four direct CLI faults must fail with actionable diagnostics.
+function Assert-ActionableCliFailure(
+    [string]$Name,
+    [string[]]$Arguments,
+    [string[]]$RequiredText) {
+  $Text = & $Cli @Arguments 2>&1 | Out-String
+  $ExitCode = $LASTEXITCODE
+  if ($ExitCode -ne 1) {
+    throw "$Name expected exit 1, actual $ExitCode."
+  }
+  foreach ($Token in (@('expected', 'actual') + $RequiredText)) {
+    if ($Text -notmatch [regex]::Escape($Token)) {
+      throw "$Name omitted actionable token '$Token'. Output: $Text"
+    }
+  }
+  if ($Text -notmatch 'action[:=]') {
+    throw "$Name omitted an action. Output: $Text"
+  }
+  Write-Host "$Name`: exit 1 with a failing path/object and expected/actual/action"
+}
+
+$MissingModelConfig = (Resolve-Path `
+  'cpp_infer\tests\fixtures\runtime\missing_model_artifact.txt').Path
+$DamagedImage = Join-Path $BuildDir `
+  'test_inputs\s1_06_faults\damaged_image.jpg'
+$BlockedParent = Join-Path $BuildDir `
+  'test_inputs\s1_06_faults\blocked_output_parent'
+
+Assert-ActionableCliFailure -Name 'missing model' `
+  -Arguments @('--config', $MissingModelConfig, '--inspect-model') `
+  -RequiredText @('model artifact does not exist')
+Assert-ActionableCliFailure -Name 'damaged image' `
+  -Arguments @('--config', $Config, '--image', $DamagedImage) `
+  -RequiredText @('OpenCV decoding returned an empty image')
+Assert-ActionableCliFailure -Name 'unwritable parent' `
+  -Arguments @('--config', $Config, '--image', $Image, '--output-json',
+    (Join-Path $BlockedParent 'detections.json')) `
+  -RequiredText @('output.json_path.parent')
+Assert-ActionableCliFailure -Name 'repeat zero' `
+  -Arguments @('--config', $Config, '--image', $Image, '--benchmark',
+    '--warmup', '1', '--repeat', '0', '--benchmark-json',
+    (Join-Path $EvidenceDir 'invalid-repeat.json')) `
+  -RequiredText @('object=--repeat')
+
+ctest --test-dir $BuildDir `
+  -R '^(postprocess\.PostprocessEmptyTest\.ValidTensorWithNoScoreAboveThresholdIsEmpty|output\.ResultWriterJsonTest\.EmptyDetectionsSerializeAsAnEmptyArray)$' `
+  --output-on-failure
+Assert-NativeSuccess 'Legal empty-detections tests'
 ```
 
 With `BUILD_TESTING=ON`, CMake uses the official GoogleTest v1.17.0 archive at commit `52eb8108c5bdec04579160ae17225d66034bd723` and verifies SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84`. An offline clean configure may pass `-DFETCHCONTENT_SOURCE_DIR_GOOGLETEST='<verified-google-test-source>'`, but only after independently checking the pinned archive hash before extraction; no personal source path is committed.
@@ -202,6 +320,8 @@ fixed result: 3 detections, all class_id=0 / class_name=crazing
 JSON: 1,164 bytes; SHA-256 E8445BC92201307430A17B7B51B6CCEFC5A74D2D473617170F50AD921CCF9049
 PNG:  39,306 bytes; SHA-256 3A0C6C57EE977EE02762F05FCDE6928C8AACBD20883596D3622A6225942E2346
 ```
+
+The fresh S1-09 temporary-build reproduction produced the same three detections and the same 1,164-byte JSON/39,306-byte PNG hashes. Python parsed the JSON, and the independent OpenCV probe read the PNG as `200x200 CV_8UC3`. This rerun validates reproducibility without promoting temporary build output as a Git-committed artifact.
 
 The JSON document uses schema version 1 and fixed root objects for `model`, `image`, `runtime`, and `detections`. It records the model id and declared artifact SHA, source/original/input image metadata, session-level provider evidence, score/NMS thresholds and mode, then `class_id`, `class_name`, `confidence`, and `bbox_xyxy` for each detection. A valid no-detection result is represented as `"detections": []`, never `null` or an omitted field.
 
@@ -234,33 +354,76 @@ Current focused GTest and complete CTest gates:
 
 ```powershell
 ctest --test-dir $BuildDir -N
+ctest --test-dir $BuildDir -L unit --output-on-failure
+ctest --test-dir $BuildDir -L negative --output-on-failure
+ctest --test-dir $BuildDir -L integration --output-on-failure
+ctest --test-dir $BuildDir -L quality_gate --output-on-failure
 ctest --test-dir $BuildDir -L output --output-on-failure
 ctest --test-dir $BuildDir -L postprocess --output-on-failure
 ctest --test-dir $BuildDir -L preprocess --output-on-failure
+ctest --test-dir $BuildDir -L consistency --output-on-failure
+ctest --test-dir $BuildDir -L benchmark --output-on-failure
 ctest --test-dir $BuildDir --output-on-failure
 ```
 
 Expected current result:
 
 ```text
-postprocess-focused GTest: 24/24 passed
-cv::Mat preprocess GTest:   7/7 passed
-retained S1-04 GTest total: 31/31 passed
-output-focused GTest:        6/6 passed
-output-labeled CTest:       16/16 passed
-complete CTest:             78/78 passed
+fresh Release configure/build: passed
+ctest --show-only / -N:        106 tests listed
+complete clean Release gate:   106/106 passed in 19.91 s
+fixed Demo:                    3 detections; JSON parsed; PNG probed
+30-image consistency:          30/30 images; 62/62 matches; JSON parsed
+formal benchmark:              warmup 10/repeat 100; strict JSON passed
+direct CLI faults:             4/4 exit 1 with actionable diagnostics
+legal empty detections:        2/2 focused tests passed
 ```
 
-The retained 24 postprocess and seven `cv::Mat` preprocess GTests continue to prove the S1-04 pure algorithms independently of a real model. Six output GTests freeze JSON field order, exact schema, empty arrays, quote/backslash/control-byte escaping, finite-number rejection, and locale-independent decimal formatting. The `output` label also includes the fixed real-model CLI run, Python `json.tool` plus semantic JSON validation, OpenCV image read-back, deterministic explicit overwrite, and focused argument/path protection failures. The fixed integration smoke proves the vertical slice and output contract; it does not replace the future S1-07 Python/C++ numerical-consistency evidence.
+The existing schema, metadata, preprocess, postprocess, output, consistency, and benchmark tests continue to prove their pure and integration boundaries. The short real-model benchmark smoke uses low repeat and checks behavior rather than enforcing a speed threshold. S1-09 separately reruns the formal 10/100 protocol into a new temporary result file, so a prior repository-resident JSON cannot mask a failed command.
 
-#### Current S1-05 Limits
+#### S1-06 Failure Triage
+
+- **Schema:** start with declaration file, line/field, expected, actual, and action. `artifact_spec_path` is relative to the Runtime config; `model_path` is relative to the artifact declaration, not the process working directory.
+- **Missing model:** inspect the artifact `model_path` and its normalized path in the error.
+- **Metadata mismatch:** run `--inspect-model`, then compare actual name/shape/dtype/provider with the declaration. Synthetic mismatches test the pure validator and do not require several malformed ONNX models.
+- **Damaged image:** distinguish a missing path from an existing file whose OpenCV decode returned an empty image, then retry with a known-good image.
+- **CLI/output:** run `--help`; check missing/duplicate/conflicting flags, parent path type and permission, protected inputs, and the explicit overwrite policy.
+
+Fresh S1-09 direct fault evidence produced exit code 1 for a missing model, generated damaged-image bytes, a regular file used as an output parent, and `--repeat 0`. All four diagnostics included object, expected, actual, and action. Two focused tests also reconfirmed that a valid tensor with no score strictly above the threshold and a valid result with no detections both succeed with `detections: []`; an invalid output rank/channel/count or non-finite value remains an error rather than an empty result.
+
+#### S1-07 Consistency Triage
+
+- **Count/class mismatch:** first compare the per-image Python/C++ detections, then verify the same config/artifact, explicit CPU provider, strict `confidence > threshold`, class-agnostic NMS, and class names.
+- **Raw numerical drift:** isolate preprocess first, then raw output, threshold/NMS tie behavior, and finally coordinate restoration. Do not relax a gate merely to turn the run green.
+- **Order differences:** JSON array order is not correctness evidence. Matching groups by `class_id`, chooses the maximum-IoU remaining pair, and uses a canonical value tie-break.
+- **Evidence files:** `per_image.json` contains image-level matches and failures; `summary.json` contains identifiers, providers, thresholds, aggregate errors, pass counts, and failure details.
+
+#### S1-08 Benchmark Triage
+
+- **Correctness first:** rerun the S1-07 consistency label before interpreting or publishing performance. A failed correctness gate blocks benchmark claims.
+- **Unexpected latency:** verify a clean `Release` build, `CPUExecutionProvider`, sequential execution, intra/inter-op `1/1`, graph optimization `all`, warmup/repeat, and the staged ORT DLL before considering optimization.
+- **Boundary interpretation:** `image_decode` times only `cv::imread`; `preprocess` starts from an already decoded `cv::Mat`; `session_run` times only `Ort::Session::Run`; pipeline includes safe input/tensor/output wrapper work; end-to-end adds decode.
+- **Evidence validation:** parse with `python -m json.tool`, then run `cpp_infer/tests/assert_benchmark_json.py` with the expected image, warmup, and repeat. Existing output is rejected unless `--overwrite` is explicit.
+
+#### Current Single-Image, Consistency, and Benchmark Limits
 
 - JSON records the artifact's **declared** SHA-256; S1-05 does not recompute the model hash at runtime.
 - `actual_provider` means the explicitly registered provider of the successfully created and executed session. It is session-level evidence, not per-node placement from ORT profiling.
 - JSON and image data are both prepared before writing, but the two files are not committed as one transaction and cross-process filesystem replacement is not guaranteed atomic.
 - The fixed ASCII Windows input path is verified. Arbitrary Unicode input image paths through the existing narrow-string OpenCV `imread` boundary are not yet claimed as supported; output path/JSON UTF-8 handling is separate.
 - The current six baseline labels are ASCII. OpenCV's Hershey text renderer is deterministic for them but is not a general Unicode font engine.
-- S1-05 is batch-1/single-image only. It adds no directory batch mode, concurrency, service, `inference_event`, Python/C++ consistency result, benchmark, INT8, or performance claim.
+- S1-07 proves implementation consistency for the same ONNX artifact, not detector accuracy against ground truth.
+- The matching `best.pt` checkpoint is unavailable, so this is not a newly rerun PyTorch/Python-ORT/C++ three-way experiment. The historical 50-image PT/ONNX count evidence remains separate.
+- Python explicitly requests `CPUExecutionProvider`, while C++ records its explicitly registered session provider. Neither is per-node placement evidence from ORT profiling.
+- All 30 frozen consistency images are `200x200`, so this cross-language run exercises resize to `800x800` without padding. Non-square/odd-padding behavior is covered synthetically in C++ tests but not yet cross-language on this manifest.
+- The 30-image run produced no empty-detection image, so legal `detections: []` remains unit/output-schema evidence rather than this consistency sample's integration evidence.
+- The benchmark is one `200x200` image, batch 1, on one Windows CPU host. It is a reproducible baseline, not a dataset-wide or cross-machine performance conclusion.
+- Repeated `imread` observes a warmed operating-system file cache rather than cold-disk latency. No CPU affinity, elevated process priority, or idle-system lock was applied, so concurrent load can move the distribution.
+- Session/model initialization, config/artifact loading, initial path/file-size checks, statistics, the memory query, benchmark JSON writing, and visualization are excluded from repeated latency. JSON and drawing are not executed inside the benchmark loop.
+- Peak Working Set is a process-lifetime peak that includes config/session initialization, warmup, timed iterations, retained samples, statistics, and harness state. It is neither per-stage nor incremental inference memory.
+- `actual_provider=CPUExecutionProvider` is session-level creation/execution evidence, not ORT per-node placement profiling.
+- Historical Python ORT 24.4/72.1 FPS used a different implementation, sample protocol, and hardware/provider context; it must not be ranked unconditionally against this C++ single-image result.
+- The Runtime remains batch-1/single-image only. S1-09 adds no directory batch mode, concurrency, service, `inference_event`, or INT8; its automatic gate passes, but Large Stage One remains open until the user L2 gate passes.
 
 ### 8. Key Data and Artifact Results
 
@@ -269,22 +432,35 @@ The retained 24 postprocess and seven `cv::Mat` preprocess GTests continue to pr
 | P0 dataset | NEU-DET steel surface defects, 1,800 images, 6 classes, 200x200 pixels |
 | P0 model | YOLOv8n baseline and tuned variants |
 | Best current YOLO result | `final_train_2`, mAP@0.5 = 0.743, mAP@50-95 = 0.388 |
-| Historical ONNX/PyTorch alignment | 50/50 detection-count matches and 146 vs 146 total detections, but the sorted subset is all `crazing` and records counts/confidence summaries rather than class/box tolerances |
 | Baseline ONNX artifact preflight | Tracked `models/best.onnx`, 12,336,935 bytes, opset 17, SHA-256 `7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68`; metadata says `nms=False` |
 | Model lineage status | The project owner confirms the current ONNX was personally exported from `runs/detect/final_train_2/weights/best.pt`; that `.pt` is absent from the workspace and Git history, so the lineage is owner-confirmed but not currently re-exportable |
 | Baseline ONNX I/O preflight | Python ORT 1.19.2 confirms input `images` = float32 `[1,3,800,800]`; output `output0` = float32 `[1,10,13125]` |
-| Historical Python ORT benchmark | ONNX CPU 24.4 FPS, ONNX GPU 72.1 FPS on RTX 3060; **not C++ Runtime performance** |
-| Current C++ Runtime state | S1-05 clean Release/NMake build with MSVC 19.50, OpenCV 4.8.0, and ORT 1.19.2 now completes the fixed single-image C++ vertical slice through JSON and headless visualization; output label 16/16 and complete CTest 78/78 pass. No Python/C++ consistency or C++ performance result exists yet |
+| Current C++ Runtime state | S1-09 fresh Release/NMake reproduction with MSVC 19.50.35721.0, C++17, OpenCV 4.8.0, and ORT C++ 1.19.2 passed 106/106 CTests in 19.91 seconds, the fixed Demo, 30-image consistency, 10/100 benchmark, four direct faults, and two legal-empty tests. Product semantics are unchanged; user L2 remains pending |
 | C++ ORT actual metadata | Loaded `models/best.onnx`; available EP inventory `[AzureExecutionProvider,CPUExecutionProvider]`; explicitly registered session EP `CPUExecutionProvider`; input `images` tensor float32 `[1,3,800,800]`; output `output0` tensor float32 `[1,10,13125]`; contract passed |
 | S1-02 dependency/session boundary | CMake consumes the official external ORT C++ SDK 1.19.2 only through `ONNXRUNTIME_ROOT`, validates the version/C/C++/CPU-provider headers/import library/DLL and stages the matching DLL. Session policy is sequential, intra-op 1, inter-op 1 (unused by sequential mode), graph optimization all |
 | S1-03 raw-output evidence | Fixed `crazing_241.jpg`: input float32 `[1,3,800,800]`, 1,920,000 finite values, range `[0.278431386,1]`; owned output float32 `[1,10,13125]`, 131,250 finite values, range `[0,795.04126]`. These values prove finite raw execution, not decoded detection correctness or benchmark performance |
 | S1-04 postprocess evidence | ORT-free synthetic tests verify `[1,4+C,N]` BCN decode, maximum class score without objectness/sigmoid, float32-domain strict `confidence > threshold`, `xywh -> xyxy`, robust IoU, stable class-agnostic NMS before coordinate restore, and letterbox inverse transform/clip. Postprocess GTest 24/24, preprocess GTest 7/7, complete CTest 62/62 |
 | S1-05 single-image output evidence | Fixed `crazing_241.jpg` produces 3 `crazing` detections, a Python-parseable 1,164-byte JSON (`E8445BC92201307430A17B7B51B6CCEFC5A74D2D473617170F50AD921CCF9049`) and an OpenCV-readable 39,306-byte PNG (`3A0C6C57EE977EE02762F05FCDE6928C8AACBD20883596D3622A6225942E2346`). Six output GTests, 16 output-labeled CTests, and all 78 tests pass |
+| S1-06 quality-gate evidence | Fresh `%TEMP%` Release build lists 90 tests: unit 51, integration 3, negative 32, contract 19, metadata 16, preprocess 9, postprocess 25, and output 18; all 90 pass. Missing model, damaged image, and uncreatable output parent each return CLI exit 1 with object/path, expected, actual, and action diagnostics; no extra large ONNX fixture is used |
 | Artifact license checkpoint | The artifact declaration preserves the ONNX metadata text `AGPL-3.0 License (https://ultralytics.com/license)`. Source remains MIT; because the owner chose to keep publicly distributing the ONNX and NEU-DET, model obligations and the dataset's unspecified redistribution terms remain separate release checkpoints |
 | Incoming research artifact | `paper_detect` D010 method on the D-FINE-S/DeepPCB research line; not a new Runtime architecture claim |
 | External D010 research evidence | Formal-validation AP50-95 = 0.847057; official-test AP50-95 = 0.830385; these are not Project 1 Runtime results |
 | D010 relationship and ablation | D003 is the ancestor/ablation anchor; all 6 D010 class deltas over D003 are positive on formal and official test; D010A erase-only and D010B replay-only each beat D003 but trail full D010 |
 | D010 integration gate | Stable ONNX + result/model card + deployment contract + real Runtime adapter + consistency validation; it must not block the YOLO P0 closure |
+
+#### Correctness evidence lanes
+
+| Evidence lane | Implementations and sample | Result | Valid claim | Limitation and path |
+|---|---|---|---|---|
+| Historical PT/ONNX count-only check | Historical PyTorch and ONNX paths; first 50 sorted validation images, all `crazing` | 50/50 images have the same detection count; 146 vs 146 total detections | Weak historical count alignment only | No six-class coverage, class pairing, box tolerance, or current `.pt` rerun; [`compare_50_summary.json`](results/pt_onnx_compare/compare_50_summary.json) |
+| Current strict Python ORT/C++ ORT evidence | Same frozen ONNX/config/artifact; six classes x five images; Python and C++ explicit CPU sessions; class-first maximum-IoU matching | S1-09 fresh reproduction: 30/30 images and 62/62 matches; max confidence error `8.049977111568296e-07`, max bbox error `9.135351561440075e-05` px, min IoU `0.999998927116394`; both JSON files parsed | Implementation consistency under the predeclared exact-count/class, `1e-4`, `1e-2` px, and `0.999` gates | Not mAP, not every image/platform, and not a new PyTorch three-way run; repository-resident [`per_image.json`](cpp_infer/results/consistency/per_image.json) and [`summary.json`](cpp_infer/results/consistency/summary.json) plus fresh temporary outputs |
+
+#### Performance evidence lanes
+
+| Evidence lane | Implementations and protocol | Result | Valid claim | Limitation and path |
+|---|---|---|---|---|
+| Historical V1 Python benchmarks | PyTorch/Python ORT; 5 warmup plus 100 timed images under their historical CPU/GPU protocols | PyTorch CPU `8.43 FPS`, PyTorch GPU `110.8 FPS`; Python ORT CPU `24.4 FPS`, Python ORT GPU `72.1 FPS` | Historical Python-side context only | Different implementation, sample/hardware/provider, and timing boundaries; see `results/*benchmark*.json` |
+| Current C++ Release benchmark | Fixed `crazing_241.jpg`, batch 1, CPU `CPUExecutionProvider`, sequential intra/inter-op `1/1`, warmup 10/repeat 100 | S1-09 fresh reproduction: pipeline `7.078853 img/s`, end-to-end `7.038151 img/s`, end-to-end mean/P50/P95 `142.082777/145.3222/150.7653 ms`, Peak Working Set `152.578125 MiB` | Reproducible single-image warm-cache C++ baseline on this host and protocol | Not full-dataset, cold-disk, GPU, concurrent, or cross-machine performance; temporary JSON was 5,453 bytes, SHA-256 `F32C0DF3157897264F9BD2B9AE3F3DB7B240A3B641494E8D3E7C346FF64E9C6F` |
 
 Pending artifact paths:
 
@@ -295,7 +471,31 @@ artifacts/paper_detect_d010/metrics_table.csv     # placeholder
 artifacts/paper_detect_d010/qualitative/          # placeholder
 ```
 
-The consolidated C++ result table is still pending. It must eventually record machine/OS/compiler/build type, model/input/sample set, correctness tolerances, segmented and end-to-end P50/P95, throughput, memory/RSS, any extension comparison, failure cases, conclusions, evidence paths, and reproduction commands. The model-license checkpoint is a provenance risk to resolve, not a C++ implementation blocker to hide.
+Historical S1-08 published latency record, retained unchanged:
+
+| Segment | Boundary | Mean (ms) | P50 (ms) | P95 (ms) |
+|---------|----------|----------:|---------:|---------:|
+| Image decode | `cv::imread` only | 0.991129 | 0.9649 | 1.3517 |
+| Preprocess | decoded `cv::Mat -> float32 NCHW tensor` | 8.244569 | 7.5514 | 12.1265 |
+| Session run | only synchronous `Ort::Session::Run` | 165.555859 | 164.8985 | 186.2136 |
+| Postprocess | owned raw output -> filtered/NMS/restored detections | 0.424115 | 0.4251 | 0.5636 |
+| Pipeline | preprocess + safe inference wrapper + postprocess | 175.560944 | 175.1058 | 195.1376 |
+| End-to-end | image decode + pipeline | 176.553060 | 176.1357 | 196.6128 |
+
+Fresh S1-09 reproduction under the same declared protocol:
+
+The rerun used the same `DESKTOP-6OGK71C` Windows 10.0.26200 host, MSVC 19.50.35721.0 Release C++17 build, OpenCV 4.8.0, ORT 1.19.2, requested CPU/actual `CPUExecutionProvider`, sequential intra/inter-op `1/1`, graph optimization `all`, model/input/sample, thresholds, batch 1, and three-detection result as S1-08. No runtime setting was tuned between the two records.
+
+| Segment | Boundary | Mean (ms) | P50 (ms) | P95 (ms) |
+|---------|----------|----------:|---------:|---------:|
+| Image decode | `cv::imread` only | 0.816168 | 0.8182 | 0.9251 |
+| Preprocess | decoded `cv::Mat -> float32 NCHW tensor` | 5.453755 | 5.4547 | 6.2128 |
+| Session run | only synchronous `Ort::Session::Run` | 134.419309 | 137.5882 | 142.5549 |
+| Postprocess | owned raw output -> filtered/NMS/restored detections | 0.345302 | 0.3438 | 0.4424 |
+| Pipeline | preprocess + safe inference wrapper + postprocess | 141.265814 | 144.4673 | 149.8395 |
+| End-to-end | image decode + pipeline | 142.082777 | 145.3222 | 150.7653 |
+
+The S1-09 automatic result is a second same-protocol reproduction, not a claim that the implementation was optimized between S1-08 and S1-09. Uncontrolled host load and warmed caches can move latency. The model-license checkpoint remains a provenance/distribution risk rather than a C++ implementation blocker to hide. Large Stage One remains open until the user L2 gate passes.
 
 ### 9. Key Design Trade-Offs
 
@@ -309,6 +509,10 @@ The consolidated C++ result table is still pending. It must eventually record ma
 - **Explicit tensor ownership:** the CPU input `Ort::Value` borrows the preprocess vector only for synchronous `Run`, while the output is copied into an ORT-free `InferenceOutput` before local ORT values are destroyed.
 - **Frozen YOLOv8 semantics:** `[1,4+C,N]` is decoded without separate objectness or an extra sigmoid; class-score ties choose the lower class id, filtering uses float32-domain strict `>`, and NMS is class-agnostic in model-input space before restore/clip.
 - **Deterministic NMS ties:** equal-confidence candidates preserve original input order. This replaces the historical NumPy `argsort()[::-1]` ambiguity with an explicit, tested C++ rule.
+- **Order-independent consistency:** detections are grouped by class and paired by deterministic maximum IoU with a canonical tie-break, so correctness does not depend on Python and C++ serializing detections in the same order.
+- **Correctness before performance:** S1-07 must pass before S1-08 numbers are published. The benchmark cannot turn a wrong result into a successful performance claim.
+- **Explicit benchmark boundaries:** `imread`, decoded-Mat preprocess, only `Session::Run`, postprocess, pipeline, and end-to-end are timed separately with one `steady_clock` protocol. Session initialization and file outputs stay outside repeated timing and are disclosed rather than silently omitted.
+- **Distribution over one-shot latency:** warmup 10/repeat 100 plus mean/P50/P95 exposes normal and tail behavior. Pipeline/end-to-end throughput is derived from matching mean latency; Peak Working Set is reported separately as a process-lifetime memory baseline.
 - **Conditional extensions:** INT8 PTQ belongs to P0 evidence hardening; TensorRT/Jetson/ARM is a later real-hardware extension, while Qt and gRPC/Triton are job-description gated.
 - **Failure records matter:** INT8, D-FINE, or eligible real-device attempts may fail, but commands, errors, root causes, and fallback decisions must be documented without promoting the attempt to a result.
 
@@ -328,11 +532,11 @@ Large stage one's detailed, one-step-at-a-time execution plan is in [`docs/STAGE
 
 ### 11. Version Changes and Progress Records
 
-Current state: historical Project 1 tasks P1-00 through P1-03 and large-stage-one tasks **S1-01 through S1-05** are implemented and verified. S1-04 is L1 accepted. S1-05 adds the fixed single-image CLI, self-contained detection result, stable JSON/visualization output boundary, six output GTests, and a 78-case complete gate; it is awaiting user L1 acceptance.
+Current state: historical Project 1 tasks P1-00 through P1-03 and large-stage-one tasks **S1-01 through S1-08** are implemented, verified, and L1 accepted. The **S1-09 automatic gate passes**, but its user-owned L2 gate is pending. Large Stage One is not complete and Large Stage Two has not started.
 
 The 2026-07-16 pre-stage readiness pass is also complete: the ORT C++ 1.19.2 SDK is present and verified, the VS x64 toolchain is discoverable, a new `%TEMP%` Release/NMake build passes 3/3 CTest, and the future GTest dependency is pinned. The owner also confirmed the current ONNX was personally exported from the `final_train_2` best checkpoint; the checkpoint is not in this workspace or Git history. The durable commands, evidence, GTest hash, model-lineage audit, and unresolved public-distribution license checkpoints are in [`docs/PRE_STAGE1_READINESS.md`](docs/PRE_STAGE1_READINESS.md). This preparation did not start S1-01 or change Runtime behavior.
 
-The next implementation step, only after user S1-05 L1 acceptance, is **S1-06: automated main-path and core failure-path hardening**. `S1-*` means “large stage one small stage” and avoids confusing the old Project 1 `P1-*` history with the top-level P1 extension category.
+The next action is not another product feature: the user must complete the S1-09 L2 explanation, follow-up, debugging, and temporary behavior-plus-GTest exercise below. Only then may Large Stage One be marked complete and Large Stage Two be planned. `S1-*` means “large stage one small stage” and avoids confusing the old Project 1 `P1-*` history with the top-level P1 extension category.
 
 The chronological V2 entry log is kept in the Roadmap section below and must be updated after every small stage.
 
@@ -349,29 +553,146 @@ The chronological V2 entry log is kept in the Roadmap section below and must be 
 | S1-03 | Added zero-copy CPU input tensor wiring, synchronous `OnnxRunner::run()`, owned `InferenceOutput`, and `--raw-output-summary`. | Isolate tensor shape/lifetime and raw model execution before postprocess algorithms. | Fixed image produced finite `[1,10,13125]` / 131,250-value raw output; invalid 1,919,999-value input failed before ORT tensor/Run; 31/31 CTest passed. | A user-buffer `Ort::Value` does not own the input vector; keep it stable through synchronous Run. ORT owns output only while its Value lives, so copy before return. |
 | S1-04 | Added `Detection`/`BoundingBox`, pure YOLOv8 raw-output validation/decode, strict score filtering, IoU, stable class-agnostic NMS, coordinate restore/clip, and a direct `cv::Mat` preprocess boundary. | Prove model-specific algorithms independently of ORT/model variability before connecting user-facing outputs. | Synthetic postprocess GTest 24/24, `cv::Mat` preprocess GTest 7/7, complete CTest 62/62; S1-03 raw regression retained. | Compare float32 scores/IoU in the float32 threshold domain; perform NMS before restore; preserve input order for equal confidence; reject non-`CV_8UC3` Mat input instead of silently applying the wrong normalization. |
 | S1-05 | Added the PImpl `DetectorPipeline`, self-contained `SingleImageDetectionResult`, schema-v1 JSON serializer, deterministic OpenCV visualizer, output safety rules, and `--output-json` / `--output-image` / `--overwrite`. | Turn the already-tested seams into the first reproducible, interview-demoable single-image C++ vertical slice while keeping algorithms out of `main.cpp`. | Fixed sample produced 3 `crazing` detections; Python parsed and semantically validated the 1,164-byte JSON; OpenCV read the 39,306-byte PNG; output GTest 6/6, output label 16/16, complete CTest 78/78. | Serialize only owned validated values; escape every JSON string; make overwrite opt-in and protect inputs. `actual_provider` is session-level evidence rather than per-node profiling, and a two-file write is not an atomic transaction. |
+| S1-06 | Expanded the Runtime/artifact, preprocess, metadata, postprocess, output, integration, and failure matrix into one labeled quality gate. | Separate proof of pure algorithm correctness, real vertical-slice operability, and failure diagnosability before consistency work. | Exact four-pixel NCHW, landscape/portrait odd padding, synthetic metadata, full empty-result path, schema faults, damaged image, and uncreatable output parent; clean Release CTest 90/90 in 5.53 seconds. | Bad metadata needs synthetic structs, not several large models. A legal empty detection list differs from malformed/empty raw output. Diagnostics should always lead from object/path to expected, actual, and action. |
+| S1-07 | Added a repository-resident frozen six-class manifest plus an independent Python ORT CPU reference and deterministic Python/C++ detector matcher. | Replace weak count-only evidence with reproducible class, confidence, coordinate, and IoU evidence under frozen gates. | 30/30 images and 62/62 matches passed; max confidence error `8.049977111568296e-07`, max coordinate error `9.135351561440075e-05` px, minimum IoU `0.999998927116394`; consistency CTest 2/2 and complete CTest 92/92. | Python 3.9 `Path.write_text()` has no `newline` argument, so evidence writing uses `open(..., newline='\n')`. This was a serialization-compatibility fix; no correctness tolerance was relaxed. |
+| S1-08 | Added a Release-only `BenchmarkRunner`, timed ORT boundary, benchmark result/writer, CLI mode, strict JSON validator, and Windows Peak Working Set capture. | Establish performance evidence only after correctness, while separating decode, preprocess, model execution, postprocess, pipeline, and user-visible end-to-end costs. | On the fixed 10/100 protocol, pipeline mean/P50/P95 is `175.560944/175.1058/195.1376` ms and end-to-end is `176.553060/176.1357/196.6128` ms; throughput is `5.696028/5.664020` images/s and Peak Working Set is `152.714844` MiB. Benchmark 14/14 and complete CTest 106/106 pass. | Time only `Session::Run` for the infer segment, but include safe tensor construction/output-copy overhead in pipeline. Warmed file cache, uncontrolled host load, process-lifetime memory, and session-level provider evidence must be disclosed; unlike protocols must not be ranked directly. |
+| S1-09 automatic gate | Added no product behavior; rebuilt and reran the full deliverable chain from a fresh temporary Release directory. | Prove that the stage-one output is reproducible and that documentation/evidence can withstand engineering review before the user L2 gate. | Configure/build passed; CTest 106/106 in 19.91 seconds; deterministic Demo hashes, 30/30 consistency, fresh 10/100 benchmark, four actionable exit-1 faults, and two legal-empty tests passed. | An automated green gate cannot prove the user can explain or modify the system. S1-09 and Large Stage One remain open until the exercise below is completed and reverted cleanly. |
 | PLAN-20260715 | Aligned repository rules and the bilingual entry points to the latest top-level design; created the long-form large-stage-one plan. | Preserve the verified baseline while preventing the short stage summary from dropping contract, correctness, test, failure, and evidence requirements. | `docs/PLAN.md` -> `AGENTS.md` rules -> README stage/status summary -> `docs/STAGE1_EXECUTION_PLAN.md` one-step plan. | Historical Python metrics, external D010 metrics, and future C++ results must stay explicitly separated. |
+
+### 13. S1-09 L2 Interview Gate
+
+Automatic status is **PASS**. User L2 status is **PENDING**. The following material is the acceptance kit rather than evidence that the user has already completed it.
+
+#### Two-minute explanation outline
+
+1. Position the project as a C++17 industrial-vision Runtime that consumes an existing YOLOv8/NEU-DET ONNX artifact rather than another training wrapper.
+2. Explain the contract boundary: `RuntimeConfig` holds runtime policy, `ModelArtifactSpec` holds declared model facts, and actual ORT `ModelMetadata` must match before inference.
+3. Walk the single-image chain: OpenCV decode -> letterbox/RGB/normalize/NCHW -> RAII ORT CPU session -> owned raw output -> BCN decode/strict score filter/stable class-agnostic NMS/coordinate restore -> JSON/PNG.
+4. Close with evidence: synthetic GTest/CTest and faults, six-class 30-image Python ORT/C++ ORT consistency, and a correctness-gated Release benchmark. State the limits: no model-accuracy claim, INT8, batch/concurrency, or real-device result.
+
+#### Five-minute explanation outline
+
+1. **0:00-0:30, positioning:** define the Python-prototype-to-deployable-Runtime gap and why model artifacts need executable contracts.
+2. **0:30-1:10, structure:** explain the static Runtime library, thin CLI, Runtime/artifact/actual-metadata separation, declaration-relative paths, and actionable errors.
+3. **1:10-1:50, preprocessing:** explain `image path -> cv::Mat -> letterbox -> RGB -> float32/255 -> NCHW`, including scale/padding retained for inverse coordinates.
+4. **1:50-2:35, ORT and lifetime:** explain PImpl/RAII, explicit CPU EP, borrowed input vector lifetime through synchronous `Run`, and output copying before `Ort::Value` dies.
+5. **2:35-3:20, postprocess/output:** explain `[1,4+C,N]`, no objectness/sigmoid, class argmax, strict `>`, stable class-agnostic NMS, restore/clip, stable JSON, and headless visualization.
+6. **3:20-4:00, tests/faults:** separate synthetic unit evidence from the few real-model integration smokes and show how missing model, damaged image, bad metadata/tensor, bad CLI, and bad output paths fail.
+7. **4:00-4:35, correctness/performance:** explain class-first maximum-IoU matching on six classes x five images, then the six benchmark timing boundaries and Peak Working Set scope.
+8. **4:35-5:00, limits/next stage:** distinguish implementation consistency from mAP and session provider from per-node profiling; put INT8 PTQ and broader evidence hardening in Large Stage Two.
+
+#### Follow-up questions and concise answers
+
+| # | Question | Interview answer |
+|---:|---|---|
+| 1 | Why separate `RuntimeConfig`, `ModelArtifactSpec`, and `ModelMetadata`? | Runtime policy is adjustable, artifact facts are declared and model-specific, and metadata is what ORT actually reads. Cross-checking them catches the wrong model before `Run`. |
+| 2 | Why resolve relative paths from the declaring file? | The process CWD changes with the launcher; declaration-relative resolution selects the same artifact/model from the repo, build directory, or another CWD. |
+| 3 | Why use a Runtime library plus a thin CLI? | Algorithms and resource management can be reused and tested without compiling `main.cpp`; the CLI only parses arguments and orchestrates. |
+| 4 | What does RAII protect in `OnnxRunner`? | `Env`, `SessionOptions`, `Session`, allocators, and names follow object lifetime and unwind safely on exceptions instead of relying on manual release. |
+| 5 | Why may the input `Ort::Value` borrow the preprocess vector but the returned output may not expose an ORT pointer? | The vector remains stable until synchronous `Run` returns; local output `Ort::Value` storage would die on return, so values are copied into `InferenceOutput`. |
+| 6 | What do 10 and 13,125 mean in `[1,10,13125]`? | Ten is `4 + 6` box/class channels; 13,125 is the candidate count, not the final detection count. |
+| 7 | Why is there no objectness multiplication or extra sigmoid? | The frozen export/contract directly exposes class scores in the baseline semantics; adding either would change threshold behavior and break consistency. |
+| 8 | Why do strict `>` and stable NMS matter? | Exact-threshold candidates must be rejected by contract, and deterministic equal-score ordering keeps repeat results, JSON, and tests reproducible. |
+| 9 | Why not compare Python and C++ detections by array index? | Equivalent detections may be serialized in another order, so matching first groups by class and then chooses deterministic maximum-IoU pairs. |
+| 10 | Why must correctness pass before benchmark publication? | Latency only says how fast code ran; a wrong detection result cannot become valid because it is fast. |
+| 11 | How do `Session::Run`, pipeline, and end-to-end timing differ? | `Session::Run` isolates ORT; pipeline also includes preprocess, tensor/wrapper checks, output copy, and postprocess; end-to-end additionally includes image decode. |
+| 12 | What does `actual_provider=CPUExecutionProvider` prove? | It proves explicit CPU EP session setup and successful runs, but not independent per-node placement without ORT profiling. |
+| 13 | Why is Peak Working Set not “model inference memory”? | It is the process-lifetime high-water mark, including session initialization, warmup, samples, statistics, and harness state. |
+| 14 | Why discuss MIT source, ONNX AGPL metadata, and NEU-DET redistribution separately? | They concern different assets and obligations; one license cannot be assigned to the others without source evidence. |
+
+#### Error-triage cases
+
+| Failure | Diagnosis order | Correct response |
+|---|---|---|
+| Config says `provider expected [cpu], actual cuda` | Read file/line/field first; this is schema loading, not evidence that inference used a GPU | Restore `cpu`; future CUDA support would require schema, SDK/CMake, session registration, actual-provider checks, and tests together |
+| Inspect reports declared `[1,3,800,800]`, actual `[1,3,640,640]` | Verify normalized model path and SHA, then actual name/shape/dtype | Use the matching artifact/model or legitimately re-export and repeat consistency; do not edit the declaration merely to silence the check |
+| Image exists but OpenCV returns an empty `cv::Mat` | Separate path existence from decoder/codec/content validity | Probe or re-encode the image and retain the non-empty `CV_8UC3` check; do not bypass preprocessing validation |
+| Output parent is a regular file | Inspect each parent component and the target type/permissions | Choose or create a directory; keep the nonzero output-path failure separate from inference errors |
+| Consistency fails and benchmark is blocked | Inspect per-image count/class/unmatched boxes before numeric errors; then trace preprocess -> raw output -> threshold/NMS -> restore -> matcher | Fix the cause under the frozen protocol; do not widen tolerances or publish performance first |
+
+#### Resume bullets
+
+- Built a C++17/CMake/OpenCV/ONNX Runtime single-image industrial-defect Runtime with strict Runtime/artifact schemas, RAII session management, letterbox/NCHW preprocessing, YOLOv8 decode/stable NMS/coordinate restoration, deterministic JSON/PNG output, and a 106-case GTest/CTest gate with actionable fault injection.
+- Established correctness and performance evidence for the same frozen ONNX: matched 62/62 detections across a six-class 30-image Python ORT/C++ ORT set with max confidence error `8.05e-7` and max box error `9.14e-5 px`; reproduced a fixed Release CPU 10/100 baseline at `7.038151 img/s` end to end and `152.578125 MiB` process Peak Working Set.
+
+The second bullet must retain the same-ONNX and fixed single-image CPU-protocol qualifiers; it is not an mAP, general FPS, or device-deployment claim.
+
+#### Core code worth handwriting
+
+- Letterbox/RGB/normalize/NCHW: `cpp_infer/src/image_preprocessor.cpp:57` and `:108`; tests at `cpp_infer/tests/preprocessor_mat_test.cpp:47`, `:82`, and `:108`.
+- ORT RAII, borrowed input, synchronous run, and owned output: `cpp_infer/src/onnx_runner.cpp:338`, `:402`, and `:419`.
+- YOLO box conversion, IoU, BCN decode, stable NMS, and restore/clip: `cpp_infer/src/postprocessor.cpp:269`, `:280`, `:311`, `:360`, `:405`, and `:450`; threshold test at `cpp_infer/tests/postprocessor_test.cpp:173`.
+- Actual metadata versus contract: `cpp_infer/src/model_metadata.cpp:149`.
+- Python reference preprocessing/postprocess and deterministic matcher: `cpp_infer/tools/compare_consistency.py:619`, `:801`, `:922`, and `:1435`.
+- Mean/nearest-rank percentiles and six timing boundaries: `cpp_infer/src/benchmark_result.cpp:66`, `cpp_infer/src/benchmark_runner.cpp:327`, `:371`, and `:520`; tests at `cpp_infer/tests/benchmark_test.cpp:31`.
+- Strict parser/path semantics, pipeline orchestration, and stable writers: `cpp_infer/src/key_value_parser.cpp:76`/`:281`, `cpp_infer/src/detector_pipeline.cpp:135`, and `cpp_infer/src/result_writer.cpp:764`/`:856`.
+
+#### User-owned behavior + GTest exercise
+
+Use the score-filter boundary as a disposable RED -> GREEN -> restore exercise. The product contract remains strict `confidence > threshold`; the inclusive behavior must never be merged.
+
+1. First create a clean S1-09 checkpoint. Because the current stage worktree may contain valuable uncommitted work, do not use a broad `git restore` or start the exercise in that dirty tree. Use a disposable practice branch only after the checkpoint exists.
+2. **RED:** change the synthetic expectation in `cpp_infer/tests/postprocessor_test.cpp:173` so a score exactly equal to `0.25` is expected to survive. Leave product code unchanged, rebuild the test target, and run:
+
+```powershell
+cmake --build $BuildDir --target yolo_defect_postprocess_tests
+if ($LASTEXITCODE -ne 0) { throw 'RED test rebuild failed.' }
+& "$BuildDir\bin\yolo_defect_postprocess_tests.exe" `
+  --gtest_filter='YoloDecodeTest.*Threshold*'
+```
+
+The test must fail, demonstrating the current strict `>` contract.
+
+3. **GREEN:** temporarily change `cpp_infer/src/postprocessor.cpp:344` to inclusive `>=` semantics and update the exact-threshold expectations around `postprocessor_test.cpp:192` and `:456`. Rebuild the same target, rerun the focused test, and require exit 0. Explain why detection counts may change and why a real contract change would also require Python reference, consistency evidence, and README updates.
+4. **RESTORE:** abandon the disposable branch or manually reverse only the exercise lines back to strict `>`. Rebuild, rerun the original focused test and complete CTest, and inspect `git diff` to prove no inclusive behavior remains on the product branch.
+
+L2 passes only after the user can deliver both outlines, answer at least ten follow-ups, explain at least three failures, identify the core files/evidence, and complete RED -> GREEN -> restore without leaving product changes. Until then the authoritative status remains **S1-09 automatic PASS / user L2 PENDING / Large Stage One NOT complete**.
 
 ## Highlights
 
 - **Best Experimental Result** — Best checkpoint `final_train_2` reaches **mAP@0.5 = 0.743** on NEU-DET
 - **Historical PyTorch vs ONNX Count Check** — **50/50** count matches and **146 vs 146** detections, but the sorted sample is all `crazing` and does not prove class/box tolerance
+- **Current Strict Consistency Evidence** — Six classes x five images, **30/30 images** and **62/62 matched detections** pass the frozen Python ORT/C++ ORT count/class/confidence/box/IoU gates
 - **Historical V1 Python Benchmarks** — PyTorch CPU **8.43 FPS**; PyTorch GPU (RTX 3060) **110.8 FPS**; Python ORT CPU **24.4 FPS**; Python ORT GPU **72.1 FPS** — all measured on 100 timed images (5 warmup), not C++ results
+- **Current C++ Release Benchmark Reproduction** — fixed batch-1 CPU sample, warmup 10/repeat 100: pipeline **7.078853 images/s**, end-to-end **7.038151 images/s**, end-to-end P50/P95 **145.3222/150.7653 ms**, Peak Working Set **152.578125 MiB**; the older S1-08 run remains separately documented and no optimization claim is made
 - **Docker Verified** — `python:3.9-slim` image has been tested with `/health` and `/detect`
-- **Clone & Run** — Dataset (28MB) included in the repo, no external downloads needed
+- **Dataset Included** — The 28MB NEU-DET copy needs no separate dataset download; the V2 C++ path still requires the documented OpenCV, ORT C++ SDK, compiler, CMake, and test dependencies
 
 ## Key Metrics
 
+### Model metrics
+
 | Metric | Value |
-|--------|-------|
+|---|---|
 | Best model | `final_train_2` |
 | mAP@0.5 | **0.743** |
 | mAP@50-95 | **0.388** |
-| Historical PT/ONNX same-count ratio | **50 / 50** all-`crazing` images (**100%**, count only) |
-| Mean abs count diff | **0.000** |
+
+### Correctness metrics — evidence kept separate
+
+| Evidence lane | Value |
+|---|---|
+| Historical PT/ONNX count-only | **50/50** all-`crazing` images, 146/146 detections, mean absolute count difference **0.000**; no class/box tolerance claim |
+| Current Python ORT/C++ ORT strict evidence | **30/30 images, 62/62 matches**; max confidence error `8.049977111568296e-07`, max bbox error `9.135351561440075e-05 px`, minimum IoU `0.999998927116394` |
+
+### Performance metrics — evidence kept separate
+
+Historical V1 Python-side protocol:
+
+| Metric | Value |
+|---|---|
 | Historical PyTorch CPU benchmark | **8.43 FPS** / **118.66 ms** per image |
 | Historical PyTorch GPU benchmark (RTX 3060) | **110.8 FPS** / **9.0 ms** per image |
 | Historical Python ORT CPU benchmark | **24.4 FPS** / **40.9 ms** per image |
 | Historical Python ORT GPU benchmark (RTX 3060) | **72.1 FPS** / **13.9 ms** per image |
+
+Current S1-09 C++ Release fresh-reproduction protocol:
+
+| Metric | Value |
+|---|---|
+| C++ ORT CPU pipeline | **7.078853 images/s** / **141.265814 ms mean**, fixed one-image 10/100 protocol |
+| C++ ORT CPU end-to-end | **7.038151 images/s** / **142.082777 ms mean**, P50/P95 **145.3222/150.7653 ms** |
+| C++ process Peak Working Set | **152.578125 MiB**, process-lifetime scope |
 | Historical model-size record (`best.pt` / current `best.onnx`) | ~6.0 MiB / ~11.8 MiB; the matching `.pt` was not found in the current workspace or Git history |
 
 ## V1 Python Baseline Quick Start
@@ -675,7 +996,7 @@ The current ONNX deployment target is exported with `imgsz=800`, so the model in
 | Historical mean absolute count difference | **0.000** | `results/pt_onnx_compare/compare_50_summary.json` |
 | Model-size record | Historical `best.pt = 6,286,072 bytes`; current tracked `best.onnx = 12,336,935 bytes`; the matching `.pt` was not found in the current workspace or Git history | artifact/evidence audit |
 
-All latency rows above are V1 Python/Python-ORT evidence. The first C++ Runtime latency table will be created in S1-08 and must use a separately documented protocol.
+All latency rows in this historical V1 subsection remain Python/Python-ORT evidence. The current C++ Runtime S1-08 table is documented separately in the V2 section above because its single-image, batch-1, Release CPU protocol is different and must not be compared unconditionally.
 
 ### YOLODetector Class (`src/detector.py`)
 
@@ -920,13 +1241,19 @@ yolo_defect/
 │   ├── artifacts/                # ModelArtifactSpec declarations
 │   │   └── yolov8_neu_det.artifact.txt
 │   ├── configs/default_config.txt# RuntimeConfig policy and artifact path
-│   ├── include/yolo_defect_cpp/  # Public contract/preprocess/runner/postprocess/output value APIs
+│   ├── include/yolo_defect_cpp/  # Public contract/preprocess/runner/postprocess/output/benchmark APIs
 │   │   ├── detector_pipeline.h   # PImpl single-image Runtime orchestration boundary
 │   │   ├── detection_result.h    # Self-contained result and image metadata
-│   │   └── result_writer.h       # Stable JSON/visualization output request API
-│   ├── src/                      # Parser, preprocess, ORT run, postprocess, pipeline, writers, thin CLI
+│   │   ├── result_writer.h       # Stable JSON/visualization output request API
+│   │   ├── benchmark_runner.h    # Release-only warmup/repeat measurement boundary
+│   │   ├── benchmark_result.h    # Typed environment/latency/throughput/memory evidence
+│   │   └── benchmark_writer.h    # Strict safe machine-readable benchmark JSON output
+│   ├── src/                      # Parser, preprocess, ORT, postprocess, pipeline, benchmark, writers, thin CLI
 │   ├── results/demo/             # Verified S1-05 JSON and visualized PNG evidence
-│   └── tests/                    # GTest logic/output + CTest contract/session/integration/failure gates
+│   ├── results/consistency/      # S1-07 machine-readable per-image and summary evidence
+│   ├── results/benchmark/        # S1-08 machine-readable Release performance evidence
+│   ├── tools/compare_consistency.py # Python CPU ORT reference and order-independent comparator
+│   └── tests/                    # GTest/CTest, manifests, assert_benchmark_json.py and fault gates
 ├── configs/
 │   ├── train_config.yaml         # Baseline training hyperparameters
 │   └── exp*.yaml                 # Experiment configs (imgsz/lr/augment/final runs)
@@ -944,23 +1271,23 @@ yolo_defect/
 
 - **`scripts/`** — One-off scripts for data processing, training, evaluation, export. Run from command line with argparse.
 - **`src/`** — Reusable modules. `detector.py` is imported by both `inference_onnx.py` and the FastAPI service.
-- **`cpp_infer/`** — V2 C++ deployment workspace. It now owns the Runtime library/CLI boundary, strict Runtime/artifact contract, OpenCV preprocessing, ORT RAII session, actual metadata validation, safe tensor ownership, pure YOLOv8 postprocess, the single-image Pipeline, stable JSON/visualization outputs, GTest, and the 78-case CTest gate; later S1 steps add broader failure hardening, consistency, and benchmark evidence.
+- **`cpp_infer/`** — V2 C++ deployment workspace. It now owns the Runtime library/CLI boundary, strict Runtime/artifact contract, OpenCV preprocessing, ORT RAII session, actual metadata validation, safe tensor ownership, pure YOLOv8 postprocess, the single-image Pipeline, stable JSON/visualization outputs, the S1-06 failure gate, repository-resident S1-07 Python/C++ consistency evidence, and repository-resident S1-08 segmented Release benchmark/Peak-Working-Set evidence. The S1-09 automatic reproduction passes; user L2 remains pending.
 - **`configs/`** — Separated hyperparameters. Easy to track experiments by diffing config files.
 
 ## Tech Stack
 
 | Tool | Purpose | Version |
 |------|---------|---------|
-| Python | Language | 3.9.25 |
+| Python | V1 utilities plus S1-07 independent consistency reference | 3.9.25; consistency environment also uses NumPy 2.0.2 |
 | C++ | V2 runtime language | C++17 |
 | MSVC | Verified x64 C++ compiler | 19.50.35721.0 |
 | PyTorch | Deep learning framework | 2.0.0 |
 | Ultralytics | YOLOv8 training & inference | 8.4.24 locally and in artifact metadata |
 | ONNX | Model interchange format | Python package 1.19.1; artifact opset 17 |
-| ONNX Runtime | Python baseline plus C++ RAII session, metadata validation, raw inference, and S1-05 single-image pipeline execution | Python 1.19.2 and official Windows x64 CPU C++ SDK 1.19.2; input is borrowed only through synchronous `Session::Run`, output is copied before ORT ownership ends, and output records session-level CPU provider evidence |
-| OpenCV | Python utilities, verified file/`CV_8UC3 cv::Mat` C++ preprocessing, deterministic headless drawing, image encoding, and output read-back | Windows C++ 4.8.0 x64 vc16 |
+| ONNX Runtime | Python consistency reference plus C++ RAII session, metadata validation, raw inference, and single-image pipeline execution | Python 1.19.2 explicitly requests `CPUExecutionProvider`; official Windows x64 CPU C++ SDK 1.19.2 explicitly registers the CPU session provider. This is session-level, not per-node profiling evidence |
+| OpenCV | Python/C++ consistency preprocessing plus verified file/`CV_8UC3 cv::Mat` C++ preprocessing, deterministic drawing, encoding, and read-back | Python 4.13.0; Windows C++ 4.8.0 x64 vc16; the explicit version difference is recorded in S1-07 evidence |
 | CMake | Active C++ build system and CTest entry | 4.1.1-msvc1 |
-| GTest | Synthetic postprocess/preprocess plus stable JSON-output unit tests linked to `yolo_defect_runtime` | Official GitHub v1.17.0 archive; commit `52eb8108c5bdec04579160ae17225d66034bd723` and SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84` pinned; verified 24 postprocess + 7 preprocess + 6 output cases; offline source override requires a separately hash-verified extraction |
+| GTest | Synthetic postprocess/preprocess/output plus benchmark-statistics/result tests linked to `yolo_defect_runtime` | Official GitHub v1.17.0 archive; commit `52eb8108c5bdec04579160ae17225d66034bd723` and SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84` pinned; benchmark label 14/14 and current complete CTest 106/106 pass; offline source override requires a separately hash-verified extraction |
 | Matplotlib | Visualization & plotting | (via ultralytics) |
 | FastAPI | REST API service | latest |
 | Conda | Environment management | — |
@@ -1001,7 +1328,7 @@ The NEU-DET dataset is only 28MB. Including it means:
 - [x] Hyperparameter tuning (imgsz / lr / augment comparisons)
 - [x] Bad sample analysis (misdetections, class confusion)
 - [x] ONNX export and CPU inference validation
-- [x] ONNX accuracy alignment (PyTorch vs ONNX)
+- [x] Historical 50-image PyTorch/ONNX detection-count check (all `crazing`; count/confidence summary only)
 - [x] FastAPI service with file upload endpoint
 - [x] Docker containerization for deployment
 - [x] Demo GIF for inference walkthrough
@@ -1020,13 +1347,13 @@ The V2 queue follows `docs/PLAN.md`. Before entering each large stage, Codex rea
 | S1-02 | **Verified; L1 accepted** | ORT session and metadata validation | RAII/PImpl session, explicit CPU EP, actual version/provider/count/name/shape/dtype/class-contract inspection, and synthetic validator | `models/best.onnx` loads; actual float32 `[1,3,800,800] -> [1,10,13125]` metadata passes; real/synthetic negative paths and 29/29 CTest pass; no `Session::Run` |
 | S1-03 | **Verified; L1 accepted** | Tensor wiring and raw inference | Borrow the preprocess vector for a CPU ORT tensor, run synchronously, validate and copy raw output into independent storage | Fixed image produces finite owned `[1,10,13125]` / 131,250-value output; invalid length fails before Run; 31/31 CTest pass; no decode |
 | S1-04 | **Verified; L1 accepted** | YOLO decode/filter/NMS/coordinate restore | Pure model-specific postprocess functions, direct `CV_8UC3 cv::Mat` preprocess boundary, and synthetic GTest | Float32 strict thresholds, BCN decode, stable class-agnostic input-space NMS, empty output, clipping, odd/non-square inverse letterbox are deterministic; GTest 31/31 and complete CTest 62/62 pass |
-| S1-05 | **Implemented and verified; awaiting L1 acceptance** | End-to-end CLI, JSON, and visualization | `DetectorPipeline` orchestrates the single-image vertical slice; `DetectionResult` snapshots owned output metadata; `ResultWriter` emits stable JSON v1 and deterministic headless visualization with explicit file safety rules | Fixed command creates 3 `crazing` detections, Python-parseable JSON and an OpenCV-readable PNG; empty detections remain valid `[]`; output GTest 6/6, output label 16/16, complete CTest 78/78 |
-| S1-06 | **Next after S1-05 L1** | Automated and failure-path gate | Expand GTest/CTest across contract, preprocess, metadata, postprocess, integration, and core failures | Tests cover missing model, shape/dtype/class mismatch, damaged image, and empty output with nonzero actionable errors where appropriate |
-| S1-07 | Pending | Fixed-sample Python ORT/C++ consistency | Compare a committed six-class manifest under the same CPU provider and postprocess semantics | Count/class match and predeclared confidence/box/IoU tolerances pass or produce per-image diagnostics; no unsupported direct PT rerun claim |
-| S1-08 | Pending | Reproducible Release benchmark | Measure decode/preprocess/infer/postprocess/pipeline with warmup/repeat and environment/memory metadata | JSON contains mean/P50/P95, throughput, build/provider/model/sample metadata, and Windows Peak Working Set or an explicit unsupported value |
-| S1-09 | Pending | Large-stage-one closure | Clean-build all gates, align documentation/evidence, and complete L2 interview acceptance | Fixed demo/tests/consistency/benchmark pass; user can explain for five minutes, handle follow-ups/failures, and change one behavior plus its test |
+| S1-05 | **Verified; L1 accepted** | End-to-end CLI, JSON, and visualization | `DetectorPipeline` orchestrates the single-image vertical slice; `DetectionResult` snapshots owned output metadata; `ResultWriter` emits stable JSON v1 and deterministic headless visualization with explicit file safety rules | Fixed command creates 3 `crazing` detections, Python-parseable JSON and an OpenCV-readable PNG; empty detections remain valid `[]`; output GTest 6/6, output label 16/16, complete CTest 78/78 |
+| S1-06 | **Verified; L1 accepted** | Automated and failure-path gate | Labeled GTest/CTest coverage across strict Runtime/artifact schemas, exact preprocess layout, synthetic metadata, postprocess, outputs, integration, and core faults | Clean Release 90/90 in 5.53 seconds; unit 51, integration 3, negative 32. Missing model, damaged image, and uncreatable output parent return nonzero actionable errors |
+| S1-07 | **Verified; L1 accepted** | Fixed-sample Python ORT/C++ consistency | Compare a frozen repository-resident six-class x five-image manifest under the same artifact/config, explicit CPU providers, strict threshold, class-agnostic NMS, and coordinate semantics; pair detections by class and deterministic maximum IoU | 30/30 images and 62/62 matches pass the frozen gates; per-image/summary JSON preserve metrics and diagnostics; consistency 2/2 and complete CTest 92/92 pass; no unsupported direct PT rerun claim |
+| S1-08 | **Verified; L1 accepted** | Reproducible Release benchmark | Measure `imread`, decoded-Mat preprocess, only `Session::Run`, postprocess, pipeline, and end-to-end under a fixed CPU/thread/model/sample protocol; record throughput, environment and memory evidence | Formal warmup 10/repeat 100 JSON contains mean/P50/P95 for all six boundaries, pipeline/end-to-end throughput, full protocol metadata, and Windows Peak Working Set; benchmark 14/14 and complete CTest 106/106 pass |
+| S1-09 | **Automatic gate PASS; user L2 PENDING** | Large-stage-one closure | Fresh-build all gates, align documentation/evidence, and complete user-owned L2 interview acceptance without adding product behavior | Automated Demo/tests/consistency/benchmark/fault/empty gates pass; the user must still deliver the explanations and complete/revert the behavior-plus-GTest exercise |
 
-Large stage two will be decomposed only when S1-09 is accepted. Its fixed boundary is P0 evidence hardening and INT8 PTQ (QAT only if justified). Large stage three then chooses condition-gated P1 extensions. TensorRT is not an unconditional queue item, and a Project 2 `inference_event` is an optional bridge rather than a large-stage-one acceptance item.
+Large Stage Two will be decomposed only after the S1-09 user L2 gate passes. Its fixed boundary is broader P0 regression/fault/sample/performance-memory evidence hardening plus an FP32-versus-INT8 PTQ correctness, accuracy, speed, and model-size comparison; QAT starts only if PTQ degradation is material and time permits. Final P0 result consolidation, focused mock interviews, and delivery freeze also remain there. Large Stage Three then chooses condition-gated P1 extensions. TensorRT is not unconditional, and a Project 2 `inference_event` remains optional.
 
 ### P1-01 CMake Skeleton Commands
 
@@ -1268,6 +1595,73 @@ ctest --test-dir $BuildDir --output-on-failure
 
 Local verification on 2026-08-16: the fixed command completed a real ORT CPU Run and emitted three `crazing` detections. Python's standard JSON module accepted the 1,164-byte schema-v1 document, and OpenCV read the 39,306-byte visualization as a `200x200` `CV_8UC3` image. The JSON and PNG SHA-256 values were respectively `E8445BC92201307430A17B7B51B6CCEFC5A74D2D473617170F50AD921CCF9049` and `3A0C6C57EE977EE02762F05FCDE6928C8AACBD20883596D3622A6225942E2346`. Output GTest passed 6/6, the `output` label passed 16/16, and the clean complete gate passed 78/78. These are single-image functionality and reproducibility results, not consistency or performance evidence.
 
+### S1-07 Python ORT/C++ ORT Consistency Commands
+
+Use the same clean Release executable built in Quick Start. The Python interpreter is intentionally explicit: using an arbitrary active Conda/base Python could silently change ORT, OpenCV, NumPy, or provider availability. `--cpp-opencv-version` records the independently verified C++ build dependency rather than pretending it equals Python OpenCV.
+
+```powershell
+$PythonExe = 'C:\Users\Everbreath\.conda\envs\TestBase\python.exe'
+$Manifest = (Resolve-Path 'cpp_infer\tests\fixtures\consistency_manifest.json').Path
+$ConsistencyDir = (Resolve-Path 'cpp_infer\results\consistency').Path
+
+& $PythonExe cpp_infer\tools\compare_consistency.py `
+  --manifest $Manifest `
+  --cpp-cli "$BuildDir\bin\yolo_defect_cpp.exe" `
+  --output-dir $ConsistencyDir `
+  --cpp-opencv-version 4.8.0
+if ($LASTEXITCODE -ne 0) {
+  throw 'S1-07 consistency comparison failed.'
+}
+
+& $PythonExe -m json.tool "$ConsistencyDir\per_image.json" *> $null
+if ($LASTEXITCODE -ne 0) { throw 'per_image.json parse failed.' }
+& $PythonExe -m json.tool "$ConsistencyDir\summary.json"
+if ($LASTEXITCODE -ne 0) { throw 'summary.json parse failed.' }
+ctest --test-dir $BuildDir -L consistency --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw 'Consistency CTest failed.' }
+ctest --test-dir $BuildDir --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw 'Complete CTest failed.' }
+```
+
+Local verification on 2026-08-22: the frozen repository-resident manifest fixed validation indices 241, 255, 270, 285, and 300 for every artifact class, five images per class and 30 total. Every declared image path and SHA-256 passed before inference. Python explicitly created an ORT 1.19.2 session with `CPUExecutionProvider`; C++ used ORT 1.19.2 with its explicitly registered CPU session provider. Under the same contract's `800x800` input, strict `confidence > threshold`, class-agnostic NMS, and coordinate semantics, order-independent class/maximum-IoU matching paired 62/62 detections across 30/30 images. Maximum confidence error was `8.049977111568296e-07`, maximum bbox coordinate error was `9.135351561440075e-05` pixels, and minimum matching IoU was `0.999998927116394`, passing the unchanged predeclared `1e-4`, `1e-2` pixel, and `0.999` gates. Repository-resident `per_image.json` and `summary.json` preserve the machine-readable evidence; S1-09 generated and parsed new temporary copies. The historical consistency label passed 2/2 in 12.58 seconds and the then-complete gate passed 92/92 in 17.28 seconds.
+
+The first evidence-write attempt exposed a Python 3.9 compatibility issue: `Path.write_text()` does not accept a `newline` argument. The tool now writes with `open(..., newline='\n')` to keep deterministic LF JSON. This changed serialization only; none of the frozen correctness thresholds were relaxed. Because the matching `best.pt` is unavailable, this is a Python ORT/C++ ORT comparison of one ONNX artifact, not a newly rerun three-way PyTorch experiment and not an accuracy evaluation.
+
+### S1-08 Release Benchmark Commands
+
+Use the same clean Release executable only after the S1-07 consistency gate passes. The repository-resident evidence path may already exist in the working tree; the historical command below uses explicit overwrite for an intentional refresh. The S1-09 Quick Start above is safer for acceptance because it writes to a new temporary path.
+
+```powershell
+$Config = (Resolve-Path 'cpp_infer\configs\default_config.txt').Path
+$Image = (Resolve-Path 'data\images\val\crazing_241.jpg').Path
+$BenchmarkJson = (Resolve-Path 'cpp_infer\results\benchmark').Path + `
+  '\yolov8_neu_det_cpu_release.json'
+
+ctest --test-dir $BuildDir -L consistency --output-on-failure
+if ($LASTEXITCODE -ne 0) {
+  throw 'S1-07 consistency failed; benchmark publication is forbidden.'
+}
+& "$BuildDir\bin\yolo_defect_cpp.exe" `
+  --config $Config --image $Image `
+  --benchmark --warmup 10 --repeat 100 `
+  --benchmark-json $BenchmarkJson --overwrite
+if ($LASTEXITCODE -ne 0) { throw 'Formal benchmark failed.' }
+
+& $PythonExe -m json.tool $BenchmarkJson
+if ($LASTEXITCODE -ne 0) { throw 'Benchmark JSON parse failed.' }
+& $PythonExe cpp_infer\tests\assert_benchmark_json.py $BenchmarkJson `
+  --expected-image $Image --expected-warmup 10 --expected-repeat 100
+if ($LASTEXITCODE -ne 0) { throw 'Benchmark validator failed.' }
+ctest --test-dir $BuildDir -L benchmark --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw 'Benchmark CTest failed.' }
+ctest --test-dir $BuildDir -N
+if ($LASTEXITCODE -ne 0) { throw 'CTest enumeration failed.' }
+ctest --test-dir $BuildDir --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw 'Complete CTest failed.' }
+```
+
+The six latency intervals are `imread`, already-decoded `cv::Mat -> tensor`, only synchronous `Ort::Session::Run`, raw-output postprocess, pipeline, and decode-plus-pipeline end-to-end. Session/model initialization, contract loading, initial path/file-size checks, statistics, memory query, JSON serialization/write, and visualization are not repeated latency. The formal run used `crazing_241.jpg`, batch/sample 1, CPU sequential `1/1` threads, warmup 10/repeat 100, produced three detections, passed the strict JSON validator, and was followed by benchmark 14/14 plus complete CTest 106/106.
+
 ### V2 Entry Log
 
 | Date | Change | Purpose |
@@ -1284,6 +1678,10 @@ Local verification on 2026-08-16: the fixed command completed a real ORT CPU Run
 | 2026-07-30 | Completed S1-03 input tensor and owned raw output boundary | Added zero-copy borrowed CPU input, synchronous `Session::Run`, overflow/shape/count/finite checks, copied `InferenceOutput`, bounded CLI summary, invalid-length pre-Run failure, and a 31-case CTest gate; stopped before decode/NMS |
 | 2026-08-15 | Completed S1-04 pure YOLOv8 postprocess and `cv::Mat` test boundary | Added validated BCN decode, no-objectness class argmax, float32 strict filtering, `xywh -> xyxy`, robust IoU, stable class-agnostic model-space NMS, inverse letterbox/clip, direct `CV_8UC3` preprocessing, pinned GTest integration, and a 62-case CTest gate; stopped before detection CLI/JSON/visualization |
 | 2026-08-16 | Completed S1-05 fixed single-image CLI, JSON, and visualization vertical slice | Added PImpl pipeline orchestration, an owned detection result, stable escaped JSON v1, deterministic headless OpenCV drawing, parent/overwrite/protected-path rules, fixed demo artifacts and hashes, six output GTests, a 16-case output label, and a 78-case clean CTest gate; stopped before S1-06 failure hardening |
+| 2026-08-22 | Completed S1-06 automated quality gate and core failure injection | Expanded schema, exact NCHW, synthetic metadata, full postprocess-empty, output-path and CLI fault evidence; all 90 named quality-gate tests passed in a clean Release build, and missing model/damaged image/uncreatable output returned actionable nonzero failures; stopped before S1-07 consistency |
+| 2026-08-22 | Completed S1-07 fixed six-class Python ORT/C++ ORT consistency evidence | Created a repository-resident SHA-frozen 30-image manifest, independent explicit-CPU Python reference, deterministic class/maximum-IoU matcher, per-image/summary JSON, unchanged numerical gates, 30/30 image and 62/62 detection matches, and a 92-case complete CTest gate; stopped before S1-08 benchmark work |
+| 2026-08-22 | Completed S1-08 reproducible Release benchmark and memory evidence | Reconfirmed S1-07 correctness before performance; added six explicit timing boundaries, warmup/repeat statistics, throughput, full Release/CPU/thread/model/sample metadata, strict JSON validation, and Windows Peak Working Set; generated the repository-resident 10/100 result, passed benchmark 14/14 and complete CTest 106/106, and stopped before S1-09 closure |
+| 2026-08-22 | Passed the S1-09 automatic large-stage closure gate; user L2 remains pending | Added no product behavior. A fresh temporary Release build passed 106/106 CTests in 19.91 seconds, reproduced byte-identical Demo outputs, passed 30/30 consistency, generated/validated a fresh 10/100 benchmark, and reconfirmed four actionable exit-1 faults plus legal empty detections. The temporary inclusive-threshold practice has not been applied to product code; Large Stage One remains open until the user completes and restores that exercise |
 
 ## License
 

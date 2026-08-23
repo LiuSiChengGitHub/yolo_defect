@@ -215,6 +215,10 @@ The only reason to advance the project is interview readiness: the user should b
 
 Do not over-fragment L1 understanding and block progress, but do not accept explanations so broad that one follow-up exposes a gap.
 
+### Oral Answer Output Format
+
+When the user says `给出口述答案`, default to a copy-ready plain-text response in the exact form `题号.回答`, for example `1.回答内容`. Put one blank line between answers. Do not restate the questions or add headings, bullet markers, Markdown code fences, prefaces, summaries, or other commentary unless the user explicitly requests a different format.
+
 ## Result and Evidence Standard
 
 The final result table must record at least:
