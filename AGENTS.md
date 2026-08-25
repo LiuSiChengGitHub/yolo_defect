@@ -1,298 +1,131 @@
-# Codex Collaboration Rules
-
-## Source of Truth and Priority
-
-`docs/PLAN.md` is the latest source of truth for project positioning, top-level design, stage boundaries, and teaching-oriented advancement rules. Read it before planning or implementing a large stage. Do not edit it unless the user explicitly asks.
-
-When the top-level design and a short large-stage description appear incomplete or inconsistent, the top-level design wins. Supplement the large-stage execution plan with the missing top-level requirements instead of narrowing the project to the shorter wording.
-
-`README.md` and `README_zh.md` are the unique project entry points and must remain aligned. Long implementation details may live under `docs/` only when putting them in README would make the main story harder to use. The current large-stage-one breakdown is the intentionally long execution artifact `docs/STAGE1_EXECUTION_PLAN.md`.
-
-## Current Goal and Positioning
-
-Project V2 is an **industrial vision edge AI Runtime and C++ engineering system** for 2026 autumn recruiting. The goal is to turn a public industrial-vision model artifact into configurable, runnable, testable, comparable, and reproducible C++ inference software for edge deployment.
-
-The interview-facing chain is:
-
-```text
-model artifact
--> model card / artifact contract
--> config and schema validation
--> OpenCV preprocess
--> ONNX Runtime C++ inference
--> decode / score filter / NMS / coordinate restore
--> detection JSON / visualization
--> Python / ONNX / C++ consistency evidence
--> benchmark and memory evidence
--> INT8 PTQ validation
--> optional real-device deployment
--> optional sample inference_event / Project 2 bridge
--> tests, failure records, and README evidence
-```
-
-YOLOv8 and NEU-DET are the stable P0 Runtime baseline carriers. The later `paper_detect` D010 artifact uses D-FINE-S on DeepPCB and is a research-side artifact source, not training logic owned by this repository.
-
-The learning direction is AI application engineering, built on modern C++, Linux, testing/debugging, performance analysis, and model-inference engineering, with edge deployment as the main differentiator. Use AI coding to accelerate implementation while preserving interview-level understanding of the architecture and core logic.
-
-## P0 Top-Level Design
-
-The complete P0 is the authority for the first two large stages. It includes:
-
-1. A C++17/CMake multi-target project with header/source separation and explicit dependencies.
-2. Runtime config and artifact-schema validation for model path, input size, classes, thresholds, and preprocess/postprocess types.
-3. OpenCV preprocessing: letterbox, BGR/RGB conversion, normalization, and HWC-to-CHW layout.
-4. An ONNX Runtime C++ session with RAII plus input/output name, shape, dtype, and provider checks.
-5. Stable-model decode, score filtering, NMS, and coordinate restoration.
-6. Detection JSON and visualization output with a fixed sample and reproducible command.
-7. Fixed-sample Python/ONNX/C++ consistency checks covering tolerance, detection count, class, confidence, and coordinate error.
-8. A benchmark with warmup/repeat, P50/P95, throughput, segmented timings, and peak memory/RSS when feasible.
-9. INT8 PTQ validation; start QAT only if PTQ degradation is material and schedule allows it.
-10. GTest coverage for config, non-square letterbox, color/layout, NMS, coordinate restoration, and invalid inputs.
-11. Failure injection for missing model, wrong shape/dtype, class mismatch, empty output, and damaged image.
-12. README evidence covering positioning, architecture, Quick Start, tests, results, limitations, and reproducible environment.
-
-Large stage one creates the first deliverable vertical slice and the minimum evidence needed to explain it. Large stage two completes the broader P0 evidence matrix, fault injection, reproducible benchmark/memory record, and INT8 comparison. Do not move INT8 or the full hardening matrix into large stage one merely to make the first slice broader; do not defer requirements that large stage one's own exit explicitly needs.
-
-## P1 Extensions and Stop Conditions
-
-After P0 is stable, choose extensions by recruiting value rather than feature count:
-
-- **P1-A, C++ product/system software:** directory batch processing, bounded queues/workers, backpressure, clean shutdown, and single-thread versus concurrent throughput.
-- **P1-B, inference deployment:** real TensorRT/Jetson/ARM deployment with correctness, latency, memory, and temperature comparisons. Do not claim or prioritize this without the required hardware.
-- **P1-C, EDA/Windows/product UI:** a Qt result viewer only when several high-priority job descriptions require Qt.
-- **P1-D, serving/model platform:** gRPC or Triton only when several high-priority job descriptions require it.
-- **P1-E, D010 artifact integration:** consume the research artifact only after its export and Runtime contract are stable.
-
-Do not broaden P0 with speculative UI, serving, concurrency, or hardware work before the deliverable chain and evidence are complete.
-
-## Model Artifact Rules
-
-- The existing YOLOv8/NEU-DET artifact is the stable P0 baseline.
-- The tracked `models/best.onnx` preflight record is 12,336,935 bytes, opset 17, SHA-256 `7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68`, input `images` float32 `[1,3,800,800]`, output `output0` float32 `[1,10,13125]`, and metadata `nms=False`. C++ must still inspect actual metadata at runtime instead of trusting this record.
-- The ONNX metadata reports `AGPL-3.0` while repository source is MIT. Treat model provenance and distribution compatibility as an explicit checkpoint before release; do not imply that the model artifact inherits the source-code license without verification.
-- `paper_detect` D010 is the proposed research method. D-FINE-S + DeepPCB is the strong baseline context; D003 is the adaptive-prior input-adapter reference/proposed ancestor and ablation anchor.
-- D010 keeps the D003 inference path and does not include D009 feature-pyramid injection. Its key addition is training-time template-counterfactual erase/replay sampling.
-- Recorded research evidence: D010 formal-validation AP50-95 is `0.847057`; official-test AP50-95 is `0.830385`; all six class deltas over D003 are positive on both evaluations; D010A erase-only and D010B replay-only beat D003 but remain below full D010.
-- These are research-side results, not C++ Runtime results. D010 enters this repository's delivered results only after stable ONNX export, an artifact/result card and deployment contract, real Runtime integration, and consistency validation.
-- Never describe the historical Python ONNX Runtime `24.4/72.1 FPS` as current C++ Runtime performance.
-
-## Current Stage Roadmap
-
-### Completed Baseline and Engineering Skeleton — through 2026-07-12
-
-The verified reusable base is:
-
-```text
-YOLOv8/NEU-DET training and tuning
--> ONNX export
--> 50-image PyTorch/ONNX detection-count check
--> Python ONNX Runtime / FastAPI / Docker / historical benchmark
--> C++17/CMake/CTest entry
--> typed RuntimeConfig
--> real-image OpenCV letterbox / RGB / normalize / NCHW preprocess
-```
-
-This proves a baseline only. C++ ONNX Runtime, postprocess, C++ consistency, and C++ benchmark are still pending.
-
-The 2026-07-15 audit established these execution facts:
-
-- A fresh `%TEMP%` NMake build with MSVC 19.50.35721.0 and OpenCV 4.8.0 passes the existing 3/3 CTest smokes. The ignored `cpp_infer/build` executable is a stale P1-01 artifact and must not be used as evidence; use a fresh out-of-tree build.
-- No native ONNX Runtime C++ header/import library was found locally. Only Python `onnxruntime-gpu 1.19.2` runtime files exist, so S1-01 must provision and pin a real C++ SDK before session work.
-- The historical 50-image PT/ONNX check contains the sorted first 50 files, all from `crazing`, and checks counts/confidence summaries rather than class/box tolerances. Keep it as weak historical evidence and create new six-class Python ORT/C++ evidence in large stage one.
-- The matching `best.pt` checkpoint is not currently present. Do not claim a newly rerun direct PT/Python-ORT/C++ three-way comparison unless that exact artifact is legitimately restored and verified.
-
-The 2026-07-16 pre-stage readiness pass resolved the dependency-preparation gap without starting S1-01:
-
-- The official Windows x64 CPU ONNX Runtime C++ SDK 1.19.2 is now present outside the repository at `D:\01_Base\Tools\onnxruntime-win-x64-1.19.2`; `onnxruntime_cxx_api.h`, `onnxruntime.lib`, and `onnxruntime.dll` were all verified. CMake must consume it through `ONNXRUNTIME_ROOT` or an equivalent configurable cache entry, never a committed personal absolute path.
-- `VsDevCmd.bat` successfully exposes x64 `cl`, `nmake`, CMake, and CTest. A new `%TEMP%` Release/NMake build with MSVC 19.50.35721.0 and OpenCV 4.8.0 again passes 3/3 CTest smokes.
-- The future GTest dependency is frozen to v1.17.0 commit `52eb8108c5bdec04579160ae17225d66034bd723` via a SHA-256-pinned HTTPS archive and `FetchContent`; it is not integrated until S1-01.
-- Model provenance and license evidence is recorded in `docs/PRE_STAGE1_READINESS.md`. The project owner confirms that the tracked ONNX was personally exported from `runs/detect/final_train_2/weights/best.pt`; the workspace and Git history contain no `.pt`, so this is owner-confirmed lineage rather than a newly reproducible re-export.
-- The declared use is personal learning, so an Enterprise license is not a prerequisite for local implementation. The owner chose to keep publicly distributing `models/best.onnx` and NEU-DET; the model's AGPL-3.0 metadata and the unspecified NEU-DET redistribution terms therefore remain explicit release checkpoints, separate from the MIT source license.
-- This readiness record changes no Runtime behavior and does not mark S1-01 as started.
-
-### Verified Windows Build and Acceptance Workflow
-
-- The canonical manual entry is `cpp_infer/tools/stage1.cmd`; run it from an ordinary PowerShell or CMD instead of manually copying the long CMD/PowerShell/CMake chain. Supported actions are `help`, `doctor`, `build`, `clean-build`, `test`, `detect`, `demo`, `consistency`, `benchmark`, and `all`. No arguments default to dependency-free `help`, never to an expensive gate.
-- Windows environment changes flow only from a parent process to children. A separately opened PowerShell does not inherit a prior `VsDevCmd.bat` call, and `call` itself is a CMD builtin rather than a PowerShell command. `stage1.cmd` uses `vswhere.exe`, calls the x64 `VsDevCmd.bat`, and launches a profile-free child PowerShell in the same process chain. If checking manually, use `where.exe`, not the PowerShell `where` alias.
-- Keep configuration separated by authority. Tracked `cpp_infer/tools/stage1.defaults.psd1` owns machine-independent workflow defaults; Git-ignored `cpp_infer/.stage1.local.psd1`, copied from `cpp_infer/tools/stage1.local.example.psd1`, owns machine dependency paths and optional convenience-only detect defaults; RuntimeConfig owns thresholds/provider/artifact selection; ArtifactSpec owns model/tensor/preprocess/postprocess semantics. Do not commit personal absolute paths in CMake, source, defaults, or templates. Dependency paths use explicit parameter -> local file -> environment -> portable fallback; detect values use explicit parameter -> optional local default -> tracked workflow default. Relative paths use the file that declares them, while command image/output paths use the caller's CWD.
-- Do not conflate tools with configuration. `vswhere` discovers Visual Studio; `VsDevCmd.bat` sets transient x64 `PATH/INCLUDE/LIB`; `PowerShell -NoProfile` preserves that clean child environment; CMake reads `CMakeLists.txt` and generates NMake rules; NMake invokes `cl/link`; CTest schedules GTest executables plus CLI/Python/CMake tests. `Release` is a build mode. `ModelMetadata` is ORT-observed validation evidence, not a config file.
-- Treat `CMakeCache.txt`, generated Makefiles, objects, binaries, and staged DLLs as disposable build state below the guarded TEMP tree. Do not hand-edit or commit them; use `clean-build` when the resolved environment or build graph must be recreated.
-- The currently verified machine uses the official ORT C++ SDK 1.19.2, OpenCV C++ 4.8.0 x64 vc16, the Visual Studio-bundled MSVC/NMake/CMake/CTest toolchain, and the explicit TestBase Python interpreter with Python ORT 1.19.2/OpenCV/NumPy plus `CPUExecutionProvider`. A Python wheel is never a substitute for the ORT headers, import library, and runtime DLL.
-- Dependency setup must not be silent. Normal clean builds use a separately verified GoogleTest v1.17.0 source path. Network-backed pinned FetchContent is permitted only when the user explicitly passes `-AllowGTestDownload`; the wrapper does not install SDKs or write dependencies into the repository.
-- Formal evidence uses NMake, `Release`, and the exact safe temporary build directory `%TEMP%\yolo_defect_stage1_manual_release`; the wrapper validates that boundary before recursive cleanup. Never use the ignored `cpp_infer/build` tree as evidence. Generated Demo, consistency, and benchmark files go to a new GUID evidence directory under the temporary build and never overwrite tracked repository evidence.
-- Every native command is followed immediately by an exit-code check, and every expected output is checked from the current run before it can count as evidence. The formal order is clean configure/build -> complete CTest -> fixed Demo -> 30-image consistency -> benchmark. `benchmark` also runs a fresh consistency gate first; correctness must not be inferred from an old summary.
-- `detect <image> [output-directory]` is the convenience entry for one arbitrary image and still calls the existing `DetectorPipeline`; it must not duplicate preprocessing/inference/postprocess logic. Its ignored manual JSON/PNG outputs are not consistency/benchmark evidence. Directory batch, session-reusing multi-image execution, and concurrency remain P1-A work rather than being implied by a shell loop.
-
-### Large Stage One — Project 1 Deliverable Loop, 2026-07-13 to 2026-07-27
-
-Required exit:
-
-```text
-fixed config/image/model command
--> ONNX Runtime C++
--> decode/filter/NMS/coordinate restore
--> detection JSON and visualization
--> fixed-sample Python/ONNX/C++ consistency
--> preprocess/infer/postprocess/end-to-end P50/P95
--> explicit core errors and automated main-path tests
-```
-
-The user must also be able to explain the chain for five minutes without AI and independently change one core behavior plus its test. Follow `docs/STAGE1_EXECUTION_PLAN.md`, execute one small stage at a time, and stop for acceptance after each one.
-
-### Large Stage Two — Project 1 Evidence Hardening, 2026-07-28 to 2026-08-10
-
-Complete the full config/preprocess/NMS/coordinate/invalid-input test matrix, failure injection, reproducible benchmark and memory record, and at least one INT8 PTQ comparison. Start QAT only when PTQ degradation and remaining time justify it. D010 may enter only after the artifact gates above. Close with a final result table, resume bullets, interview questions, and a focused mock interview.
-
-### Large Stage Three — Project 1 P1 Extensions
-
-Attempt real TensorRT/Jetson/ARM deployment only with suitable hardware, and integrate D010 only when its stable ONNX artifact and deployment contract exist. Other P1 extensions remain job-description gated.
-
-### Large Stage Four — Freeze, Rolling Applications, Interview Priority, from 2026-08-25
-
-Freeze P0 feature scope. Allow only demo/correctness/reproduction fixes, tests and evidence, result/evaluation/failure-case improvements, small job-specific patches, and adjustments based on real interview feedback. Continue P1 only without destabilizing the frozen P0.
-
-## Advancement Rules
-
-### Time Cadence
-
-- Monday to Friday: three hours after work per day.
-- Saturday and Sunday: eight hours per day.
-
-Use the cadence to keep small stages finishable and reviewable; do not trade away acceptance and understanding just to increase feature count.
-
-### Role Split
-
-- Codex advances implementation, documentation, tests, commands, reproducible evidence, and debugging records.
-- The user owns understanding of the architecture, chain, modules, data flow, inputs/outputs, tests, failure diagnosis, design choices, and core logic.
-- Do not slow project advancement so the user can hand-write every line. Identify the small set of interview-relevant algorithms or logic for a separate code-practice module.
-- This is teaching-grade advancement: complete one step, explain the important parts, wait for understanding and acceptance, then continue.
-
-### Large and Small Stages
-
-- Divide the project into large stages with explicit exit criteria.
-- On entering a large stage, read the repository and current interview schedule, then create that stage's detailed small-stage plan. Do not statically decompose every future large stage at project start.
-- Execute exactly one small stage at a time. Every small stage has explicit scope, inputs/outputs, commands, evidence, and acceptance criteria.
-- After each small stage, summarize the actual state, pause for the user's L1 acceptance, and revalidate the remaining plan against what was learned. Adjust future small stages when evidence requires it.
-- After each large stage, stop for L2 interview-facing understanding before entering the next large stage.
-
-### README and Documentation
-
-README must tell the complete main story and include:
-
-```text
-1. Project positioning, top-level design, and problem solved
-2. Architecture/data-flow diagram and module responsibilities
-3. Quick Start, demo input/output, and exact test commands
-4. Stage records, version changes, task queue, and current status
-5. Key metrics, artifacts, results, and evidence paths
-6. Core design decisions, details, trade-offs, limits, and failure lessons
-7. A teaching-oriented history: what was done, why, how, what failed, and how it was debugged
-```
-
-Documentation principles:
-
-```text
-README tells the complete main story.
-docs stores only details that are too long or task-specific artifacts/results.
-README must not become a directory index.
-docs must not become an unmaintained fragment warehouse.
-```
-
-Every implementation small stage must update both README languages before it is complete. At minimum, align current status, task status, commands, tests, acceptance evidence, limitations, and the V2 entry log.
-
-### Required Small-Stage Closure — Latest Nine-Part Format
-
-After every implemented small stage, the final response must contain these nine parts unless the user explicitly requests a shorter status-only answer:
-
-```text
-1. What was done this time at a high level?
-2. Which modules were added or changed, why, and why were they designed this way?
-3. Which files changed, how did the file tree change, why, and what role does each file play in the chain?
-4. What would the exact manual implementation workflow be without Codex?
-5. What are the entry functions and core classes/functions, their inputs/outputs, and the macro pseudocode for the core logic?
-6. How do you run, test, debug, tune, modify, and customize it?
-7. What acceptance questions and follow-up questions prove interview-level understanding?
-8. Which exact code sections are most likely to be asked about and should enter the code-practice module? Include file and current line references.
-9. Was README/log/progress updated with the important data, paths, files, functions, and classes?
-```
-
-This nine-part format replaces the previous thirteen-part closure list.
-
-### Understanding Depth
-
-The only reason to advance the project is interview readiness: the user should be able to explain the chain, architecture, modules, decisions, implementation highlights, and debugging paths.
-
-- **L1, after every small stage:** answer the macro questions; answer stage acceptance questions; explain the current chain/data flow in about 30 seconds; and, with AI guidance, run commands, tests, small changes, and debugging exercises.
-- **L2, after every large stage:** answer macro questions plus roughly ten follow-ups; explain several failure cases; give a two-minute project explanation; make larger changes with AI guidance; write one or two resume bullets; keep stage notes; and identify the stage's code-practice candidates.
-- **L3, after the first complete version during the August recruiting sprint:** turn README and notes into a teaching-level walkthrough and interview question set; re-read or hand-write the most important logic; explain the complete chain and key files/functions; answer likely follow-ups; describe concrete highlights and failure diagnosis; modify/test/debug across the project; and produce five selectable resume bullets.
-
-Do not over-fragment L1 understanding and block progress, but do not accept explanations so broad that one follow-up exposes a gap.
-
-### Oral Answer Output Format
-
-When the user says `给出口述答案`, default to a copy-ready plain-text response in the exact form `题号.回答`, for example `1.回答内容`. Put one blank line between answers. Do not restate the questions or add headings, bullet markers, Markdown code fences, prefaces, summaries, or other commentary unless the user explicitly requests a different format.
-
-## Result and Evidence Standard
-
-The final result table must record at least:
-
-```text
-machine, OS, compiler, and build type
-model, input size, dataset/fixed sample count
-correctness standard and numeric tolerance
-preprocess/infer/postprocess/end-to-end P50/P95
-throughput and memory/RSS
-single-thread or extension comparison when implemented
-failure cases and conclusions
-raw evidence paths and exact reproduction commands
-```
-
-Treat generated JSON, visualization, consistency, benchmark, and test results as evidence only after the documented command has run successfully.
-
-## Allowed Scope by Default
-
-- `cpp_infer/`
-- `README.md`
-- `README_zh.md`
-- `AGENTS.md`
-- A specific `docs/` artifact only when the user explicitly asks for it or the current large-stage plan names it
-
-Read `docs/PLAN.md` for current planning context. Preserve it as the authored planning source unless the user asks for a change.
-
-## Protected Scope
-
-Do not rewrite or refactor the legacy Python training, evaluation, FastAPI, or Docker assets unless the user explicitly asks for that task:
-
-- `scripts/`
-- `src/`
-- `api/`
-- `Dockerfile`
-- `requirements*.txt`
-- `environment.yml`
-- `configs/`
-- `data/`
-- `models/`
-- `results/`
-- `runs/`
-
-Do not modify files outside this repository. In particular:
-
-- Do not edit anything under `D:\01_Base\Obsidian`.
-- Do not edit sibling projects under `D:\01_Base\CodingSpace`.
-
-## Implementation Rules
-
-- Do one small Project 1 task at a time, then stop for acceptance.
-- Prefer runnable, testable, explainable modules over broad framework work.
-- Keep C++ work simple: C++17, CMake, OpenCV, ONNX Runtime C++, GTest, and structured benchmark output.
-- Do not introduce unrelated dependencies or replace the technology stack.
-- Keep model-family-specific decode behind a clear contract so the YOLO P0 path does not falsely imply D-FINE compatibility.
-- Make schema and runtime errors actionable: include the failing field/path, expected contract, actual value, and likely corrective action where practical.
-- Never promote a placeholder, planned path, historical Python metric, research-side metric, or failed attempt into a delivered C++ result.
-- If a step truly needs no README change, state why and verify that both READMEs already describe the behavior exactly; this should be rare.
-
-## Verification Rules
-
-For documentation-only changes, verify Markdown structure, internal links/paths, bilingual alignment, stale-route references, and `git diff`.
-
-For C++ work, include the exact configure, build, run, and test commands used. Do not claim completion unless the relevant commands have run successfully, or clearly state the limitation and keep the task incomplete.
+# Codex 协作与推进规则
+
+## 1. 项目定位与当前状态
+
+项目中文名为 **工业视觉边缘 AI Runtime 与 C++ 工程化系统**，英文名为 **Industrial Vision Edge AI Runtime and C++ Engineering System**。
+
+本项目服务于 2026 秋招简历和面试，重点展示现代 C++、Linux、测试调试、推理工程、性能分析、并发和边缘部署能力。目标是把工业视觉模型产物做成可配置、可运行、可测试、可比较、可复现、可追问的工程系统。
+
+当前状态：**大阶段一自动工程门与用户 L2 均已完成；S2 前置文档已收口；S2-01 尚未开始。**
+
+已经验证的单图主链为：
+
+~~~text
+RuntimeConfig + ModelArtifactSpec
+-> 实际 ONNX ModelMetadata 校验
+-> OpenCV letterbox / RGB / normalize / NCHW
+-> ONNX Runtime C++ CPU inference
+-> YOLO decode / score filter / NMS / coordinate restore
+-> Detection JSON / visualization
+-> Python ORT / C++ consistency
+-> segmented benchmark / throughput / memory / automated gates
+~~~
+
+## 2. 权威来源与默认阅读规则
+
+- 每次新对话先读本文件；它是默认协作入口。
+- 不自动预读 README.md、README_zh.md 或 cpp_infer/README.md。仅在用户明确要求查看/更新，或当前单元已进入既定的三文档收口时，定向读取相关段落。
+- docs/Proj1_S2.md 是大阶段二的顶层设计。进入某个 S2 单元前，只读取该文档的总则、目标架构和对应单元。
+- 该 S2 文档中残留的旧规划路径、旧优先级标签和旧日期均视为历史文字，不具权威性；旧规划文件不再读取或引用。
+- 用户当前指令优先于本文件，本文件优先于阶段文档；真实源码、测试和机器证据决定实际完成状态。
+- docs/路线0712-new.md 仅在核对秋招方向、项目定位或投递策略时读取。
+- 根双语 README 是公开入口且必须事实一致；长命令和细节放入 docs/，README 不写成流水账或目录索引。
+- docs/Proj1_S2.md 未经用户明确要求不得改写。
+
+## 3. 大阶段二路线
+
+大阶段二只包含五个完整单元，按顺序滚动交付：
+
+1. **S2-01 — INT8 PTQ 与 ORT Profiling：**完成 static PTQ、FP32/INT8 对比和可分析 profile。
+2. **S2-02 — Linux x86_64 与 AArch64/QEMU：**同一源码跨 Windows/Linux，并交叉编译 AArch64 做 QEMU portability smoke。
+3. **S2-03 — 目录/Manifest 有界并发：**以 bounded queue、workers、backpressure、异常传播和 clean shutdown 复用单图 Pipeline。
+4. **S2-04 — Linux x86_64 + RTX 4060 TensorRT：**形成真实 TensorRT 路径，先完成 correctness 与 FP16。
+5. **S2-05 — 证据与 Recruiting Freeze：**完成跨平台回归、结果矩阵、简历、面试材料和用户 L2，随后冻结。
+
+D010、Qt、LLM、Agent、真实板卡和其他新框架不进入当前主线；只有真实岗位需求、面试反馈或用户明确指令才能解冻。
+
+## 4. 单元推进规则
+
+- 一次只推进一个 S2-* 完整单元，不并行实现后续单元，也不重新拆成大量微阶段。
+- 固定闭环为：**最小 SPEC → 实现 → 测试 → 机器可读证据 → 同步三份入口文档 → 停止等待用户 L1。**
+- SPEC 先冻结目标、输入输出、接口、错误语义、证据协议、非目标和验收；先检查可发现事实。单元必须可运行、可测试、可解释。
+- 正确性先于性能。正式 benchmark 必须先通过同次运行的 correctness gate，并固定 artifact、config、manifest、容差、输出模式、warmup/repeat 和机器环境。
+- 每个单元完成后同步 AGENTS.md、README.md、README_zh.md 的状态、命令、证据、限制和下一步；三者未同步，单元不算完成。
+- cpp_infer/README.md 仅在技术入口或事实变化时同步，不属于每次固定三文档。
+- 单元结束后立即停下做 L1；S2-05 做 L2。冻结后仅接受正确性、复现、证据、测试、定向投递或真实面试反馈驱动的修改。
+- Codex 负责实现、测试、证据、命令、文档和调试记录；用户负责形成可独立讲解、追问和修改的理解。
+
+## 5. 架构与实现不变量
+
+- 保持 C++17、CMake、OpenCV、ONNX Runtime C++、GTest 主技术栈；依赖必须显式、可配置、可诊断。
+- Runtime library 负责配置、artifact、metadata、preprocess、backend、postprocess 和结果；CLI/workflow 只做参数、文件、退出码与证据编排。
+- 所有 Demo、batch、benchmark 和新 backend 必须复用现有 DetectorPipeline 或其清晰抽象，不得复制 preprocess、decode、NMS 或坐标恢复逻辑。
+- 配置权威分层不混用：RuntimeConfig 管运行选择和阈值，ModelArtifactSpec 管模型语义，ModelMetadata 是运行时观察到的事实。
+- backend 只暴露模型无关的 owned I/O 与可行动错误；模型族逻辑留在 pre/postprocess，不把 YOLO 支持写成 D-FINE 通用兼容。
+- Windows/Linux 共用业务源码，平台差异放薄适配层、CMake 或 workflow；以 RAII 和明确 ownership 管理 session、buffer、文件、线程和 profile。
+- 多图复用单图产品链，首选最简单且可证明正确的 session 策略，不为极致吞吐引入不可解释复杂度。
+- 错误包含失败位置、期望、实际和纠正动作，并返回稳定非零退出码；优化不得改变 score、NMS、类别和坐标语义。
+
+## 6. 平台与证据口径
+
+- **Windows x86_64：**当前已验证基线，使用 ORT CPU、Release/NMake、完整 correctness 与 benchmark gate。
+- **WSL2/Linux x86_64：**S2-02 建立本地 Linux 证据；必须明确 WSL2，不冒充独立 Linux 设备。
+- **Linux AArch64/QEMU：**只证明 cross-build、架构和功能可移植性；QEMU 下不发布延迟、吞吐、温度或真实板端性能。
+- **Linux x86_64 + RTX 4060 Laptop：**S2-04 证明本地 GPU/edge-node TensorRT readiness；不得写成 Jetson、ARM64 GPU 或嵌入式实机部署。
+- TensorRT 优先用 ORT TensorRT EP 和 CUDA fallback 复用产品链；仅在正确性、岗位要求或 timebox 充分时扩展 native backend。
+- profiling 与正式 benchmark 分开运行；开启 profiler、verbose log 或 engine build 的耗时不能混入 steady-state 主结果。
+- 证据记录 command、平台、编译器/build、artifact SHA、config、manifest、provider/precision、容差、原始输出和限制。
+- 只有当前成功运行且产物存在的结果才是证据；历史、研究、临时和计划结果必须标注，不能改写为当前 Runtime 结果。
+- 性能区分 pre/infer/post/pipeline，记录 mean/P50/P95、throughput 和 peak memory；PWS、RSS、GPU memory 不直接等同。
+
+## 7. 核心路径、环境与避坑
+
+- 主工程：cpp_infer/；公共头、实现、测试分别位于 include/、src/、tests/。
+- Windows 统一入口：cpp_infer/tools/stage1.cmd；支持 help、doctor、build、clean-build、test、detect、demo、consistency、benchmark、all。无参数只显示 help。
+- 核心契约：cpp_infer/configs/default_config.txt 与 cpp_infer/artifacts/yolov8_neu_det.artifact.txt。
+- 固定 manifest：cpp_infer/tests/fixtures/consistency_manifest.json；正式结果在 cpp_infer/results/。
+- 当前模型：models/best.onnx；运行时必须重新检查真实 metadata 和 SHA，不能只信文档记录。
+- 已验证 Windows 依赖：MSVC/NMake/CMake/CTest，OpenCV C++ 4.8.0 x64 vc16，官方 ORT C++ SDK 1.19.2，GTest 1.17.0，以及 TestBase Python 中的 ORT 1.19.2/OpenCV/NumPy。
+- 本机 ORT SDK 位于 D:\01_Base\Tools\onnxruntime-win-x64-1.19.2；通过 ONNXRUNTIME_ROOT、local config 或 CMake cache 注入，绝不提交个人绝对路径。
+- Python onnxruntime wheel 不能替代 C++ headers、import library 和 runtime DLL；依赖缺失必须显式报错，不能静默安装。
+- 路径优先级：显式参数 → Git 忽略的本机配置 → 环境变量 → portable fallback；机器无关默认值归 tracked defaults。
+- 不使用 cpp_infer/build 中的旧二进制作证据；正式 Windows 构建使用受保护的 TEMP out-of-tree Release 目录，并在清理前验证绝对路径边界。
+- stage1.cmd 负责发现 Visual Studio、调用 x64 VsDevCmd.bat 并启动无 profile PowerShell；手工诊断使用 where.exe。
+- 每条 native 命令立即检查退出码和本次产物；旧 JSON 或另一次 correctness 不能替代当前 gate。
+- 更完整的路径、命令和依赖规则集中在 docs/paths_commands.md；大阶段一最终证据集中在 docs/details/stage1_closure.md。
+
+## 8. 工作区、安全与受保护范围
+
+- 工作树可能已有用户修改。开始前检查 git status/diff；保留无关修改，禁止 reset、覆盖、顺手格式化或删除用户文件。
+- 默认范围是 cpp_infer/、AGENTS.md、双语根 README 和当前单元明确命名的 docs。
+- scripts/、src/、api/、Dockerfile、requirements*.txt、environment.yml、configs/、data/、models/、results/、runs/ 属于 legacy Python/训练/API/Docker 或数据产物范围；除非用户明确授权，不改写、不重构。
+- 不修改仓库外文件，尤其不动 D:\01_Base\Obsidian 和 D:\01_Base\CodingSpace 下的兄弟项目。
+- 纯文档任务不伪造新 Runtime 结果，只做结构、链接、双语事实、路径、陈旧状态和 diff 检查。
+- 源码 MIT 不代表模型自动继承 MIT；best.onnx metadata 报告 AGPL-3.0，NEU-DET 条款待确认，公开发布前单独核查。
+- D010 仅在稳定 ONNX、artifact/result card、部署契约、Runtime 集成和一致性通过后进入交付结果。
+- best.pt 当前不在工作区或 Git 历史中，不得声称已重新完成 PyTorch/Python ORT/C++ 三方复现。
+
+## 9. 验证与完成标准
+
+- C++ 变更必须给出并实际运行相关 configure、build、test、run 命令；未成功运行时保持任务未完成并准确写明 blocker。
+- 新功能覆盖正常、边界、无效输入、故障传播和回归；并发额外覆盖 backpressure、close/stop、异常与有限时间 join。
+- 文档检查结构、链接、路径、双语事实、陈旧引用、git diff --check 和完整 diff；重要迁移先备份。
+- 测试数量、研究指标或安装成功不等于产品链完成；验收必须对应可运行行为与机器可读输出。
+
+## 10. 每个实现单元的九部分收口
+
+除非用户明确要求简短状态答复，每个实现单元最终回复必须依次包含：
+
+1. 本次高层完成了什么，实际状态和未完成项是什么？
+2. 新增或修改了哪些模块，为什么这样设计；同时说明关键 trade-off、输入输出和异常语义。
+3. 哪些文件变化、目录树如何变化、各文件在链路中承担什么职责？
+4. 不使用 Codex 时，准确的人工实现流程是什么？
+5. 入口函数、核心类/函数、输入输出、ownership，以及核心逻辑的宏观伪代码是什么？
+6. 如何运行、测试、调试、调参、修改和定制；给出实际命令、证据路径和常见失败诊断。
+7. 哪些验收问题和连续追问能证明达到面试理解深度？
+8. 哪些代码最可能被追问并应进入代码练习；给出文件与当前行号。
+9. 三份入口文档是否同步了状态、命令、证据、限制、路径和关键接口？
+
+## 11. 口述答案格式
+
+当用户说“给出口述答案”时，只输出可复制纯文本，使用“题号.回答”，答案间空一行；不复述问题，不加标题、项目符号、代码块、前言或总结，除非用户明确要求。

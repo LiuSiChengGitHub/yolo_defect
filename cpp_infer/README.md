@@ -1,16 +1,17 @@
 # cpp_infer
 
-This directory is the V2 C++ deployment workspace for the steel-surface defect project.
+This directory is the C++ Runtime workspace for the **Industrial Vision Edge AI Runtime and C++ Engineering System**.
 
-Current status: **S1-08 L1 accepted; S1-09 automatic PASS; user L2 PENDING; Large Stage One not complete; Stage Two not started.** The fixed single-image CLI connects the validated Runtime/artifact contract, OpenCV preprocessing, an ONNX Runtime CPU session, owned raw output, YOLOv8 postprocess, stable detection JSON, and a GUI-free visualization. S1-07 proves Python ORT/C++ ORT correctness on a fixed six-class, 30-image manifest, S1-08 records the Release-only benchmark baseline, and the fresh S1-09 reproduction proves that the complete chain still builds and runs without adding product behavior. Automatic success is not a substitute for the user-owned L2 explanation, troubleshooting, and modification exercise.
+Current status: **the Large-Stage-One automatic engineering gate passed and the user-owned L2 acceptance is complete; the S2 preparatory documentation closure is complete; S2-01 has not started.** The fixed single-image CLI connects the validated Runtime/artifact contract, OpenCV preprocessing, an ONNX Runtime CPU session, owned raw output, YOLOv8 postprocess, stable detection JSON, and a GUI-free visualization. S1-07 proves Python ORT/C++ ORT correctness on a fixed six-class, 30-image manifest, S1-08 records the Release-only benchmark baseline, and the fresh S1-09 reproduction proves that the complete chain still builds and runs without adding product behavior. The automatic gate and the completed user-owned L2 explanation, troubleshooting, and modification exercise together close Large Stage One. The root bilingual READMEs are the project-status and roadmap entry points; this file retains the C++ Runtime's technical details and historical evidence.
 
 | Gate | Status |
 |---|---|
 | S1-08 L1 | Accepted |
 | S1-09 clean reproduction / automatic gate | PASS |
-| User Large-Stage-One L2 | PENDING |
-| Large Stage One | Not complete until user L2 passes |
-| Stage Two | Not started |
+| User Large-Stage-One L2 | Accepted |
+| Large Stage One | Complete |
+| S2 preparatory documentation closure | Complete |
+| S2-01 | Not started |
 
 ## Current single-image chain
 
@@ -790,9 +791,9 @@ A valid tensor that yields no score strictly above the threshold remains a succe
 | Strict Python ORT/C++ ORT correctness | Same ONNX/config/artifact, explicit CPU providers, six classes x five images, deterministic class/maximum-IoU matching; S1-09 reproduced 30/30 images and 62/62 matches within the frozen tolerances | Strong implementation-consistency evidence for this fixed set. It is not model-accuracy evaluation, bitwise equality, or proof for every platform/image. |
 | C++ Release performance | S1-08 recorded the original 10/100 baseline; S1-09 independently reproduced the same six timing boundaries, throughput, environment record, and Peak Working Set | Current C++ evidence only for batch 1, one fixed image, one Windows CPU, single-thread policy, and warm cache. The two runs are retained separately rather than averaged or ranked. |
 
-### S1-09 technical teaching log and pending user L2 gate
+### S1-09 technical teaching log and completed user L2 acceptance
 
-The automatic gate proves reproducibility; it does not prove that the user can explain or modify the system. Large Stage One remains open until the following user-owned L2 gate is completed.
+The automatic gate proves reproducibility but does not by itself prove that the user can explain or modify the system. The following teaching and acceptance material was used for the user-owned L2 gate, which is now complete and closes Large Stage One.
 
 Two-minute explanation outline:
 
@@ -800,7 +801,7 @@ Two-minute explanation outline:
 2. Walk through contract loading, OpenCV preprocess, ORT session/run, YOLO decode/filter/NMS/restore, then JSON/PNG.
 3. Explain that synthetic GTest covers pure boundaries while the real model is reserved for a few integration smokes.
 4. Separate S1-07 correctness evidence from S1-08/S1-09 performance evidence.
-5. End with current limits and the Stage Two INT8/evidence-hardening boundary.
+5. End with current limits and the S2-01 INT8 PTQ/ORT Profiling boundary.
 
 Five-minute explanation outline:
 
@@ -810,7 +811,7 @@ Five-minute explanation outline:
 4. Explain `DetectorPipeline`, stable JSON, deterministic headless visualization, and output safety.
 5. Explain the 30-image class-first/maximum-IoU comparison and frozen numeric gates.
 6. Explain the six benchmark boundaries, warmup/repeat, mean/P50/P95, throughput, Peak Working Set, and timing exclusions.
-7. Close with three failure paths, licensing limitations, absent `best.pt`, and the work explicitly deferred to Stage Two.
+7. Close with three failure paths, licensing limitations, absent `best.pt`, and the work explicitly deferred to the five S2 units.
 
 L2 follow-up questions:
 
@@ -831,7 +832,7 @@ L2 follow-up questions:
 
 The user should also be able to triage at least these three cases in order: missing model (`config -> artifact-relative model path -> file/hash -> metadata`), consistency mismatch (`image/hash -> preprocess tensor -> raw output -> strict threshold -> NMS -> coordinate restore -> matcher`), and abnormal benchmark (`Release/provider/threads -> correctness gate -> warmup/timing boundary -> background load/P95`). The four automatic fault injections above provide concrete examples, not substitutes for the user's explanation.
 
-Interview-ready resume bullets, to finalize only after L2 acceptance:
+Interview-ready resume bullets accepted at the L2 closure:
 
 - Built a C++17/OpenCV/ONNX Runtime industrial-defect inference Runtime with strict model contracts, RAII session/tensor ownership, deterministic YOLOv8 postprocess, stable JSON/PNG outputs, and 106 automated GTest/CTest checks.
 - Established correctness and performance evidence: Python ORT/C++ ORT matched 62 detections across a six-class 30-image manifest within `1e-4` confidence, `1e-2 px` bbox, and `0.999` IoU gates; added Release warmup/repeat segmented P50/P95, throughput, and Windows Peak Working Set reporting.
@@ -852,7 +853,7 @@ Required core-behavior-plus-GTest exercise:
 3. **GREEN:** temporarily change the comparison in `postprocessor.cpp` from strict `>` to inclusive `>=`, update the other exact-threshold expectations, rebuild the same target, and require the focused test to pass. Explain how equality changes detections and why a real contract change would also require the Python reference, consistency evidence, and README updates.
 4. Because schema-v1 freezes strict `>`, return to the checkpoint without merging the practice branch, rebuild, rerun the original focused test and complete CTest, and verify no temporary exercise diff remains. Do not leave `>=` in the product merely to finish the exercise.
 
-The root bilingual READMEs contain the full interview script and acceptance worksheet. This technical README records the same gate state: **automatic PASS, user L2 PENDING, Large Stage One not complete**.
+The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same gate state: **automatic PASS, user L2 accepted, Large Stage One complete; S2 preparatory documentation closure complete; S2-01 not started**.
 
 ## Current limits
 
@@ -871,7 +872,7 @@ The root bilingual READMEs contain the full interview script and acceptance work
 - Class-agnostic NMS remains deliberate baseline behavior and can suppress a lower-scoring box from another class when boxes overlap.
 - The visualization is deterministic for the pinned OpenCV build; it is evidence output, not an annotation editor or GUI.
 
-S1-09's automated gate has passed, but the user L2 gate is still pending, so Large Stage One is not complete. Stage Two has not started. After L2 acceptance, Stage Two remains responsible for INT8 PTQ comparison, broader evidence hardening, expanded regression/failure coverage, and final P0 result consolidation; batch deployment, fuzzing, concurrency stress, and a cross-platform matrix have not begun.
+Large Stage One is complete: the S1-09 automated gate passed and the user-owned L2 acceptance is finished. The S2 preparatory documentation closure is also complete, while S2-01 has not started. The current five-unit route is: (1) INT8 PTQ and ORT Profiling; (2) Linux x86_64 and AArch64/QEMU portability; (3) directory/manifest multi-image bounded concurrency; (4) TensorRT on Linux x86_64 with the desktop RTX 4060; and (5) full evidence, resume, and interview closure followed by recruiting freeze. These capabilities remain planned until their own unit evidence is produced; QEMU results will not be published as device-performance evidence, and the desktop RTX 4060 path will not be described as Jetson deployment.
 
 ## License checkpoint
 
