@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "evidence_type": "cpp_ort_single_image_release_benchmark",
+  "timestamp_utc": "2026-08-25T08:06:22Z",
+  "command": [
+    "C:\\Users\\Everbreath\\AppData\\Local\\Temp\\yolo_defect_stage1_manual_release\\bin\\yolo_defect_cpp.exe",
+    "--config",
+    "cpp_infer\\configs\\int8_config.txt",
+    "--image",
+    "data\\images\\val\\crazing_241.jpg",
+    "--benchmark",
+    "--warmup",
+    "10",
+    "--repeat",
+    "100",
+    "--benchmark-json",
+    "cpp_infer\\results\\s2_01\\benchmark\\int8_cpu_release.json"
+  ],
+  "protocol": {
+    "batch_size": 1,
+    "sample_count": 1,
+    "warmup": 10,
+    "repeat": 100,
+    "clock": "std::chrono::steady_clock",
+    "timing_unit": "milliseconds",
+    "percentile_method": "empirical_nearest_rank_ceiling"
+  },
+  "environment": {
+    "machine": {
+      "hostname": "DESKTOP-6OGK71C",
+      "processor": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+      "architecture": "x86_64",
+      "logical_cpu_count": 16
+    },
+    "os": {
+      "name": "Windows",
+      "version": "10.0.26200"
+    },
+    "compiler": {
+      "id": "MSVC",
+      "version": "19.50.35721.0"
+    },
+    "build": {
+      "type": "Release",
+      "cxx_standard": 17
+    },
+    "opencv_version": "4.8.0",
+    "onnxruntime_version": "1.19.2"
+  },
+  "runtime": {
+    "requested_provider": "cpu",
+    "actual_provider": "CPUExecutionProvider",
+    "provider_evidence": "explicit_cpu_ep_registration_and_session_creation",
+    "session": {
+      "execution_mode": "sequential",
+      "intra_op_num_threads": 1,
+      "inter_op_num_threads": 1,
+      "graph_optimization_level": "all",
+      "initialization_ms": 94.979200000000006,
+      "profiling_enabled": false
+    }
+  },
+  "model": {
+    "model_id": "yolov8n_neu_det_s2_01_int8_qdq_s8s8",
+    "model_family": "yolov8",
+    "path": "models/best.int8.qdq.onnx",
+    "declared_sha256": "C0B4EDAF6B26B1495E22B9B504CF677EA9A08D10B051156AD55649F98C0EDE2F",
+    "file_size_bytes": 3545141,
+    "opset": 17,
+    "input": {
+      "name": "images",
+      "shape": [1, 3, 800, 800],
+      "dtype": "float32",
+      "layout": "nchw"
+    }
+  },
+  "sample": {
+    "image_path": "data/images/val/crazing_241.jpg",
+    "file_size_bytes": 23845,
+    "original_shape": [200, 200, 3],
+    "sample_count": 1
+  },
+  "postprocess": {
+    "score_threshold": 0.25,
+    "nms_threshold": 0.45000000000000001,
+    "nms_mode": "class_agnostic",
+    "detection_count": 3
+  },
+  "latency_ms": {
+    "image_decode": {
+      "sample_count": 100,
+      "mean": 0.8186110000000002,
+      "p50": 0.80379999999999996,
+      "p95": 0.93359999999999999
+    },
+    "preprocess": {
+      "sample_count": 100,
+      "mean": 5.771344,
+      "p50": 5.6624999999999996,
+      "p95": 6.8240999999999996
+    },
+    "session_run": {
+      "sample_count": 100,
+      "mean": 191.91342600000007,
+      "p50": 190.92850000000001,
+      "p95": 220.76920000000001
+    },
+    "postprocess": {
+      "sample_count": 100,
+      "mean": 0.35726800000000003,
+      "p50": 0.33300000000000002,
+      "p95": 0.42280000000000001
+    },
+    "pipeline": {
+      "sample_count": 100,
+      "mean": 199.22826699999999,
+      "p50": 198.4941,
+      "p95": 229.2748
+    },
+    "end_to_end": {
+      "sample_count": 100,
+      "mean": 200.04773000000006,
+      "p50": 199.31200000000001,
+      "p95": 230.27979999999999
+    }
+  },
+  "throughput_images_per_second": {
+    "pipeline": 5.0193680598546795,
+    "end_to_end": 4.9988070347011675
+  },
+  "memory": {
+    "status": "supported",
+    "metric": "peak_working_set",
+    "bytes": 158048256,
+    "mebibytes": 150.7265625,
+    "scope": "process lifetime including config/session initialization, warmup, timed iterations, retained sample vectors, statistics, and benchmark harness; queried before JSON serialization/write",
+    "reason": null
+  },
+  "timing_exclusions": [
+    "RuntimeConfig/ModelArtifactSpec loading and validation",
+    "Ort::Env and SessionOptions construction plus model metadata inspection/validation; Ort::Session construction is recorded separately as one initialization observation",
+    "initial image path validation and file-size queries",
+    "statistics calculation and Peak Working Set query",
+    "benchmark JSON serialization and filesystem write",
+    "visualization/GUI rendering (not executed)"
+  ],
+  "limitations": [
+    "One 200x200 validation image, batch=1, one Windows CPU machine; results do not represent the full dataset or other hardware.",
+    "Repeated imread uses a warmed operating-system file cache and is not cold-disk latency.",
+    "No CPU affinity, elevated process priority, or idle-system lock was applied; concurrent system load can change latency.",
+    "session_run measures only Ort::Session::Run; pipeline additionally includes input validation/tensor construction and output validation/copy.",
+    "session initialization is one Ort::Session construction observation; it does not provide initialization percentiles and can be affected by operating-system file cache state.",
+    "Peak Working Set is the process-lifetime peak including session initialization, warmup, measured iterations, retained samples, statistics, and harness state; it is not per-stage or incremental inference memory.",
+    "Actual provider is session-level evidence, not per-node placement profiling.",
+    "Historical Python ORT 24.4/72.1 FPS used a different protocol and must not be compared unconditionally with this C++ result.",
+    "The benchmark records the declared model SHA and fixed file sizes; the required immediately preceding S1-07 gate and JSON validator recompute the actual model/sample SHA-256 values."
+  ]
+}

@@ -1,102 +1,111 @@
-# 路径、环境与复现命令
+# 路径、工具链与环境诊断
 
-本文集中保存工业视觉边缘 AI Runtime 与 C++ 工程化系统的核心路径、Windows 环境和大阶段一复现入口。项目状态与路线以根目录双语 README 和 [`Proj1_S2.md`](./Proj1_S2.md) 为准；大阶段一的结果口径见 [`details/stage1_closure.md`](./details/stage1_closure.md)。
+本文是本项目**当前工具链、机器路径、构建入口和环境踩坑的唯一操作事实源**。`AGENTS.md` 不复制这些细节；只有任务需要查找工具链路径、依赖版本或位置、环境入口命令或已知环境踩坑时，仓库 Skill `yolo-defect-dev` 才按需读取本文的相关部分。任务仅仅涉及构建、运行、测试、benchmark 或 profiling，不构成加载该 Skill 的理由。历史 closure 中的版本和路径是当时证据快照，不替代本文。
 
-## 1. 核心路径
+## 1. 先看这里
 
-| 路径 | 作用 |
+- 日常从仓库根目录的普通 PowerShell 或 CMD 调用 `cpp_infer\tools\stage1.cmd`；它会发现 Visual Studio、调用 x64 `VsDevCmd.bat`，再启动无 profile 的 PowerShell 调度器。
+- 普通 PowerShell 直接运行 `ctest`、`cmake`、`cl` 或 `nmake` 找不到命令，通常表示当前 shell 没有继承 `VsDevCmd.bat` 注入的 `PATH/INCLUDE/LIB`，不能据此判断源码或测试失败。先运行 `stage1.cmd doctor`。
+- `call` 是 CMD builtin，不是 PowerShell command。PowerShell 查找可执行文件时使用 `where.exe`，不要误用 `where` alias。
+- PowerShell 不会因 native command 返回非零而自动停止；手工运行底层命令后立即检查 `$LASTEXITCODE`。
+- Python `onnxruntime` wheel 不能替代 C++ SDK；C++ 构建需要 headers、import library 和匹配的 runtime DLL。
+- 机器路径写入 Git 忽略的 `cpp_infer/.stage1.local.psd1` 或进程环境变量，不写入源码、CMake、tracked defaults 或 README。
+
+## 2. Windows 统一入口
+
+查看帮助和检查环境不会运行完整测试：
+
+```powershell
+cpp_infer\tools\stage1.cmd help
+cpp_infer\tools\stage1.cmd doctor
+```
+
+常见开发动作：
+
+```powershell
+cpp_infer\tools\stage1.cmd build
+cpp_infer\tools\stage1.cmd test
+cpp_infer\tools\stage1.cmd detect "data\images\val\crazing_241.jpg"
+cpp_infer\tools\stage1.cmd profile
+cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_config.txt -ProfileRuns 10
+```
+
+| Action | 行为 |
 |---|---|
-| [`../cpp_infer/`](../cpp_infer/) | C++17 Runtime、CLI、CMake、测试、工具和已跟踪证据 |
-| [`../cpp_infer/CMakeLists.txt`](../cpp_infer/CMakeLists.txt) | Runtime library、CLI、GTest/CTest 与依赖链接关系 |
-| [`../cpp_infer/configs/default_config.txt`](../cpp_infer/configs/default_config.txt) | 默认 RuntimeConfig：artifact、score/NMS 阈值和 provider |
-| [`../cpp_infer/artifacts/yolov8_neu_det.artifact.txt`](../cpp_infer/artifacts/yolov8_neu_det.artifact.txt) | 模型身份、SHA-256、tensor、类别和前后处理契约 |
-| [`../models/best.onnx`](../models/best.onnx) | 当前 YOLOv8/NEU-DET 基线模型，12,336,935 bytes |
-| [`../data/images/val/crazing_241.jpg`](../data/images/val/crazing_241.jpg) | 固定 Demo 与正式单图 benchmark 样本 |
-| [`../cpp_infer/tests/fixtures/consistency_manifest.json`](../cpp_infer/tests/fixtures/consistency_manifest.json) | 六类各 5 张、共 30 张的一致性固定 manifest |
-| [`../cpp_infer/results/demo/`](../cpp_infer/results/demo/) | 已跟踪的固定 Demo JSON/PNG |
-| [`../cpp_infer/results/consistency/`](../cpp_infer/results/consistency/) | 已跟踪的一致性逐图与汇总 JSON |
-| [`../cpp_infer/results/benchmark/yolov8_neu_det_cpu_release.json`](../cpp_infer/results/benchmark/yolov8_neu_det_cpu_release.json) | 已跟踪的正式 C++ Release CPU benchmark 基线 |
-| [`../cpp_infer/tools/stage1.cmd`](../cpp_infer/tools/stage1.cmd) | Windows 统一手工入口；负责发现 VS、继承 x64 环境并调用 PowerShell 调度器 |
-| [`../cpp_infer/tools/stage1.defaults.psd1`](../cpp_infer/tools/stage1.defaults.psd1) | 已跟踪、与机器无关的 workflow 默认值 |
-| [`../cpp_infer/tools/stage1.local.example.psd1`](../cpp_infer/tools/stage1.local.example.psd1) | 本机依赖配置模板；复制为 Git 忽略的 `cpp_infer/.stage1.local.psd1` |
+| `help` | 显示参数，不检查依赖、不构建 |
+| `doctor` | 只读检查 x64 MSVC、CMake/CTest、ORT SDK、OpenCV、Python、GTest policy 和有效配置 |
+| `build` | 增量 Release 构建；没有构建树时先 configure |
+| `clean-build` | 只在受保护 TEMP 边界内清理并重新构建 |
+| `test` | 构建当前源码并运行完整 CTest；日常局部改动优先运行相关 target/test |
+| `detect <image> [output-directory]` | 复用 `DetectorPipeline` 运行单图，可选 `-Config` 与 `-Overwrite` |
+| `demo` | 固定样本的 JSON/PNG smoke |
+| `consistency` | 固定 manifest 的 Python ORT/C++ ORT 比较 |
+| `benchmark` | 先运行 workflow 定义的 correctness 前置，再采集分段 latency/throughput/memory |
+| `profile [image]` | 独立 profiling session；可选 config、prefix 和 run count，不进入正式 benchmark |
+| `all` | clean build、完整 CTest、Demo、consistency 和正式 benchmark；用于单元收口而非每次编辑 |
 
-路径解析规则不能混用：
+`profile` trace 含插桩开销，只用于 operator/node 诊断。`all` 是完整收口入口，不是普通改动的默认命令。
 
-- workflow/local、RuntimeConfig 和 artifact 中的相对路径，分别相对声明它们的文件解析。
-- CLI 的图片和输出路径相对调用者当前工作目录解析。
-- `ModelMetadata` 是 ORT 对真实模型的观察和校验证据，不是另一份配置。
-- `CMakeCache.txt`、Makefiles、objects、binaries 和 staged DLL 是可丢弃构建状态，不应手工维护或提交。
+## 3. 当前已验证 Windows 环境
 
-## 2. 已验证的 Windows 环境
+当前本机证据对应 Windows x86_64、C++17、MSVC/NMake、Release：
 
-仓库内正式证据对应 Windows `10.0.26200`、x86_64、MSVC `19.50.35721.0`、Release、C++17。当前机器已验证的关键依赖为：
-
-| 依赖 | 版本或路径 |
+| 依赖 | 当前版本或位置 |
 |---|---|
-| Visual Studio C++ | `vswhere.exe` 自动发现；当前 `VsDevCmd.bat` 为 `D:\01_Base\Tools\VisualStudio_Community\Common7\Tools\VsDevCmd.bat` |
-| ONNX Runtime C++ SDK | `1.19.2`，`D:\01_Base\Tools\onnxruntime-win-x64-1.19.2` |
-| OpenCV C++ | `4.8.0`，CMake package 为 `D:\01_Base\Tools\opencv\build\x64\vc16\lib`，DLL 为同级 `bin` |
+| Visual Studio C++ | MSVC 19.50.35721.0；`vswhere.exe` 自动发现；当前 `VsDevCmd.bat`：`D:\01_Base\Tools\VisualStudio_Community\Common7\Tools\VsDevCmd.bat` |
+| CMake / CTest | 4.1.1-msvc1，Visual Studio 附带并由 `VsDevCmd.bat` 加入 PATH |
+| ONNX Runtime C++ SDK | 1.19.2：`D:\01_Base\Tools\onnxruntime-win-x64-1.19.2` |
+| OpenCV C++ | 4.8.0：`D:\01_Base\Tools\opencv\build\x64\vc16\lib`，DLL 位于同级 `bin` |
 | Python reference | `C:\Users\Everbreath\.conda\envs\TestBase\python.exe`；Python 3.9.25、ORT 1.19.2、OpenCV 4.13.0、NumPy 2.0.2 |
-| GoogleTest | v1.17.0 commit `52eb8108c5bdec04579160ae17225d66034bd723`；archive SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84` |
+| GoogleTest | v1.17.0；实际 source 目录由本机忽略配置提供，依赖版本由 CMake 固定 |
 
-GoogleTest 的有效源码目录由 Git 忽略的 `.stage1.local.psd1` 指定；该路径可能位于临时目录，不应写进 CMake 或提交到仓库。运行 `doctor` 查看本次真正解析到的路径。
+运行 `doctor` 查看本次进程实际解析到的路径，不要仅依赖本表。
 
-## 3. 配置分层与依赖优先级
+## 4. 配置层次与优先级
 
-机器依赖路径的统一优先级是：
+机器依赖路径：
 
 ```text
 显式命令参数 -> cpp_infer/.stage1.local.psd1 -> 进程环境变量 -> portable fallback
 ```
 
-| 依赖 | 参数 | local key | 环境变量 | 当前 portable fallback |
-|---|---|---|---|---|
-| ORT SDK | `-OrtRoot` | `OrtRoot` | `ONNXRUNTIME_ROOT` | `D:\01_Base\Tools\onnxruntime-win-x64-1.19.2` |
-| OpenCV CMake | `-OpenCvDir` | `OpenCvDir` | `OpenCV_DIR` | `D:\01_Base\Tools\opencv\build\x64\vc16\lib` |
-| OpenCV DLL | `-OpenCvBin` | `OpenCvBin` | `YOLO_DEFECT_OPENCV_BIN` | 从已解析的 `OpenCvDir` 推导同级 `bin` |
-| Python | `-PythonExe` | `PythonExe` | `YOLO_DEFECT_PYTHON` | 当前用户目录下 `.conda\envs\TestBase\python.exe` |
-| GoogleTest source | `-GTestSource` | `GTestSource` | `YOLO_DEFECT_GTEST_SOURCE` | 无；必须提供已验证源码，或显式允许下载 |
+| 依赖 | 参数 | local key | 环境变量 |
+|---|---|---|---|
+| ORT SDK | `-OrtRoot` | `OrtRoot` | `ONNXRUNTIME_ROOT` |
+| OpenCV CMake | `-OpenCvDir` | `OpenCvDir` | `OpenCV_DIR` |
+| OpenCV DLL | `-OpenCvBin` | `OpenCvBin` | `YOLO_DEFECT_OPENCV_BIN` |
+| Python | `-PythonExe` | `PythonExe` | `YOLO_DEFECT_PYTHON` |
+| GoogleTest source | `-GTestSource` | `GTestSource` | `YOLO_DEFECT_GTEST_SOURCE` |
 
-`VsDevCmd.bat` 单独按 `YOLO_DEFECT_VSDEVCMD` -> `vswhere.exe` 自动发现解析。`detect` 的 RuntimeConfig/输出默认值按“显式参数 -> local 默认值 -> tracked workflow 默认值”解析。缺少本地 GoogleTest 源码时，只有显式传入 `-AllowGTestDownload` 才允许 CMake 使用已固定 URL 和 SHA-256 的 FetchContent。
+`VsDevCmd.bat` 按 `YOLO_DEFECT_VSDEVCMD`、`vswhere.exe` 自动发现解析。缺少本地 GoogleTest source 时，只有显式 `-AllowGTestDownload` 才允许 CMake 联网获取固定版本。
 
-## 4. `stage1.cmd` 十个动作
+不同配置的相对路径基准不能混用：
 
-从普通 PowerShell 或 CMD 在仓库根目录运行；无参数等价于 `help`，不会触发构建。
+- workflow/local 文件相对各自声明文件解析；
+- `RuntimeConfig` 和 artifact 相对各自配置文件解析；
+- CLI 图片和输出路径相对调用者当前工作目录解析；
+- `ModelMetadata` 是 ORT 对真实模型的观察，不是配置来源。
 
-| 动作 | 行为 |
+## 5. 核心项目路径
+
+| 路径 | 职责 |
 |---|---|
-| `help` | 显示帮助；不要求 Visual Studio 或 SDK |
-| `doctor` | 只读检查 x64 MSVC、CMake/CTest、ORT C++ SDK、OpenCV、Python、GoogleTest policy 与解析后的默认值 |
-| `build` | 已有构建树时增量构建；没有时先 configure |
-| `clean-build` | 只在受保护的 TEMP 边界内删除并重建 NMake Release 构建树 |
-| `test` | 构建当前源码并运行完整 CTest |
-| `detect <image> [output-directory]` | 任意单图经过现有 Pipeline 输出 JSON/PNG；可用 `-Config` 和显式 `-Overwrite` |
-| `demo` | 构建并验证固定样本的 3-detection JSON/PNG Demo |
-| `consistency` | 构建并运行固定 30 图 Python ORT/C++ ORT 比较 |
-| `benchmark` | 先重新运行 consistency，再按指定 warmup/repeat 运行 benchmark |
-| `all` | clean configure/build -> 完整 CTest -> Demo -> consistency -> 正式 benchmark |
+| [`../cpp_infer/`](../cpp_infer/) | C++ Runtime、CLI、CMake、tests 和 tools |
+| [`../cpp_infer/tools/stage1.cmd`](../cpp_infer/tools/stage1.cmd) | Windows 统一入口 |
+| [`../cpp_infer/tools/stage1.defaults.psd1`](../cpp_infer/tools/stage1.defaults.psd1) | tracked、机器无关的 workflow 默认值 |
+| [`../cpp_infer/tools/stage1.local.example.psd1`](../cpp_infer/tools/stage1.local.example.psd1) | `cpp_infer/.stage1.local.psd1` 模板 |
+| [`../cpp_infer/configs/default_config.txt`](../cpp_infer/configs/default_config.txt) | 默认 FP32 RuntimeConfig |
+| [`../cpp_infer/configs/int8_config.txt`](../cpp_infer/configs/int8_config.txt) | S2-01 INT8 RuntimeConfig |
+| [`../cpp_infer/artifacts/yolov8_neu_det.artifact.txt`](../cpp_infer/artifacts/yolov8_neu_det.artifact.txt) | FP32 模型语义契约 |
+| [`../cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt`](../cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt) | INT8 模型语义契约；派生 ONNX 本体受 `.gitignore` 管理 |
+| [`../models/best.onnx`](../models/best.onnx) | 当前 FP32 ONNX |
+| [`../data/images/val/crazing_241.jpg`](../data/images/val/crazing_241.jpg) | 固定单图 Demo/benchmark 样本 |
 
-常用入口：
+`CMakeCache.txt`、Makefiles、objects、binaries 和 staged DLL 都是可丢弃构建状态，不应手工维护或提交。
 
-```powershell
-cpp_infer\tools\stage1.cmd help
-cpp_infer\tools\stage1.cmd doctor
-cpp_infer\tools\stage1.cmd all
-cpp_infer\tools\stage1.cmd detect "data\images\val\crazing_241.jpg"
-```
+## 6. 仅用于诊断的底层构建链
 
-`all` 固定使用 tracked workflow 中的 warmup `10`、repeat `100`；探索性非正式参数只应传给 `benchmark -Warmup <n> -Repeat <n>`。
-
-## 5. 最小手工复现链
-
-推荐的最短正式复现只有两步：
-
-```powershell
-cpp_infer\tools\stage1.cmd doctor
-cpp_infer\tools\stage1.cmd all
-```
-
-如果需要审计 wrapper 背后的构建关系，先在 CMD 中初始化同一进程链里的 x64 开发环境：
+只有需要审计 wrapper 或 CMake build graph 时才手工展开。先在 CMD 中初始化 x64 环境：
 
 ```bat
 call "D:\01_Base\Tools\VisualStudio_Community\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
@@ -104,7 +113,7 @@ if errorlevel 1 exit /b 1
 powershell.exe -NoProfile
 ```
 
-随后在该 PowerShell 中使用本机忽略配置进行最小 configure/build/CTest。每个 native command 后都必须立即检查退出码：
+随后在同一个 PowerShell 进程链中运行：
 
 ```powershell
 $RepoRoot = 'D:\01_Base\CodingSpace\yolo_defect'
@@ -127,32 +136,20 @@ if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed.' }
 cmake --build $BuildDir
 if ($LASTEXITCODE -ne 0) { throw 'Release build failed.' }
 
-ctest --test-dir $BuildDir -N
-if ($LASTEXITCODE -ne 0) { throw 'CTest inventory failed.' }
-
 ctest --test-dir $BuildDir --output-on-failure
-if ($LASTEXITCODE -ne 0) { throw 'Complete CTest failed.' }
+if ($LASTEXITCODE -ne 0) { throw 'CTest failed.' }
 ```
 
-这段底层命令只复现 configure/build/完整测试。正式 Demo、一致性、benchmark 的顺序、fresh-output 校验和严格 JSON validator 仍以 `stage1.cmd all` 为权威，避免手工长命令漏掉正确性前置门。
+这段命令只解释 configure/build/test 关系，不替代 `stage1.cmd` 的参数检查、DLL staging 和产品动作。
 
-## 6. TEMP 与证据边界
+## 7. TEMP、输出与故障分层
 
-- 默认正式构建目录是 `%TEMP%\yolo_defect_stage1_manual_release`。
-- 自定义 `-BuildDir` 必须位于真实 TEMP 根目录下，叶目录必须以 `yolo_defect_stage1_` 开头，且不能是 junction/symlink；`clean-build` 只会递归清理通过该检查的目标。
-- `demo`、`consistency`、`benchmark` 和 `all` 每次都在 `<build>\stage1_evidence\<timestamp>_<GUID>` 下创建新证据，不覆盖仓库内已有 JSON/PNG。
-- `detect` 默认输出到 Git 忽略的 `cpp_infer/results/manual/` 新目录；显式输出已存在时默认拒绝覆盖。
-- 仓库内 `cpp_infer/results/{demo,consistency,benchmark}` 是已收口基线。TEMP 结果只有在本次命令、解析器、validator 和预期文件全部成功后才是一次有效复现，但仍不是自动提交的新基线。
-
-## 7. 关键避坑
-
-- 禁止把忽略目录 `cpp_infer/build` 中的旧二进制当作证据；始终使用 fresh out-of-tree TEMP build。
-- Python `onnxruntime` wheel 不包含本项目所需的 C++ headers、import library 和 runtime DLL，不能替代官方 ORT C++ SDK。
-- Windows 环境变量只从父进程传给子进程。另开 PowerShell 不会继承先前终端的 `VsDevCmd.bat`；日常直接调用 `stage1.cmd`。
-- `call` 是 CMD builtin，不是 PowerShell command；PowerShell 查找可执行文件时使用 `where.exe`，不要误用 `where` alias。
-- PowerShell 对 native command 的非零退出码不会自动停止；低层复现时必须紧跟 `$LASTEXITCODE` 检查。
-- 不要手改 TEMP 下的 CMakeCache/Makefiles，也不要把个人绝对依赖路径写入 CMake、源码、tracked defaults 或模板。
-- 不允许静默下载 GoogleTest；先配置并验证 v1.17.0 source，或明确传入 `-AllowGTestDownload`。
-- benchmark 必须以同次 consistency 通过为前提。不得用旧 summary 造成假阳性，也不得为了通过而放宽冻结容差。
-- 当前 C++ benchmark 与历史 Python 指标协议不同；不能据此无条件声称谁更快。
-- 工作树可能包含用户未提交修改；清理或复现前先检查 `git status`，不要覆盖、恢复或删除无关变更。
+- 默认构建目录是 `%TEMP%\yolo_defect_stage1_manual_release`；自定义 `-BuildDir` 必须满足 `stage1.ps1` 的受保护 TEMP 边界检查。
+- `demo`、`consistency`、`benchmark`、`profile` 和 `all` 默认写入构建目录下的新 evidence 子目录；`detect` 默认写入 Git 忽略的 manual result 目录。
+- 不使用 `cpp_infer/build` 中的旧二进制判断当前源码；需要复现时使用当前 TEMP build。
+- 环境失败：命令、SDK、package、DLL、架构或 provider 不可用；先运行 `doctor`。
+- configure/build 失败：CMake discovery、编译或链接错误；查看第一条决定性错误。
+- test 失败：编译已成功，但某个行为或集成预期不满足；运行相关 case，不先扩大到完整 gate。
+- product runtime 失败：沿 config/artifact/metadata、preprocess、`Session::Run`、postprocess、output 边界定位。
+- benchmark/profile 结果只适用于记录的机器与协议；PWS 是进程高水位，不是模型独占内存。
+- 工作树可能已有未提交修改；构建或清理前先检查 `git status`，不要覆盖或删除无关文件。

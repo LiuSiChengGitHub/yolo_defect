@@ -513,6 +513,13 @@ std::string serialize_benchmark_json(const BenchmarkResult& result) {
       << escape_json_string(
              result.runtime.graph_optimization_level,
              "runtime.session.graph_optimization_level")
+      << ",\n"
+      << "      \"initialization_ms\": "
+      << format_double(result.runtime.session_initialization_ms,
+                       "runtime.session.initialization_ms")
+      << ",\n"
+      << "      \"profiling_enabled\": "
+      << (result.runtime.profiling_enabled ? "true" : "false")
       << "\n"
       << "    }\n"
       << "  },\n"

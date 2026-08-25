@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "model": {
+    "model_id": "yolov8n_neu_det_s2_01_int8_qdq_s8s8_backbone",
+    "declared_sha256": "293B3B1363C7257F318FE82D52E57EADA74D72149FFB63482D4AD1F8BF991527"
+  },
+  "image": {
+    "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\data\\images\\val\\crazing_241.jpg",
+    "original_size": {"width": 200, "height": 200, "channels": 3},
+    "input_size": {"width": 800, "height": 800}
+  },
+  "runtime": {
+    "actual_provider": "CPUExecutionProvider",
+    "provider_evidence": "explicit_cpu_ep_registration_and_session_creation",
+    "score_threshold": 0.25,
+    "nms_threshold": 0.45000000000000001,
+    "nms_mode": "class_agnostic"
+  },
+  "detections": [
+    {
+      "class_id": 0,
+      "class_name": "crazing",
+      "confidence": 0.475860775,
+      "bbox_xyxy": [0, 53.9867706, 176.670517, 146.886536]
+    },
+    {
+      "class_id": 0,
+      "class_name": "crazing",
+      "confidence": 0.414752543,
+      "bbox_xyxy": [21.2364197, 118.908989, 188.246216, 193.201721]
+    },
+    {
+      "class_id": 0,
+      "class_name": "crazing",
+      "confidence": 0.290411711,
+      "bbox_xyxy": [22.9119568, 2.97953796, 190.53746, 85.6971359]
+    }
+  ]
+}

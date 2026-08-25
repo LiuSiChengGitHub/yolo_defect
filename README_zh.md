@@ -17,8 +17,9 @@ YOLOv8 和 NEU-DET 是首个 Runtime 实现所使用的稳定模型与数据集�
 正确性门禁、Benchmark 证据，以及受控推进 Linux、并发、量化和 TensorRT 的路径。
 
 > **状态 — 2026-08-25：** 大阶段一自动工程门与用户负责的 L2 验收均已完成。
-> 大阶段二文档前置准备已经收口；**S2-01 尚未开始**。目前已交付的结论仍仅限于
-> 下文说明的 Windows x86_64 ONNX Runtime CPU 单图链路。
+> 大阶段二文档前置准备已经收口；**S2-01 实现与机器证据已经完成，当前等待用户
+> L1**。最终在本机生成的是全 64 个 Conv 的 QDQ/S8S8 模型。按用户批准的个人练习口径，
+> 产品差异与任务质量结果保留为 advisory 诊断项，不声称通过原始三层严格验收。
 
 ![固定推理 Demo](docs/assets/demo_inference_result.gif)
 
@@ -29,7 +30,8 @@ YOLOv8 和 NEU-DET 是首个 Runtime 实现所使用的稳定模型与数据集�
 - 实际执行的是哪一套模型、张量、预处理、后处理与阈值契约？
 - 同一张图片能否产生确定、可检查的 JSON 与可视化结果？
 - 独立实现的 Python 与 C++ 能否在声明的数值门限内保持一致？
-- 失败是否可定位，并且性能数字是否只在通过正确性门禁后发布？
+- 失败是否可定位，并且性能数字是否绑定显式、机器可读的正确性策略，
+  而不是悄悄脱离质量结果？
 - 同一套核心逻辑以后能否跨操作系统、架构、工作负载和推理后端迁移，
   而不复制产品语义？
 
@@ -71,7 +73,7 @@ YOLO decode -> score filter -> stable NMS -> coordinate restore
 
 ```text
 FP32 ONNX
-  -> static INT8 PTQ + ORT operator/node profiling
+  -> [Windows CPU 已交付] static INT8 PTQ + ORT operator/node profiling
   -> Windows and Linux x86_64 shared-source Runtime
   -> AArch64 cross-build + QEMU portability smoke
   -> directory/manifest + bounded queue + workers
@@ -94,9 +96,11 @@ contract + metadata -> model-specific preprocess
 - Windows、Linux 和 AArch64 共用同一份业务源码。
 - 平台差异仅保留在依赖发现、动态库、内存/信号适配器和工作流脚本中。
 - 后续多图 Worker 复用现有单图 `DetectorPipeline`，不复制预处理、推理或后处理。
-- 正式 Benchmark 前必须先通过正确性门禁。
+- 发布 Benchmark 前，在相同 artifact/config 下完成代表性正确性 smoke；S2-01
+  额外保留原始产品差异与任务质量结果作为非阻断诊断。
 - 后端抽象只保留真实后端所需的最小边界。
-- 每项结果都记录命令、契约、产物身份、样本、环境、原始证据和限制。
+- 性能结论记录解释它所需的 artifact、样本、运行条件和限制；普通输出不要求
+  新建 evidence bundle 或 hash 台账。
 
 ## 3. 大阶段一最终记录
 
@@ -132,40 +136,17 @@ contract + metadata -> model-specific preprocess
 
 ## 4. 快速开始
 
-### 依赖要求
-
-已验证的 Windows 工作流使用 x64 MSVC 环境、OpenCV C++ 4.8.0、
-完整的 ONNX Runtime C++ 1.19.2 SDK、用于一致性验证的兼容 Python 环境，
-以及固定的 GoogleTest 源码策略。机器路径必须写入已忽略的
-`cpp_infer/.stage1.local.psd1` 或环境变量，绝不能写入已跟踪的 CMake 或源码。
-
-便携发现无法找到依赖时，复制并填写可选本地模板：
+在仓库根目录的普通 PowerShell 或 CMD 中调用 Windows task runner；它会
+自动发现并初始化所需的 Visual Studio 环境：
 
 ```powershell
-Copy-Item .\cpp_infer\tools\stage1.local.example.psd1 .\cpp_infer\.stage1.local.psd1
-```
-
-### 标准命令
-
-在仓库根目录的普通 PowerShell 或 CMD 中运行：
-
-```powershell
-# 查看工作流，不启动构建。
 .\cpp_infer\tools\stage1.cmd help
-
-# 只读验证工具链与依赖。
 .\cpp_infer\tools\stage1.cmd doctor
-
-# 全新 Release 构建 -> 106 项测试 -> Demo -> 一致性 -> Benchmark。
-.\cpp_infer\tools\stage1.cmd all
-
-# 运行任意单张图片；可选第二个参数指定输出目录。
-.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg" "D:\outputs"
+.\cpp_infer\tools\stage1.cmd build
 ```
 
-`detect` 仍是复用 `DetectorPipeline` 的单图便捷入口，并不是目录批处理。
-完整 action 矩阵、底层命令、环境路径和安全临时构建规则见
-[路径与命令](docs/paths_commands.md)。
+完整 action 矩阵、当前依赖路径、本机配置优先级、底层 CMake/CTest 审计命令
+和环境故障诊断只保存在[路径、工具链与环境诊断](docs/paths_commands.md)。
 
 ## 5. 核心模块
 
@@ -174,29 +155,77 @@ Copy-Item .\cpp_infer\tools\stage1.local.example.psd1 .\cpp_infer\.stage1.local.
 | Runtime/artifact/metadata 契约 | 分离可调 Runtime 策略、声明的产物语义和 ORT 实际观察到的张量/provider 事实；在推理前拒绝不匹配 |
 | `ImagePreprocessor` | 解码或接收 `CV_8UC3` 图片；执行 letterbox、BGR-to-RGB、归一化，生成连续 NCHW 数据，并保留逆变换元数据 |
 | `OnnxRunner` / `InferenceOutput` | 通过 RAII/PImpl 管理 ORT 资源，验证输入/输出，同步执行，并把输出复制到生命周期独立于 ORT 的存储中 |
+| Static PTQ 工具链 | 冻结校准输入与量化配置，执行 Conv-only QDQ/S8S8 PTQ，检查选中/量化/失败节点，验证 actual metadata，并生成派生产物卡 |
+| `ProfileRunner` 与 profile 汇总器 | 创建隔离的 profiling session，保留 ORT raw trace，按 node/operator/provider 汇总耗时与调用次数，并把 trace 耗时排除在正式 Benchmark 外 |
 | 后处理/NMS | 验证 YOLO BCN 输出，选择类别分数，执行严格过滤与稳定的类别无关 NMS，再恢复并裁剪源图坐标 |
 | `DetectorPipeline` 与 writers | 编排单张图片并输出自持有结果、稳定 JSON 和确定性的无 GUI 可视化，同时强制安全输出路径 |
-| 证据工具链 | 用合成 fixture 测试纯逻辑接缝，谨慎测试真实垂直链，比较 Python/C++ 检测，并发布结构化 Benchmark/内存证据 |
+| 验证工具链 | 用聚焦 fixture 测试有意义的逻辑接缝，谨慎运行真实垂直链，在相关时比较 Python/C++ 检测并记录限定范围的 Benchmark/内存结果 |
 
 ## 6. 大阶段二计划
 
-大阶段二划分为五个完整交付单元。每个单元先冻结最小 SPEC，再实现一个可运行能力，
-产出测试和机器可读证据，更新三个项目入口文档，然后停止并等待 L1 验收。
+大阶段二划分为五个完整交付单元。每个单元先定义最小 SPEC，再实现一个可运行能力，
+做与改动相称的验证，只记录解释该能力所需的结果，更新三个项目入口文档，然后停止并等待 L1 验收。
 
 | 单元 | 交付内容 | 诚实边界 | 状态 |
 |---|---|---|---|
-| S2-01 | Static INT8 PTQ、FP32/INT8 正确性/任务质量/性能对比、ORT operator/node profiling | 不做 QAT、D010 量化，也不把 profiler 数据冒充 Benchmark | **下一步；尚未开始** |
+| S2-01 | Static INT8 PTQ、FP32/INT8 正确性/任务质量/性能对比、ORT operator/node profiling | Windows CPU 个人练习收口；产品/质量结果为 advisory；不做 QAT，也不把 profiler 冒充 Benchmark | **实现/证据完成；等待 L1** |
 | S2-02 | Linux x86_64 原生链路、共享源码可移植性、AArch64 交叉构建与 QEMU smoke | WSL2 不是开发板；QEMU 不产出性能结论 | 计划中 |
 | S2-03 | 目录/manifest 发现、有界队列、workers、背压、失败计数、干净退出、吞吐对比 | 并发单图任务不等于真正的 ONNX batch | 计划中 |
 | S2-04 | 一条真实 Linux x86_64 + RTX 4060 TensorRT 执行路径、FP16 正确性与性能 | 仅为本地 GPU/边缘节点证据；不是 Jetson 或嵌入式部署 | 计划中 |
 | S2-05 | 适用的完整门禁、结果矩阵、失败案例、三套简历叙事、面试材料、recruiting freeze | 不增加新技术栈 | 计划中 |
+
+### S2-01 Windows CPU 记录
+
+最终本地产物使用 ONNX Runtime 1.19.2 static PTQ，配置为 `QDQ`、S8S8、
+MinMax 校准、per-channel 权重，并将源图全部 64 个 `Conv` 纳入量化目标。
+外部契约仍为 float32 `images [1,3,800,800] -> output0 [1,10,13125]`；
+INT8 是图内部表示，不是应用侧整数 I/O 契约。
+
+| 证据 | FP32 | INT8 / 结果 |
+|---|---:|---:|
+| 模型文件 | 12,336,935 bytes | 3,545,141 bytes；**缩小 71.264%** |
+| Python/C++ ORT 合法性 | 通过 | 通过；输出有限且 actual metadata 一致 |
+| 当前 Windows 回归 | 118/118 CTest 通过 | FP32/INT8 profile workflow smoke 通过 |
+| 361 图任务质量 | mAP50 `0.710815`；mAP50-95 `0.345786` | `0.707206` / `0.342174`；delta `-0.003610/-0.003612` |
+| 30 图产品差异 | 62 个检测 | 65 个检测、61 个匹配；原始 aggregate gate 为 `false` |
+| Session 初始化 | `40.309 ms` | `94.979 ms` |
+| `Session::Run` mean/P50/P95 | `139.920/141.677/156.473 ms` | `191.913/190.929/220.769 ms`；**mean 慢 37.16%** |
+| Pipeline mean/P50/P95 | `146.927/148.779/163.921 ms` | `199.228/198.494/229.275 ms` |
+| Pipeline 吞吐 | `6.806 img/s` | `5.019 img/s` |
+| Peak Working Set | `150.742 MiB` | `150.727 MiB`；按进程高水位口径基本不变 |
+
+Profiler 在与正式 Benchmark 分离的两个 10-call session 中运行，全部优化后节点
+都由 `CPUExecutionProvider` 执行。FP32 的 `Conv` 占 kernel-event 时间 `67.80%`；
+INT8 中剩余 `Conv` 占 `64.55%`，`DequantizeLinear` 占 `10.55%`，
+`QuantizeLinear` 占 `6.18%`，`QLinearConv` 仅占 `0.47%`，执行节点数由
+294 增至 683。由此可以解释变慢：文件压缩成功，但该图与本机 CPU 的组合仍保留了
+昂贵卷积，并增加大量 Q/DQ 边界。Profile event 总时长含插桩开销，只用于诊断，
+绝不替代未开 profiler 的 `Session::Run` 正式结果。
+
+`models/best.int8.qdq.onnx` 当前存在，并已由记录中的 Python/C++ 运行实际加载；
+但派生 ONNX 继续遵守项目的模型许可证边界而被 Git 忽略。新 clone 应从冻结 protocol
+重建同 SHA 二进制；Git 交付的是绑定 SHA 的 contract、card、工具和机器证据，
+而不是暗示仓库正在分发该模型。
+
+S2-01 主要证据：
+
+- [冻结 PTQ 协议](cpp_infer/protocols/s2_01_ptq_protocol.json)与
+  [INT8 产物契约](cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt)
+- [量化产物卡](cpp_infer/results/s2_01/quantization_report.json)
+- [未改写的正确性/质量结果](cpp_infer/results/s2_01/correctness_quality_v1_failed.json)
+- [FP32/INT8 Benchmark 比较](cpp_infer/results/s2_01/benchmark/comparison.json)
+- [FP32 profile 摘要](cpp_infer/results/s2_01/profile/fp32_summary.json)与
+  [INT8 profile 摘要](cpp_infer/results/s2_01/profile/int8_summary.json)
+- [Advisory 练习完成记录](cpp_infer/results/s2_01/exercise_completion.json)
+- [S2-01 收口与复现详情](docs/details/s2_01_closure.md)
 
 ### 平台矩阵
 
 | 平台/后端 | 能证明什么 | 当前状态 |
 |---|---|---|
 | Windows x86_64 + ORT CPU FP32 | 当前产品链、正确性、测试、分段 Benchmark、Peak Working Set | 已验证 |
-| Windows/Linux x86_64 + ORT CPU INT8 | 在冻结协议下验证量化质量、大小、延迟、内存和 profiling | 计划在 S2-01/S2-02 完成 |
+| Windows x86_64 + ORT CPU INT8 | Static PTQ 产物、Runtime 合法性、大小/质量/性能比较、逐节点 profiling | S2-01 已按 advisory 练习口径验证 |
+| WSL2/Linux x86_64 + ORT CPU INT8 | 共享源码 Linux 加载/运行可移植性、比较与 peak RSS | 计划在 S2-02 完成 |
 | WSL2 Ubuntu 24.04 x86_64 + ORT CPU | Linux 构建/加载/Runtime 可移植性、一致性、Benchmark、peak RSS | 计划在 S2-02 完成 |
 | Linux AArch64 under QEMU | 仅证明交叉编译和可移植性正确性 | 计划在 S2-02 完成；不发布性能结论 |
 | Linux x86_64 + RTX 4060 + TensorRT | 真实本地 TensorRT 执行、FP16 正确性/性能、GPU 内存 | 计划在 S2-04 完成；不是 Jetson |
@@ -213,9 +242,10 @@ Copy-Item .\cpp_infer\tools\stage1.local.example.psd1 .\cpp_infer\.stage1.local.
 - 正式 Benchmark 仅使用一张 `200x200` 图片、batch 1、暖文件缓存、
   一台 Windows CPU 主机、串行 ORT 执行，并且没有锁定 CPU affinity/priority。
 - Peak Working Set 是进程生命周期的高水位，不是模型专属或单次推理内存。
-- `CPUExecutionProvider` 是 session 级执行证据。逐节点归属需要计划中的 ORT profiling。
-- 当前 Runtime 仅支持 CPU 单图。INT8、Linux、AArch64/QEMU、有界并发和 TensorRT
-  在各自门禁通过前都仍是计划能力。
+- S2-01 ORT trace 已证明优化后节点由 `CPUExecutionProvider` 执行，但 trace
+  时长含 profiler 开销，也不能说明 kernel 内部最终选择了哪条 CPU 指令。
+- 当前 Runtime 仍为 CPU 单图；Windows INT8 已交付，Linux、AArch64/QEMU、
+  有界并发和 TensorRT 仍需各自单元提供证据。
 - 历史 Python ORT `24.4/72.1 FPS` 使用不同实现、provider、硬件、样本和计时边界；
   只能作为背景，不能与 C++ 结果排名比较。
 - 源码、模型与数据集许可证是彼此独立的检查点。MIT 源码许可证不会自动为已分发的
@@ -239,6 +269,7 @@ D010 集成、Qt、本地 LLM、Agent 工作流和真实 ARM/Jetson 设备保持
 - [秋招路线](docs/路线0712-new.md)
 - [大阶段二顶层设计](docs/Proj1_S2.md)
 - [大阶段一合并收口](docs/details/stage1_closure.md)
+- [S2-01 INT8/PTQ 与 profiling 收口](docs/details/s2_01_closure.md)
 - [路径、命令与环境](docs/paths_commands.md)
 - [C++ Runtime 技术参考](cpp_infer/README.md)
 

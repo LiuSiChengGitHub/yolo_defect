@@ -1,0 +1,9 @@
+# S2-01 protocol/evidence digests are computed from LF UTF-8 text.
+/protocols/*.json text eol=lf
+/tests/fixtures/s2_01_*.json text eol=lf
+/tools/*s2_01*.py text eol=lf
+/tools/summarize_ort_profile.py text eol=lf
+/tests/test_s2_01_*.py text eol=lf
+/artifacts/*int8*.txt text eol=lf
+/configs/*int8*.txt text eol=lf
+/results/s2_01/**/*.json text eol=lf

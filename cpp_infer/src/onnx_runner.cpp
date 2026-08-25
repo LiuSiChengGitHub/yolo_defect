@@ -13,6 +13,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -22,6 +23,82 @@ namespace {
 constexpr int kIntraOpNumThreads = 1;
 constexpr int kInterOpNumThreads = 1;
 constexpr const char* kCpuProviderName = "CPUExecutionProvider";
+
+[[noreturn]] void throw_profile_error(
+    const std::filesystem::path& model_path,
+    const std::string& object,
+    const std::string& expected,
+    const std::string& actual,
+    const std::string& action) {
+  throw std::runtime_error(
+      "ONNX profiling error for '" + object + "' in model '" +
+      model_path.string() + "': expected " + expected + "; actual " +
+      actual + "; action: " + action + ".");
+}
+
+std::filesystem::path normalize_profile_prefix(
+    const std::filesystem::path& declared_prefix,
+    const std::filesystem::path& model_path) {
+  if (declared_prefix.empty()) {
+    throw_profile_error(
+        model_path, "profile_file_prefix", "a non-empty file prefix",
+        "empty", "pass --profile-prefix <path> with a filename prefix");
+  }
+
+  std::error_code error;
+  std::filesystem::path prefix =
+      std::filesystem::absolute(declared_prefix, error);
+  if (error) {
+    throw_profile_error(
+        model_path, "profile_file_prefix",
+        "a path resolvable from the current working directory",
+        declared_prefix.string() + " (" + error.message() + ")",
+        "correct the prefix path");
+  }
+  prefix = prefix.lexically_normal();
+  if (prefix.filename().empty()) {
+    throw_profile_error(
+        model_path, "profile_file_prefix", "a file prefix, not a directory",
+        prefix.string(), "append a filename prefix to the output directory");
+  }
+
+  const std::filesystem::path parent = prefix.parent_path();
+  const bool parent_exists = std::filesystem::exists(parent, error);
+  if (error || !parent_exists) {
+    throw_profile_error(
+        model_path, "profile_file_prefix.parent",
+        "an existing accessible directory",
+        error ? parent.string() + " (" + error.message() + ")"
+              : "missing directory '" + parent.string() + "'",
+        "create the profile output directory before constructing the ORT "
+        "session");
+  }
+  const bool parent_is_directory =
+      std::filesystem::is_directory(parent, error);
+  if (error || !parent_is_directory) {
+    throw_profile_error(
+        model_path, "profile_file_prefix.parent", "a directory",
+        error ? parent.string() + " (" + error.message() + ")"
+              : "non-directory path '" + parent.string() + "'",
+        "choose an existing directory for the trace prefix");
+  }
+
+  const std::filesystem::file_status prefix_status =
+      std::filesystem::symlink_status(prefix, error);
+  if (error &&
+      prefix_status.type() != std::filesystem::file_type::not_found) {
+    throw_profile_error(
+        model_path, "profile_file_prefix", "an inspectable file prefix",
+        prefix.string() + " (" + error.message() + ")",
+        "check the target filesystem permissions");
+  }
+  if (!error && std::filesystem::is_directory(prefix_status)) {
+    throw_profile_error(
+        model_path, "profile_file_prefix", "a file prefix, not a directory",
+        prefix.string(), "append a filename prefix to the directory");
+  }
+  return prefix;
+}
 
 ModelValueType convert_value_type(ONNXType value) {
   switch (value) {
@@ -337,8 +414,9 @@ std::runtime_error make_run_ort_error(
 
 class OnnxRunner::Impl {
  public:
-  explicit Impl(const RuntimeContract& contract)
+  explicit Impl(const RuntimeContract& contract, OnnxRunnerOptions options)
       : model_path_(contract.artifact.model_path),
+        options_(std::move(options)),
         env_(ORT_LOGGING_LEVEL_WARNING, "yolo_defect_runtime"),
         session_options_(),
         session_(nullptr),
@@ -369,8 +447,29 @@ class OnnxRunner::Impl {
     Ort::ThrowOnError(
         OrtSessionOptionsAppendExecutionProvider_CPU(session_options_, 1));
 
+    if (options_.profile_file_prefix.has_value()) {
+      profile_file_prefix_ = normalize_profile_prefix(
+          *options_.profile_file_prefix, model_path_);
+      session_options_.EnableProfiling(profile_file_prefix_.c_str());
+      profiling_enabled_ = true;
+    }
+
+    const auto session_start = std::chrono::steady_clock::now();
     session_ = Ort::Session(env_, contract.artifact.model_path.c_str(),
                             session_options_);
+    const auto session_end = std::chrono::steady_clock::now();
+    session_initialization_ms_ =
+        std::chrono::duration<double, std::milli>(
+            session_end - session_start).count();
+    if (!std::isfinite(session_initialization_ms_) ||
+        session_initialization_ms_ < 0.0) {
+      throw_profile_error(
+          model_path_, "session_initialization_ms",
+          "a finite non-negative steady-clock duration",
+          std::to_string(session_initialization_ms_),
+          "verify the platform steady_clock before publishing benchmark "
+          "evidence");
+    }
 
     metadata_.session_provider = kCpuProviderName;
     metadata_.provider_evidence =
@@ -398,6 +497,81 @@ class OnnxRunner::Impl {
   }
 
   const ModelMetadata& metadata() const noexcept { return metadata_; }
+
+  double session_initialization_ms() const noexcept {
+    return session_initialization_ms_;
+  }
+
+  bool profiling_enabled() const noexcept { return profiling_enabled_; }
+
+  std::filesystem::path end_profiling() {
+    if (!profiling_enabled_) {
+      throw_profile_error(
+          model_path_, "profiling.state", "profiling enabled at session "
+          "creation", "disabled",
+          "construct OnnxRunner with OnnxRunnerOptions.profile_file_prefix");
+    }
+    if (profiling_ended_) {
+      throw_profile_error(
+          model_path_, "profiling.state", "one finalization after the last "
+          "Session::Run", "EndProfiling was already called",
+          "retain the path returned by the first end_profiling call");
+    }
+
+    try {
+      Ort::AllocatedStringPtr allocated_path =
+          session_.EndProfilingAllocated(allocator_);
+      profiling_ended_ = true;
+      if (!allocated_path || allocated_path.get()[0] == '\0') {
+        throw_profile_error(
+            model_path_, "profile_trace.path",
+            "a non-empty filename returned by ORT", "empty",
+            "check the profile prefix and ORT runtime diagnostics");
+      }
+
+      std::filesystem::path trace_path =
+          std::filesystem::u8path(allocated_path.get());
+      std::error_code error;
+      trace_path = std::filesystem::absolute(trace_path, error);
+      if (error) {
+        throw_profile_error(
+            model_path_, "profile_trace.path",
+            "a returned path resolvable from the current working directory",
+            std::string(allocated_path.get()) + " (" + error.message() + ")",
+            "inspect the ORT profile prefix and process working directory");
+      }
+      trace_path = trace_path.lexically_normal();
+      const bool is_regular =
+          std::filesystem::is_regular_file(trace_path, error);
+      if (error || !is_regular) {
+        throw_profile_error(
+            model_path_, "profile_trace.path",
+            "an existing regular trace file",
+            error ? trace_path.string() + " (" + error.message() + ")"
+                  : "missing or non-file path '" + trace_path.string() + "'",
+            "check output permissions and the ORT profiling diagnostic");
+      }
+      const std::uintmax_t trace_size =
+          std::filesystem::file_size(trace_path, error);
+      if (error || trace_size == 0) {
+        throw_profile_error(
+            model_path_, "profile_trace.size", "a non-empty JSON trace",
+            error ? trace_path.string() + " (" + error.message() + ")"
+                  : "0 bytes",
+            "rerun profiling in a writable directory after at least one "
+            "Session::Run");
+      }
+      return trace_path;
+    } catch (const Ort::Exception& error) {
+      throw_profile_error(
+          model_path_, "SessionEndProfiling", "a successfully finalized ORT "
+          "JSON trace",
+          "ORT error code " +
+              std::to_string(static_cast<int>(error.GetOrtErrorCode())) +
+              ": " + error.what(),
+          "check profile output permissions and the staged ORT DLL");
+    }
+  }
 
   TimedInferenceOutput run_with_session_timing(
       const std::vector<std::int64_t>& input_shape,
@@ -443,16 +617,22 @@ class OnnxRunner::Impl {
 
  private:
   std::filesystem::path model_path_;
+  OnnxRunnerOptions options_;
+  std::filesystem::path profile_file_prefix_;
   Ort::Env env_;
   Ort::SessionOptions session_options_;
   Ort::Session session_;
   Ort::AllocatorWithDefaultOptions allocator_;
   ModelMetadata metadata_;
+  double session_initialization_ms_ = 0.0;
+  bool profiling_enabled_ = false;
+  bool profiling_ended_ = false;
 };
 
-OnnxRunner::OnnxRunner(const RuntimeContract& contract) {
+OnnxRunner::OnnxRunner(const RuntimeContract& contract,
+                       OnnxRunnerOptions options) {
   try {
-    impl_ = std::make_unique<Impl>(contract);
+    impl_ = std::make_unique<Impl>(contract, std::move(options));
   } catch (const Ort::Exception& error) {
     throw make_ort_error(contract, error);
   }
@@ -464,6 +644,18 @@ OnnxRunner& OnnxRunner::operator=(OnnxRunner&&) noexcept = default;
 
 const ModelMetadata& OnnxRunner::metadata() const noexcept {
   return impl_->metadata();
+}
+
+double OnnxRunner::session_initialization_ms() const noexcept {
+  return impl_->session_initialization_ms();
+}
+
+bool OnnxRunner::profiling_enabled() const noexcept {
+  return impl_->profiling_enabled();
+}
+
+std::filesystem::path OnnxRunner::end_profiling() {
+  return impl_->end_profiling();
 }
 
 InferenceOutput OnnxRunner::run(

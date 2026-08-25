@@ -85,6 +85,7 @@ add_library(yolo_defect_runtime STATIC
   src/model_metadata.cpp
   src/onnx_runner.cpp
   src/postprocessor.cpp
+  src/profile_runner.cpp
   src/result_writer.cpp
 )
 add_library(yolo_defect::runtime ALIAS yolo_defect_runtime)
@@ -211,12 +212,26 @@ if(BUILD_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_benchmark.cmake")
   set(TEST_BENCHMARK_JSON_VALIDATOR
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_benchmark_json.py")
+  set(TEST_PROFILE_SCRIPT
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_profile.cmake")
   set(CONSISTENCY_MANIFEST
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consistency_manifest.json")
   set(CONSISTENCY_TOOL
     "${CMAKE_CURRENT_SOURCE_DIR}/tools/compare_consistency.py")
   set(CONSISTENCY_UNIT_TEST
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_consistency.py")
+  set(S2_01_PROFILE_SUMMARY_UNIT_TEST
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_profile_summary.py")
+  set(S2_01_BENCHMARK_COMPARISON_UNIT_TEST
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_benchmark_comparison.py")
+  set(S2_01_QUALITY_UNIT_TEST
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_quality.py")
+  set(S2_01_PROTOCOL_UNIT_TEST
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_protocol.py")
+  set(S2_01_EVIDENCE_UNIT_TEST
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_evidence.py")
+  set(S2_01_MANIFEST_TOOL
+    "${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_s2_01_manifests.py")
   set(FIXED_IMAGE
     "${CMAKE_CURRENT_SOURCE_DIR}/../data/images/val/crazing_241.jpg")
   set(S1_06_FAULT_INPUT_ROOT
@@ -435,6 +450,57 @@ if(BUILD_TESTING)
   )
 
   add_test(
+    NAME yolo_defect_s2_01_profile_summary_unit
+    COMMAND "${Python3_EXECUTABLE}"
+      "${S2_01_PROFILE_SUMMARY_UNIT_TEST}" -v
+  )
+  set_tests_properties(yolo_defect_s2_01_profile_summary_unit PROPERTIES
+    LABELS "profiling;unit;quality_gate"
+  )
+
+  add_test(
+    NAME yolo_defect_s2_01_benchmark_comparison_unit
+    COMMAND "${Python3_EXECUTABLE}"
+      "${S2_01_BENCHMARK_COMPARISON_UNIT_TEST}" -v
+  )
+  set_tests_properties(
+    yolo_defect_s2_01_benchmark_comparison_unit PROPERTIES
+    LABELS "benchmark;comparison;unit;quality_gate"
+  )
+
+  add_test(
+    NAME yolo_defect_s2_01_quality_unit
+    COMMAND "${Python3_EXECUTABLE}" "${S2_01_QUALITY_UNIT_TEST}" -v
+  )
+  set_tests_properties(yolo_defect_s2_01_quality_unit PROPERTIES
+    LABELS "ptq;quality;unit;quality_gate"
+  )
+
+  add_test(
+    NAME yolo_defect_s2_01_protocol_unit
+    COMMAND "${Python3_EXECUTABLE}" "${S2_01_PROTOCOL_UNIT_TEST}" -v
+  )
+  set_tests_properties(yolo_defect_s2_01_protocol_unit PROPERTIES
+    LABELS "ptq;protocol;unit;quality_gate"
+  )
+
+  add_test(
+    NAME yolo_defect_s2_01_evidence_unit
+    COMMAND "${Python3_EXECUTABLE}" "${S2_01_EVIDENCE_UNIT_TEST}" -v
+  )
+  set_tests_properties(yolo_defect_s2_01_evidence_unit PROPERTIES
+    LABELS "ptq;evidence;unit;quality_gate"
+  )
+
+  add_test(
+    NAME yolo_defect_s2_01_manifest_check
+    COMMAND "${Python3_EXECUTABLE}" "${S2_01_MANIFEST_TOOL}" --check
+  )
+  set_tests_properties(yolo_defect_s2_01_manifest_check PROPERTIES
+    LABELS "ptq;manifest;quality_gate"
+  )
+
+  add_test(
     NAME yolo_defect_python_cpp_consistency
     COMMAND "${Python3_EXECUTABLE}" "${CONSISTENCY_TOOL}"
       --manifest "${CONSISTENCY_MANIFEST}"
@@ -461,6 +527,21 @@ if(BUILD_TESTING)
   )
   set_tests_properties(yolo_defect_cpp_benchmark_smoke PROPERTIES
     LABELS "benchmark;integration;quality_gate"
+    DEPENDS yolo_defect_python_cpp_consistency
+    TIMEOUT 180
+  )
+
+  add_test(
+    NAME yolo_defect_cpp_profile_smoke
+    COMMAND "${CMAKE_COMMAND}"
+      "-DCLI=$<TARGET_FILE:yolo_defect_cpp>"
+      "-DCONFIG=${DEFAULT_CONFIG}"
+      "-DIMAGE=${FIXED_IMAGE}"
+      "-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/test_outputs/profile"
+      -P "${TEST_PROFILE_SCRIPT}"
+  )
+  set_tests_properties(yolo_defect_cpp_profile_smoke PROPERTIES
+    LABELS "profiling;integration;quality_gate"
     DEPENDS yolo_defect_python_cpp_consistency
     TIMEOUT 180
   )
@@ -587,6 +668,40 @@ if(BUILD_TESTING)
     --benchmark
     --output-json "${CLI_FAILURE_OUTPUT_ROOT}/detections.json"
     --benchmark-json "${CLI_FAILURE_OUTPUT_ROOT}/benchmark.json")
+
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_profile_prefix_requires_mode
+    "--profile-prefix requires --profile"
+    --profile-prefix "${CLI_FAILURE_OUTPUT_ROOT}/profile")
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_profile_requires_image
+    "--profile requires --image"
+    --config "${DEFAULT_CONFIG}"
+    --profile
+    --profile-prefix "${CLI_FAILURE_OUTPUT_ROOT}/profile")
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_profile_requires_prefix
+    "--profile requires --profile-prefix"
+    --config "${DEFAULT_CONFIG}"
+    --image "${FIXED_IMAGE}"
+    --profile)
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_profile_invalid_runs
+    "object=--profile-runs"
+    --config "${DEFAULT_CONFIG}"
+    --image "${FIXED_IMAGE}"
+    --profile
+    --profile-prefix "${CLI_FAILURE_OUTPUT_ROOT}/profile"
+    --profile-runs 0)
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_profile_benchmark_conflict
+    "mutually exclusive"
+    --config "${DEFAULT_CONFIG}"
+    --image "${FIXED_IMAGE}"
+    --profile
+    --profile-prefix "${CLI_FAILURE_OUTPUT_ROOT}/profile"
+    --benchmark
+    --benchmark-json "${CLI_FAILURE_OUTPUT_ROOT}/benchmark.json")
   set_tests_properties(
     yolo_defect_cpp_benchmark_json_requires_mode
     yolo_defect_cpp_benchmark_requires_image
@@ -594,6 +709,13 @@ if(BUILD_TESTING)
     yolo_defect_cpp_benchmark_invalid_repeat
     yolo_defect_cpp_benchmark_output_conflict
     PROPERTIES LABELS "benchmark;cli;negative;quality_gate")
+  set_tests_properties(
+    yolo_defect_cpp_profile_prefix_requires_mode
+    yolo_defect_cpp_profile_requires_image
+    yolo_defect_cpp_profile_requires_prefix
+    yolo_defect_cpp_profile_invalid_runs
+    yolo_defect_cpp_profile_benchmark_conflict
+    PROPERTIES LABELS "profiling;cli;negative;quality_gate")
 
   add_cli_quality_failure_test(
     yolo_defect_cpp_damaged_image

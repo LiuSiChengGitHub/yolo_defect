@@ -49,11 +49,6 @@ namespace {
 using SteadyClock = std::chrono::steady_clock;
 constexpr std::size_t kMaximumIterations = 1000000;
 constexpr const char* kCpuProvider = "CPUExecutionProvider";
-constexpr const char* kBaselineModelId =
-    "yolov8n_neu_det_final_train_2";
-constexpr const char* kBaselineModelSha256 =
-    "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68";
-constexpr std::uint64_t kBaselineModelSizeBytes = 12336935;
 constexpr const char* kBaselineImageFilename = "crazing_241.jpg";
 constexpr std::uint64_t kBaselineImageSizeBytes = 23845;
 
@@ -465,40 +460,18 @@ class BenchmarkRunner::Impl {
               ", actual=" + runner_.metadata().session_provider,
           "restore the fixed CPU RuntimeConfig/session before benchmarking");
     }
+    if (runner_.profiling_enabled()) {
+      throw_runner_error(
+          "profiling", "disabled for formal benchmark evidence", "enabled",
+          "create a default OnnxRunner and run profiling through the separate "
+          "profile workflow");
+    }
     if (contract_.artifact.input.shape.size() != 4 ||
         contract_.artifact.input.shape[0] != 1) {
       throw_runner_error(
           "artifact.input.shape", "batch=1 static NCHW",
           format_shape(contract_.artifact.input.shape),
           "use the validated single-image baseline artifact");
-    }
-    const std::vector<std::int64_t> expected_input = {1, 3, 800, 800};
-    if (contract_.artifact.model_id != kBaselineModelId ||
-        contract_.artifact.model_sha256 != kBaselineModelSha256 ||
-        contract_.artifact.opset != 17 ||
-        contract_.artifact.input.name != "images" ||
-        contract_.artifact.input.shape != expected_input ||
-        to_string(contract_.artifact.input.dtype) != "float32" ||
-        to_string(contract_.artifact.input.layout) != "nchw") {
-      throw_runner_error(
-          "baseline.model_contract",
-          "model_id=" + std::string(kBaselineModelId) +
-              ", SHA-256=" + kBaselineModelSha256 +
-              ", opset=17, images float32 [1,3,800,800] NCHW",
-          "model_id=" + contract_.artifact.model_id +
-              ", SHA-256=" + contract_.artifact.model_sha256 +
-              ", opset=" + std::to_string(contract_.artifact.opset) +
-              ", input=" + format_shape(contract_.artifact.input.shape),
-          "use cpp_infer/configs/default_config.txt and the frozen S1-08 "
-          "YOLOv8/NEU-DET artifact");
-    }
-    const std::uint64_t model_size = regular_file_size(
-        contract_.artifact.model_path, "baseline.model_size");
-    if (model_size != kBaselineModelSizeBytes) {
-      throw_runner_error(
-          "baseline.model_size", std::to_string(kBaselineModelSizeBytes),
-          std::to_string(model_size),
-          "restore models/best.onnx and rerun the S1-07 SHA/correctness gate");
     }
     if (std::abs(contract_.runtime.score_threshold - 0.25) > 1.0e-12 ||
         std::abs(contract_.runtime.nms_threshold - 0.45) > 1.0e-12 ||
@@ -591,15 +564,12 @@ class BenchmarkRunner::Impl {
 
     if (expected_identity->width != 200 ||
         expected_identity->height != 200 ||
-        expected_identity->channels != 3 ||
-        expected_identity->detections.size() != 3) {
+        expected_identity->channels != 3) {
       throw_runner_error(
-          "baseline.sample_result", "decoded shape 200x200x3 and 3 detections",
+          "baseline.sample_result", "decoded shape 200x200x3",
           "shape=" + std::to_string(expected_identity->width) + "x" +
               std::to_string(expected_identity->height) + "x" +
-              std::to_string(expected_identity->channels) +
-              ", detections=" +
-              std::to_string(expected_identity->detections.size()),
+              std::to_string(expected_identity->channels),
           "stop publication and rerun S1-07 consistency before diagnosing "
           "the model/config/sample");
     }
@@ -624,6 +594,9 @@ class BenchmarkRunner::Impl {
     result.runtime.inter_op_num_threads = metadata.inter_op_num_threads;
     result.runtime.graph_optimization_level =
         metadata.graph_optimization_level;
+    result.runtime.session_initialization_ms =
+        runner_.session_initialization_ms();
+    result.runtime.profiling_enabled = runner_.profiling_enabled();
 
     result.model.model_id = contract_.artifact.model_id;
     result.model.model_family = to_string(contract_.artifact.model_family);
@@ -668,7 +641,9 @@ class BenchmarkRunner::Impl {
 
     result.timing_exclusions = {
         "RuntimeConfig/ModelArtifactSpec loading and validation",
-        "Ort::Env/Session/model initialization and metadata validation",
+        "Ort::Env and SessionOptions construction plus model metadata "
+        "inspection/validation; Ort::Session construction is recorded "
+        "separately as one initialization observation",
         "initial image path validation and file-size queries",
         "statistics calculation and Peak Working Set query",
         "benchmark JSON serialization and filesystem write",
@@ -683,6 +658,9 @@ class BenchmarkRunner::Impl {
         "session_run measures only Ort::Session::Run; pipeline additionally "
         "includes input validation/tensor construction and output "
         "validation/copy.",
+        "session initialization is one Ort::Session construction observation; "
+        "it does not provide initialization percentiles and can be affected "
+        "by operating-system file cache state.",
         "Peak Working Set is the process-lifetime peak including session "
         "initialization, warmup, measured iterations, retained samples, "
         "statistics, and harness state; it is not per-stage or incremental "

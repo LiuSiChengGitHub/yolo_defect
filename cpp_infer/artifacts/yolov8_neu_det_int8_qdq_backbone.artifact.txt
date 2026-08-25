@@ -1,0 +1,23 @@
+# S2-01 selective backbone INT8 ModelArtifactSpec schema v1.
+# model_path is resolved from this declaration file.
+schema_version = 1
+model_id = yolov8n_neu_det_s2_01_int8_qdq_s8s8_backbone
+model_family = yolov8
+model_path = ../../models/best.int8.qdq.backbone.onnx
+model_sha256 = 293B3B1363C7257F318FE82D52E57EADA74D72149FFB63482D4AD1F8BF991527
+opset = 17
+source = ONNX Runtime 1.19.2 static selective PTQ from models/best.onnx; 27 backbone Conv QDQ and 37 neck/head Conv FP32
+provenance = protocol s2_01_static_ptq_qdq_s8s8_backbone_only_cpu_v4; source_sha256 7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68; card ../results/s2_01/quantization_report_v4.json
+artifact_license = AGPL-3.0 License (https://ultralytics.com/license); derived model distribution remains subject to source model and dataset terms
+input_name = images
+input_shape = 1,3,800,800
+input_dtype = float32
+input_layout = nchw
+output_name = output0
+output_shape = 1,10,13125
+output_dtype = float32
+output_layout = bcn
+class_names = crazing, inclusion, patches, pitted_surface, rolled-in_scale, scratches
+preprocess_type = letterbox_rgb_0_1_nchw
+postprocess_type = yolov8_raw
+nms_mode = class_agnostic

@@ -5,7 +5,9 @@
 #include "yolo_defect_cpp/model_metadata.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace yolo_defect_cpp {
@@ -22,9 +24,16 @@ struct TimedInferenceOutput {
   double session_run_ms = 0.0;
 };
 
+struct OnnxRunnerOptions {
+  // ORT treats this as a file prefix and chooses the final trace filename.
+  // The actual filename is returned by OnnxRunner::end_profiling().
+  std::optional<std::filesystem::path> profile_file_prefix;
+};
+
 class OnnxRunner {
  public:
-  explicit OnnxRunner(const RuntimeContract& contract);
+  explicit OnnxRunner(const RuntimeContract& contract,
+                      OnnxRunnerOptions options = {});
   ~OnnxRunner();
 
   OnnxRunner(const OnnxRunner&) = delete;
@@ -33,6 +42,9 @@ class OnnxRunner {
   OnnxRunner& operator=(OnnxRunner&&) noexcept;
 
   const ModelMetadata& metadata() const noexcept;
+  double session_initialization_ms() const noexcept;
+  bool profiling_enabled() const noexcept;
+  std::filesystem::path end_profiling();
   InferenceOutput run(const std::vector<std::int64_t>& input_shape,
                       std::vector<float>& input_values);
   TimedInferenceOutput run_with_session_timing(

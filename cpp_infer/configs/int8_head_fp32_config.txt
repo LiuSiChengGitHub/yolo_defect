@@ -1,0 +1,7 @@
+# S2-01 RuntimeConfig schema v1 for the selective QDQ/S8S8 artifact.
+# Relative paths are resolved from this declaration file.
+schema_version = 1
+artifact_spec_path = ../artifacts/yolov8_neu_det_int8_qdq_head_fp32.artifact.txt
+score_threshold = 0.25
+nms_threshold = 0.45
+provider = cpu

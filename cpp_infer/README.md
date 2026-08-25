@@ -2,7 +2,7 @@
 
 This directory is the C++ Runtime workspace for the **Industrial Vision Edge AI Runtime and C++ Engineering System**.
 
-Current status: **the Large-Stage-One automatic engineering gate passed and the user-owned L2 acceptance is complete; the S2 preparatory documentation closure is complete; S2-01 has not started.** The fixed single-image CLI connects the validated Runtime/artifact contract, OpenCV preprocessing, an ONNX Runtime CPU session, owned raw output, YOLOv8 postprocess, stable detection JSON, and a GUI-free visualization. S1-07 proves Python ORT/C++ ORT correctness on a fixed six-class, 30-image manifest, S1-08 records the Release-only benchmark baseline, and the fresh S1-09 reproduction proves that the complete chain still builds and runs without adding product behavior. The automatic gate and the completed user-owned L2 explanation, troubleshooting, and modification exercise together close Large Stage One. The root bilingual READMEs are the project-status and roadmap entry points; this file retains the C++ Runtime's technical details and historical evidence.
+Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU static INT8 PTQ, same-protocol comparison, ORT Profiling, and machine evidence are complete and await user L1.** The final locally generated S2-01 artifact is the full 64-Conv QDQ/S8S8 v1 model. Python/C++ Runtime legality passed; the original 30-image product gate remains `false` and is retained, not rewritten, under the user-approved advisory exercise policy. The fixed single-image CLI still connects the validated Runtime/artifact contract, OpenCV preprocessing, an ONNX Runtime CPU session, owned raw output, YOLOv8 postprocess, stable detection JSON, and GUI-free visualization. The root bilingual READMEs are the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
 
 | Gate | Status |
 |---|---|
@@ -11,7 +11,8 @@ Current status: **the Large-Stage-One automatic engineering gate passed and the 
 | User Large-Stage-One L2 | Accepted |
 | Large Stage One | Complete |
 | S2 preparatory documentation closure | Complete |
-| S2-01 | Not started |
+| S2-01 implementation and evidence | Complete under advisory exercise policy |
+| S2-01 user L1 | Awaiting |
 
 ## Current single-image chain
 
@@ -54,13 +55,30 @@ same frozen config + model + crazing_241.jpg
 -> benchmark JSON written only after timing is complete
 ```
 
+The S2-01 path reuses the same product semantics and keeps formal timing and
+profiling in separate sessions:
+
+```text
+frozen FP32 ONNX + 180-image calibration manifest + QDQ/S8S8 protocol
+-> static Conv PTQ -> audited INT8 ONNX + artifact/config/card
+-> Python/C++ Runtime legality + advisory product/task-quality comparison
+-> two independent unprofiled Release benchmark processes
+-> two independent profiling-enabled sessions
+-> raw ORT traces -> node/operator/provider summaries
+-> cross-bound advisory exercise-completion JSON
+```
+
 ## Layout and responsibilities
 
 ```text
 cpp_infer/
 ├── CMakeLists.txt
-├── artifacts/yolov8_neu_det.artifact.txt
-├── configs/default_config.txt
+├── artifacts/
+│   ├── yolov8_neu_det.artifact.txt
+│   └── yolov8_neu_det_int8_qdq.artifact.txt
+├── configs/
+│   ├── default_config.txt
+│   └── int8_config.txt
 ├── include/yolo_defect_cpp/
 │   ├── artifact_spec.h
 │   ├── benchmark_result.h
@@ -72,6 +90,7 @@ cpp_infer/
 │   ├── image_preprocessor.h
 │   ├── model_metadata.h
 │   ├── onnx_runner.h
+│   ├── profile_runner.h
 │   ├── postprocessor.h
 │   └── result_writer.h
 ├── src/
@@ -88,6 +107,7 @@ cpp_infer/
 │   ├── key_value_parser.h
 │   ├── model_metadata.cpp
 │   ├── onnx_runner.cpp
+│   ├── profile_runner.cpp
 │   ├── postprocessor.cpp
 │   ├── result_writer.cpp
 │   └── main.cpp
@@ -99,7 +119,19 @@ cpp_infer/
 │   └── summary.json
 ├── results/benchmark/
 │   └── yolov8_neu_det_cpu_release.json
+├── results/s2_01/
+│   ├── quantization_report.json
+│   ├── correctness_quality_v1_failed.json
+│   ├── benchmark/
+│   ├── profile/
+│   └── exercise_completion.json
+├── protocols/s2_01_ptq_protocol.json
 ├── tools/
+│   ├── quantize_s2_01.py
+│   ├── evaluate_s2_01_correctness.py
+│   ├── compare_s2_01_benchmarks.py
+│   ├── summarize_ort_profile.py
+│   ├── assemble_s2_01_evidence.py
 │   ├── compare_consistency.py
 │   ├── stage1.cmd
 │   ├── stage1.ps1
@@ -128,6 +160,8 @@ cpp_infer/
 - `ModelArtifactSpec` owns model identity, declared SHA-256, provenance/license, tensor I/O, classes, and preprocess/postprocess/NMS semantics.
 - `ImagePreprocessor` exposes file-path and `const cv::Mat&` entries. Both use the same letterbox/RGB/normalize/NCHW implementation.
 - `OnnxRunner` owns ORT resources through RAII/PImpl. `run()` borrows the preprocess vector only for synchronous `Session::Run`, then copies output into ORT-independent storage.
+- `OnnxRunnerOptions::profile_file_prefix` enables ORT profiling before session construction; the runner finalizes it exactly once through `EndProfilingAllocated` and validates the returned trace path.
+- `ProfileRunner` prepares one image once, creates a dedicated profiling session, executes the declared number of `Session::Run` calls, finalizes the raw trace before postprocess, and returns owned run/model/provider/output metadata. It cannot be mixed with benchmark mode.
 - `Postprocessor` performs validated BCN decode, class argmax, strict score filtering, `xywh -> xyxy`, IoU, stable class-agnostic NMS, inverse letterbox, and clipping.
 - `SingleImageDetectionResult` is a self-contained result object holding model, image, Runtime, provider, and detection evidence needed by output writers.
 - `DetectorPipeline` connects the established modules for exactly one image and protects config, artifact, model, and source-image paths from output overwrite.
@@ -142,7 +176,76 @@ cpp_infer/
 - `benchmark_test.cpp` fixes the mean and nearest-rank percentile definitions, single-sample behavior, invalid empty/negative/NaN/Inf rejection, and throughput calculation independently of machine speed.
 - `assert_benchmark.cmake` runs a short `warmup=1/repeat=2` Release smoke, invokes the strict Python validator, then proves a second run refuses overwrite without changing the first file.
 - `assert_benchmark_json.py` rejects duplicate/non-finite JSON, validates the complete Release/CPU/thread/batch/sample/model/input/statistics/memory/disclosure schema, recomputes the referenced model and image SHA-256 values, and checks both throughput values equal `1000 / mean_ms`.
+- `quantize_s2_01.py` validates the frozen protocol and every calibration image hash before PTQ, publishes through staged files, audits all selected Conv/QDQ structures, checks actual metadata and finite Python ORT output, and emits the independent artifact card.
+- `evaluate_s2_01_correctness.py` runs the same FP32/INT8 product semantics over the frozen product and labeled quality manifests and invokes the Release C++ CLI for legality/consistency evidence. Its original failed product gate remains machine-readable.
+- `summarize_ort_profile.py` counts `Session/model_run` and per-node calls, validates CPU placement and an optimized-graph FP32/INT8 signature, and aggregates top nodes/operators with percentages and cumulative percentages. Raw trace time remains diagnostic.
+- `assemble_s2_01_evidence.py` defaults to strict correctness. Its explicit `--correctness-policy advisory` mode still requires model/protocol/manifest/runtime/benchmark/trace bindings, preserves every failed quality boolean, and emits `strict_acceptance_passed=false` rather than laundering the result.
 - GTest targets link `yolo_defect::runtime`; they never compile or reuse `main.cpp`.
+
+## S2-01 static PTQ, comparison, and ORT Profiling
+
+The frozen v1 protocol is
+[`s2_01_ptq_protocol.json`](protocols/s2_01_ptq_protocol.json), canonical-LF
+SHA-256 `0EC9A7B1CF5E4F246CF3AC15275EF06D7C67FB6C0CE11C5218391CFACE5B73F2`.
+It binds the 12,336,935-byte FP32 source SHA
+`7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68`,
+180 calibration images and hashes, OpenCV letterbox/RGB/normalize/NCHW,
+QDQ/S8S8 MinMax per-channel Conv PTQ, downstream manifests, the 10/100
+benchmark, and the separate 10-call profile protocol.
+
+The locally generated derived model is `models/best.int8.qdq.onnx`, 3,545,141 bytes,
+SHA-256 `C0B4EDAF6B26B1495E22B9B504CF677EA9A08D10B051156AD55649F98C0EDE2F`.
+The graph audit records all 64 target Conv nodes quantized, no intentional
+exclusions, no target-unquantized nodes, and no failures. Python and C++ ORT
+both create CPU sessions and observe the same external float32 metadata:
+`images [1,3,800,800] -> output0 [1,10,13125]`, with finite output.
+The binary exists in this workspace and was loaded by both runtimes, but root
+`.gitignore` intentionally excludes derived ONNX files. A fresh clone must
+regenerate it from the frozen protocol; the tracked deliverables are the
+SHA-bound contract/card, implementation, manifests, and evidence.
+
+The frozen 361-image labeled comparison changed mAP50 from `0.710815` to
+`0.707206` and mAP50-95 from `0.345786` to `0.342174`. The 30-image product
+comparison found 62 FP32 detections, 65 INT8 detections, and 61 matches; its
+strict aggregate remains `passed=false`. Under the later user scope decision,
+these values are advisory and do not block the PTQ/profiling exercise. The
+completion record therefore says both `passed=true` for the revised deliverable
+and `strict_acceptance_passed=false` for the original gate.
+
+The final current-source Windows regression passed 118/118 CTest cases. The
+unified `stage1.cmd profile` action was also run once with the FP32 config and
+once with the INT8 config; both validated the returned non-empty trace, run
+count, CPU provider, prefix, and JSON syntax.
+
+Formal unprofiled Release evidence uses two independent processes,
+`CPUExecutionProvider`, sequential execution, intra/inter threads `1/1`, one
+fixed image, warmup 10, and repeat 100:
+
+| Metric | FP32 | INT8 |
+|---|---:|---:|
+| model size | 12,336,935 B | 3,545,141 B (-71.264%) |
+| session initialization | 40.309 ms | 94.979 ms |
+| `Session::Run` mean/P50/P95 | 139.920/141.677/156.473 ms | 191.913/190.929/220.769 ms |
+| pipeline mean/P50/P95 | 146.927/148.779/163.921 ms | 199.228/198.494/229.275 ms |
+| end-to-end mean/P50/P95 | 147.748/149.583/164.825 ms | 200.048/199.312/230.280 ms |
+| pipeline throughput | 6.806 img/s | 5.019 img/s |
+| Peak Working Set | 150.742 MiB | 150.727 MiB |
+
+INT8 is therefore a valid negative speed result on this host: mean
+`Session::Run` is 1.3716x FP32 and pipeline throughput falls about 26.25%.
+The current 10-run raw profiles explain the direction. All nodes were placed on
+the CPU EP. FP32 has 294 executed optimized nodes and attributes 67.80% of
+kernel-event time to Conv. INT8 has 683 nodes and attributes 64.55% to Conv,
+10.55% to DequantizeLinear, 6.18% to QuantizeLinear, and 0.47% to QLinearConv.
+The Q/DQ pair alone contributes 16.73% of the diagnostic event total. ORT's
+optimized op inventory is not a claim about exact CPU instructions, and the
+profile event total includes instrumentation overhead.
+
+Machine evidence is under [`results/s2_01/`](results/s2_01/); the compact
+cross-bound record is
+[`exercise_completion.json`](results/s2_01/exercise_completion.json). Full
+commands, hashes, top-node tables, limitations, and manual reproduction steps
+are in [`s2_01_closure.md`](../docs/details/s2_01_closure.md).
 
 ## Frozen YOLOv8 baseline semantics
 
@@ -208,310 +311,28 @@ detections[]
 
 All JSON strings are UTF-8 validated and safely escape quotes, backslashes, standard control characters, embedded NUL, and other bytes below U+0020. Numbers are finite JSON numbers formatted with the classic locale and stable precision. A valid no-detection result is always `"detections": []` rather than `null` or a missing field.
 
-## Dependency boundary
+## Development environment and Windows task runner
 
-| Dependency | Verified S1-09 reproduction input |
-|---|---|
-| Compiler | MSVC 19.50.35721.0, x64 |
-| CMake / CTest | 4.1.1-msvc1, Visual Studio bundled runtime |
-| C++ OpenCV | 4.8.0 x64 vc16 at `D:\01_Base\Tools\opencv` |
-| ONNX Runtime C++ SDK | Official Windows x64 CPU SDK 1.19.2 at `D:\01_Base\Tools\onnxruntime-win-x64-1.19.2` |
-| Python comparison environment | `C:\Users\Everbreath\.conda\envs\TestBase\python.exe`: Python 3.9.25, ONNX Runtime CPU 1.19.2, OpenCV 4.13.0, NumPy 2.0.2 |
-| GoogleTest | Official v1.17.0 commit `52eb8108c5bdec04579160ae17225d66034bd723`; archive SHA-256 `9A56A54AE784394FF664CD55E8F4C9A03B503EBF0CB99576321C78AB3D87CA84` |
+Current MSVC/CMake/CTest, ONNX Runtime, OpenCV, Python, GoogleTest, local-path
+precedence, TEMP rules, raw CMake audit commands, and shell pitfalls live only in
+the canonical [paths, toolchains, and environment diagnosis](../docs/paths_commands.md).
+Historical evidence sections below retain the environment and result snapshots
+recorded at their original milestones; they are not current setup instructions.
 
-CMake fetches GoogleTest only with `BUILD_TESTING=ON`, verifies the pinned archive hash, disables installation/GMock, and keeps the parent MSVC runtime choice. A fully offline configure can point at a separately verified extracted source:
-
-```powershell
--DFETCHCONTENT_SOURCE_DIR_GOOGLETEST='<path-to-verified-googletest-source>'
-```
-
-The source override bypasses archive download/hash checking during that configure, so verify the pinned archive before extraction. No personal GTest path is committed. ORT is located only through `ONNXRUNTIME_ROOT`, and its matching DLL is staged beside ORT-using executables. With `BUILD_TESTING=ON`, configure also checks that the selected Python can import the pinned ORT version plus OpenCV/NumPy and exposes `CPUExecutionProvider`; a different or incomplete Python environment fails with an actionable dependency error.
-
-## Unified Windows task runner and S1-09 acceptance
-
-The recommended interface is the task runner from an ordinary PowerShell or CMD at the repository root. With no arguments it shows help and performs no environment preflight or build:
+Run the wrapper from an ordinary PowerShell or CMD at the repository root:
 
 ```powershell
 .\cpp_infer\tools\stage1.cmd help
-```
-
-| Action | Behavior |
-|---|---|
-| `help` | Dependency-free command/configuration reference |
-| `doctor` | Read-only workflow schema, x64 toolchain, full ORT SDK, OpenCV, Python CPU ORT, GTest policy, and effective-default check |
-| `build` | Incremental Release build; safely configure first if the TEMP tree is absent |
-| `clean-build` | Guarded TEMP deletion followed by NMake Release configure/build with tests |
-| `test` | Current build plus complete CTest |
-| `detect <image> [output-dir]` | Arbitrary single-image `DetectorPipeline` with JSON/PNG validation |
-| `demo` | Fixed image, 3 detections, strict JSON validator, and OpenCV PNG probe |
-| `consistency` | Frozen 30-image comparison and strict summary checks |
-| `benchmark` | Fresh consistency gate, then benchmark; `-Warmup`/`-Repeat` may override this invocation |
-| `all` | Clean build, complete CTest, fixed Demo, consistency, and tracked formal 10/100 benchmark |
-
-Daily examples are:
-
-```powershell
 .\cpp_infer\tools\stage1.cmd doctor
 .\cpp_infer\tools\stage1.cmd build
-.\cpp_infer\tools\stage1.cmd clean-build
-.\cpp_infer\tools\stage1.cmd test
-.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg"
-.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg" "D:\outputs"
-.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg" "D:\outputs" -Overwrite
-.\cpp_infer\tools\stage1.cmd demo
-.\cpp_infer\tools\stage1.cmd consistency
-.\cpp_infer\tools\stage1.cmd benchmark
-.\cpp_infer\tools\stage1.cmd all
 ```
 
-`detect` requires only the source. Without an output argument it creates a fresh ignored `results/manual/<timestamp>_<id>_<stem>/`; with an output directory it derives `<stem>.detections.json` and `<stem>.visualized.png` directly below it. Both formats are enabled by default, existing files are rejected unless `-Overwrite` is explicit, JSON is parsed, PNG is reopened through the C++ OpenCV probe, and the resolved config/input/output/provider/count are printed. It is a single-image convenience entry over the existing Runtime library, not a directory batch/concurrency implementation and not formal benchmark evidence.
-
-Configuration is intentionally layered:
-
-| File/input | Responsibility | Relative-path base |
-|---|---|---|
-| `tools/stage1.defaults.psd1` | Tracked NMake/Release/test protocol, default Runtime config, manual output root/formats, fixed Demo/manifest, formal warmup/repeat | The workflow file itself |
-| ignored `.stage1.local.psd1` | ORT/OpenCV/Python/GTest machine paths plus optional `DefaultRuntimeConfig`, `DefaultDetectOutputRoot`, and output-format overrides | The local file itself |
-| `CMakeLists.txt` | Build targets, sources, dependency discovery/linking, DLL staging, and CTest registration | Repository source file; not a runtime setting |
-| `configs/*.txt` | Runtime artifact selection, provider, score/NMS thresholds | The Runtime config itself |
-| `artifacts/*.txt` | Model path/identity/license/tensor and preprocess/postprocess semantics | The artifact file itself |
-| `ModelMetadata` | ORT-observed provider/input/output name, shape, and dtype used to validate the declarations | Runtime-owned C++ value, not a configuration file |
-| `tests/fixtures/consistency_manifest.json` | Frozen 30-image correctness sample and hashes | Test protocol only, not product configuration |
-| command arguments | One invocation's image, optional output directory/config, overwrite, or benchmark sample counts | The caller's CWD |
-
-Dependency path precedence is explicit parameter -> local file -> process environment -> portable fallback. Detect defaults are explicit parameter -> optional local value -> tracked workflow value. The literal PSD1 loader rejects executable expressions, missing/unknown workflow keys, wrong types, unsupported build protocol, invalid benchmark bounds, and disabling both outputs. It never writes configuration back. Machine-specific paths remain ignored; copy `tools/stage1.local.example.psd1` once. Network-backed pinned GTest FetchContent still requires explicit `-AllowGTestDownload`.
-
-The environment/build/test chain is:
-
-```text
-stage1.cmd
--> vswhere locates Visual Studio
--> x64 VsDevCmd.bat sets transient PATH/INCLUDE/LIB
--> PowerShell -NoProfile inherits that environment and runs stage1.ps1
--> CMake reads CMakeLists.txt and generates NMake rules
--> NMake invokes cl/link to produce the Runtime library, CLI, and tests
--> CTest launches discovered GTest cases plus CLI/Python/CMake tests
-```
-
-`Release` is the selected optimized build mode, not an executable. `CMakeCache.txt`, Makefiles, object files, binaries, and staged DLLs are generated build state under the guarded TEMP tree and must not become manually maintained configuration. The wrapper keeps delayed expansion disabled while forwarding arguments, resolves defaults independently of CWD, checks native exit codes and current-run outputs, and writes formal evidence to fresh GUID directories.
-
-The unified task/config layer was validated from an ordinary shell on 2026-08-23. Dependency-free help, read-only doctor, incremental build, default-output detect, explicit-output detect from another CWD, paths containing spaces/`!`, and actionable argument failures passed. A final `all` safely rebuilt from scratch, passed 106/106 CTest in 20.48 seconds, produced and validated the fixed 3-detection JSON/PNG, passed 30/30 images and 62/62 matches, and passed the strict formal warmup-10/repeat-100 benchmark validator. The disposable run recorded pipeline mean `144.609525 ms` and `6.915174 images/s`; it is a workflow regression smoke, not a replacement performance baseline.
-
-The expanded commands below are retained as the low-level audit specification implemented by the wrapper. They are not the recommended daily manual interface.
-
-From CMD, initialize the x64 MSVC environment and start a profile-free PowerShell:
-
-```bat
-call "D:\01_Base\Tools\VisualStudio_Community\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
-if errorlevel 1 exit /b 1
-powershell.exe -NoProfile -NoExit
-```
-
-Use the verified TestBase interpreter rather than the Windows Store `python.exe` alias. The GoogleTest source override must point to a separately hash-verified extraction of the pinned archive; it avoids an implicit network fetch. The build and every generated S1-09 artifact use one unique disposable directory, so these reproduction commands do not overwrite repository-local demo, consistency, or benchmark evidence.
-
-PowerShell does not automatically stop after every native executable returns nonzero. The helper below must be called immediately after each `cmake`, `ctest`, CLI, or Python command:
-
-```powershell
-$Repo = 'D:\01_Base\CodingSpace\yolo_defect'
-$OrtRoot = 'D:\01_Base\Tools\onnxruntime-win-x64-1.19.2'
-$OpenCvDir = 'D:\01_Base\Tools\opencv\build\x64\vc16\lib'
-$OpenCvBin = 'D:\01_Base\Tools\opencv\build\x64\vc16\bin'
-$CMakeBin = 'D:\01_Base\Tools\VisualStudio_Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin'
-$PythonExe = 'C:\Users\Everbreath\.conda\envs\TestBase\python.exe'
-$GTestSource = '<path-to-verified-googletest-source>'
-$ErrorActionPreference = 'Stop'
-
-function Assert-NativeSuccess {
-  param([string]$Step)
-  if ($global:LASTEXITCODE -ne 0) {
-    throw "$Step failed with exit code $global:LASTEXITCODE."
-  }
-}
-
-Set-Location $Repo
-$env:ONNXRUNTIME_ROOT = $OrtRoot
-$env:PATH = $CMakeBin + ';' + $OpenCvBin + ';' + $env:PATH
-$BuildDir = Join-Path $env:TEMP `
-  ('yolo_defect_s1_09_' + [guid]::NewGuid().ToString('N'))
-$EvidenceDir = Join-Path $BuildDir 's1_09_evidence'
-
-cmake -S cpp_infer -B $BuildDir -G 'NMake Makefiles' `
-  -DOpenCV_DIR="$OpenCvDir" `
-  -DONNXRUNTIME_ROOT="$OrtRoot" `
-  -DFETCHCONTENT_SOURCE_DIR_GOOGLETEST="$GTestSource" `
-  -DPython3_EXECUTABLE="$PythonExe" `
-  -DCMAKE_BUILD_TYPE=Release `
-  -DBUILD_TESTING=ON
-Assert-NativeSuccess 'S1-09 configure'
-
-cmake --build $BuildDir
-Assert-NativeSuccess 'S1-09 Release build'
-
-ctest --test-dir $BuildDir -N
-Assert-NativeSuccess 'CTest inventory'
-
-ctest --test-dir $BuildDir --output-on-failure
-Assert-NativeSuccess 'complete CTest'
-```
-
-Do not continue after a failed complete CTest. Once it is green, run the fixed Demo and validate both output formats:
-
-```powershell
-$Cli = Join-Path $BuildDir 'bin\yolo_defect_cpp.exe'
-$ImageProbe = Join-Path $BuildDir 'bin\yolo_defect_image_probe.exe'
-$Config = (Resolve-Path 'cpp_infer\configs\default_config.txt').Path
-$Image = (Resolve-Path 'data\images\val\crazing_241.jpg').Path
-$DemoJson = Join-Path $EvidenceDir 'demo\crazing_241.json'
-$DemoImage = Join-Path $EvidenceDir 'demo\crazing_241.png'
-$DetectionValidator = (Resolve-Path `
-  'cpp_infer\tests\assert_detection_json.py').Path
-
-& $Cli --config $Config --image $Image `
-  --output-json $DemoJson --output-image $DemoImage
-Assert-NativeSuccess 'fixed single-image Demo'
-
-& $PythonExe -m json.tool $DemoJson > $null
-Assert-NativeSuccess 'Demo JSON parse'
-
-& $PythonExe $DetectionValidator $DemoJson --expected-image $Image
-Assert-NativeSuccess 'Demo JSON strict validation'
-
-$Demo = Get-Content $DemoJson -Raw | ConvertFrom-Json
-if ($Demo.detections.Count -ne 3) {
-  throw "Fixed Demo expected 3 detections, actual $($Demo.detections.Count)."
-}
-
-& $ImageProbe $DemoImage
-Assert-NativeSuccess 'Demo visualization OpenCV probe'
-```
-
-Next, run the six-class comparison into the same disposable evidence root. The comparison returns zero only when all 30 images pass the frozen requirements; it deliberately has no CLI option for weakening tolerances:
-
-```powershell
-$Manifest = (Resolve-Path `
-  'cpp_infer\tests\fixtures\consistency_manifest.json').Path
-$ConsistencyTool = (Resolve-Path `
-  'cpp_infer\tools\compare_consistency.py').Path
-$ConsistencyDir = Join-Path $EvidenceDir 'consistency'
-$PerImageJson = Join-Path $ConsistencyDir 'per_image.json'
-$SummaryJson = Join-Path $ConsistencyDir 'summary.json'
-
-& $PythonExe $ConsistencyTool `
-  --manifest $Manifest `
-  --cpp-cli $Cli `
-  --output-dir $ConsistencyDir `
-  --cpp-opencv-version 4.8.0
-Assert-NativeSuccess '30-image Python ORT/C++ ORT consistency'
-
-& $PythonExe -m json.tool $PerImageJson > $null
-Assert-NativeSuccess 'consistency per_image.json parse'
-
-& $PythonExe -m json.tool $SummaryJson > $null
-Assert-NativeSuccess 'consistency summary.json parse'
-
-$PerImage = Get-Content $PerImageJson -Raw | ConvertFrom-Json
-$Summary = Get-Content $SummaryJson -Raw | ConvertFrom-Json
-if (-not $Summary.passed -or
-    $Summary.result.images_total -ne 30 -or
-    $Summary.result.images_passed -ne 30 -or
-    $Summary.result.python_detections_total -ne 62 -or
-    $Summary.result.cpp_detections_total -ne 62 -or
-    $Summary.result.matched_detections_total -ne 62 -or
-    $Summary.result.max_confidence_abs_error -gt 1.0e-4 -or
-    $Summary.result.max_bbox_coordinate_abs_error_pixels -gt 1.0e-2 -or
-    $Summary.result.min_matching_iou -lt 0.999 -or
-    $PerImage.images.Count -ne 30 -or
-    @($PerImage.images | Where-Object { -not $_.passed }).Count -ne 0 -or
-    $Summary.source_class_results.Count -ne 6 -or
-    @($Summary.source_class_results | Where-Object {
-      $_.images_total -ne 5 -or $_.images_passed -ne 5
-    }).Count -ne 0) {
-  throw 'Consistency evidence breached the frozen 30-image/six-class gate.'
-}
-```
-
-Only after that explicit correctness gate passes may the fixed Release benchmark run. Its JSON is parsed and then checked by the strict schema/protocol/hash/statistics validator:
-
-```powershell
-$BenchmarkJson = Join-Path $EvidenceDir `
-  'benchmark\yolov8_neu_det_cpu_release.json'
-$BenchmarkValidator = (Resolve-Path `
-  'cpp_infer\tests\assert_benchmark_json.py').Path
-
-& $Cli --config $Config --image $Image `
-  --benchmark --warmup 10 --repeat 100 `
-  --benchmark-json $BenchmarkJson
-Assert-NativeSuccess 'formal warmup=10 repeat=100 benchmark'
-
-& $PythonExe -m json.tool $BenchmarkJson > $null
-Assert-NativeSuccess 'benchmark JSON parse'
-
-& $PythonExe $BenchmarkValidator $BenchmarkJson `
-  --expected-image $Image `
-  --expected-warmup 10 `
-  --expected-repeat 100
-Assert-NativeSuccess 'benchmark JSON strict validation'
-```
-
-Finally, directly inject four stable faults and require both a nonzero exit and actionable text. The damaged image and blocked output parent are generated by configure under the fresh build tree; using a regular file as the output parent is more reproducible than relying on machine-specific filesystem permissions.
-
-```powershell
-function Assert-CliFailure {
-  param(
-    [string]$Name,
-    [string[]]$Arguments,
-    [string[]]$RequiredText
-  )
-  $Lines = & $Cli @Arguments 2>&1
-  $ExitCode = $LASTEXITCODE
-  $Text = $Lines -join [Environment]::NewLine
-  if ($ExitCode -eq 0) { throw "$Name unexpectedly exited 0." }
-  foreach ($Needle in $RequiredText) {
-    if (-not $Text.Contains($Needle)) {
-      throw "$Name did not report required text '$Needle'."
-    }
-  }
-  Write-Host "[$Name] exit=$ExitCode"
-  Write-Host $Text
-}
-
-$MissingModelConfig = (Resolve-Path `
-  'cpp_infer\tests\fixtures\runtime\missing_model_artifact.txt').Path
-$DamagedImage = Join-Path $BuildDir `
-  'test_inputs\s1_06_faults\damaged_image.jpg'
-$BlockedParent = Join-Path $BuildDir `
-  'test_inputs\s1_06_faults\blocked_output_parent'
-
-Assert-CliFailure -Name 'missing model' `
-  -Arguments @('--config', $MissingModelConfig, '--inspect-model') `
-  -RequiredText @('model artifact does not exist',
-    'expected', 'actual', 'action:')
-
-Assert-CliFailure -Name 'damaged image' `
-  -Arguments @('--config', $Config, '--image', $DamagedImage) `
-  -RequiredText @('OpenCV decoding returned an empty image',
-    'expected', 'actual', 'action:')
-
-Assert-CliFailure -Name 'unwritable output parent' `
-  -Arguments @('--config', $Config, '--image', $Image, '--output-json',
-    (Join-Path $BlockedParent 'detections.json')) `
-  -RequiredText @('output.json_path.parent',
-    'expected', 'actual', 'action:')
-
-Assert-CliFailure -Name 'invalid benchmark repeat' `
-  -Arguments @('--config', $Config, '--image', $Image, '--benchmark',
-    '--repeat', '0', '--benchmark-json',
-    (Join-Path $EvidenceDir 'invalid.json')) `
-  -RequiredText @('object=--repeat',
-    'expected=', 'actual=', 'action=')
-
-ctest --test-dir $BuildDir `
-  -R '^(postprocess\.PostprocessEmptyTest\.ValidTensorWithNoScoreAboveThresholdIsEmpty|output\.ResultWriterJsonTest\.EmptyDetectionsSerializeAsAnEmptyArray)$' `
-  --output-on-failure
-Assert-NativeSuccess 'legal empty-detections checks'
-```
-
-`--benchmark`, `--warmup`, `--repeat`, and `--benchmark-json` form a separate CLI mode. Detection JSON, visualization, model inspection, and raw-output summary flags cannot be mixed into it. Warmup/repeat must be bounded integers; repeat must be positive. Relative CLI image/output paths use the current working directory, while config/artifact paths use their declaration files. Output writers protect config, artifact, model, and source-image inputs and refuse overwrite by default.
+The wrapper initializes the x64 Visual Studio environment before invoking the
+PowerShell workflow. A plain PowerShell that cannot find `ctest`, `cmake`,
+`cl`, or `nmake` has usually skipped that environment chain; diagnose it
+with `stage1.cmd doctor` before treating it as a source or test failure. Use
+`test`, `all`, `benchmark`, or `profile` only when the requested change
+and the project's proportional-validation policy call for them.
 
 ## Verified S1-05 evidence
 
@@ -643,7 +464,7 @@ The verified runtime split is explicit rather than hidden: Python 3.9.25 used ON
 
 ### S1-07 failure triage
 
-- Python dependency/provider failure: confirm CMake receives `C:\Users\Everbreath\.conda\envs\TestBase\python.exe`, imports ORT/OpenCV/NumPy, and lists `CPUExecutionProvider`. The comparison refuses a Python Session whose provider list is not exactly CPU.
+- Python dependency/provider failure: confirm CMake receives the `PythonExe` resolved by the local workflow configuration, imports ORT/OpenCV/NumPy, and lists `CPUExecutionProvider`. Current machine paths and precedence are documented only in the central toolchain reference. The comparison refuses a Python Session whose provider list is not exactly CPU.
 - Manifest failure: use the reported sample/field/path, expected/actual, and action. Do not replace a missing image or update its hash silently; any sample change creates a new evidence protocol.
 - Count/class failure: inspect the per-image Python/C++ class counts and unmatched detections before looking at numeric tolerances. Matching never crosses class boundaries.
 - Confidence or box failure: debug in order: decoded image and letterbox metadata, normalized NCHW tensor, raw ORT output, float32 strict threshold, stable class-agnostic NMS, then inverse letterbox/clip. Do not widen the gate merely to turn the run green.
@@ -853,18 +674,20 @@ Required core-behavior-plus-GTest exercise:
 3. **GREEN:** temporarily change the comparison in `postprocessor.cpp` from strict `>` to inclusive `>=`, update the other exact-threshold expectations, rebuild the same target, and require the focused test to pass. Explain how equality changes detections and why a real contract change would also require the Python reference, consistency evidence, and README updates.
 4. Because schema-v1 freezes strict `>`, return to the checkpoint without merging the practice branch, rebuild, rerun the original focused test and complete CTest, and verify no temporary exercise diff remains. Do not leave `>=` in the product merely to finish the exercise.
 
-The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same gate state: **automatic PASS, user L2 accepted, Large Stage One complete; S2 preparatory documentation closure complete; S2-01 not started**.
+The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01 implementation and evidence complete under the explicit advisory-quality exercise policy; user L1 pending; S2-02 not started**.
 
 ## Current limits
 
-- `actual_provider` is session-level evidence from explicit CPU EP registration plus successful session creation. It is not per-node profiling evidence.
+- Normal `actual_provider` remains session-level evidence. S2-01's separate raw ORT traces add optimized-node placement evidence: every profiled node event names `CPUExecutionProvider`; trace time includes instrumentation overhead.
 - `model.declared_sha256` is copied from the validated artifact declaration. The ordinary S1-05 detection CLI does not recompute the model hash on every invocation; the S1-07 comparison and strict S1-08 evidence validator independently bind their runs to the actual frozen model SHA-256.
 - JSON and visualization are validated before writing, but they are two files rather than one filesystem transaction. A disk-level failure while writing the second file can leave the first file present.
 - The C++17 path check and later file open are not a cross-process atomic transaction. This S1-05 CLI is verified for one local invocation, not for competing writers racing on the same destination; an explicit overwrite can also leave a partial output after a disk-level write failure.
-- The product and benchmark CLI support exactly one image. The S1-07 tool invokes the product interface repeatedly for a fixed experiment; neither path is a directory-batch API, worker/concurrency system, service, `inference_event`, or INT8 path.
+- The product, benchmark, and profile CLI support exactly one image. Manifest tools invoke the product interface repeatedly for controlled experiments; none is a directory-batch API, worker/concurrency system, service, or `inference_event`. Both FP32 and INT8 reuse this same single-image product chain.
 - S1-07 proves Python ORT/C++ ORT implementation consistency for one fixed 30-image set under the frozen contract. It is not an accuracy evaluation or proof for every possible image/platform/library version; it is the required correctness gate that precedes performance publication.
 - S1-08 is a warm-cache, single-image, batch-1 result from one Windows CPU machine with no affinity/priority/idle-system controls. It does not establish full-dataset latency, cold-disk behavior, cross-platform performance, or a statistically controlled hardware comparison.
 - Peak Working Set is a process-lifetime high-water mark that includes session initialization and benchmark harness state. It is not a per-stage allocation profile, current RSS, or incremental model memory.
+- The S2-01 advisory completion is not the original strict acceptance: the 30-image product aggregate remains false, although the 361-image task-quality deltas passed the originally declared tolerances. The machine record exposes both facts.
+- ORT profile summaries describe the optimized execution graph. A source Conv represented by QDQ in the ONNX file may appear as `QLinearConv`, `Conv`, and Q/DQ transition nodes after optimization; the trace does not prove exact hardware instructions.
 - The matching `best.pt` is absent from the workspace and Git history. Historical PT/ONNX evidence covers 50 sorted `crazing` images and only count/confidence summaries; S1-07 is a separate same-ONNX Python ORT/C++ ORT comparison and must not be described as a newly rerun PyTorch/Python-ORT/C++ three-way experiment.
 - Python OpenCV 4.13.0 and C++ OpenCV 4.8.0 are recorded separately. The 30-image evidence passed the original requirements, but this does not establish bitwise equality across arbitrary OpenCV builds.
 - UTF-8 strings, JSON control-byte escaping, Windows separator escaping, paths containing spaces, and the fixed local paths are tested. Arbitrary Unicode input/output paths across every Windows locale and filesystem have not been broadly validated.
@@ -872,7 +695,7 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - Class-agnostic NMS remains deliberate baseline behavior and can suppress a lower-scoring box from another class when boxes overlap.
 - The visualization is deterministic for the pinned OpenCV build; it is evidence output, not an annotation editor or GUI.
 
-Large Stage One is complete: the S1-09 automated gate passed and the user-owned L2 acceptance is finished. The S2 preparatory documentation closure is also complete, while S2-01 has not started. The current five-unit route is: (1) INT8 PTQ and ORT Profiling; (2) Linux x86_64 and AArch64/QEMU portability; (3) directory/manifest multi-image bounded concurrency; (4) TensorRT on Linux x86_64 with the desktop RTX 4060; and (5) full evidence, resume, and interview closure followed by recruiting freeze. These capabilities remain planned until their own unit evidence is produced; QEMU results will not be published as device-performance evidence, and the desktop RTX 4060 path will not be described as Jetson deployment.
+Large Stage One is complete, and S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the user-approved advisory exercise scope. Work stops here for user L1; S2-02 has not begun. The remaining route is: (2) Linux x86_64 and AArch64/QEMU portability; (3) directory/manifest multi-image bounded concurrency; (4) TensorRT on Linux x86_64 with the desktop RTX 4060; and (5) full evidence, resume, and interview closure followed by recruiting freeze. These capabilities remain planned until their own unit evidence is produced; QEMU results will not be published as device-performance evidence, and the desktop RTX 4060 path will not be described as Jetson deployment.
 
 ## License checkpoint
 

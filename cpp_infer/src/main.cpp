@@ -4,6 +4,7 @@
 #include "yolo_defect_cpp/detector_pipeline.h"
 #include "yolo_defect_cpp/image_preprocessor.h"
 #include "yolo_defect_cpp/onnx_runner.h"
+#include "yolo_defect_cpp/profile_runner.h"
 
 #include <algorithm>
 #include <charconv>
@@ -25,16 +26,20 @@ struct CliOptions {
   bool inspect_model = false;
   bool raw_output_summary = false;
   bool benchmark = false;
+  bool profile = false;
   bool overwrite_existing = false;
   bool warmup_provided = false;
   bool repeat_provided = false;
+  bool profile_runs_provided = false;
   std::size_t warmup = 10;
   std::size_t repeat = 100;
+  std::size_t profile_runs = 10;
   std::string config_path;
   std::string image_path;
   std::string output_json_path;
   std::string output_image_path;
   std::string benchmark_json_path;
+  std::string profile_prefix_path;
 };
 
 struct NumericSummary {
@@ -88,6 +93,9 @@ void print_help(const char* program_name) {
       << " --config <config_path> --image <image_path> --benchmark"
          " --warmup <count> --repeat <count>"
          " --benchmark-json <path> [--overwrite]\n"
+      << "  " << program_name
+      << " --config <config_path> --image <image_path> --profile"
+         " --profile-prefix <path> [--profile-runs <count>]\n"
       << "\n"
       << "Scope:\n"
       << "  Loads and validates RuntimeConfig + ModelArtifactSpec.\n"
@@ -104,11 +112,15 @@ void print_help(const char* program_name) {
       << "  and end-to-end, then writes machine-readable --benchmark-json.\n"
       << "  Session/model initialization, statistics, JSON writing, and drawing\n"
       << "  are outside repeated timing; drawing is not executed.\n"
+      << "  --profile creates a separate profiling-enabled ORT session, runs\n"
+      << "  the fixed preprocessed image (default 10 times), calls EndProfiling,\n"
+      << "  and reports the actual ORT-generated JSON trace path. Profile timing\n"
+      << "  contains instrumentation overhead and is not benchmark evidence.\n"
       << "  Output parents are created recursively. Existing regular files are\n"
       << "  rejected unless --overwrite is explicit; paths matching protected\n"
       << "  inputs are rejected before writing. Relative CLI image/output paths\n"
       << "  use the current working directory. No GUI, batch processing,\n"
-      << "  concurrency, service, INT8, or cross-platform matrix exists.\n";
+      << "  concurrency, service, or cross-platform matrix exists.\n";
 }
 
 void print_banner() {
@@ -116,10 +128,11 @@ void print_banner() {
       << "yolo_defect_cpp - S1-08 reproducible CPU benchmark CLI\n"
       << "V2 Runtime: industrial vision AI deployment workspace\n"
       << "Current scope: validated single-image detection, S1-07 consistency "
-         "evidence, and S1-08 Release CPU benchmark evidence\n"
-      << "Run with --help for the fixed single-image and benchmark commands.\n"
-      << "Batch processing, concurrency, service, and INT8 are not part of "
-         "this Runtime scope.\n";
+         "evidence, S1-08 Release CPU benchmark evidence, and S2-01 ORT "
+         "profiling\n"
+      << "Run with --help for single-image, benchmark, and profile commands.\n"
+      << "Batch processing, concurrency, and service are not part of this "
+         "Runtime scope.\n";
 }
 
 void print_contract_summary(
@@ -363,12 +376,16 @@ void print_benchmark_summary(
       << result.runtime.intra_op_num_threads << "\n"
       << "inter_op_num_threads: "
       << result.runtime.inter_op_num_threads << "\n"
+      << std::fixed << std::setprecision(6)
+      << "session_initialization_ms: "
+      << result.runtime.session_initialization_ms << "\n"
+      << "profiling_enabled: "
+      << (result.runtime.profiling_enabled ? "true" : "false") << "\n"
       << "batch_size: " << result.batch_size << "\n"
       << "sample_count: " << result.sample_count << "\n"
       << "warmup: " << result.warmup << "\n"
       << "repeat: " << result.repeat << "\n"
-      << "detection_count: " << result.sample.detection_count << "\n"
-      << std::fixed << std::setprecision(6);
+      << "detection_count: " << result.sample.detection_count << "\n";
   print_latency_statistics("image_decode", result.latency.image_decode);
   print_latency_statistics("preprocess", result.latency.preprocess);
   print_latency_statistics("session_run", result.latency.session_run);
@@ -390,10 +407,31 @@ void print_benchmark_summary(
     std::cout << "memory.reason: " << result.memory.reason << "\n";
   }
   std::cout
-      << "timing_exclusions: Runtime/session initialization, statistics, "
-         "benchmark JSON write, and visualization\n"
+      << "timing_exclusions: Runtime setup around the separately recorded "
+         "Ort::Session constructor, statistics, benchmark JSON write, and "
+         "visualization\n"
       << "scope: fixed single image, batch=1, CPU, warm-cache Release "
          "benchmark; see JSON limitations before comparison.\n";
+}
+
+void print_profile_summary(
+    const yolo_defect_cpp::ProfileResult& result) {
+  std::cout
+      << "S2-01 ORT profiling completed\n"
+      << "profile_trace_path: " << result.trace_path.string() << "\n"
+      << "profile_runs: " << result.run_count << "\n"
+      << "model_id: " << result.model_id << "\n"
+      << "declared_model_sha256: " << result.declared_model_sha256 << "\n"
+      << "actual_provider: " << result.actual_provider << "\n"
+      << std::fixed << std::setprecision(6)
+      << "session_initialization_ms_with_profiling: "
+      << result.session_initialization_ms << "\n"
+      << "output_shape: " << format_shape(result.output_shape) << "\n"
+      << "output_elements: " << result.output_element_count << "\n"
+      << "detection_count: " << result.detection_count << "\n"
+      << "profiling_overhead: enabled; trace timing is diagnostic only\n"
+      << "scope: one preprocessed image and one profiling-enabled ORT session; "
+         "formal benchmark evidence must come from --benchmark.\n";
 }
 
 std::size_t parse_count_value(const std::string& value,
@@ -408,12 +446,17 @@ std::size_t parse_count_value(const std::string& value,
   if (value.empty() || conversion.ec != std::errc{} ||
       conversion.ptr != end || parsed < minimum ||
       parsed > kMaximumIterations) {
+    const std::string action =
+        option == "--profile-runs"
+            ? "use the frozen --profile-runs 10 count for formal profiling "
+              "profiling"
+            : "use --warmup 10 and --repeat 100 for the formal S1-08 "
+              "baseline";
     throw std::runtime_error(
         "CLI argument error: object=" + option +
         "; expected=an integer in [" + std::to_string(minimum) +
         ",1000000]; actual='" + value +
-        "'; action=use --warmup 10 and --repeat 100 for the formal "
-        "S1-08 baseline.");
+        "'; action=" + action + ".");
   }
   return parsed;
 }
@@ -489,11 +532,28 @@ CliOptions parse_cli(int argc, char* argv[]) {
       continue;
     }
 
+    if (argument == "--profile-prefix") {
+      if (!options.profile_prefix_path.empty()) {
+        throw std::runtime_error(
+            "--profile-prefix was provided more than once.");
+      }
+      options.profile_prefix_path = read_path_value(index, argument);
+      continue;
+    }
+
     if (argument == "--benchmark") {
       if (options.benchmark) {
         throw std::runtime_error("--benchmark was provided more than once.");
       }
       options.benchmark = true;
+      continue;
+    }
+
+    if (argument == "--profile") {
+      if (options.profile) {
+        throw std::runtime_error("--profile was provided more than once.");
+      }
+      options.profile = true;
       continue;
     }
 
@@ -514,6 +574,17 @@ CliOptions parse_cli(int argc, char* argv[]) {
       const std::string value = read_path_value(index, argument);
       options.repeat = parse_count_value(value, argument, 1);
       options.repeat_provided = true;
+      continue;
+    }
+
+    if (argument == "--profile-runs") {
+      if (options.profile_runs_provided) {
+        throw std::runtime_error(
+            "--profile-runs was provided more than once.");
+      }
+      const std::string value = read_path_value(index, argument);
+      options.profile_runs = parse_count_value(value, argument, 1);
+      options.profile_runs_provided = true;
       continue;
     }
 
@@ -569,6 +640,12 @@ CliOptions parse_cli(int argc, char* argv[]) {
   if (!options.benchmark && options.repeat_provided) {
     throw std::runtime_error("--repeat requires --benchmark.");
   }
+  if (!options.profile && !options.profile_prefix_path.empty()) {
+    throw std::runtime_error("--profile-prefix requires --profile.");
+  }
+  if (!options.profile && options.profile_runs_provided) {
+    throw std::runtime_error("--profile-runs requires --profile.");
+  }
   if (options.benchmark && options.config_path.empty()) {
     throw std::runtime_error("--benchmark requires --config.");
   }
@@ -590,6 +667,31 @@ CliOptions parse_cli(int argc, char* argv[]) {
   if (options.benchmark && options.raw_output_summary) {
     throw std::runtime_error(
         "--benchmark and --raw-output-summary are mutually exclusive.");
+  }
+  if (options.profile && options.config_path.empty()) {
+    throw std::runtime_error("--profile requires --config.");
+  }
+  if (options.profile && options.image_path.empty()) {
+    throw std::runtime_error("--profile requires --image.");
+  }
+  if (options.profile && options.profile_prefix_path.empty()) {
+    throw std::runtime_error("--profile requires --profile-prefix.");
+  }
+  if (options.profile && options.benchmark) {
+    throw std::runtime_error(
+        "--profile and --benchmark are mutually exclusive.");
+  }
+  if (options.profile && output_requested) {
+    throw std::runtime_error(
+        "--profile and --output-json/--output-image are mutually exclusive.");
+  }
+  if (options.profile && options.inspect_model) {
+    throw std::runtime_error(
+        "--profile and --inspect-model are mutually exclusive.");
+  }
+  if (options.profile && options.raw_output_summary) {
+    throw std::runtime_error(
+        "--profile and --raw-output-summary are mutually exclusive.");
   }
   if (output_requested && options.config_path.empty()) {
     throw std::runtime_error(
@@ -661,6 +763,15 @@ int main(int argc, char* argv[]) {
                 result, options.benchmark_json_path,
                 options.overwrite_existing, protected_paths);
         print_benchmark_summary(result, written_path);
+      } else if (options.profile) {
+        yolo_defect_cpp::ProfileRequest request;
+        request.image_path = options.image_path;
+        request.profile_file_prefix = options.profile_prefix_path;
+        request.run_count = options.profile_runs;
+
+        yolo_defect_cpp::ProfileRunner runner(contract);
+        const yolo_defect_cpp::ProfileResult result = runner.run(request);
+        print_profile_summary(result);
       } else if (options.inspect_model) {
         const yolo_defect_cpp::OnnxRunner runner(contract);
         print_model_metadata_summary(contract, runner.metadata());

@@ -1,0 +1,3102 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_01_candidate_product_screen",
+  "passed": true,
+  "formal_acceptance": false,
+  "protocol": {
+    "protocol_id": "s2_01_static_ptq_qdq_s8s8_mid_backbone_cpu_v7",
+    "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\protocols\\s2_01_ptq_protocol_v7.json",
+    "raw_sha256": "7CEA43AB52C030AFA47DC3C733A0F9D96055BAAD30B0296C93ECE06E9529B4DD",
+    "canonical_lf_sha256": "7CEA43AB52C030AFA47DC3C733A0F9D96055BAAD30B0296C93ECE06E9529B4DD"
+  },
+  "manifests": {
+    "product": {
+      "manifest_id": "neu_det_val_6x5_v1",
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\tests\\fixtures\\consistency_manifest.json",
+      "raw_sha256": "B3456FAAABD41F0961AE2CA368036A54FF43EEBFB28A88CC02F999FA342C1621",
+      "canonical_lf_sha256": "4A10742F373D1A999839996D45BEAD84F3340F3A37C35A18E9EBF534147F1E46",
+      "sample_count": 30
+    },
+    "quality_gate_source": {
+      "manifest_id": "neu_det_val_361_quality_v1",
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\tests\\fixtures\\s2_01_quality_manifest.json",
+      "canonical_lf_sha256": "CED5CE80B119B1446066B18072B2AD1C7BE7A6DA30429B5C01D617F2AA2BCEF8"
+    }
+  },
+  "artifacts": {
+    "fp32": {
+      "config_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\configs\\default_config.txt",
+      "config_canonical_lf_sha256": "5E7F640CEA58AA6A269503F32B969171F05D1EE89B6E09ACFE88F18E989791DD",
+      "artifact_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\artifacts\\yolov8_neu_det.artifact.txt",
+      "artifact_canonical_lf_sha256": "B7D04064A3386BAEAF3ED6B880BF230C291C608370090C52C4A61B16C6E31F83",
+      "model_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\models\\best.onnx",
+      "model_id": "yolov8n_neu_det_final_train_2",
+      "model_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+      "model_size_bytes": 12336935,
+      "input_name": "images",
+      "input_shape": [
+        1,
+        3,
+        800,
+        800
+      ],
+      "output_name": "output0",
+      "output_shape": [
+        1,
+        10,
+        13125
+      ],
+      "class_names": [
+        "crazing",
+        "inclusion",
+        "patches",
+        "pitted_surface",
+        "rolled-in_scale",
+        "scratches"
+      ],
+      "score_threshold": 0.25,
+      "nms_threshold": 0.45,
+      "nms_mode": "class_agnostic"
+    },
+    "int8": {
+      "config_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\configs\\int8_mid_backbone_config.txt",
+      "config_canonical_lf_sha256": "873F3E10721C8DF0B3E6F1BB7310FDC93949EF8605AB458F98830C0DA7D04CB9",
+      "artifact_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\artifacts\\yolov8_neu_det_int8_qdq_mid_backbone.artifact.txt",
+      "artifact_canonical_lf_sha256": "E7A25E18947F545336A597A09FB9FACB3114FCBFAEC1FC5922AF94B38A13FDB0",
+      "model_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\models\\best.int8.qdq.mid_backbone.onnx",
+      "model_id": "yolov8n_neu_det_s2_01_int8_qdq_s8s8_mid_backbone",
+      "model_sha256": "218D4A499F39132F7EEF703DA01E2DFF1999120F78D0875DE0B4193F73EF7DEA",
+      "model_size_bytes": 11563976,
+      "input_name": "images",
+      "input_shape": [
+        1,
+        3,
+        800,
+        800
+      ],
+      "output_name": "output0",
+      "output_shape": [
+        1,
+        10,
+        13125
+      ],
+      "class_names": [
+        "crazing",
+        "inclusion",
+        "patches",
+        "pitted_surface",
+        "rolled-in_scale",
+        "scratches"
+      ],
+      "score_threshold": 0.25,
+      "nms_threshold": 0.45,
+      "nms_mode": "class_agnostic"
+    }
+  },
+  "runtime": {
+    "python_version": "3.9.25",
+    "onnxruntime_version": "1.19.2",
+    "opencv_version": "4.13.0",
+    "numpy_version": "2.0.2",
+    "provider": "CPUExecutionProvider",
+    "execution_mode": "sequential",
+    "intra_op_num_threads": 1,
+    "inter_op_num_threads": 1,
+    "graph_optimization_level": "all"
+  },
+  "product_detection_difference": {
+    "passed": true,
+    "matching_protocol": {
+      "scope": "per_image_then_exact_class_id",
+      "assignment": "greedy_one_to_one_descending_iou",
+      "box_iou": "float32_continuous_xyxy",
+      "edge_tie_break": "fp32_detection_key_then_int8_detection_key_then_original_indices",
+      "detection_key": "class_id,negative_confidence,bbox_x1,bbox_y1,bbox_x2,bbox_y2",
+      "pair_acceptance": "matching_iou_greater_than_or_equal_to_pair_iou_min",
+      "percentile_interpolation": "linear_between_adjacent_order_statistics_at_p_times_n_minus_1",
+      "unmatched_policy": "every_detection_not_in_an_accepted_pair_is_unmatched"
+    },
+    "gates": {
+      "pair_iou_min": 0.5,
+      "fp32_retention_min": 0.95,
+      "int8_agreement_precision_min": 0.95,
+      "matched_mean_iou_min": 0.9,
+      "matched_iou_p05_min": 0.75,
+      "confidence_abs_error_mean_max": 0.05,
+      "confidence_abs_error_p95_max": 0.1
+    },
+    "checks": {
+      "fp32_retention": true,
+      "int8_agreement_precision": true,
+      "matched_mean_iou": true,
+      "matched_iou_p05": true,
+      "confidence_abs_error_mean": true,
+      "confidence_abs_error_p95": true
+    },
+    "metrics": {
+      "images_total": 30,
+      "fp32_detections_total": 62,
+      "int8_detections_total": 64,
+      "matched_detections_total": 61,
+      "fp32_retention": 0.9838709677419355,
+      "int8_agreement_precision": 0.953125,
+      "matched_iou_mean": 0.9829999315934103,
+      "matched_iou_p05": 0.9649842977523804,
+      "matched_iou_min": 0.5382553339004517,
+      "confidence_abs_error_mean": 0.008695837415632655,
+      "confidence_abs_error_p95": 0.02288082242012024,
+      "confidence_abs_error_max": 0.048916369676589966,
+      "bbox_coordinate_abs_error_pixels_mean": 0.45131635275043425,
+      "bbox_coordinate_abs_error_pixels_p95": 0.7024475097656248,
+      "bbox_coordinate_abs_error_pixels_max": 58.05412292480469,
+      "fp32_class_counts": {
+        "0": 14,
+        "1": 11,
+        "2": 9,
+        "3": 6,
+        "4": 9,
+        "5": 13
+      },
+      "int8_class_counts": {
+        "0": 16,
+        "1": 11,
+        "2": 9,
+        "3": 6,
+        "4": 8,
+        "5": 14
+      }
+    },
+    "per_image": [
+      {
+        "sample_id": "crazing_241",
+        "fp32_detection_count": 3,
+        "int8_detection_count": 4,
+        "fp32_class_counts": {
+          "0": 3
+        },
+        "int8_class_counts": {
+          "0": 4
+        },
+        "matched_detection_count": 3,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [
+          3
+        ],
+        "match_records": [
+          {
+            "class_id": 0,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.44579318165779114,
+              "bbox_xyxy": [
+                0.0,
+                53.68034362792969,
+                176.90679931640625,
+                146.2407989501953
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.43543189764022827,
+              "bbox_xyxy": [
+                0.0,
+                53.881534576416016,
+                177.37835693359375,
+                146.44171142578125
+              ]
+            },
+            "confidence_abs_error": 0.010361284017562866,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.20119094848632812,
+              0.4715576171875,
+              0.2009124755859375
+            ],
+            "bbox_coordinate_abs_error_max": 0.4715576171875,
+            "matching_iou": 0.9930239319801331,
+            "accepted": true
+          },
+          {
+            "class_id": 0,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.41758260130882263,
+              "bbox_xyxy": [
+                21.250396728515625,
+                118.81275177001953,
+                188.81417846679688,
+                194.868408203125
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.4084393382072449,
+              "bbox_xyxy": [
+                21.216506958007812,
+                118.81266784667969,
+                189.10665893554688,
+                194.86119079589844
+              ]
+            },
+            "confidence_abs_error": 0.009143263101577759,
+            "bbox_coordinate_abs_errors": [
+              0.0338897705078125,
+              8.392333984375e-05,
+              0.29248046875,
+              0.0072174072265625
+            ],
+            "bbox_coordinate_abs_error_max": 0.29248046875,
+            "matching_iou": 0.9979604482650757,
+            "accepted": true
+          },
+          {
+            "class_id": 0,
+            "fp32_index": 2,
+            "int8_index": 2,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.30851203203201294,
+              "bbox_xyxy": [
+                22.772354125976562,
+                2.6882476806640625,
+                192.409423828125,
+                86.20254516601562
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.317240834236145,
+              "bbox_xyxy": [
+                22.199249267578125,
+                2.11907958984375,
+                192.56634521484375,
+                86.29774475097656
+              ]
+            },
+            "confidence_abs_error": 0.00872880220413208,
+            "bbox_coordinate_abs_errors": [
+              0.5731048583984375,
+              0.5691680908203125,
+              0.15692138671875,
+              0.0951995849609375
+            ],
+            "bbox_coordinate_abs_error_max": 0.5731048583984375,
+            "matching_iou": 0.9878564476966858,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [
+          {
+            "index": 3,
+            "detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.25123971700668335,
+              "bbox_xyxy": [
+                59.000762939453125,
+                155.7845458984375,
+                198.541748046875,
+                199.9312744140625
+              ]
+            }
+          }
+        ],
+        "min_matched_iou": 0.9878564476966858,
+        "max_confidence_abs_error": 0.010361284017562866
+      },
+      {
+        "sample_id": "crazing_255",
+        "fp32_detection_count": 2,
+        "int8_detection_count": 2,
+        "fp32_class_counts": {
+          "0": 2
+        },
+        "int8_class_counts": {
+          "0": 2
+        },
+        "matched_detection_count": 2,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 0,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.5782608389854431,
+              "bbox_xyxy": [
+                75.72625732421875,
+                37.68382263183594,
+                199.58877563476562,
+                110.98873901367188
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.5635685324668884,
+              "bbox_xyxy": [
+                74.411376953125,
+                38.39287567138672,
+                200.0,
+                104.52458953857422
+              ]
+            },
+            "confidence_abs_error": 0.014692306518554688,
+            "bbox_coordinate_abs_errors": [
+              1.31488037109375,
+              0.7090530395507812,
+              0.411224365234375,
+              6.464149475097656
+            ],
+            "bbox_coordinate_abs_error_max": 6.464149475097656,
+            "matching_iou": 0.8909447193145752,
+            "accepted": true
+          },
+          {
+            "class_id": 0,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.3779483437538147,
+              "bbox_xyxy": [
+                30.305862426757812,
+                139.93359375,
+                178.1029815673828,
+                191.4141845703125
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.39897000789642334,
+              "bbox_xyxy": [
+                29.720184326171875,
+                139.94308471679688,
+                177.61715698242188,
+                191.51119995117188
+              ]
+            },
+            "confidence_abs_error": 0.021021664142608643,
+            "bbox_coordinate_abs_errors": [
+              0.5856781005859375,
+              0.009490966796875,
+              0.4858245849609375,
+              0.097015380859375
+            ],
+            "bbox_coordinate_abs_error_max": 0.5856781005859375,
+            "matching_iou": 0.9907355308532715,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.8909447193145752,
+        "max_confidence_abs_error": 0.021021664142608643
+      },
+      {
+        "sample_id": "crazing_270",
+        "fp32_detection_count": 3,
+        "int8_detection_count": 3,
+        "fp32_class_counts": {
+          "0": 3
+        },
+        "int8_class_counts": {
+          "0": 3
+        },
+        "matched_detection_count": 3,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 0,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.43448343873023987,
+              "bbox_xyxy": [
+                0.0,
+                78.79498291015625,
+                186.91708374023438,
+                160.0686798095703
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.4303795099258423,
+              "bbox_xyxy": [
+                0.0,
+                78.7191162109375,
+                187.16281127929688,
+                160.11181640625
+              ]
+            },
+            "confidence_abs_error": 0.004103928804397583,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.07586669921875,
+              0.2457275390625,
+              0.0431365966796875
+            ],
+            "bbox_coordinate_abs_error_max": 0.2457275390625,
+            "matching_iou": 0.997226893901825,
+            "accepted": true
+          },
+          {
+            "class_id": 0,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.39299720525741577,
+              "bbox_xyxy": [
+                0.0,
+                124.95903778076172,
+                188.27725219726562,
+                175.36090087890625
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.39743107557296753,
+              "bbox_xyxy": [
+                0.0,
+                124.921875,
+                188.00875854492188,
+                175.31472778320312
+              ]
+            },
+            "confidence_abs_error": 0.004433870315551758,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.03716278076171875,
+              0.26849365234375,
+              0.046173095703125
+            ],
+            "bbox_coordinate_abs_error_max": 0.26849365234375,
+            "matching_iou": 0.9969251155853271,
+            "accepted": true
+          },
+          {
+            "class_id": 0,
+            "fp32_index": 2,
+            "int8_index": 2,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.36515143513679504,
+              "bbox_xyxy": [
+                0.0,
+                39.335723876953125,
+                183.89059448242188,
+                106.3101806640625
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.3700571060180664,
+              "bbox_xyxy": [
+                0.0,
+                39.45335388183594,
+                184.509765625,
+                106.11936950683594
+              ]
+            },
+            "confidence_abs_error": 0.004905670881271362,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.1176300048828125,
+              0.619171142578125,
+              0.1908111572265625
+            ],
+            "bbox_coordinate_abs_error_max": 0.619171142578125,
+            "matching_iou": 0.992069661617279,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.992069661617279,
+        "max_confidence_abs_error": 0.004905670881271362
+      },
+      {
+        "sample_id": "crazing_285",
+        "fp32_detection_count": 2,
+        "int8_detection_count": 3,
+        "fp32_class_counts": {
+          "0": 2
+        },
+        "int8_class_counts": {
+          "0": 3
+        },
+        "matched_detection_count": 2,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [
+          2
+        ],
+        "match_records": [
+          {
+            "class_id": 0,
+            "fp32_index": 0,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.30126258730888367,
+              "bbox_xyxy": [
+                0.42325592041015625,
+                0.0277557373046875,
+                123.09873962402344,
+                56.623008728027344
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.29026854038238525,
+              "bbox_xyxy": [
+                0.39656829833984375,
+                0.02550506591796875,
+                123.4324951171875,
+                56.6356315612793
+              ]
+            },
+            "confidence_abs_error": 0.010994046926498413,
+            "bbox_coordinate_abs_errors": [
+              0.0266876220703125,
+              0.00225067138671875,
+              0.3337554931640625,
+              0.012622833251953125
+            ],
+            "bbox_coordinate_abs_error_max": 0.3337554931640625,
+            "matching_iou": 0.9968084692955017,
+            "accepted": true
+          },
+          {
+            "class_id": 0,
+            "fp32_index": 1,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.285747766494751,
+              "bbox_xyxy": [
+                130.1748504638672,
+                167.960205078125,
+                199.6947784423828,
+                199.93853759765625
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.29737240076065063,
+              "bbox_xyxy": [
+                129.9978485107422,
+                167.77194213867188,
+                199.69151306152344,
+                199.93722534179688
+              ]
+            },
+            "confidence_abs_error": 0.011624634265899658,
+            "bbox_coordinate_abs_errors": [
+              0.177001953125,
+              0.188262939453125,
+              0.003265380859375,
+              0.001312255859375
+            ],
+            "bbox_coordinate_abs_error_max": 0.188262939453125,
+            "matching_iou": 0.9915356040000916,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [
+          {
+            "index": 2,
+            "detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.25749415159225464,
+              "bbox_xyxy": [
+                0.9989776611328125,
+                117.73738098144531,
+                131.54286193847656,
+                189.5038604736328
+              ]
+            }
+          }
+        ],
+        "min_matched_iou": 0.9915356040000916,
+        "max_confidence_abs_error": 0.011624634265899658
+      },
+      {
+        "sample_id": "crazing_300",
+        "fp32_detection_count": 4,
+        "int8_detection_count": 4,
+        "fp32_class_counts": {
+          "0": 4
+        },
+        "int8_class_counts": {
+          "0": 4
+        },
+        "matched_detection_count": 4,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 0,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.5691817402839661,
+              "bbox_xyxy": [
+                1.712646484375,
+                148.40155029296875,
+                111.9085693359375,
+                200.0
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.5617925524711609,
+              "bbox_xyxy": [
+                1.629302978515625,
+                148.4384765625,
+                112.46180725097656,
+                200.0
+              ]
+            },
+            "confidence_abs_error": 0.007389187812805176,
+            "bbox_coordinate_abs_errors": [
+              0.083343505859375,
+              0.03692626953125,
+              0.5532379150390625,
+              0.0
+            ],
+            "bbox_coordinate_abs_error_max": 0.5532379150390625,
+            "matching_iou": 0.9935489296913147,
+            "accepted": true
+          },
+          {
+            "class_id": 0,
+            "fp32_index": 1,
+            "int8_index": 2,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.31378108263015747,
+              "bbox_xyxy": [
+                0.25708770751953125,
+                42.542816162109375,
+                82.58990478515625,
+                138.42713928222656
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.30764639377593994,
+              "bbox_xyxy": [
+                0.2818603515625,
+                42.2110595703125,
+                82.40689086914062,
+                138.33685302734375
+              ]
+            },
+            "confidence_abs_error": 0.006134688854217529,
+            "bbox_coordinate_abs_errors": [
+              0.02477264404296875,
+              0.331756591796875,
+              0.183013916015625,
+              0.0902862548828125
+            ],
+            "bbox_coordinate_abs_error_max": 0.331756591796875,
+            "matching_iou": 0.9931095838546753,
+            "accepted": true
+          },
+          {
+            "class_id": 0,
+            "fp32_index": 2,
+            "int8_index": 3,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.3079286217689514,
+              "bbox_xyxy": [
+                116.42231750488281,
+                83.49079895019531,
+                199.8415069580078,
+                184.2403106689453
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.30265188217163086,
+              "bbox_xyxy": [
+                116.55731964111328,
+                83.29193115234375,
+                199.81036376953125,
+                184.49020385742188
+              ]
+            },
+            "confidence_abs_error": 0.005276739597320557,
+            "bbox_coordinate_abs_errors": [
+              0.13500213623046875,
+              0.1988677978515625,
+              0.0311431884765625,
+              0.2498931884765625
+            ],
+            "bbox_coordinate_abs_error_max": 0.2498931884765625,
+            "matching_iou": 0.9935914278030396,
+            "accepted": true
+          },
+          {
+            "class_id": 0,
+            "fp32_index": 3,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.3017192780971527,
+              "bbox_xyxy": [
+                0.0,
+                50.573883056640625,
+                185.23097229003906,
+                139.89537048339844
+              ]
+            },
+            "int8_detection": {
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence": 0.30777978897094727,
+              "bbox_xyxy": [
+                0.0,
+                50.83061218261719,
+                185.11465454101562,
+                140.51290893554688
+              ]
+            },
+            "confidence_abs_error": 0.006060510873794556,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.2567291259765625,
+              0.1163177490234375,
+              0.6175384521484375
+            ],
+            "bbox_coordinate_abs_error_max": 0.6175384521484375,
+            "matching_iou": 0.9896617531776428,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9896617531776428,
+        "max_confidence_abs_error": 0.007389187812805176
+      },
+      {
+        "sample_id": "inclusion_241",
+        "fp32_detection_count": 3,
+        "int8_detection_count": 3,
+        "fp32_class_counts": {
+          "1": 3
+        },
+        "int8_class_counts": {
+          "1": 3
+        },
+        "matched_detection_count": 3,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 1,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.7974936962127686,
+              "bbox_xyxy": [
+                125.68893432617188,
+                74.76615142822266,
+                142.60684204101562,
+                113.30753326416016
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.7977279424667358,
+              "bbox_xyxy": [
+                125.67315673828125,
+                74.7691879272461,
+                142.63607788085938,
+                113.16967010498047
+              ]
+            },
+            "confidence_abs_error": 0.00023424625396728516,
+            "bbox_coordinate_abs_errors": [
+              0.015777587890625,
+              0.0030364990234375,
+              0.02923583984375,
+              0.1378631591796875
+            ],
+            "bbox_coordinate_abs_error_max": 0.1378631591796875,
+            "matching_iou": 0.993709921836853,
+            "accepted": true
+          },
+          {
+            "class_id": 1,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.7479501366615295,
+              "bbox_xyxy": [
+                18.714580535888672,
+                124.5909423828125,
+                33.20219802856445,
+                170.2996826171875
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.7362481951713562,
+              "bbox_xyxy": [
+                18.691207885742188,
+                124.5303955078125,
+                33.2160530090332,
+                170.29202270507812
+              ]
+            },
+            "confidence_abs_error": 0.01170194149017334,
+            "bbox_coordinate_abs_errors": [
+              0.023372650146484375,
+              0.060546875,
+              0.01385498046875,
+              0.007659912109375
+            ],
+            "bbox_coordinate_abs_error_max": 0.060546875,
+            "matching_iou": 0.9959509968757629,
+            "accepted": true
+          },
+          {
+            "class_id": 1,
+            "fp32_index": 2,
+            "int8_index": 2,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.5007092952728271,
+              "bbox_xyxy": [
+                0.1601390838623047,
+                179.761474609375,
+                30.633163452148438,
+                200.0
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.4836753308773041,
+              "bbox_xyxy": [
+                0.15448760986328125,
+                179.75308227539062,
+                30.768747329711914,
+                200.0
+              ]
+            },
+            "confidence_abs_error": 0.01703396439552307,
+            "bbox_coordinate_abs_errors": [
+              0.0056514739990234375,
+              0.008392333984375,
+              0.13558387756347656,
+              0.0
+            ],
+            "bbox_coordinate_abs_error_max": 0.13558387756347656,
+            "matching_iou": 0.9949740171432495,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.993709921836853,
+        "max_confidence_abs_error": 0.01703396439552307
+      },
+      {
+        "sample_id": "inclusion_255",
+        "fp32_detection_count": 2,
+        "int8_detection_count": 2,
+        "fp32_class_counts": {
+          "1": 2
+        },
+        "int8_class_counts": {
+          "1": 2
+        },
+        "matched_detection_count": 2,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 1,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.8157792091369629,
+              "bbox_xyxy": [
+                86.38168334960938,
+                0.0,
+                110.554931640625,
+                79.01997375488281
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.8169935941696167,
+              "bbox_xyxy": [
+                86.53756713867188,
+                0.0,
+                110.50775146484375,
+                79.05366516113281
+              ]
+            },
+            "confidence_abs_error": 0.0012143850326538086,
+            "bbox_coordinate_abs_errors": [
+              0.1558837890625,
+              0.0,
+              0.04718017578125,
+              0.03369140625
+            ],
+            "bbox_coordinate_abs_error_max": 0.1558837890625,
+            "matching_iou": 0.9911805987358093,
+            "accepted": true
+          },
+          {
+            "class_id": 1,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.6393411159515381,
+              "bbox_xyxy": [
+                83.9771499633789,
+                104.05545043945312,
+                120.95679473876953,
+                199.91635131835938
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.6520254611968994,
+              "bbox_xyxy": [
+                83.96928405761719,
+                104.19783020019531,
+                120.98350524902344,
+                199.90602111816406
+              ]
+            },
+            "confidence_abs_error": 0.012684345245361328,
+            "bbox_coordinate_abs_errors": [
+              0.00786590576171875,
+              0.1423797607421875,
+              0.02671051025390625,
+              0.0103302001953125
+            ],
+            "bbox_coordinate_abs_error_max": 0.1423797607421875,
+            "matching_iou": 0.997475802898407,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9911805987358093,
+        "max_confidence_abs_error": 0.012684345245361328
+      },
+      {
+        "sample_id": "inclusion_270",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "1": 1
+        },
+        "int8_class_counts": {
+          "1": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 1,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.8229151964187622,
+              "bbox_xyxy": [
+                24.282371520996094,
+                0.2749786376953125,
+                62.736183166503906,
+                197.9405975341797
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.816994309425354,
+              "bbox_xyxy": [
+                24.278656005859375,
+                0.2764129638671875,
+                62.785560607910156,
+                197.77359008789062
+              ]
+            },
+            "confidence_abs_error": 0.005920886993408203,
+            "bbox_coordinate_abs_errors": [
+              0.00371551513671875,
+              0.001434326171875,
+              0.04937744140625,
+              0.1670074462890625
+            ],
+            "bbox_coordinate_abs_error_max": 0.1670074462890625,
+            "matching_iou": 0.9977713823318481,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9977713823318481,
+        "max_confidence_abs_error": 0.005920886993408203
+      },
+      {
+        "sample_id": "inclusion_285",
+        "fp32_detection_count": 2,
+        "int8_detection_count": 2,
+        "fp32_class_counts": {
+          "1": 2
+        },
+        "int8_class_counts": {
+          "1": 2
+        },
+        "matched_detection_count": 2,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 1,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.6158885955810547,
+              "bbox_xyxy": [
+                57.45154571533203,
+                0.0,
+                99.3012924194336,
+                190.84197998046875
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.6138926148414612,
+              "bbox_xyxy": [
+                57.526546478271484,
+                0.0,
+                99.50836181640625,
+                190.65374755859375
+              ]
+            },
+            "confidence_abs_error": 0.001995980739593506,
+            "bbox_coordinate_abs_errors": [
+              0.07500076293945312,
+              0.0,
+              0.20706939697265625,
+              0.188232421875
+            ],
+            "bbox_coordinate_abs_error_max": 0.20706939697265625,
+            "matching_iou": 0.9923182129859924,
+            "accepted": true
+          },
+          {
+            "class_id": 1,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.448168009519577,
+              "bbox_xyxy": [
+                4.450319290161133,
+                0.0,
+                22.368532180786133,
+                25.110536575317383
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.47104883193969727,
+              "bbox_xyxy": [
+                4.499128341674805,
+                0.0,
+                22.336666107177734,
+                24.803489685058594
+              ]
+            },
+            "confidence_abs_error": 0.02288082242012024,
+            "bbox_coordinate_abs_errors": [
+              0.048809051513671875,
+              0.0,
+              0.03186607360839844,
+              0.30704689025878906
+            ],
+            "bbox_coordinate_abs_error_max": 0.30704689025878906,
+            "matching_iou": 0.9833248257637024,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9833248257637024,
+        "max_confidence_abs_error": 0.02288082242012024
+      },
+      {
+        "sample_id": "inclusion_300",
+        "fp32_detection_count": 3,
+        "int8_detection_count": 3,
+        "fp32_class_counts": {
+          "1": 3
+        },
+        "int8_class_counts": {
+          "1": 3
+        },
+        "matched_detection_count": 3,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 1,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.7747000455856323,
+              "bbox_xyxy": [
+                145.53663635253906,
+                51.09478759765625,
+                164.58619689941406,
+                115.91935729980469
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.7678102254867554,
+              "bbox_xyxy": [
+                145.66845703125,
+                51.14105987548828,
+                164.5860595703125,
+                115.87638092041016
+              ]
+            },
+            "confidence_abs_error": 0.006889820098876953,
+            "bbox_coordinate_abs_errors": [
+              0.1318206787109375,
+              0.04627227783203125,
+              0.0001373291015625,
+              0.04297637939453125
+            ],
+            "bbox_coordinate_abs_error_max": 0.1318206787109375,
+            "matching_iou": 0.9917056560516357,
+            "accepted": true
+          },
+          {
+            "class_id": 1,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.6579615473747253,
+              "bbox_xyxy": [
+                150.864501953125,
+                118.80763244628906,
+                167.263671875,
+                160.77293395996094
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.6617489457130432,
+              "bbox_xyxy": [
+                150.95156860351562,
+                118.8843002319336,
+                167.22833251953125,
+                160.65774536132812
+              ]
+            },
+            "confidence_abs_error": 0.003787398338317871,
+            "bbox_coordinate_abs_errors": [
+              0.087066650390625,
+              0.07666778564453125,
+              0.03533935546875,
+              0.1151885986328125
+            ],
+            "bbox_coordinate_abs_error_max": 0.1151885986328125,
+            "matching_iou": 0.9879981875419617,
+            "accepted": true
+          },
+          {
+            "class_id": 1,
+            "fp32_index": 2,
+            "int8_index": 2,
+            "fp32_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.39028453826904297,
+              "bbox_xyxy": [
+                133.7668914794922,
+                136.54397583007812,
+                146.7733917236328,
+                165.10879516601562
+              ]
+            },
+            "int8_detection": {
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence": 0.43920090794563293,
+              "bbox_xyxy": [
+                133.76705932617188,
+                136.59744262695312,
+                146.77816772460938,
+                165.08963012695312
+              ]
+            },
+            "confidence_abs_error": 0.048916369676589966,
+            "bbox_coordinate_abs_errors": [
+              0.0001678466796875,
+              0.053466796875,
+              0.0047760009765625,
+              0.0191650390625
+            ],
+            "bbox_coordinate_abs_error_max": 0.053466796875,
+            "matching_iou": 0.9970792531967163,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9879981875419617,
+        "max_confidence_abs_error": 0.048916369676589966
+      },
+      {
+        "sample_id": "patches_241",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "2": 1
+        },
+        "int8_class_counts": {
+          "2": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 2,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.7150930166244507,
+              "bbox_xyxy": [
+                69.56472778320312,
+                36.714263916015625,
+                125.26406860351562,
+                175.22085571289062
+              ]
+            },
+            "int8_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.6882882714271545,
+              "bbox_xyxy": [
+                69.57547760009766,
+                36.481048583984375,
+                125.38751983642578,
+                175.2686767578125
+              ]
+            },
+            "confidence_abs_error": 0.026804745197296143,
+            "bbox_coordinate_abs_errors": [
+              0.01074981689453125,
+              0.23321533203125,
+              0.12345123291015625,
+              0.047821044921875
+            ],
+            "bbox_coordinate_abs_error_max": 0.23321533203125,
+            "matching_iou": 0.9955762624740601,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9955762624740601,
+        "max_confidence_abs_error": 0.026804745197296143
+      },
+      {
+        "sample_id": "patches_255",
+        "fp32_detection_count": 3,
+        "int8_detection_count": 3,
+        "fp32_class_counts": {
+          "2": 3
+        },
+        "int8_class_counts": {
+          "2": 3
+        },
+        "matched_detection_count": 3,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 2,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.8693292140960693,
+              "bbox_xyxy": [
+                117.61822509765625,
+                127.48877716064453,
+                180.55264282226562,
+                200.0
+              ]
+            },
+            "int8_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.8671838045120239,
+              "bbox_xyxy": [
+                117.59770202636719,
+                127.6019058227539,
+                180.9692840576172,
+                200.0
+              ]
+            },
+            "confidence_abs_error": 0.00214540958404541,
+            "bbox_coordinate_abs_errors": [
+              0.0205230712890625,
+              0.113128662109375,
+              0.4166412353515625,
+              0.0
+            ],
+            "bbox_coordinate_abs_error_max": 0.4166412353515625,
+            "matching_iou": 0.9915628433227539,
+            "accepted": true
+          },
+          {
+            "class_id": 2,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.7715839147567749,
+              "bbox_xyxy": [
+                0.2556629180908203,
+                67.29530334472656,
+                26.82346534729004,
+                108.02583312988281
+              ]
+            },
+            "int8_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.7738693952560425,
+              "bbox_xyxy": [
+                0.2537670135498047,
+                67.28282165527344,
+                26.890913009643555,
+                107.98960876464844
+              ]
+            },
+            "confidence_abs_error": 0.002285480499267578,
+            "bbox_coordinate_abs_errors": [
+              0.001895904541015625,
+              0.012481689453125,
+              0.06744766235351562,
+              0.036224365234375
+            ],
+            "bbox_coordinate_abs_error_max": 0.06744766235351562,
+            "matching_iou": 0.9962067008018494,
+            "accepted": true
+          },
+          {
+            "class_id": 2,
+            "fp32_index": 2,
+            "int8_index": 2,
+            "fp32_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.6969462037086487,
+              "bbox_xyxy": [
+                143.49319458007812,
+                11.625922203063965,
+                181.22369384765625,
+                38.03350830078125
+              ]
+            },
+            "int8_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.6991985440254211,
+              "bbox_xyxy": [
+                143.44888305664062,
+                11.698291778564453,
+                181.21505737304688,
+                38.021942138671875
+              ]
+            },
+            "confidence_abs_error": 0.002252340316772461,
+            "bbox_coordinate_abs_errors": [
+              0.0443115234375,
+              0.07236957550048828,
+              0.008636474609375,
+              0.011566162109375
+            ],
+            "bbox_coordinate_abs_error_max": 0.07236957550048828,
+            "matching_iou": 0.9954280257225037,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9915628433227539,
+        "max_confidence_abs_error": 0.002285480499267578
+      },
+      {
+        "sample_id": "patches_270",
+        "fp32_detection_count": 2,
+        "int8_detection_count": 2,
+        "fp32_class_counts": {
+          "2": 2
+        },
+        "int8_class_counts": {
+          "2": 2
+        },
+        "matched_detection_count": 2,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 2,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.8979724645614624,
+              "bbox_xyxy": [
+                89.40708923339844,
+                70.54685974121094,
+                145.06468200683594,
+                171.3197479248047
+              ]
+            },
+            "int8_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.8971512317657471,
+              "bbox_xyxy": [
+                89.48858642578125,
+                70.61433410644531,
+                145.0938720703125,
+                171.4619903564453
+              ]
+            },
+            "confidence_abs_error": 0.000821232795715332,
+            "bbox_coordinate_abs_errors": [
+              0.0814971923828125,
+              0.067474365234375,
+              0.0291900634765625,
+              0.142242431640625
+            ],
+            "bbox_coordinate_abs_error_max": 0.142242431640625,
+            "matching_iou": 0.9959406852722168,
+            "accepted": true
+          },
+          {
+            "class_id": 2,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.8192514181137085,
+              "bbox_xyxy": [
+                88.92884826660156,
+                0.03737640380859375,
+                144.889892578125,
+                33.5008544921875
+              ]
+            },
+            "int8_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.8199728727340698,
+              "bbox_xyxy": [
+                88.96070861816406,
+                0.037471771240234375,
+                144.8438262939453,
+                33.54501724243164
+              ]
+            },
+            "confidence_abs_error": 0.0007214546203613281,
+            "bbox_coordinate_abs_errors": [
+              0.0318603515625,
+              9.5367431640625e-05,
+              0.0460662841796875,
+              0.044162750244140625
+            ],
+            "bbox_coordinate_abs_error_max": 0.0460662841796875,
+            "matching_iou": 0.997290313243866,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9959406852722168,
+        "max_confidence_abs_error": 0.000821232795715332
+      },
+      {
+        "sample_id": "patches_285",
+        "fp32_detection_count": 2,
+        "int8_detection_count": 2,
+        "fp32_class_counts": {
+          "2": 2
+        },
+        "int8_class_counts": {
+          "2": 2
+        },
+        "matched_detection_count": 2,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 2,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.8837835192680359,
+              "bbox_xyxy": [
+                150.43701171875,
+                0.005588531494140625,
+                200.0,
+                47.37519454956055
+              ]
+            },
+            "int8_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.8837379217147827,
+              "bbox_xyxy": [
+                150.4209442138672,
+                0.00759124755859375,
+                200.0,
+                47.37802505493164
+              ]
+            },
+            "confidence_abs_error": 4.559755325317383e-05,
+            "bbox_coordinate_abs_errors": [
+              0.0160675048828125,
+              0.002002716064453125,
+              0.0,
+              0.00283050537109375
+            ],
+            "bbox_coordinate_abs_error_max": 0.0160675048828125,
+            "matching_iou": 0.9995739459991455,
+            "accepted": true
+          },
+          {
+            "class_id": 2,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.6179402470588684,
+              "bbox_xyxy": [
+                61.696659088134766,
+                0.0,
+                126.98419189453125,
+                137.47421264648438
+              ]
+            },
+            "int8_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.6149224042892456,
+              "bbox_xyxy": [
+                61.68760299682617,
+                0.0,
+                127.09495544433594,
+                134.38551330566406
+              ]
+            },
+            "confidence_abs_error": 0.0030178427696228027,
+            "bbox_coordinate_abs_errors": [
+              0.00905609130859375,
+              0.0,
+              0.1107635498046875,
+              3.0886993408203125
+            ],
+            "bbox_coordinate_abs_error_max": 3.0886993408203125,
+            "matching_iou": 0.9757819175720215,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9757819175720215,
+        "max_confidence_abs_error": 0.0030178427696228027
+      },
+      {
+        "sample_id": "patches_300",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "2": 1
+        },
+        "int8_class_counts": {
+          "2": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 2,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.5629469752311707,
+              "bbox_xyxy": [
+                47.493560791015625,
+                20.002548217773438,
+                102.376220703125,
+                102.01445007324219
+              ]
+            },
+            "int8_detection": {
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence": 0.5549253225326538,
+              "bbox_xyxy": [
+                45.286865234375,
+                14.361114501953125,
+                101.88095092773438,
+                160.06857299804688
+              ]
+            },
+            "confidence_abs_error": 0.008021652698516846,
+            "bbox_coordinate_abs_errors": [
+              2.206695556640625,
+              5.6414337158203125,
+              0.495269775390625,
+              58.05412292480469
+            ],
+            "bbox_coordinate_abs_error_max": 58.05412292480469,
+            "matching_iou": 0.5382553339004517,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.5382553339004517,
+        "max_confidence_abs_error": 0.008021652698516846
+      },
+      {
+        "sample_id": "pitted_surface_241",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "3": 1
+        },
+        "int8_class_counts": {
+          "3": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 3,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.6312441825866699,
+              "bbox_xyxy": [
+                29.844009399414062,
+                1.8359527587890625,
+                198.96853637695312,
+                195.07557678222656
+              ]
+            },
+            "int8_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.6490371227264404,
+              "bbox_xyxy": [
+                29.876678466796875,
+                1.7162322998046875,
+                199.07022094726562,
+                195.53469848632812
+              ]
+            },
+            "confidence_abs_error": 0.017792940139770508,
+            "bbox_coordinate_abs_errors": [
+              0.0326690673828125,
+              0.119720458984375,
+              0.1016845703125,
+              0.4591217041015625
+            ],
+            "bbox_coordinate_abs_error_max": 0.4591217041015625,
+            "matching_iou": 0.9962224960327148,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9962224960327148,
+        "max_confidence_abs_error": 0.017792940139770508
+      },
+      {
+        "sample_id": "pitted_surface_255",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "3": 1
+        },
+        "int8_class_counts": {
+          "3": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 3,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.8862067461013794,
+              "bbox_xyxy": [
+                10.413970947265625,
+                0.3042755126953125,
+                200.0,
+                199.9976348876953
+              ]
+            },
+            "int8_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.8786170482635498,
+              "bbox_xyxy": [
+                9.4432373046875,
+                0.202880859375,
+                200.0,
+                199.92178344726562
+              ]
+            },
+            "confidence_abs_error": 0.00758969783782959,
+            "bbox_coordinate_abs_errors": [
+              0.970733642578125,
+              0.1013946533203125,
+              0.0,
+              0.0758514404296875
+            ],
+            "bbox_coordinate_abs_error_max": 0.970733642578125,
+            "matching_iou": 0.9940251111984253,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9940251111984253,
+        "max_confidence_abs_error": 0.00758969783782959
+      },
+      {
+        "sample_id": "pitted_surface_270",
+        "fp32_detection_count": 2,
+        "int8_detection_count": 2,
+        "fp32_class_counts": {
+          "3": 2
+        },
+        "int8_class_counts": {
+          "3": 2
+        },
+        "matched_detection_count": 2,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 3,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.7638524770736694,
+              "bbox_xyxy": [
+                15.764328002929688,
+                0.292144775390625,
+                200.0,
+                199.00653076171875
+              ]
+            },
+            "int8_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.7745487689971924,
+              "bbox_xyxy": [
+                16.384307861328125,
+                0.2280120849609375,
+                200.0,
+                198.9078826904297
+              ]
+            },
+            "confidence_abs_error": 0.01069629192352295,
+            "bbox_coordinate_abs_errors": [
+              0.6199798583984375,
+              0.0641326904296875,
+              0.0,
+              0.0986480712890625
+            ],
+            "bbox_coordinate_abs_error_max": 0.6199798583984375,
+            "matching_iou": 0.9958198070526123,
+            "accepted": true
+          },
+          {
+            "class_id": 3,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.33658409118652344,
+              "bbox_xyxy": [
+                0.36644744873046875,
+                0.32452392578125,
+                87.4826431274414,
+                198.55752563476562
+              ]
+            },
+            "int8_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.3209700286388397,
+              "bbox_xyxy": [
+                0.37950897216796875,
+                0.3841552734375,
+                87.0897445678711,
+                198.34475708007812
+              ]
+            },
+            "confidence_abs_error": 0.015614062547683716,
+            "bbox_coordinate_abs_errors": [
+              0.0130615234375,
+              0.05963134765625,
+              0.3928985595703125,
+              0.2127685546875
+            ],
+            "bbox_coordinate_abs_error_max": 0.3928985595703125,
+            "matching_iou": 0.9939723014831543,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9939723014831543,
+        "max_confidence_abs_error": 0.015614062547683716
+      },
+      {
+        "sample_id": "pitted_surface_285",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "3": 1
+        },
+        "int8_class_counts": {
+          "3": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 3,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.6587398052215576,
+              "bbox_xyxy": [
+                13.912445068359375,
+                2.9365234375,
+                161.00653076171875,
+                199.85409545898438
+              ]
+            },
+            "int8_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.6642946004867554,
+              "bbox_xyxy": [
+                13.59912109375,
+                2.83154296875,
+                161.41513061523438,
+                199.90321350097656
+              ]
+            },
+            "confidence_abs_error": 0.005554795265197754,
+            "bbox_coordinate_abs_errors": [
+              0.313323974609375,
+              0.10498046875,
+              0.408599853515625,
+              0.0491180419921875
+            ],
+            "bbox_coordinate_abs_error_max": 0.408599853515625,
+            "matching_iou": 0.9943379163742065,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9943379163742065,
+        "max_confidence_abs_error": 0.005554795265197754
+      },
+      {
+        "sample_id": "pitted_surface_300",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "3": 1
+        },
+        "int8_class_counts": {
+          "3": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 3,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.8331260681152344,
+              "bbox_xyxy": [
+                6.997955322265625,
+                0.0,
+                200.0,
+                199.2491912841797
+              ]
+            },
+            "int8_detection": {
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence": 0.8426223993301392,
+              "bbox_xyxy": [
+                6.996337890625,
+                0.0,
+                200.0,
+                199.29574584960938
+              ]
+            },
+            "confidence_abs_error": 0.009496331214904785,
+            "bbox_coordinate_abs_errors": [
+              0.001617431640625,
+              0.0,
+              0.0,
+              0.0465545654296875
+            ],
+            "bbox_coordinate_abs_error_max": 0.0465545654296875,
+            "matching_iou": 0.9997580051422119,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9997580051422119,
+        "max_confidence_abs_error": 0.009496331214904785
+      },
+      {
+        "sample_id": "rolled-in_scale_241",
+        "fp32_detection_count": 2,
+        "int8_detection_count": 2,
+        "fp32_class_counts": {
+          "4": 2
+        },
+        "int8_class_counts": {
+          "4": 2
+        },
+        "matched_detection_count": 2,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 4,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.6840000152587891,
+              "bbox_xyxy": [
+                106.81712341308594,
+                0.0,
+                165.98341369628906,
+                101.49383544921875
+              ]
+            },
+            "int8_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.6833180785179138,
+              "bbox_xyxy": [
+                107.02033233642578,
+                0.0,
+                166.17742919921875,
+                101.55430603027344
+              ]
+            },
+            "confidence_abs_error": 0.0006819367408752441,
+            "bbox_coordinate_abs_errors": [
+              0.20320892333984375,
+              0.0,
+              0.1940155029296875,
+              0.0604705810546875
+            ],
+            "bbox_coordinate_abs_error_max": 0.20320892333984375,
+            "matching_iou": 0.9927188158035278,
+            "accepted": true
+          },
+          {
+            "class_id": 4,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.45625242590904236,
+              "bbox_xyxy": [
+                49.06874084472656,
+                105.81791687011719,
+                159.03001403808594,
+                199.46946716308594
+              ]
+            },
+            "int8_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.47184789180755615,
+              "bbox_xyxy": [
+                49.03106689453125,
+                105.537109375,
+                158.85986328125,
+                199.477783203125
+              ]
+            },
+            "confidence_abs_error": 0.015595465898513794,
+            "bbox_coordinate_abs_errors": [
+              0.0376739501953125,
+              0.2808074951171875,
+              0.1701507568359375,
+              0.0083160400390625
+            ],
+            "bbox_coordinate_abs_error_max": 0.2808074951171875,
+            "matching_iou": 0.9950435161590576,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9927188158035278,
+        "max_confidence_abs_error": 0.015595465898513794
+      },
+      {
+        "sample_id": "rolled-in_scale_255",
+        "fp32_detection_count": 3,
+        "int8_detection_count": 2,
+        "fp32_class_counts": {
+          "4": 3
+        },
+        "int8_class_counts": {
+          "4": 2
+        },
+        "matched_detection_count": 2,
+        "unmatched_fp32_indices": [
+          2
+        ],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 4,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.6022043824195862,
+              "bbox_xyxy": [
+                8.546913146972656,
+                171.06224060058594,
+                85.32742309570312,
+                200.0
+              ]
+            },
+            "int8_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.5925096869468689,
+              "bbox_xyxy": [
+                8.619552612304688,
+                170.46755981445312,
+                85.42980194091797,
+                200.0
+              ]
+            },
+            "confidence_abs_error": 0.009694695472717285,
+            "bbox_coordinate_abs_errors": [
+              0.07263946533203125,
+              0.5946807861328125,
+              0.10237884521484375,
+              0.0
+            ],
+            "bbox_coordinate_abs_error_max": 0.5946807861328125,
+            "matching_iou": 0.9776514768600464,
+            "accepted": true
+          },
+          {
+            "class_id": 4,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.2795180082321167,
+              "bbox_xyxy": [
+                160.60446166992188,
+                0.0,
+                199.93966674804688,
+                69.29745483398438
+              ]
+            },
+            "int8_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.2747553288936615,
+              "bbox_xyxy": [
+                160.332763671875,
+                0.0,
+                199.93429565429688,
+                69.89631652832031
+              ]
+            },
+            "confidence_abs_error": 0.0047626793384552,
+            "bbox_coordinate_abs_errors": [
+              0.271697998046875,
+              0.0,
+              0.00537109375,
+              0.5988616943359375
+            ],
+            "bbox_coordinate_abs_error_max": 0.5988616943359375,
+            "matching_iou": 0.9844977259635925,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [
+          {
+            "index": 2,
+            "detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.2558344900608063,
+              "bbox_xyxy": [
+                0.4849090576171875,
+                86.13922119140625,
+                80.23399353027344,
+                199.769775390625
+              ]
+            }
+          }
+        ],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9776514768600464,
+        "max_confidence_abs_error": 0.009694695472717285
+      },
+      {
+        "sample_id": "rolled-in_scale_270",
+        "fp32_detection_count": 2,
+        "int8_detection_count": 2,
+        "fp32_class_counts": {
+          "4": 2
+        },
+        "int8_class_counts": {
+          "4": 2
+        },
+        "matched_detection_count": 2,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 4,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.7050431966781616,
+              "bbox_xyxy": [
+                24.358413696289062,
+                3.9966659545898438,
+                108.54298400878906,
+                88.62252807617188
+              ]
+            },
+            "int8_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.70204758644104,
+              "bbox_xyxy": [
+                24.359176635742188,
+                4.117897033691406,
+                108.77340698242188,
+                88.02203369140625
+              ]
+            },
+            "confidence_abs_error": 0.002995610237121582,
+            "bbox_coordinate_abs_errors": [
+              0.000762939453125,
+              0.1212310791015625,
+              0.2304229736328125,
+              0.600494384765625
+            ],
+            "bbox_coordinate_abs_error_max": 0.600494384765625,
+            "matching_iou": 0.9887792468070984,
+            "accepted": true
+          },
+          {
+            "class_id": 4,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.6227275133132935,
+              "bbox_xyxy": [
+                19.022541046142578,
+                131.88336181640625,
+                118.55747985839844,
+                200.0
+              ]
+            },
+            "int8_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.6240226030349731,
+              "bbox_xyxy": [
+                18.941177368164062,
+                132.04754638671875,
+                118.77774047851562,
+                200.0
+              ]
+            },
+            "confidence_abs_error": 0.0012950897216796875,
+            "bbox_coordinate_abs_errors": [
+              0.08136367797851562,
+              0.1641845703125,
+              0.2202606201171875,
+              0.0
+            ],
+            "bbox_coordinate_abs_error_max": 0.2202606201171875,
+            "matching_iou": 0.994583010673523,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9887792468070984,
+        "max_confidence_abs_error": 0.002995610237121582
+      },
+      {
+        "sample_id": "rolled-in_scale_285",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "4": 1
+        },
+        "int8_class_counts": {
+          "4": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 4,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.2941284477710724,
+              "bbox_xyxy": [
+                19.47076416015625,
+                15.792633056640625,
+                171.06256103515625,
+                125.61393737792969
+              ]
+            },
+            "int8_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.27968114614486694,
+              "bbox_xyxy": [
+                18.958099365234375,
+                14.37371826171875,
+                171.42474365234375,
+                127.31521606445312
+              ]
+            },
+            "confidence_abs_error": 0.014447301626205444,
+            "bbox_coordinate_abs_errors": [
+              0.512664794921875,
+              1.418914794921875,
+              0.3621826171875,
+              1.7012786865234375
+            ],
+            "bbox_coordinate_abs_error_max": 1.7012786865234375,
+            "matching_iou": 0.966793954372406,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.966793954372406,
+        "max_confidence_abs_error": 0.014447301626205444
+      },
+      {
+        "sample_id": "rolled-in_scale_300",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "4": 1
+        },
+        "int8_class_counts": {
+          "4": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 4,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.5091457962989807,
+              "bbox_xyxy": [
+                36.956626892089844,
+                0.0,
+                117.22806549072266,
+                48.71800231933594
+              ]
+            },
+            "int8_detection": {
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence": 0.5097339749336243,
+              "bbox_xyxy": [
+                37.16275405883789,
+                0.0,
+                118.1177978515625,
+                48.72801971435547
+              ]
+            },
+            "confidence_abs_error": 0.0005881786346435547,
+            "bbox_coordinate_abs_errors": [
+              0.20612716674804688,
+              0.0,
+              0.8897323608398438,
+              0.01001739501953125
+            ],
+            "bbox_coordinate_abs_error_max": 0.8897323608398438,
+            "matching_iou": 0.9862954616546631,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9862954616546631,
+        "max_confidence_abs_error": 0.0005881786346435547
+      },
+      {
+        "sample_id": "scratches_241",
+        "fp32_detection_count": 4,
+        "int8_detection_count": 4,
+        "fp32_class_counts": {
+          "5": 4
+        },
+        "int8_class_counts": {
+          "5": 4
+        },
+        "matched_detection_count": 4,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 5,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.7172185182571411,
+              "bbox_xyxy": [
+                0.0,
+                109.069580078125,
+                188.98529052734375,
+                132.7487030029297
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.7088437676429749,
+              "bbox_xyxy": [
+                0.0,
+                108.33116149902344,
+                190.0716552734375,
+                132.7905731201172
+              ]
+            },
+            "confidence_abs_error": 0.00837475061416626,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.7384185791015625,
+              1.08636474609375,
+              0.0418701171875
+            ],
+            "bbox_coordinate_abs_error_max": 1.08636474609375,
+            "matching_iou": 0.9625654220581055,
+            "accepted": true
+          },
+          {
+            "class_id": 5,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.6736433506011963,
+              "bbox_xyxy": [
+                131.3564453125,
+                168.65478515625,
+                197.7608642578125,
+                199.64239501953125
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.6773357391357422,
+              "bbox_xyxy": [
+                131.25311279296875,
+                168.64100646972656,
+                197.82965087890625,
+                199.65281677246094
+              ]
+            },
+            "confidence_abs_error": 0.0036923885345458984,
+            "bbox_coordinate_abs_errors": [
+              0.10333251953125,
+              0.0137786865234375,
+              0.06878662109375,
+              0.0104217529296875
+            ],
+            "bbox_coordinate_abs_error_max": 0.10333251953125,
+            "matching_iou": 0.9966363906860352,
+            "accepted": true
+          },
+          {
+            "class_id": 5,
+            "fp32_index": 2,
+            "int8_index": 2,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.6342729926109314,
+              "bbox_xyxy": [
+                0.0,
+                26.575231552124023,
+                192.92276000976562,
+                45.49077606201172
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.6329216957092285,
+              "bbox_xyxy": [
+                0.0,
+                26.53850555419922,
+                192.98226928710938,
+                45.545204162597656
+              ]
+            },
+            "confidence_abs_error": 0.0013512969017028809,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.03672599792480469,
+              0.05950927734375,
+              0.0544281005859375
+            ],
+            "bbox_coordinate_abs_error_max": 0.05950927734375,
+            "matching_iou": 0.9948972463607788,
+            "accepted": true
+          },
+          {
+            "class_id": 5,
+            "fp32_index": 3,
+            "int8_index": 3,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.4554237723350525,
+              "bbox_xyxy": [
+                74.83043670654297,
+                76.07664489746094,
+                104.80977630615234,
+                84.81044006347656
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.45613840222358704,
+              "bbox_xyxy": [
+                74.82231140136719,
+                76.08401489257812,
+                104.82659912109375,
+                84.86325073242188
+              ]
+            },
+            "confidence_abs_error": 0.0007146298885345459,
+            "bbox_coordinate_abs_errors": [
+              0.00812530517578125,
+              0.0073699951171875,
+              0.01682281494140625,
+              0.0528106689453125
+            ],
+            "bbox_coordinate_abs_error_max": 0.0528106689453125,
+            "matching_iou": 0.9923257827758789,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9625654220581055,
+        "max_confidence_abs_error": 0.00837475061416626
+      },
+      {
+        "sample_id": "scratches_255",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "5": 1
+        },
+        "int8_class_counts": {
+          "5": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 5,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.7654058933258057,
+              "bbox_xyxy": [
+                3.9118499755859375,
+                136.87271118164062,
+                199.6621551513672,
+                166.77902221679688
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.7634310722351074,
+              "bbox_xyxy": [
+                3.9592132568359375,
+                136.92025756835938,
+                199.66915893554688,
+                166.75924682617188
+              ]
+            },
+            "confidence_abs_error": 0.001974821090698242,
+            "bbox_coordinate_abs_errors": [
+              0.04736328125,
+              0.04754638671875,
+              0.0070037841796875,
+              0.019775390625
+            ],
+            "bbox_coordinate_abs_error_max": 0.04754638671875,
+            "matching_iou": 0.9974718689918518,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9974718689918518,
+        "max_confidence_abs_error": 0.001974821090698242
+      },
+      {
+        "sample_id": "scratches_270",
+        "fp32_detection_count": 3,
+        "int8_detection_count": 3,
+        "fp32_class_counts": {
+          "5": 3
+        },
+        "int8_class_counts": {
+          "5": 3
+        },
+        "matched_detection_count": 3,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 5,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.7515883445739746,
+              "bbox_xyxy": [
+                0.0,
+                113.11831665039062,
+                192.31842041015625,
+                150.59591674804688
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.7516186237335205,
+              "bbox_xyxy": [
+                0.0,
+                113.07917785644531,
+                192.19488525390625,
+                150.58253479003906
+              ]
+            },
+            "confidence_abs_error": 3.0279159545898438e-05,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.0391387939453125,
+              0.12353515625,
+              0.0133819580078125
+            ],
+            "bbox_coordinate_abs_error_max": 0.12353515625,
+            "matching_iou": 0.997959315776825,
+            "accepted": true
+          },
+          {
+            "class_id": 5,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.6857563853263855,
+              "bbox_xyxy": [
+                0.0,
+                60.17445373535156,
+                191.40206909179688,
+                78.47320556640625
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.6832892894744873,
+              "bbox_xyxy": [
+                0.0,
+                60.157020568847656,
+                191.48684692382812,
+                78.47737884521484
+              ]
+            },
+            "confidence_abs_error": 0.0024670958518981934,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.01743316650390625,
+              0.08477783203125,
+              0.00417327880859375
+            ],
+            "bbox_coordinate_abs_error_max": 0.08477783203125,
+            "matching_iou": 0.9983783960342407,
+            "accepted": true
+          },
+          {
+            "class_id": 5,
+            "fp32_index": 2,
+            "int8_index": 2,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.361466646194458,
+              "bbox_xyxy": [
+                158.03781127929688,
+                121.51738739013672,
+                200.0,
+                150.54388427734375
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.37821730971336365,
+              "bbox_xyxy": [
+                158.0390625,
+                122.18240356445312,
+                200.0,
+                150.90713500976562
+              ]
+            },
+            "confidence_abs_error": 0.01675066351890564,
+            "bbox_coordinate_abs_errors": [
+              0.001251220703125,
+              0.6650161743164062,
+              0.0,
+              0.363250732421875
+            ],
+            "bbox_coordinate_abs_error_max": 0.6650161743164062,
+            "matching_iou": 0.9649842977523804,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9649842977523804,
+        "max_confidence_abs_error": 0.01675066351890564
+      },
+      {
+        "sample_id": "scratches_285",
+        "fp32_detection_count": 1,
+        "int8_detection_count": 1,
+        "fp32_class_counts": {
+          "5": 1
+        },
+        "int8_class_counts": {
+          "5": 1
+        },
+        "matched_detection_count": 1,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [],
+        "match_records": [
+          {
+            "class_id": 5,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.6102930903434753,
+              "bbox_xyxy": [
+                0.0,
+                47.40660095214844,
+                186.86163330078125,
+                69.58740997314453
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.6068317294120789,
+              "bbox_xyxy": [
+                0.0,
+                47.39976501464844,
+                187.28311157226562,
+                69.62387084960938
+              ]
+            },
+            "confidence_abs_error": 0.0034613609313964844,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.0068359375,
+              0.421478271484375,
+              0.03646087646484375
+            ],
+            "bbox_coordinate_abs_error_max": 0.421478271484375,
+            "matching_iou": 0.9958056807518005,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [],
+        "min_matched_iou": 0.9958056807518005,
+        "max_confidence_abs_error": 0.0034613609313964844
+      },
+      {
+        "sample_id": "scratches_300",
+        "fp32_detection_count": 4,
+        "int8_detection_count": 5,
+        "fp32_class_counts": {
+          "5": 4
+        },
+        "int8_class_counts": {
+          "5": 5
+        },
+        "matched_detection_count": 4,
+        "unmatched_fp32_indices": [],
+        "unmatched_int8_indices": [
+          4
+        ],
+        "match_records": [
+          {
+            "class_id": 5,
+            "fp32_index": 0,
+            "int8_index": 0,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.42824918031692505,
+              "bbox_xyxy": [
+                0.0,
+                18.159202575683594,
+                188.22056579589844,
+                34.937110900878906
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.4496864378452301,
+              "bbox_xyxy": [
+                0.0,
+                18.133373260498047,
+                187.82559204101562,
+                34.93568420410156
+              ]
+            },
+            "confidence_abs_error": 0.021437257528305054,
+            "bbox_coordinate_abs_errors": [
+              0.0,
+              0.025829315185546875,
+              0.3949737548828125,
+              0.00142669677734375
+            ],
+            "bbox_coordinate_abs_error_max": 0.3949737548828125,
+            "matching_iou": 0.996286153793335,
+            "accepted": true
+          },
+          {
+            "class_id": 5,
+            "fp32_index": 1,
+            "int8_index": 1,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.40508681535720825,
+              "bbox_xyxy": [
+                96.61725616455078,
+                3.8571205139160156,
+                199.1343994140625,
+                32.79684066772461
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.3881499171257019,
+              "bbox_xyxy": [
+                96.66692352294922,
+                3.9148902893066406,
+                199.14691162109375,
+                32.74073791503906
+              ]
+            },
+            "confidence_abs_error": 0.016936898231506348,
+            "bbox_coordinate_abs_errors": [
+              0.0496673583984375,
+              0.057769775390625,
+              0.01251220703125,
+              0.056102752685546875
+            ],
+            "bbox_coordinate_abs_error_max": 0.057769775390625,
+            "matching_iou": 0.9954615831375122,
+            "accepted": true
+          },
+          {
+            "class_id": 5,
+            "fp32_index": 2,
+            "int8_index": 2,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.3132355213165283,
+              "bbox_xyxy": [
+                180.32708740234375,
+                0.0,
+                199.98724365234375,
+                10.020393371582031
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.31382760405540466,
+              "bbox_xyxy": [
+                180.33242797851562,
+                0.0,
+                199.98709106445312,
+                10.005926132202148
+              ]
+            },
+            "confidence_abs_error": 0.0005920827388763428,
+            "bbox_coordinate_abs_errors": [
+              0.005340576171875,
+              0.0,
+              0.000152587890625,
+              0.014467239379882812
+            ],
+            "bbox_coordinate_abs_error_max": 0.014467239379882812,
+            "matching_iou": 0.9982772469520569,
+            "accepted": true
+          },
+          {
+            "class_id": 5,
+            "fp32_index": 3,
+            "int8_index": 3,
+            "fp32_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.2975473999977112,
+              "bbox_xyxy": [
+                2.0190887451171875,
+                17.181312561035156,
+                87.32122802734375,
+                35.16325378417969
+              ]
+            },
+            "int8_detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.2659364342689514,
+              "bbox_xyxy": [
+                2.0337142944335938,
+                17.17992401123047,
+                87.39109802246094,
+                35.19190979003906
+              ]
+            },
+            "confidence_abs_error": 0.031610965728759766,
+            "bbox_coordinate_abs_errors": [
+              0.01462554931640625,
+              0.0013885498046875,
+              0.0698699951171875,
+              0.028656005859375
+            ],
+            "bbox_coordinate_abs_error_max": 0.0698699951171875,
+            "matching_iou": 0.9973441958427429,
+            "accepted": true
+          }
+        ],
+        "unmatched_fp32_detections": [],
+        "unmatched_int8_detections": [
+          {
+            "index": 4,
+            "detection": {
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence": 0.25523340702056885,
+              "bbox_xyxy": [
+                5.0484619140625,
+                0.4256782531738281,
+                199.39596557617188,
+                19.726619720458984
+              ]
+            }
+          }
+        ],
+        "min_matched_iou": 0.9954615831375122,
+        "max_confidence_abs_error": 0.031610965728759766
+      }
+    ]
+  },
+  "limitations": [
+    "Candidate screen only: it is not formal S2-01 acceptance evidence.",
+    "The 361-image task-quality metric and Release C++ consistency are intentionally not run here.",
+    "A passing candidate must still pass the full formal evaluator before benchmark publication."
+  ]
+}

@@ -1,0 +1,1323 @@
+{
+  "schema_version": 1,
+  "manifest_kind": "static_ptq_calibration",
+  "manifest_id": "neu_det_train_ptq_calibration_6x30_v1",
+  "dataset": {
+    "name": "NEU-DET",
+    "split": "train",
+    "selection_rule": "for each artifact class, select index i=1+8*k for k=0..29",
+    "samples_per_source_class": 30,
+    "sample_count": 180,
+    "source_class_semantics": "filename prefix used only for balanced sampling; labels are not consumed by PTQ"
+  },
+  "preprocess": {
+    "type": "letterbox_rgb_0_1_nchw",
+    "decode": "OpenCV IMREAD_COLOR uint8 BGR",
+    "input_shape": [
+      1,
+      3,
+      800,
+      800
+    ],
+    "resize_interpolation": "INTER_LINEAR",
+    "letterbox_pad_value": 114,
+    "resize_rounding": "floor(positive_value+0.5)",
+    "color_conversion": "BGR_to_RGB",
+    "normalization": "float32_divide_by_255",
+    "layout": "NCHW",
+    "tensor_contiguity": "C_contiguous"
+  },
+  "classes": [
+    {
+      "class_id": 0,
+      "class_name": "crazing"
+    },
+    {
+      "class_id": 1,
+      "class_name": "inclusion"
+    },
+    {
+      "class_id": 2,
+      "class_name": "patches"
+    },
+    {
+      "class_id": 3,
+      "class_name": "pitted_surface"
+    },
+    {
+      "class_id": 4,
+      "class_name": "rolled-in_scale"
+    },
+    {
+      "class_id": 5,
+      "class_name": "scratches"
+    }
+  ],
+  "samples": [
+    {
+      "sample_id": "crazing_1",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_1.jpg",
+      "image_sha256": "5278CD3695ADBCBD7A16A7E4B2C6BC27F18095AB8A1E034D2B06C0FC42020ECA"
+    },
+    {
+      "sample_id": "crazing_9",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_9.jpg",
+      "image_sha256": "77FA42B142E72EBAADEB44516B791BDDCF511DB1A4448655E4C16180012A263D"
+    },
+    {
+      "sample_id": "crazing_17",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_17.jpg",
+      "image_sha256": "C811854BC098B5524D3DE6C31C21CCBB2DFDE665309317A8D92CC59137263E0E"
+    },
+    {
+      "sample_id": "crazing_25",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_25.jpg",
+      "image_sha256": "0357EBE4E802A34427D3A5C1C2CCD7C3674F690BF8FCE4DD0D622D79A29CA1D8"
+    },
+    {
+      "sample_id": "crazing_33",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_33.jpg",
+      "image_sha256": "448D39AF4C31BC49221DBAACA70522B51A5C9B000499F395DB8292F421788931"
+    },
+    {
+      "sample_id": "crazing_41",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_41.jpg",
+      "image_sha256": "53B23674F9756FFBEE2D8E24D622AB80C797F9380B881734A62D8F8383BD1F49"
+    },
+    {
+      "sample_id": "crazing_49",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_49.jpg",
+      "image_sha256": "D9BEEFF73A60926EBF5A2763DF3F02C22275F0D9164B81204D30A4926A1EBCCE"
+    },
+    {
+      "sample_id": "crazing_57",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_57.jpg",
+      "image_sha256": "D962440B85F1A1B6A3FBFC38562DD10FBA994C3E8B269AE34B28F2F44B0EDFF0"
+    },
+    {
+      "sample_id": "crazing_65",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_65.jpg",
+      "image_sha256": "A35F3D67BD8F90728FF701AB77E49073085BC8AD2FA3BA4BF7EF8599140F1A08"
+    },
+    {
+      "sample_id": "crazing_73",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_73.jpg",
+      "image_sha256": "01DA434C490153C66593C10EC70AB8A776A68D6468C7A28894FE09A5A81B50E7"
+    },
+    {
+      "sample_id": "crazing_81",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_81.jpg",
+      "image_sha256": "79BEF32F8309A3E38A5C96E56A1E54BFD5057B58D4B000E08A5815A28BCFFAEF"
+    },
+    {
+      "sample_id": "crazing_89",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_89.jpg",
+      "image_sha256": "B74F577A82E82A76DB9450526B2FC5863ECC761CFB6D243FEF8907559711AFB5"
+    },
+    {
+      "sample_id": "crazing_97",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_97.jpg",
+      "image_sha256": "A613D4150CDCC04FAE34A4E95814A877E1CCCC939851343B46F8E11386190B68"
+    },
+    {
+      "sample_id": "crazing_105",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_105.jpg",
+      "image_sha256": "1163A4F6E0A9F9FC950748E1ABE52B6C6FC6D8253D13FB36AF3C90E78AAEE884"
+    },
+    {
+      "sample_id": "crazing_113",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_113.jpg",
+      "image_sha256": "D3B215C4E9BDAC856FCE33B9C59029583439010135C26D9E75ADC24744594D32"
+    },
+    {
+      "sample_id": "crazing_121",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_121.jpg",
+      "image_sha256": "E8A92B1981DACA6071464CAD61B03A41CABE33E921D01D4C12CCC767576457C0"
+    },
+    {
+      "sample_id": "crazing_129",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_129.jpg",
+      "image_sha256": "A466019AAE3E0D4A5324E0BD2A9C1D8298EB113B7792F90354EE400A59574A7C"
+    },
+    {
+      "sample_id": "crazing_137",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_137.jpg",
+      "image_sha256": "CF573F466BC44D4CB0316EB3C661B8BC44776FE186BA237BDFBC4E5011CADD2A"
+    },
+    {
+      "sample_id": "crazing_145",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_145.jpg",
+      "image_sha256": "C91B2E3EE3B1A86D955389405BB97E16922D410DF54F3FBDDB5CF5F4A8BDB16B"
+    },
+    {
+      "sample_id": "crazing_153",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_153.jpg",
+      "image_sha256": "9568A72DDC882108A6DEFE0F6BB2600E22E278F2E684716B9C563DC810B33BAC"
+    },
+    {
+      "sample_id": "crazing_161",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_161.jpg",
+      "image_sha256": "E79AAE5302CE4FBE38F7B2E5C32AF5F6125A6DD141861E3ED54CC2E407D49673"
+    },
+    {
+      "sample_id": "crazing_169",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_169.jpg",
+      "image_sha256": "84A1BD8144AD8B9B280400EC22D2AE1CA09012108B24A90A9599235F1A01F313"
+    },
+    {
+      "sample_id": "crazing_177",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_177.jpg",
+      "image_sha256": "7CFAD80ED8DF45124DCE13A24DCE66949B774750FE13AB9F3A29AE7ECF32D4EF"
+    },
+    {
+      "sample_id": "crazing_185",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_185.jpg",
+      "image_sha256": "2ECD30DE32C5FCAEADEDBD7B97EFE6910E037A88B7D4A1D82800D5B837977C2E"
+    },
+    {
+      "sample_id": "crazing_193",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_193.jpg",
+      "image_sha256": "AD8B326145B04C0E36E738451B010691094B1213792A64D911C093F3A3310C17"
+    },
+    {
+      "sample_id": "crazing_201",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_201.jpg",
+      "image_sha256": "20AE74412C2C5E1271D975356217412B3A2F8C1C68CED06C5175028FA74566D9"
+    },
+    {
+      "sample_id": "crazing_209",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_209.jpg",
+      "image_sha256": "77E8903891D20E2997A793C3789823FF8133E909B404CE8FFDBD4BB7CC470D64"
+    },
+    {
+      "sample_id": "crazing_217",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_217.jpg",
+      "image_sha256": "DD0E2F8A2C6901CC540C53AA7194AF40FA2E8ED38A0825608E1B56C846FCF01E"
+    },
+    {
+      "sample_id": "crazing_225",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_225.jpg",
+      "image_sha256": "CF6C9FB4F506098D208AD0E77FD60DA60EEBB7F483EAE9A5A56876157F39A428"
+    },
+    {
+      "sample_id": "crazing_233",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/train/crazing_233.jpg",
+      "image_sha256": "6D36474A8491A431C9965B54C53A51538C4BBA96752C9AF72BD3D82B3F4A85EF"
+    },
+    {
+      "sample_id": "inclusion_1",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_1.jpg",
+      "image_sha256": "2B0A6EFF755D5C5867D3E3CA6B26AF9548813E50C9B12B0F3381A49560A42634"
+    },
+    {
+      "sample_id": "inclusion_9",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_9.jpg",
+      "image_sha256": "20C34B61AB678832629C6EE8BCE155710E520BBBE1435AEB138EA91C9AB6AB22"
+    },
+    {
+      "sample_id": "inclusion_17",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_17.jpg",
+      "image_sha256": "87581DA8B895C19669FE724B00B2180DD183FEC337A3AF9E0B88D574DBA7E66F"
+    },
+    {
+      "sample_id": "inclusion_25",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_25.jpg",
+      "image_sha256": "12364FF0521A417EB27BB5504A6698849A5E45810D5A60055368D69034C6122C"
+    },
+    {
+      "sample_id": "inclusion_33",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_33.jpg",
+      "image_sha256": "38E21661768ED76F443F3ECFCFC009DFA3297870E30731BB1C3A16EE6BABFABE"
+    },
+    {
+      "sample_id": "inclusion_41",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_41.jpg",
+      "image_sha256": "28612AB5241DA32535D450C8F68A632551F8C26E391E8766E592A288EBD3507E"
+    },
+    {
+      "sample_id": "inclusion_49",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_49.jpg",
+      "image_sha256": "2F73B68667C43D84A593CAB12432B333C62D4D67236D6D578071F8141FD78AE0"
+    },
+    {
+      "sample_id": "inclusion_57",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_57.jpg",
+      "image_sha256": "F51B7B9C213B8584377C251FD29B0D49087AC1BD2433BDFC69195E8CDE481B00"
+    },
+    {
+      "sample_id": "inclusion_65",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_65.jpg",
+      "image_sha256": "E59317CB276342730A6B07328219FC8B8461FA62D53AFCA6F921D0C5787651D4"
+    },
+    {
+      "sample_id": "inclusion_73",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_73.jpg",
+      "image_sha256": "3D0B1FAA0D49F2ECA6D707D0DED89DF614AEF91C15A8BF301EC0EE6824A312B2"
+    },
+    {
+      "sample_id": "inclusion_81",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_81.jpg",
+      "image_sha256": "72C30EECC2BEB38A31B41B25CA26C8E380924D2036BDA0BF5B6D5F99F5CBB967"
+    },
+    {
+      "sample_id": "inclusion_89",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_89.jpg",
+      "image_sha256": "832126474EB86A0AFB051ED85288FD51E00DCC7C094498787D2736519150C334"
+    },
+    {
+      "sample_id": "inclusion_97",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_97.jpg",
+      "image_sha256": "6D4AC443D14C9F7481EDC7DA94BE06B9DDA1B43C05DFE036D218D920F3DEBC41"
+    },
+    {
+      "sample_id": "inclusion_105",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_105.jpg",
+      "image_sha256": "B017CECCE1ED22826088C567CF600C2D7925E2E002B69A0B6ABF7F494D8CDE86"
+    },
+    {
+      "sample_id": "inclusion_113",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_113.jpg",
+      "image_sha256": "A2659EC4B2525F131436DB9793D8771C00580577AD002D410E106600F42FA1B4"
+    },
+    {
+      "sample_id": "inclusion_121",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_121.jpg",
+      "image_sha256": "8A441BF016F67AAA0F21112BFBD35A032F157DF1869F5B97154063F527891151"
+    },
+    {
+      "sample_id": "inclusion_129",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_129.jpg",
+      "image_sha256": "26B493E2BC04505E128C9A3D1F1B5AB4D248FFC9B50739848FA389CF07643B0B"
+    },
+    {
+      "sample_id": "inclusion_137",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_137.jpg",
+      "image_sha256": "83E36CE6A0C6C52DF50800121A1F786B0B5006A0AF5034BCBB64F76FEB3A1A02"
+    },
+    {
+      "sample_id": "inclusion_145",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_145.jpg",
+      "image_sha256": "BD928A997D31EF67DA19B3FB130B504E198E0687DD5AB5ADAF5F1D888F2B9F95"
+    },
+    {
+      "sample_id": "inclusion_153",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_153.jpg",
+      "image_sha256": "45D7514244EE1334C276973371A33BF1D5791BA3EE8548A19ED996ECC4279BF5"
+    },
+    {
+      "sample_id": "inclusion_161",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_161.jpg",
+      "image_sha256": "A4CD53D1D2E625C7AF5487DFE0710B0B731E5FA84A4F32E2942B2DB49286C02A"
+    },
+    {
+      "sample_id": "inclusion_169",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_169.jpg",
+      "image_sha256": "E4936FF375F3BC21A1B7E43C9A0ECCE642B1E603EE33D53231B065B458C77D0B"
+    },
+    {
+      "sample_id": "inclusion_177",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_177.jpg",
+      "image_sha256": "BFE34C1CF0883FB91BBB6C8F91C39F0FA174E3F3F566B6DDEE04786764F546D2"
+    },
+    {
+      "sample_id": "inclusion_185",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_185.jpg",
+      "image_sha256": "044E6041678C98A6EA41FDB7DA1EADD75FD29CED0C8F538B43A663D42910F10B"
+    },
+    {
+      "sample_id": "inclusion_193",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_193.jpg",
+      "image_sha256": "12F915D6F44C1366132A023C00ED8D932320F8777301705087F784ED2B5C8FA7"
+    },
+    {
+      "sample_id": "inclusion_201",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_201.jpg",
+      "image_sha256": "1D7FFBA898128163002177ABF22766D368700F6504F4273DB2481835D247BD14"
+    },
+    {
+      "sample_id": "inclusion_209",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_209.jpg",
+      "image_sha256": "208C94C15CA21363B31067979F1A7E215262FFA61BF45374AA1683C8DD939083"
+    },
+    {
+      "sample_id": "inclusion_217",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_217.jpg",
+      "image_sha256": "E40821C51A341286572663CBBA1159E7EFE8A7CD729C763A5C439D851E6A9C77"
+    },
+    {
+      "sample_id": "inclusion_225",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_225.jpg",
+      "image_sha256": "0B3E713521A07D8074214175C96692A61E5F29E10C8D150E6095A48B2DA271F9"
+    },
+    {
+      "sample_id": "inclusion_233",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/train/inclusion_233.jpg",
+      "image_sha256": "B623A1F88D2A7437EEE86AF7BD73B27456056775B4394694D6EBC331FE5F02BF"
+    },
+    {
+      "sample_id": "patches_1",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_1.jpg",
+      "image_sha256": "0EA4843AA7801CE5A5E672EC8C0266D4910AA7D740955F38D087B38154D0FE67"
+    },
+    {
+      "sample_id": "patches_9",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_9.jpg",
+      "image_sha256": "48158C47D557AB7B499A34DBC2BA4955754A2235DB290C5CC3C4A1266111494A"
+    },
+    {
+      "sample_id": "patches_17",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_17.jpg",
+      "image_sha256": "5321E25088DA9ADF11B3455DA3A3435AB7A81A5302C46FDB987F6521E65F4F07"
+    },
+    {
+      "sample_id": "patches_25",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_25.jpg",
+      "image_sha256": "3C2CC3EFF5489F7B63D2DFF96F4DEF2FD2F3A645E30A6F3446E3E0B51C61F67F"
+    },
+    {
+      "sample_id": "patches_33",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_33.jpg",
+      "image_sha256": "48F16D365F49EC5AE025ADD65E89951206AC60A74583332FD45CFB541E0C35C4"
+    },
+    {
+      "sample_id": "patches_41",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_41.jpg",
+      "image_sha256": "47FA240620B53D3E904860C9233616FFA07714E76B2BB0570973D42A356ACAE5"
+    },
+    {
+      "sample_id": "patches_49",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_49.jpg",
+      "image_sha256": "813FD3FE142C2C6A82A3C4D9F0752F7EA0A12E3C051FBC5C6E47417D3D097A1F"
+    },
+    {
+      "sample_id": "patches_57",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_57.jpg",
+      "image_sha256": "AD85BC58B5B85587725A3D43F80689AED3A6559750A9177FF7CAE7424A5831E2"
+    },
+    {
+      "sample_id": "patches_65",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_65.jpg",
+      "image_sha256": "9BC86E5DBA604D4F670BD6EB4517E936549EEDF56E598AF740845DE5C7DD306F"
+    },
+    {
+      "sample_id": "patches_73",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_73.jpg",
+      "image_sha256": "D9BE27423D716B677D8A2BBCBC025BB34A076E172622A595A093E074BDCF925B"
+    },
+    {
+      "sample_id": "patches_81",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_81.jpg",
+      "image_sha256": "166D260252071650251D0A7AE8BA380FC33005E882799871FE60074B61DA1E30"
+    },
+    {
+      "sample_id": "patches_89",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_89.jpg",
+      "image_sha256": "9D66C91AEC906D8BE6A0296FFD1FB2FB337B6804BF684ADCE43229BDD664570C"
+    },
+    {
+      "sample_id": "patches_97",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_97.jpg",
+      "image_sha256": "9C08845910FA4492A657EAACB89A80890FD83010E79C94223DC38A6F4D6534B4"
+    },
+    {
+      "sample_id": "patches_105",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_105.jpg",
+      "image_sha256": "4D2DE82731B86CDBC7A66F2A9BFB01074BB4CB65E47BCCF06B66470D53857071"
+    },
+    {
+      "sample_id": "patches_113",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_113.jpg",
+      "image_sha256": "96512DEBEDAA44F6FC462336BC99C9EB082DA86CDB149331A8880BEFF8AA60B1"
+    },
+    {
+      "sample_id": "patches_121",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_121.jpg",
+      "image_sha256": "EFBAEE1C2678FF433374DF25F385927A5B106C8BA3AD9E675E3CA7948E9EAFAB"
+    },
+    {
+      "sample_id": "patches_129",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_129.jpg",
+      "image_sha256": "3FA248C8BF726361ACCEFDAE301EE11602D1EF0489E414CDE5B711A991927BCD"
+    },
+    {
+      "sample_id": "patches_137",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_137.jpg",
+      "image_sha256": "82FB6D832A93AB370A235AD1DA788E4C00E869995829F368F4D58225D416B365"
+    },
+    {
+      "sample_id": "patches_145",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_145.jpg",
+      "image_sha256": "6FB38C29252478274769AD1377696796B812BE1EA4E32B5335F9680CE823FEB7"
+    },
+    {
+      "sample_id": "patches_153",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_153.jpg",
+      "image_sha256": "0D25CEE992679E08246BE6763EF5CC97BE495C201C3A16013F077484D3E2B836"
+    },
+    {
+      "sample_id": "patches_161",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_161.jpg",
+      "image_sha256": "BD202F91DDD89C3727996D411E6330301DF47BFBCE8627E909DCF5CD3AB12636"
+    },
+    {
+      "sample_id": "patches_169",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_169.jpg",
+      "image_sha256": "6F4636871B1447810CCCEE23D7C432D19595069555D9C5AF2940A987E6223D78"
+    },
+    {
+      "sample_id": "patches_177",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_177.jpg",
+      "image_sha256": "8296704A80A15A59E806394DB76485FBAF9160AC55F745DCDA03DA054EDB1BB7"
+    },
+    {
+      "sample_id": "patches_185",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_185.jpg",
+      "image_sha256": "FA83293BA81F4AAE52FF4E395C98D6AA81596624F19C2F4539D9D8E3493BAE1B"
+    },
+    {
+      "sample_id": "patches_193",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_193.jpg",
+      "image_sha256": "9FCC65087F61AF456D62D8FABEA419E6EB99FAF1B66F92F532A54DBD5CCC63DC"
+    },
+    {
+      "sample_id": "patches_201",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_201.jpg",
+      "image_sha256": "3096D28045CA41280028E716D6C64C9D65A70F3C171A98686F4772C99C7620A6"
+    },
+    {
+      "sample_id": "patches_209",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_209.jpg",
+      "image_sha256": "4F98A185024E14CB67F9ECA63EE70982A240328C139C80AE670F550754398C7D"
+    },
+    {
+      "sample_id": "patches_217",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_217.jpg",
+      "image_sha256": "71285ECC73EE77E281E1EDD71A31FBA5FBFC123DC4E120910AC9A0696568DB47"
+    },
+    {
+      "sample_id": "patches_225",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_225.jpg",
+      "image_sha256": "3554340B5A48B23C97A194F7B7BF1776A625CC789D77A0B835AD07052B679EDA"
+    },
+    {
+      "sample_id": "patches_233",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/train/patches_233.jpg",
+      "image_sha256": "D8D82AF5475004BEFE8AAD2D33FA125D4F25A9D133A25F689BD6E434F1DCF1B5"
+    },
+    {
+      "sample_id": "pitted_surface_1",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_1.jpg",
+      "image_sha256": "38A0ECE141350F5BED53C99DA4D96CE25D42B3ED4248E536A579AB823ABFB318"
+    },
+    {
+      "sample_id": "pitted_surface_9",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_9.jpg",
+      "image_sha256": "7555653EE061B383D285A6CD376E667AEDAC34EA732476D391FD8092E60CA8E7"
+    },
+    {
+      "sample_id": "pitted_surface_17",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_17.jpg",
+      "image_sha256": "EFA2E345933A082A83E015E77C8A6F478CC33C5A28CC4E46C9E6CE53D3769A73"
+    },
+    {
+      "sample_id": "pitted_surface_25",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_25.jpg",
+      "image_sha256": "943C5054815B05422D178B9F6040AAFFD378BB094389E51662AB757E584A095C"
+    },
+    {
+      "sample_id": "pitted_surface_33",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_33.jpg",
+      "image_sha256": "AF99BDFAB330B77986583AAA86DA06F6DDFA291D2A365E6AC09E24B3AE17E321"
+    },
+    {
+      "sample_id": "pitted_surface_41",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_41.jpg",
+      "image_sha256": "50CA0984E1B38189C34E62D61EDD2A4C21202D3353A20EA9A31722DD25B72201"
+    },
+    {
+      "sample_id": "pitted_surface_49",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_49.jpg",
+      "image_sha256": "A9670BE72781679C10FA4AE7C174AB3C6196E4A3B38545AA318116A58123D49F"
+    },
+    {
+      "sample_id": "pitted_surface_57",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_57.jpg",
+      "image_sha256": "59C28C2A5BB33B78236BA5035AB7E7E37ACBE98C9F1D8BEA9F9635AAA68CF2C1"
+    },
+    {
+      "sample_id": "pitted_surface_65",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_65.jpg",
+      "image_sha256": "F34E6E2986B6EFC0C7281E6765D94C0E449DADA265F65DD42074BA2ABBDC63D7"
+    },
+    {
+      "sample_id": "pitted_surface_73",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_73.jpg",
+      "image_sha256": "821B1E0CEA8C13BBF9629DAC10958DA3EBE4F74560D311B4FD398C820E76D129"
+    },
+    {
+      "sample_id": "pitted_surface_81",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_81.jpg",
+      "image_sha256": "5E66E37C6B75CF9DDA04DCA89743E43D082D6836931654ABEDFAB076DD01ADEA"
+    },
+    {
+      "sample_id": "pitted_surface_89",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_89.jpg",
+      "image_sha256": "5AED54CF5EA07E4C3E0887EAFD00D5D598ED4674DDEAF14422939205773B8BA7"
+    },
+    {
+      "sample_id": "pitted_surface_97",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_97.jpg",
+      "image_sha256": "E98E59BF3EE6869A2F29C25A96F54C99F2AA159B1630595B3073465D26B5F807"
+    },
+    {
+      "sample_id": "pitted_surface_105",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_105.jpg",
+      "image_sha256": "DFF0501D7A09A474271930B63E051E3A15613AB10D169C39D6C0453DE23B3A59"
+    },
+    {
+      "sample_id": "pitted_surface_113",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_113.jpg",
+      "image_sha256": "85988F6CAE7B26BBB95668AE57BA731CD733D700631F1072A41A1C511C7B133B"
+    },
+    {
+      "sample_id": "pitted_surface_121",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_121.jpg",
+      "image_sha256": "EDF9240AA7FE76ECFC0384E64000C24D59E38CBEAB699F7C3A80BC908F5564A9"
+    },
+    {
+      "sample_id": "pitted_surface_129",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_129.jpg",
+      "image_sha256": "970F912B65572015C6BE924332A361BC9033BBED55F7CFBA4C9C48151B93CB3C"
+    },
+    {
+      "sample_id": "pitted_surface_137",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_137.jpg",
+      "image_sha256": "DB701DF4413C5913F0F67F7374FFE50B52931B46AFE0CF9A276DF742983E44B6"
+    },
+    {
+      "sample_id": "pitted_surface_145",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_145.jpg",
+      "image_sha256": "ACDD1073B72B38592CA7E9F5E4B027EED2219769095C7FD5A990D310268FEE87"
+    },
+    {
+      "sample_id": "pitted_surface_153",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_153.jpg",
+      "image_sha256": "EDAC63AA6C0BAA6E30F86EC7797342CF96605D6E25FC566700589B9F4522E210"
+    },
+    {
+      "sample_id": "pitted_surface_161",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_161.jpg",
+      "image_sha256": "2E831D96126F240BC4615CDDEBE49AEEF493D4927A05355541B845D624F4EA61"
+    },
+    {
+      "sample_id": "pitted_surface_169",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_169.jpg",
+      "image_sha256": "8ADDE2933895B423743393C72DB703EA996A0BEC8DFE324ED055642763AF28D1"
+    },
+    {
+      "sample_id": "pitted_surface_177",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_177.jpg",
+      "image_sha256": "CF734CB6382268765C36DE9D9FE9FBBC7D082943B271062E1861A71C4DA97347"
+    },
+    {
+      "sample_id": "pitted_surface_185",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_185.jpg",
+      "image_sha256": "CBBD9E956886C5EA30E94D7F4CF26C81790B440839B7AA3F8FE08AA9CC6944EA"
+    },
+    {
+      "sample_id": "pitted_surface_193",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_193.jpg",
+      "image_sha256": "4FBD168AFD947DC6CD6440BA16C211C5892B776E9DB0E3C1A037DEA20C3102A3"
+    },
+    {
+      "sample_id": "pitted_surface_201",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_201.jpg",
+      "image_sha256": "568BB30A2536D70CE4BE156E2A98825EEA9E20C45BD603C06678A07F5C5DFD04"
+    },
+    {
+      "sample_id": "pitted_surface_209",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_209.jpg",
+      "image_sha256": "76AFF94FC0715EFB879685A56AB14CED25A300216035F1262A0223D3A77DFE22"
+    },
+    {
+      "sample_id": "pitted_surface_217",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_217.jpg",
+      "image_sha256": "6F1F26A6ACE02993D898F43CA3E9D6D04BDBB8DB1E7DAC5D39129DB0EC789791"
+    },
+    {
+      "sample_id": "pitted_surface_225",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_225.jpg",
+      "image_sha256": "23BE66132F661BA432B06BA402734CBE12D05D5ECA0BEBED90B99D9F15CEC92F"
+    },
+    {
+      "sample_id": "pitted_surface_233",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/train/pitted_surface_233.jpg",
+      "image_sha256": "A5E0724B49500D56911C65E25705E564217D7E39F098921845BEB08FEEFC88E3"
+    },
+    {
+      "sample_id": "rolled-in_scale_1",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_1.jpg",
+      "image_sha256": "E9D0358A2859DA86A7A9CC75DEB5C235FCB8B14E8773CD92E94593B0289736FD"
+    },
+    {
+      "sample_id": "rolled-in_scale_9",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_9.jpg",
+      "image_sha256": "842947ED242D553D7FBC7BC3B3D1496CB7219559AA5820435B63399F5EF6E8E0"
+    },
+    {
+      "sample_id": "rolled-in_scale_17",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_17.jpg",
+      "image_sha256": "905BF78850CE127112DF3EE1E3FBC58214A092EC7293E2C94BD90303CE1449E7"
+    },
+    {
+      "sample_id": "rolled-in_scale_25",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_25.jpg",
+      "image_sha256": "4E60ED53DC7E487306E513F4CD47B37B838D61F83CE0B530DC6BF9B3E514FF8C"
+    },
+    {
+      "sample_id": "rolled-in_scale_33",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_33.jpg",
+      "image_sha256": "2B2F8C1D313F4F281578546706DD5597D814D71E3150E5F40D11CBA6F78860A5"
+    },
+    {
+      "sample_id": "rolled-in_scale_41",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_41.jpg",
+      "image_sha256": "92E13ACB9DF5165A2F94A2360236F6A4AE6E6A24C069C0F742798D94640238FF"
+    },
+    {
+      "sample_id": "rolled-in_scale_49",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_49.jpg",
+      "image_sha256": "95E4ED37A0B7FBF54E713A9CFC6FC66AA9C3BB5CE170914576FFB125364F6E7B"
+    },
+    {
+      "sample_id": "rolled-in_scale_57",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_57.jpg",
+      "image_sha256": "6A27271B80C5F64663072C045E1129BD1EF87808E23BEE3F6888F9DF6F6D66A6"
+    },
+    {
+      "sample_id": "rolled-in_scale_65",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_65.jpg",
+      "image_sha256": "484C528E94C1CA590CE089553358CF9256CAD3191427C97C33E0F5CCC8DBE16E"
+    },
+    {
+      "sample_id": "rolled-in_scale_73",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_73.jpg",
+      "image_sha256": "09DE9D987C8CE064472CFB9F5BE4D24338AFB7EDABD4DD9320B24FFFD7A7BB91"
+    },
+    {
+      "sample_id": "rolled-in_scale_81",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_81.jpg",
+      "image_sha256": "834C71734FC6257E459B03759BDF40A8F010D968F9B051533AE2577F4AE2F403"
+    },
+    {
+      "sample_id": "rolled-in_scale_89",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_89.jpg",
+      "image_sha256": "8FEF9E33D39267D7B0EC2F2CB73E6B31EE0A288EEA95CE815A56E0AE79ABC237"
+    },
+    {
+      "sample_id": "rolled-in_scale_97",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_97.jpg",
+      "image_sha256": "FB0964326483CD3811425C0D43404FBE211B0C9055F9FA440F9D464EE4F6FBCA"
+    },
+    {
+      "sample_id": "rolled-in_scale_105",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_105.jpg",
+      "image_sha256": "5EB3C30442E000E5CCA7FD258AB6ACE13428C3693754214790848537AA02858A"
+    },
+    {
+      "sample_id": "rolled-in_scale_113",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_113.jpg",
+      "image_sha256": "BB50FF807BAAB8D9FCF4E041E8912056E0BDA033236B58B4DF1CBB5BD1A0CC88"
+    },
+    {
+      "sample_id": "rolled-in_scale_121",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_121.jpg",
+      "image_sha256": "FD23F268A5A08C4C3C93CF8918941FE2F7EF65B4177D5618F7867753DBE18748"
+    },
+    {
+      "sample_id": "rolled-in_scale_129",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_129.jpg",
+      "image_sha256": "826A6D703D214DD004EF389462A6C506546350FBF8C4BD3E333F80AE3AD8B475"
+    },
+    {
+      "sample_id": "rolled-in_scale_137",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_137.jpg",
+      "image_sha256": "72BD6673DE3E9F7D8DF1D69A024C04F714C19BB2AC8B45A0589D9B13244FCE75"
+    },
+    {
+      "sample_id": "rolled-in_scale_145",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_145.jpg",
+      "image_sha256": "D9B8E810D393975FD87BD0159E754C629D1B9615152EFFE7A979139D8F51600C"
+    },
+    {
+      "sample_id": "rolled-in_scale_153",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_153.jpg",
+      "image_sha256": "D56E3EB807F29DC2B782B7B59D1DAEA82E5FCAB810256D6B1D88F7993841BCE6"
+    },
+    {
+      "sample_id": "rolled-in_scale_161",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_161.jpg",
+      "image_sha256": "E875FC3BB9A8BED646825668981A24709E5CBBC630A28315C2FB56EC38E85A75"
+    },
+    {
+      "sample_id": "rolled-in_scale_169",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_169.jpg",
+      "image_sha256": "E48252B233324D081B482E4986DB38A764533DCB1FA07F7A12D3ADC9EB65AB88"
+    },
+    {
+      "sample_id": "rolled-in_scale_177",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_177.jpg",
+      "image_sha256": "8101AA59BCD07D7C326A0BFB57D2ADEEA3B827ED81D980ACD42EA87DBF5F16B1"
+    },
+    {
+      "sample_id": "rolled-in_scale_185",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_185.jpg",
+      "image_sha256": "142B4072A53154A6B126AEE143F5809BCAB5C00B2A14F3A4DC22BEA2B3813782"
+    },
+    {
+      "sample_id": "rolled-in_scale_193",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_193.jpg",
+      "image_sha256": "F298F309E6F2C25904B3A066256CC028D60DAF59D11C42BAEDF85A0A24366036"
+    },
+    {
+      "sample_id": "rolled-in_scale_201",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_201.jpg",
+      "image_sha256": "93F1F4105E08E65C75283D4149248CA401DE3251D994155AE08492DE344CDF82"
+    },
+    {
+      "sample_id": "rolled-in_scale_209",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_209.jpg",
+      "image_sha256": "5B0551A18F09969F80EA78107B8DC10472D4CB078B7E51F832C6058246A15EA9"
+    },
+    {
+      "sample_id": "rolled-in_scale_217",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_217.jpg",
+      "image_sha256": "6518CD1259EE169A39DD98F755A3DBB11175CF30BD346E2974D709362961824C"
+    },
+    {
+      "sample_id": "rolled-in_scale_225",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_225.jpg",
+      "image_sha256": "1509CD72DE0B703B1328D59E5DD7705BE79FFBF93C162986CEC204330E5221E3"
+    },
+    {
+      "sample_id": "rolled-in_scale_233",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/train/rolled-in_scale_233.jpg",
+      "image_sha256": "F56A6DF98A0F17232EA9C223BF874D124549D95D50550CD403F83F4A689AD59F"
+    },
+    {
+      "sample_id": "scratches_1",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_1.jpg",
+      "image_sha256": "500C46E2F5D7065D8C492B0CFB36C3BA77A85A744079BF6453DFC85E02B97A3C"
+    },
+    {
+      "sample_id": "scratches_9",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_9.jpg",
+      "image_sha256": "345C4F6E6F0F2FCD9F9BE2DF77A9A9AC9BCB74A3594FB51EBEC3EF9C5EA1BA41"
+    },
+    {
+      "sample_id": "scratches_17",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_17.jpg",
+      "image_sha256": "72FE2E74A970FCF954BEBF7138EB3D51FB66A3BF195C1DEC95C89E29E3DAEFE3"
+    },
+    {
+      "sample_id": "scratches_25",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_25.jpg",
+      "image_sha256": "A396520AA648BAF7345A7D1B88325650FF2DAE4DF1FC4D9E19BEE4C714BE8C82"
+    },
+    {
+      "sample_id": "scratches_33",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_33.jpg",
+      "image_sha256": "C5C302E720075C67817605D4715A7F1E63DF3BFF7F531D0CFB289068728EFCE5"
+    },
+    {
+      "sample_id": "scratches_41",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_41.jpg",
+      "image_sha256": "B92004BA11866501F5A257DCB5F2840BC9265FFE8E9E5F48F554D68C7BEF35B0"
+    },
+    {
+      "sample_id": "scratches_49",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_49.jpg",
+      "image_sha256": "E39F96DB2C4012D8D67A10C8D39DC580E99CDAC09112D4B5DA5A047389B120E2"
+    },
+    {
+      "sample_id": "scratches_57",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_57.jpg",
+      "image_sha256": "B46371506A9386702AA82E3707F8D315ECEC02F17912F76F6AAEFAAC87946D53"
+    },
+    {
+      "sample_id": "scratches_65",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_65.jpg",
+      "image_sha256": "6D0E29F19F167C5E34BCE00EC93C0B6F58C3905D23D53FEF977D7DD27F2B5EA8"
+    },
+    {
+      "sample_id": "scratches_73",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_73.jpg",
+      "image_sha256": "3D85A326F477DA24BF6D84411A65FFBFC93E1A5FD7187FDF3C530E04AED886FB"
+    },
+    {
+      "sample_id": "scratches_81",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_81.jpg",
+      "image_sha256": "18601FCE531059A2FAEE79D8B1D9881964B1FD486C837C99FC0BB970BCB9D7AD"
+    },
+    {
+      "sample_id": "scratches_89",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_89.jpg",
+      "image_sha256": "2384449A35B02B37AB9678138E8C631214475D595867DFA6C1FA4C83AC5F36B1"
+    },
+    {
+      "sample_id": "scratches_97",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_97.jpg",
+      "image_sha256": "A676D6115DD0E39E2CF5EE2E8AA6CF784C6D6B1156F7DA3F202E962BF5F67D32"
+    },
+    {
+      "sample_id": "scratches_105",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_105.jpg",
+      "image_sha256": "BB2F2218A6F8E68156975FF64973AF7FB5DCB5D6169F7715C452850C3E33EB92"
+    },
+    {
+      "sample_id": "scratches_113",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_113.jpg",
+      "image_sha256": "E73A907D6406FB5B2872340CB49C2982B1724F71F75B66ADE085C88FE736805C"
+    },
+    {
+      "sample_id": "scratches_121",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_121.jpg",
+      "image_sha256": "D3EE2418B21B7982B5621D5A0967DAFD0E763142210518388EAD02BAC8F47DAB"
+    },
+    {
+      "sample_id": "scratches_129",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_129.jpg",
+      "image_sha256": "DEF28753FBC0D5050DE6136E3C68E55B804577BA81F0DC0B64064FA5F5C2F591"
+    },
+    {
+      "sample_id": "scratches_137",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_137.jpg",
+      "image_sha256": "0327D255906525E9E803F7BC308C5392351BF2EE7DBE384F38FFA84C9BAFCD4E"
+    },
+    {
+      "sample_id": "scratches_145",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_145.jpg",
+      "image_sha256": "B5767351BB25860CCD2FF1DE030A77C19D5F1FD721A7A01DBB289CBA1F744D41"
+    },
+    {
+      "sample_id": "scratches_153",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_153.jpg",
+      "image_sha256": "EDFDA57ED4467E635BAEFF00654D9774BD2E94483C0E1A28C59B5F7F34240807"
+    },
+    {
+      "sample_id": "scratches_161",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_161.jpg",
+      "image_sha256": "3146339EF9953E19B3D631A2D3CB56E787B9D8A0BCB0128521D77BF09655EF4F"
+    },
+    {
+      "sample_id": "scratches_169",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_169.jpg",
+      "image_sha256": "4C0E084B88350FC15C22A71D0F278BB64D2D1DCCC1F9AE2D60F197E0A25EA697"
+    },
+    {
+      "sample_id": "scratches_177",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_177.jpg",
+      "image_sha256": "C6AD18A288B8C427CB64BBACF5A76000A4CA9B030C91F7F42E0E22BAD86A4030"
+    },
+    {
+      "sample_id": "scratches_185",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_185.jpg",
+      "image_sha256": "C4DA2F96EF8E2CF70074638B5605BD523DDDBF39D427A33C3A41B200CDD9001C"
+    },
+    {
+      "sample_id": "scratches_193",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_193.jpg",
+      "image_sha256": "D201E7C39A88CED01E99E541D0F6BA4C7C24CCD5091A8C86973187459146FE88"
+    },
+    {
+      "sample_id": "scratches_201",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_201.jpg",
+      "image_sha256": "8FFEAAFBD98F91BAC64788E47E2A85596158ED6867C3160ECEB166CF5B2C2496"
+    },
+    {
+      "sample_id": "scratches_209",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_209.jpg",
+      "image_sha256": "9F7DB1E44228CDAA737B8CC1788CF5A61F8687854C269210F86DF8AB137C1F79"
+    },
+    {
+      "sample_id": "scratches_217",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_217.jpg",
+      "image_sha256": "2076BE693E7D6B5CDCE9FDAD174AFBA3D0EFB9EA838CC510E0155517D46460B2"
+    },
+    {
+      "sample_id": "scratches_225",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_225.jpg",
+      "image_sha256": "0B994C808E2305028287CF23AA342F180813DE9194FA902E63C8601BA4C0BAD7"
+    },
+    {
+      "sample_id": "scratches_233",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/train/scratches_233.jpg",
+      "image_sha256": "52B547C24FCB07B514BFE71FC1CD617CDCF23090BAA9D1BFB5E7544404E20B90"
+    }
+  ],
+  "integrity": {
+    "sample_row_format": "sample_id<TAB>source_class_id<TAB>source_class_name<TAB>image_path<TAB>image_sha256<LF>",
+    "sample_set_sha256": "FDEF7FB3B64E222386387438C0B4A32A6BDECF9761E5ED5C60E9A17B7311AE5F",
+    "image_hash_semantics": "SHA-256 of raw image file bytes"
+  }
+}

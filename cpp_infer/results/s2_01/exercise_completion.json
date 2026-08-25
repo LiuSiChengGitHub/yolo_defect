@@ -1,0 +1,949 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_01_exercise_completion",
+  "passed": true,
+  "strict_acceptance_passed": false,
+  "protocol": {
+    "protocol_id": "s2_01_static_ptq_qdq_s8s8_cpu_v1",
+    "canonical_lf_sha256": "0EC9A7B1CF5E4F246CF3AC15275EF06D7C67FB6C0CE11C5218391CFACE5B73F2"
+  },
+  "evidence_inputs": {
+    "protocol": {
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\protocols\\s2_01_ptq_protocol.json",
+      "size_bytes": 4041,
+      "sha256": "0EC9A7B1CF5E4F246CF3AC15275EF06D7C67FB6C0CE11C5218391CFACE5B73F2"
+    },
+    "quant_report": {
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\results\\s2_01\\quantization_report.json",
+      "size_bytes": 89671,
+      "sha256": "21BFE1501E171B452A1545129EC4773B2608EBFB15F3F0A124A62E3172D49133"
+    },
+    "correctness": {
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\results\\s2_01\\correctness_quality_v1_failed.json",
+      "size_bytes": 128757,
+      "sha256": "73E417D16BDCDEB0B95C1946DA53F552DAF4DF9895CFCF95EB685ADB6A9B9062"
+    },
+    "fp32_benchmark": {
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\results\\s2_01\\benchmark\\fp32_cpu_release.json",
+      "size_bytes": 5628,
+      "sha256": "28F345CB5F35F2CA2E1C3A45F84D2F9CC5052961B9B3B38C0079AAA6D516E5F0"
+    },
+    "int8_benchmark": {
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\results\\s2_01\\benchmark\\int8_cpu_release.json",
+      "size_bytes": 5641,
+      "sha256": "0643EF9F6A7EF7985605AE33F0968465EC801204EC8B37268F8C2A28EBF4A0FD"
+    },
+    "benchmark_comparison": {
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\results\\s2_01\\benchmark\\comparison.json",
+      "size_bytes": 8352,
+      "sha256": "EDC2AF9CA388FB2442D68E72FD03BBE9F6F4905C06017D55664DC33A09ABA8D9"
+    },
+    "fp32_profile_summary": {
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\results\\s2_01\\profile\\fp32_summary.json",
+      "size_bytes": 19913,
+      "sha256": "0BABB42263BAB9D21A53E92F2971095AC272E62530A42CE6D071CFC072227254"
+    },
+    "int8_profile_summary": {
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\results\\s2_01\\profile\\int8_summary.json",
+      "size_bytes": 21533,
+      "sha256": "74A162962D20FAF23018D22F9AFE6DD5AC1319E9928E7F53F27CED01AAC37021"
+    }
+  },
+  "lineage": {
+    "source_fp32": {
+      "sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+      "size_bytes": 12336935
+    },
+    "derived_int8": {
+      "sha256": "C0B4EDAF6B26B1495E22B9B504CF677EA9A08D10B051156AD55649F98C0EDE2F",
+      "size_bytes": 3545141,
+      "quantized_conv_count": 64
+    },
+    "manifests": {
+      "calibration": {
+        "manifest_id": "neu_det_train_ptq_calibration_6x30_v1",
+        "canonical_lf_sha256": "6C0735C6E1510F725E1168A3C57E7107259CC1934D32DEB3E619C1BF6712AA9D"
+      },
+      "product": {
+        "manifest_id": "neu_det_val_6x5_v1",
+        "canonical_lf_sha256": "4A10742F373D1A999839996D45BEAD84F3340F3A37C35A18E9EBF534147F1E46"
+      },
+      "quality": {
+        "manifest_id": "neu_det_val_361_quality_v1",
+        "canonical_lf_sha256": "CED5CE80B119B1446066B18072B2AD1C7BE7A6DA30429B5C01D617F2AA2BCEF8"
+      }
+    }
+  },
+  "correctness": {
+    "policy": "advisory",
+    "reported_passed": false,
+    "strict_acceptance_passed": false,
+    "accepted_for_completion": true,
+    "python_runtime_legality": true,
+    "cpp_runtime_legality": true,
+    "product_detection_difference_passed": false,
+    "task_quality_passed": true
+  },
+  "performance": {
+    "passed": true,
+    "correctness_policy": "advisory",
+    "correctness_prerequisite_reported_passed": false,
+    "speed_is_pass_gate": false,
+    "pipeline_mean_outcome": "int8_worse",
+    "session_run_mean_outcome": "int8_worse",
+    "model_size": {
+      "int8_minus_fp32_bytes": -8791794,
+      "int8_div_fp32": 0.2873599479935657,
+      "reduction_fraction": 0.7126400520064343
+    }
+  },
+  "profiling": {
+    "fp32": {
+      "passed": true,
+      "trace": {
+        "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\results\\s2_01\\profile\\fp32_v1_ort_2026-08-25_16-22-00.json",
+        "sha256": "7F6507FD9069A97567C6F9D4D08771015799F0B3AC170B8C0B065B4B62215B62",
+        "size_bytes": 2274478
+      },
+      "kernel_event_total_ms": 1376.274,
+      "unique_node_count": 294,
+      "top_nodes": [
+        {
+          "node_name": "/model.22/dfl/Softmax",
+          "op_type": "Softmax",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 64.376,
+          "mean_ms": 6.437600000000001,
+          "percentage": 4.6775569399698025,
+          "rank": 1,
+          "cumulative_percentage": 4.6775569399698025
+        },
+        {
+          "node_name": "/model.22/cv2.0/cv2.0.0/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 54.71,
+          "mean_ms": 5.471,
+          "percentage": 3.9752258634545155,
+          "rank": 2,
+          "cumulative_percentage": 8.652782803424317
+        },
+        {
+          "node_name": "/model.22/cv3.0/cv3.0.0/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 52.253,
+          "mean_ms": 5.2253,
+          "percentage": 3.796700366351468,
+          "rank": 3,
+          "cumulative_percentage": 12.449483169775785
+        },
+        {
+          "node_name": "/model.22/cv2.0/cv2.0.1/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 51.666,
+          "mean_ms": 5.166600000000001,
+          "percentage": 3.754048975712685,
+          "rank": 4,
+          "cumulative_percentage": 16.20353214548847
+        },
+        {
+          "node_name": "/model.22/cv3.0/cv3.0.1/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 51.19,
+          "mean_ms": 5.119,
+          "percentage": 3.7194628395217815,
+          "rank": 5,
+          "cumulative_percentage": 19.922994985010252
+        },
+        {
+          "node_name": "/model.1/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 28.348,
+          "mean_ms": 2.8348,
+          "percentage": 2.059764262058282,
+          "rank": 6,
+          "cumulative_percentage": 21.982759247068536
+        },
+        {
+          "node_name": "/model.7/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 27.876,
+          "mean_ms": 2.7876,
+          "percentage": 2.0254687656673016,
+          "rank": 7,
+          "cumulative_percentage": 24.008228012735838
+        },
+        {
+          "node_name": "/model.3/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 27.297,
+          "mean_ms": 2.7297,
+          "percentage": 1.9833986546283662,
+          "rank": 8,
+          "cumulative_percentage": 25.991626667364205
+        },
+        {
+          "node_name": "/model.5/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 27.183,
+          "mean_ms": 2.7183,
+          "percentage": 1.9751154203305445,
+          "rank": 9,
+          "cumulative_percentage": 27.96674208769475
+        },
+        {
+          "node_name": "/model.22/cv2.1/cv2.1.0/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 26.283,
+          "mean_ms": 2.6283000000000003,
+          "percentage": 1.9097214653477432,
+          "rank": 10,
+          "cumulative_percentage": 29.876463553042495
+        },
+        {
+          "node_name": "/model.22/cv3.1/cv3.1.0/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 25.926,
+          "mean_ms": 2.5926,
+          "percentage": 1.8837818632045653,
+          "rank": 11,
+          "cumulative_percentage": 31.76024541624706
+        },
+        {
+          "node_name": "/model.15/cv1/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 20.413,
+          "mean_ms": 2.0413,
+          "percentage": 1.4832075589599165,
+          "rank": 12,
+          "cumulative_percentage": 33.24345297520698
+        },
+        {
+          "node_name": "/model.12/cv1/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 18.682,
+          "mean_ms": 1.8682,
+          "percentage": 1.357433185542995,
+          "rank": 13,
+          "cumulative_percentage": 34.60088616074997
+        },
+        {
+          "node_name": "/model.0/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 17.436,
+          "mean_ms": 1.7435999999999998,
+          "percentage": 1.2668988878668055,
+          "rank": 14,
+          "cumulative_percentage": 35.86778504861678
+        },
+        {
+          "node_name": "/model.0/act/Mul/QuickGeluFusion/",
+          "op_type": "QuickGelu",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 16.855,
+          "mean_ms": 1.6855,
+          "percentage": 1.2246834569279081,
+          "rank": 15,
+          "cumulative_percentage": 37.09246850554469
+        },
+        {
+          "node_name": "ReorderOutput_token_272",
+          "op_type": "ReorderOutput",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 15.873,
+          "mean_ms": 1.5873,
+          "percentage": 1.1533313860466738,
+          "rank": 16,
+          "cumulative_percentage": 38.24579989159136
+        },
+        {
+          "node_name": "ReorderInput",
+          "op_type": "ReorderInput",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 14.907,
+          "mean_ms": 1.4907000000000001,
+          "percentage": 1.0831418743651338,
+          "rank": 17,
+          "cumulative_percentage": 39.32894176595649
+        },
+        {
+          "node_name": "/model.19/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 13.927,
+          "mean_ms": 1.3927,
+          "percentage": 1.0119351233838612,
+          "rank": 18,
+          "cumulative_percentage": 40.34087688934036
+        },
+        {
+          "node_name": "/model.8/m.0/cv1/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 13.233,
+          "mean_ms": 1.3233,
+          "percentage": 0.9615091180971231,
+          "rank": 19,
+          "cumulative_percentage": 41.302386007437484
+        },
+        {
+          "node_name": "/model.16/conv/Conv_output_0_nchwc",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 13.187,
+          "mean_ms": 1.3187,
+          "percentage": 0.9581667603980022,
+          "rank": 20,
+          "cumulative_percentage": 42.260552767835485
+        }
+      ],
+      "top_operators": [
+        {
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 640,
+          "total_ms": 933.169,
+          "mean_ms": 1.4580765624999998,
+          "percentage": 67.80401286371755,
+          "rank": 1,
+          "cumulative_percentage": 67.80401286371755
+        },
+        {
+          "op_type": "QuickGelu",
+          "provider": "CPUExecutionProvider",
+          "calls": 560,
+          "total_ms": 105.216,
+          "mean_ms": 0.18788571428571427,
+          "percentage": 7.644989297189368,
+          "rank": 2,
+          "cumulative_percentage": 75.44900216090691
+        },
+        {
+          "op_type": "ReorderInput",
+          "provider": "CPUExecutionProvider",
+          "calls": 570,
+          "total_ms": 98.114,
+          "mean_ms": 0.1721298245614035,
+          "percentage": 7.128958332425084,
+          "rank": 3,
+          "cumulative_percentage": 82.577960493332
+        },
+        {
+          "op_type": "ReorderOutput",
+          "provider": "CPUExecutionProvider",
+          "calls": 630,
+          "total_ms": 84.957,
+          "mean_ms": 0.13485238095238095,
+          "percentage": 6.172971370526509,
+          "rank": 4,
+          "cumulative_percentage": 88.75093186385851
+        },
+        {
+          "op_type": "Softmax",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 64.376,
+          "mean_ms": 6.437600000000001,
+          "percentage": 4.6775569399698025,
+          "rank": 5,
+          "cumulative_percentage": 93.42848880382832
+        },
+        {
+          "op_type": "Concat",
+          "provider": "CPUExecutionProvider",
+          "calls": 170,
+          "total_ms": 50.089,
+          "mean_ms": 0.29464117647058824,
+          "percentage": 3.639464234592821,
+          "rank": 6,
+          "cumulative_percentage": 97.06795303842114
+        },
+        {
+          "op_type": "Split",
+          "provider": "CPUExecutionProvider",
+          "calls": 90,
+          "total_ms": 16.901,
+          "mean_ms": 0.1877888888888889,
+          "percentage": 1.2280258146270293,
+          "rank": 7,
+          "cumulative_percentage": 98.29597885304817
+        },
+        {
+          "op_type": "Resize",
+          "provider": "CPUExecutionProvider",
+          "calls": 20,
+          "total_ms": 8.963,
+          "mean_ms": 0.44815,
+          "percentage": 0.651251131678721,
+          "rank": 8,
+          "cumulative_percentage": 98.94722998472689
+        },
+        {
+          "op_type": "Add",
+          "provider": "CPUExecutionProvider",
+          "calls": 80,
+          "total_ms": 7.593,
+          "mean_ms": 0.0949125,
+          "percentage": 0.551707000204901,
+          "rank": 9,
+          "cumulative_percentage": 99.49893698493179
+        },
+        {
+          "op_type": "Transpose",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 4.144,
+          "mean_ms": 0.4144,
+          "percentage": 0.30110283272080995,
+          "rank": 10,
+          "cumulative_percentage": 99.8000398176526
+        },
+        {
+          "op_type": "MaxPool",
+          "provider": "CPUExecutionProvider",
+          "calls": 30,
+          "total_ms": 1.462,
+          "mean_ms": 0.04873333333333334,
+          "percentage": 0.10622884687206181,
+          "rank": 11,
+          "cumulative_percentage": 99.90626866452466
+        },
+        {
+          "op_type": "Reshape",
+          "provider": "CPUExecutionProvider",
+          "calls": 80,
+          "total_ms": 0.508,
+          "mean_ms": 0.00635,
+          "percentage": 0.03691125459029234,
+          "rank": 12,
+          "cumulative_percentage": 99.94317991911495
+        },
+        {
+          "op_type": "Sub",
+          "provider": "CPUExecutionProvider",
+          "calls": 20,
+          "total_ms": 0.261,
+          "mean_ms": 0.01305,
+          "percentage": 0.018964246945012402,
+          "rank": 13,
+          "cumulative_percentage": 99.96214416605997
+        },
+        {
+          "op_type": "Sigmoid",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 0.224,
+          "mean_ms": 0.0224,
+          "percentage": 0.016275828795719458,
+          "rank": 14,
+          "cumulative_percentage": 99.97841999485568
+        },
+        {
+          "op_type": "Mul",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 0.2,
+          "mean_ms": 0.02,
+          "percentage": 0.014531989996178087,
+          "rank": 15,
+          "cumulative_percentage": 99.99295198485186
+        },
+        {
+          "op_type": "Div",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 0.097,
+          "mean_ms": 0.009699999999999999,
+          "percentage": 0.007048015148146372,
+          "rank": 16,
+          "cumulative_percentage": 100.0
+        }
+      ],
+      "profiling_overhead_is_not_benchmark": true
+    },
+    "int8": {
+      "passed": true,
+      "trace": {
+        "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\results\\s2_01\\profile\\int8_v1_ort_2026-08-25_16-22-01.json",
+        "sha256": "76E8F8A16EB33EE6950CC63C434C50B33C9B60710DCD6B78ED39619770A6FE25",
+        "size_bytes": 5602548
+      },
+      "kernel_event_total_ms": 1918.933,
+      "unique_node_count": 683,
+      "top_nodes": [
+        {
+          "node_name": "/model.22/cv2.0/cv2.0.1/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 65.384,
+          "mean_ms": 6.538399999999999,
+          "percentage": 3.4073102083293163,
+          "rank": 1,
+          "cumulative_percentage": 3.4073102083293163
+        },
+        {
+          "node_name": "/model.22/cv3.0/cv3.0.1/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 64.811,
+          "mean_ms": 6.4811000000000005,
+          "percentage": 3.377449864065082,
+          "rank": 2,
+          "cumulative_percentage": 6.784760072394398
+        },
+        {
+          "node_name": "/model.22/cv3.0/cv3.0.0/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 64.594,
+          "mean_ms": 6.4594,
+          "percentage": 3.3661414963419776,
+          "rank": 3,
+          "cumulative_percentage": 10.150901568736376
+        },
+        {
+          "node_name": "/model.22/cv2.0/cv2.0.0/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 63.2,
+          "mean_ms": 6.32,
+          "percentage": 3.2934969589871037,
+          "rank": 4,
+          "cumulative_percentage": 13.44439852772348
+        },
+        {
+          "node_name": "/model.1/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 60.137,
+          "mean_ms": 6.0137,
+          "percentage": 3.13387700352227,
+          "rank": 5,
+          "cumulative_percentage": 16.57827553124575
+        },
+        {
+          "node_name": "/model.3/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 41.356,
+          "mean_ms": 4.1356,
+          "percentage": 2.1551560163903587,
+          "rank": 6,
+          "cumulative_percentage": 18.73343154763611
+        },
+        {
+          "node_name": "/model.0/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 39.333,
+          "mean_ms": 3.9333,
+          "percentage": 2.0497328463265783,
+          "rank": 7,
+          "cumulative_percentage": 20.783164393962686
+        },
+        {
+          "node_name": "/model.5/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 35.803,
+          "mean_ms": 3.5803000000000003,
+          "percentage": 1.8657764497249252,
+          "rank": 8,
+          "cumulative_percentage": 22.648940843687612
+        },
+        {
+          "node_name": "/model.15/cv1/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 34.001,
+          "mean_ms": 3.4001,
+          "percentage": 1.771870096558869,
+          "rank": 9,
+          "cumulative_percentage": 24.42081094024648
+        },
+        {
+          "node_name": "/model.7/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 32.956,
+          "mean_ms": 3.2956,
+          "percentage": 1.717412749689541,
+          "rank": 10,
+          "cumulative_percentage": 26.13822368993602
+        },
+        {
+          "node_name": "/model.22/cv2.1/cv2.1.0/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 32.85,
+          "mean_ms": 3.285,
+          "percentage": 1.711888846562126,
+          "rank": 11,
+          "cumulative_percentage": 27.850112536498145
+        },
+        {
+          "node_name": "/model.22/cv3.1/cv3.1.0/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 32.194,
+          "mean_ms": 3.2194000000000003,
+          "percentage": 1.6777031819245383,
+          "rank": 12,
+          "cumulative_percentage": 29.527815718422683
+        },
+        {
+          "node_name": "/model.22/dfl/Softmax",
+          "op_type": "Softmax",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 28.197,
+          "mean_ms": 2.8196999999999997,
+          "percentage": 1.469410344186066,
+          "rank": 13,
+          "cumulative_percentage": 30.99722606260875
+        },
+        {
+          "node_name": "/model.9/m/MaxPool",
+          "op_type": "MaxPool",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 27.257,
+          "mean_ms": 2.7257,
+          "percentage": 1.4204247881504983,
+          "rank": 14,
+          "cumulative_percentage": 32.417650850759244
+        },
+        {
+          "node_name": "/model.2/m.0/cv1/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 23.858,
+          "mean_ms": 2.3858,
+          "percentage": 1.2432951020176317,
+          "rank": 15,
+          "cumulative_percentage": 33.66094595277688
+        },
+        {
+          "node_name": "/model.2/m.0/cv2/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 23.739,
+          "mean_ms": 2.3739,
+          "percentage": 1.2370937390727035,
+          "rank": 16,
+          "cumulative_percentage": 34.89803969184958
+        },
+        {
+          "node_name": "/model.12/cv1/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 21.88,
+          "mean_ms": 2.188,
+          "percentage": 1.1402169851683202,
+          "rank": 17,
+          "cumulative_percentage": 36.038256677017905
+        },
+        {
+          "node_name": "/model.2/cv2/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 20.925,
+          "mean_ms": 2.0925,
+          "percentage": 1.0904497447279295,
+          "rank": 18,
+          "cumulative_percentage": 37.12870642174583
+        },
+        {
+          "node_name": "/model.16/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 20.588,
+          "mean_ms": 2.0588,
+          "percentage": 1.072887901766242,
+          "rank": 19,
+          "cumulative_percentage": 38.201594323512076
+        },
+        {
+          "node_name": "/model.4/m.1/cv1/conv/Conv",
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 19.449,
+          "mean_ms": 1.9449,
+          "percentage": 1.0135319992933574,
+          "rank": 20,
+          "cumulative_percentage": 39.21512632280543
+        }
+      ],
+      "top_operators": [
+        {
+          "op_type": "Conv",
+          "provider": "CPUExecutionProvider",
+          "calls": 570,
+          "total_ms": 1238.668,
+          "mean_ms": 2.1731017543859648,
+          "percentage": 64.54983055687718,
+          "rank": 1,
+          "cumulative_percentage": 64.54983055687718
+        },
+        {
+          "op_type": "DequantizeLinear",
+          "provider": "CPUExecutionProvider",
+          "calls": 3170,
+          "total_ms": 202.452,
+          "mean_ms": 0.06386498422712934,
+          "percentage": 10.550238075013562,
+          "rank": 2,
+          "cumulative_percentage": 75.10006863189075
+        },
+        {
+          "op_type": "Mul",
+          "provider": "CPUExecutionProvider",
+          "calls": 570,
+          "total_ms": 123.12,
+          "mean_ms": 0.216,
+          "percentage": 6.416065594786269,
+          "rank": 3,
+          "cumulative_percentage": 81.51613422667702
+        },
+        {
+          "op_type": "QuantizeLinear",
+          "provider": "CPUExecutionProvider",
+          "calls": 1200,
+          "total_ms": 118.573,
+          "mean_ms": 0.09881083333333333,
+          "percentage": 6.179110995537624,
+          "rank": 4,
+          "cumulative_percentage": 87.69524522221465
+        },
+        {
+          "op_type": "Sigmoid",
+          "provider": "CPUExecutionProvider",
+          "calls": 570,
+          "total_ms": 62.313,
+          "mean_ms": 0.10932105263157896,
+          "percentage": 3.2472733545152437,
+          "rank": 5,
+          "cumulative_percentage": 90.9425185767299
+        },
+        {
+          "op_type": "Concat",
+          "provider": "CPUExecutionProvider",
+          "calls": 170,
+          "total_ms": 54.13,
+          "mean_ms": 0.3184117647058824,
+          "percentage": 2.8208384555375305,
+          "rank": 6,
+          "cumulative_percentage": 93.76335703226742
+        },
+        {
+          "op_type": "MaxPool",
+          "provider": "CPUExecutionProvider",
+          "calls": 30,
+          "total_ms": 43.468,
+          "mean_ms": 1.4489333333333334,
+          "percentage": 2.2652171805894215,
+          "rank": 7,
+          "cumulative_percentage": 96.02857421285684
+        },
+        {
+          "op_type": "Softmax",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 28.197,
+          "mean_ms": 2.8196999999999997,
+          "percentage": 1.469410344186066,
+          "rank": 8,
+          "cumulative_percentage": 97.4979845570429
+        },
+        {
+          "op_type": "Split",
+          "provider": "CPUExecutionProvider",
+          "calls": 80,
+          "total_ms": 14.332,
+          "mean_ms": 0.17915,
+          "percentage": 0.7468733926614426,
+          "rank": 9,
+          "cumulative_percentage": 98.24485794970434
+        },
+        {
+          "op_type": "Add",
+          "provider": "CPUExecutionProvider",
+          "calls": 80,
+          "total_ms": 9.509,
+          "mean_ms": 0.1188625,
+          "percentage": 0.4955358003640565,
+          "rank": 10,
+          "cumulative_percentage": 98.74039375006839
+        },
+        {
+          "op_type": "QLinearConv",
+          "provider": "CPUExecutionProvider",
+          "calls": 70,
+          "total_ms": 9.01,
+          "mean_ms": 0.12871428571428573,
+          "percentage": 0.4695317658302817,
+          "rank": 11,
+          "cumulative_percentage": 99.20992551589868
+        },
+        {
+          "op_type": "Resize",
+          "provider": "CPUExecutionProvider",
+          "calls": 20,
+          "total_ms": 7.95,
+          "mean_ms": 0.3975,
+          "percentage": 0.4142927345561309,
+          "rank": 12,
+          "cumulative_percentage": 99.6242182504548
+        },
+        {
+          "op_type": "Transpose",
+          "provider": "CPUExecutionProvider",
+          "calls": 140,
+          "total_ms": 5.651,
+          "mean_ms": 0.040364285714285714,
+          "percentage": 0.29448657144360957,
+          "rank": 13,
+          "cumulative_percentage": 99.91870482189842
+        },
+        {
+          "op_type": "Reshape",
+          "provider": "CPUExecutionProvider",
+          "calls": 80,
+          "total_ms": 0.439,
+          "mean_ms": 0.0054875,
+          "percentage": 0.022877296914483206,
+          "rank": 14,
+          "cumulative_percentage": 99.9415821188129
+        },
+        {
+          "op_type": "ReorderInput",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 0.369,
+          "mean_ms": 0.036899999999999995,
+          "percentage": 0.01922943635864306,
+          "rank": 15,
+          "cumulative_percentage": 99.96081155517155
+        },
+        {
+          "op_type": "Slice",
+          "provider": "CPUExecutionProvider",
+          "calls": 20,
+          "total_ms": 0.268,
+          "mean_ms": 0.0134,
+          "percentage": 0.013966094699502276,
+          "rank": 16,
+          "cumulative_percentage": 99.97477764987104
+        },
+        {
+          "op_type": "Sub",
+          "provider": "CPUExecutionProvider",
+          "calls": 20,
+          "total_ms": 0.264,
+          "mean_ms": 0.0132,
+          "percentage": 0.01375764552488284,
+          "rank": 17,
+          "cumulative_percentage": 99.98853529539592
+        },
+        {
+          "op_type": "ReorderOutput",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 0.12,
+          "mean_ms": 0.012,
+          "percentage": 0.006253475238583109,
+          "rank": 18,
+          "cumulative_percentage": 99.9947887706345
+        },
+        {
+          "op_type": "Div",
+          "provider": "CPUExecutionProvider",
+          "calls": 10,
+          "total_ms": 0.1,
+          "mean_ms": 0.01,
+          "percentage": 0.005211229365485924,
+          "rank": 19,
+          "cumulative_percentage": 99.99999999999999
+        }
+      ],
+      "profiling_overhead_is_not_benchmark": true
+    }
+  },
+  "acceptance_checks": {
+    "protocol_and_manifest_hashes": true,
+    "source_and_derived_model_lineage": true,
+    "static_ptq_graph_and_python_legality": true,
+    "correctness_evidence_bound_and_policy_applied": true,
+    "cpp_runtime_legality": true,
+    "same_protocol_unprofiled_benchmarks": true,
+    "benchmark_comparison_bound_to_raw_inputs": true,
+    "fp32_raw_trace_exists_and_hash_matches": true,
+    "int8_raw_trace_exists_and_hash_matches": true,
+    "profiles_bound_to_benchmark_session_run_scope": true
+  },
+  "policy": {
+    "correctness_policy": "advisory",
+    "correctness_results_rewritten": false,
+    "runtime_legality_required": true,
+    "formal_benchmark_profiling_enabled": false,
+    "profile_trace_used_as_formal_latency": false,
+    "int8_speed_is_pass_gate": false,
+    "slower_int8_is_valid_evidence": true
+  },
+  "limitations": [
+    "INT8 latency direction is reported but is not an acceptance condition.",
+    "Product-difference and task-quality gates are diagnostic, non-blocking results under the user-approved exercise policy.",
+    "ORT profile traces include instrumentation overhead and are diagnostic only.",
+    "Peak Working Set is a process-lifetime high-water mark rather than incremental model memory."
+  ]
+}

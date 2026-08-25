@@ -23,6 +23,10 @@ param(
 
   [int]$Repeat = -1,
 
+  [string]$ProfilePrefix = '',
+
+  [int]$ProfileRuns = -1,
+
   [switch]$Overwrite,
   [switch]$AllowGTestDownload
 )
@@ -61,6 +65,8 @@ Usage:
   stage1.cmd demo
   stage1.cmd consistency
   stage1.cmd benchmark [-Warmup <n>] [-Repeat <n>]
+  stage1.cmd profile [image] [-Config <path>] [-ProfilePrefix <path>]
+                     [-ProfileRuns <n>]
   stage1.cmd all
 
 Actions:
@@ -75,6 +81,9 @@ Actions:
   demo         Build and validate the fixed three-detection Demo.
   consistency  Build and run the frozen 30-image Python/C++ comparison.
   benchmark    Build, rerun consistency, then run the configured benchmark.
+  profile      Build, then run a separate profiling-enabled ORT session.
+               Defaults: FP32 Runtime config, fixed crazing_241 sample,
+               10 runs, and a fresh config-named trace prefix below TEMP.
   all          Clean build -> CTest -> Demo -> consistency -> benchmark.
 
 Configuration:
@@ -87,6 +96,18 @@ Detect examples:
   stage1.cmd detect "D:\images\sample.jpg"
   stage1.cmd detect "D:\images\sample.jpg" "D:\outputs"
   stage1.cmd detect "D:\images\sample.jpg" "D:\outputs" -Overwrite
+
+Profile examples:
+  stage1.cmd profile
+  stage1.cmd profile -Config cpp_infer\configs\int8_config.txt
+  stage1.cmd profile -Config cpp_infer\configs\int8_config.txt -ProfilePrefix cpp_infer\results\s2_01\profile\int8_ort -ProfileRuns 10
+
+Profile environment overrides (explicit parameters take precedence):
+  YOLO_DEFECT_PROFILE_CONFIG, YOLO_DEFECT_PROFILE_IMAGE,
+  YOLO_DEFECT_PROFILE_PREFIX, YOLO_DEFECT_PROFILE_RUNS
+
+Profiling is diagnostic and includes instrumentation overhead. It is always
+separate from the formal benchmark action and is not performance evidence.
 
 Run stage1.cmd from an ordinary PowerShell or CMD. No manual VsDevCmd or
 PowerShell switching is required.
@@ -775,9 +796,100 @@ function Invoke-Benchmark {
       $benchmarkJson)
 }
 
+function Invoke-Profile {
+  Write-Stage ("separate ORT profiling run (runs={0})" -f
+      $script:ResolvedProfileRuns)
+  Write-Host "[profile] config: $script:ProfileConfigPath"
+  Write-Host "[profile] image:  $script:ProfileImagePath"
+  Write-Host "[profile] prefix: $script:ResolvedProfilePrefix"
+  Write-Host '[profile] benchmark separation: profiling overhead is diagnostic only'
+
+  $arguments = @('--config', $script:ProfileConfigPath,
+                 '--image', $script:ProfileImagePath,
+                 '--profile',
+                 '--profile-prefix', $script:ResolvedProfilePrefix,
+                 '--profile-runs', ([string]$script:ResolvedProfileRuns))
+  Write-Host '[run] profiling-enabled C++ CLI'
+  $outputLines = @(& $script:CliPath @arguments 2>&1)
+  $exitCode = $LASTEXITCODE
+  $reportedTracePaths = @()
+  $reportedRunCounts = @()
+  $reportedProviders = @()
+  foreach ($outputLine in $outputLines) {
+    $lineText = [string]$outputLine
+    Write-Host $lineText
+    if ($lineText -match '^profile_trace_path:\s*(.+)$') {
+      $reportedTracePaths += $Matches[1].Trim()
+    }
+    if ($lineText -match '^profile_runs:\s*([0-9]+)$') {
+      $reportedRunCounts += [int]$Matches[1]
+    }
+    if ($lineText -match '^actual_provider:\s*(\S+)$') {
+      $reportedProviders += $Matches[1]
+    }
+  }
+  if ($exitCode -ne 0) {
+    Throw-ActionableError -Object 'profiling-enabled C++ CLI' `
+      -Expected 'exit code 0' -Actual "exit code $exitCode" `
+      -ActionText 'read the first profiling diagnostic above; verify the config artifact/model, fixed image, prefix permissions, and run count'
+  }
+  if ($reportedTracePaths.Count -ne 1) {
+    Throw-ActionableError -Object 'profile_trace_path CLI report' `
+      -Expected 'exactly one non-empty profile_trace_path line' `
+      -Actual ("count={0}" -f $reportedTracePaths.Count) `
+      -ActionText 'verify that the Release CLI implements the S2-01 bounded profiling summary and rebuild cleanly'
+  }
+  if ($reportedRunCounts.Count -ne 1 -or
+      $reportedRunCounts[0] -ne $script:ResolvedProfileRuns) {
+    Throw-ActionableError -Object 'profile_runs CLI report' `
+      -Expected ("exactly one value equal to {0}" -f
+          $script:ResolvedProfileRuns) `
+      -Actual ("values=[{0}]" -f ($reportedRunCounts -join ', ')) `
+      -ActionText 'verify that the CLI executed the requested bounded profiling run count'
+  }
+  if ($reportedProviders.Count -ne 1 -or
+      $reportedProviders[0] -ne 'CPUExecutionProvider') {
+    Throw-ActionableError -Object 'profile actual_provider CLI report' `
+      -Expected 'exactly one CPUExecutionProvider value' `
+      -Actual ("values=[{0}]" -f ($reportedProviders -join ', ')) `
+      -ActionText 'verify explicit CPU EP registration and the profiling session summary'
+  }
+
+  $reportedTracePath = [string]$reportedTracePaths[0]
+  if (-not [IO.Path]::IsPathRooted($reportedTracePath)) {
+    $reportedTracePath = ConvertTo-AbsolutePath $reportedTracePath `
+      $script:RepoRoot
+  }
+  $script:ProfileTracePath = Resolve-RequiredFile `
+    -Value $reportedTracePath -Object 'ORT profile trace' `
+    -ActionText 'inspect EndProfiling and the selected profile-prefix directory'
+  if (-not $script:ProfileTracePath.StartsWith(
+      $script:ResolvedProfilePrefix,
+      [StringComparison]::OrdinalIgnoreCase)) {
+    Throw-ActionableError -Object 'ORT profile trace prefix' `
+      -Expected "a trace beginning with $script:ResolvedProfilePrefix" `
+      -Actual $script:ProfileTracePath `
+      -ActionText 'inspect the ORT-returned trace path and profile prefix normalization'
+  }
+  $traceItem = Get-Item -LiteralPath $script:ProfileTracePath
+  if ($traceItem.Length -le 0) {
+    Throw-ActionableError -Object 'ORT profile trace size' `
+      -Expected 'a non-empty JSON trace' -Actual '0 bytes' `
+      -ActionText 'inspect ORT profiling finalization after the requested Session::Run calls'
+  }
+  Invoke-NativeStep -Name 'ORT profile trace JSON parse' `
+    -FilePath $script:ResolvedPythonExe `
+    -Arguments @('-m', 'json.tool', $script:ProfileTracePath) -Quiet
+
+  Write-Host ("[pass] Profile: runs={0}; bytes={1}; trace={2}" -f
+      $script:ResolvedProfileRuns, $traceItem.Length,
+      $script:ProfileTracePath)
+}
+
 $script:InvocationDirectory = [IO.Path]::GetFullPath((Get-Location).Path)
 $supportedActions = @('help', 'doctor', 'build', 'clean-build', 'test',
-                      'detect', 'demo', 'consistency', 'benchmark', 'all')
+                      'detect', 'demo', 'consistency', 'benchmark', 'profile',
+                      'all')
 if ($Action -notin $supportedActions) {
   Throw-ActionableError -Object 'workflow action' `
     -Expected ("one of [{0}]" -f ($supportedActions -join ', ')) `
@@ -794,13 +906,20 @@ if ($Action -eq 'detect') {
       -Expected 'one source image path' -Actual 'missing' `
       -ActionText 'run stage1.cmd detect <image> [output-directory]'
   }
+} elseif ($Action -eq 'profile') {
+  if (-not [string]::IsNullOrWhiteSpace($OutputDir) -or $Overwrite) {
+    Throw-ActionableError -Object 'profile arguments' `
+      -Expected '-ProfilePrefix for the trace prefix and no -Overwrite' `
+      -Actual 'a detect-only output/overwrite argument was supplied' `
+      -ActionText 'remove the argument and use -ProfilePrefix for profiling output'
+  }
 } elseif (-not [string]::IsNullOrWhiteSpace($Image) -or
           -not [string]::IsNullOrWhiteSpace($OutputDir) -or
           -not [string]::IsNullOrWhiteSpace($Config) -or $Overwrite) {
   Throw-ActionableError -Object "$Action arguments" `
-    -Expected 'image/output/config/overwrite arguments only with detect' `
-    -Actual 'a detect-only argument was supplied' `
-    -ActionText 'remove the argument or use the detect action'
+    -Expected 'image/config only with detect or profile; output/overwrite only with detect' `
+    -Actual 'an action-specific argument was supplied' `
+    -ActionText 'remove the argument or use the detect/profile action'
 }
 if (($PSBoundParameters.ContainsKey('Warmup') -or
      $PSBoundParameters.ContainsKey('Repeat')) -and
@@ -809,6 +928,14 @@ if (($PSBoundParameters.ContainsKey('Warmup') -or
     -Expected '-Warmup and -Repeat only with benchmark' `
     -Actual 'a benchmark-only argument was supplied' `
     -ActionText 'remove the argument or use the benchmark action'
+}
+if (($PSBoundParameters.ContainsKey('ProfilePrefix') -or
+     $PSBoundParameters.ContainsKey('ProfileRuns')) -and
+    $Action -ne 'profile') {
+  Throw-ActionableError -Object "$Action profile arguments" `
+    -Expected '-ProfilePrefix and -ProfileRuns only with profile' `
+    -Actual 'a profile-only argument was supplied' `
+    -ActionText 'remove the argument or use the profile action'
 }
 
 $script:RepoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
@@ -1003,12 +1130,26 @@ $script:ConsistencyTool = (Resolve-Path -LiteralPath `
 $script:BenchmarkValidator = (Resolve-Path -LiteralPath `
   (Join-Path $script:CppInferDir 'tests\assert_benchmark_json.py')).Path
 
+$runtimeConfigExplicit = $Config
+if ($Action -eq 'profile' -and
+    [string]::IsNullOrWhiteSpace($runtimeConfigExplicit)) {
+  $profileConfigEnvironment = [Environment]::GetEnvironmentVariable(
+      'YOLO_DEFECT_PROFILE_CONFIG',
+      [EnvironmentVariableTarget]::Process)
+  if (-not [string]::IsNullOrWhiteSpace($profileConfigEnvironment)) {
+    $runtimeConfigExplicit = $profileConfigEnvironment
+  }
+}
 $script:DetectConfigPath = Get-DetectPathDefault `
-  -ExplicitValue $Config -LocalKey 'DefaultRuntimeConfig' `
+  -ExplicitValue $runtimeConfigExplicit -LocalKey 'DefaultRuntimeConfig' `
   -WorkflowValue ([string]$script:WorkflowSettings.Detect.RuntimeConfig)
+$runtimeConfigObject = 'detect Runtime config'
+if ($Action -eq 'profile') {
+  $runtimeConfigObject = 'profile Runtime config'
+}
 $script:DetectConfigPath = Resolve-RequiredFile `
-  -Value $script:DetectConfigPath -Object 'detect Runtime config' `
-  -ActionText 'correct -Config, local DefaultRuntimeConfig, or workflow Detect.RuntimeConfig'
+  -Value $script:DetectConfigPath -Object $runtimeConfigObject `
+  -ActionText 'correct -Config/YOLO_DEFECT_PROFILE_CONFIG, local DefaultRuntimeConfig, or workflow Detect.RuntimeConfig'
 $script:DetectOutputRoot = Get-DetectPathDefault -ExplicitValue '' `
   -LocalKey 'DefaultDetectOutputRoot' `
   -WorkflowValue ([string]$script:WorkflowSettings.Detect.OutputRoot)
@@ -1022,6 +1163,60 @@ if (-not $script:DetectWriteJson -and -not $script:DetectWriteImage) {
   Throw-ActionableError -Object 'effective detect outputs' `
     -Expected 'JSON or image output enabled' -Actual 'both disabled' `
     -ActionText 'enable DetectWriteJson or DetectWriteImage in local/workflow settings'
+}
+
+$script:ProfileConfigPath = ''
+$script:ProfileImagePath = ''
+$script:ResolvedProfileRuns = 10
+$script:ResolvedProfilePrefix = ''
+$script:ProfileTracePath = ''
+if ($Action -eq 'profile') {
+  $script:ProfileConfigPath = $script:DetectConfigPath
+  $script:ProfileImagePath = $script:ImagePath
+  $profileImageCandidate = ''
+  if (-not [string]::IsNullOrWhiteSpace($Image)) {
+    $profileImageCandidate = ConvertTo-AbsolutePath $Image `
+      $script:InvocationDirectory
+  } else {
+    $profileImageEnvironment = [Environment]::GetEnvironmentVariable(
+        'YOLO_DEFECT_PROFILE_IMAGE',
+        [EnvironmentVariableTarget]::Process)
+    if (-not [string]::IsNullOrWhiteSpace($profileImageEnvironment)) {
+      $profileImageCandidate = ConvertTo-AbsolutePath `
+        $profileImageEnvironment $script:InvocationDirectory
+    }
+  }
+  if (-not [string]::IsNullOrWhiteSpace($profileImageCandidate)) {
+    $script:ProfileImagePath = Resolve-RequiredFile `
+      -Value $profileImageCandidate -Object 'profile fixed sample' `
+      -ActionText 'pass one existing image, correct YOLO_DEFECT_PROFILE_IMAGE, or remove the override to use the frozen crazing_241 sample'
+  }
+
+  if ($PSBoundParameters.ContainsKey('ProfileRuns')) {
+    $script:ResolvedProfileRuns = $ProfileRuns
+  } else {
+    $profileRunsEnvironment = [Environment]::GetEnvironmentVariable(
+        'YOLO_DEFECT_PROFILE_RUNS',
+        [EnvironmentVariableTarget]::Process)
+    if (-not [string]::IsNullOrWhiteSpace($profileRunsEnvironment)) {
+      $parsedProfileRuns = 0
+      if (-not [int]::TryParse(
+          $profileRunsEnvironment, [ref]$parsedProfileRuns)) {
+        Throw-ActionableError -Object 'YOLO_DEFECT_PROFILE_RUNS' `
+          -Expected 'an integer in [1,1000000]' `
+          -Actual $profileRunsEnvironment `
+          -ActionText 'set a bounded integer, pass -ProfileRuns, or remove the environment override to use 10'
+      }
+      $script:ResolvedProfileRuns = $parsedProfileRuns
+    }
+  }
+  if ($script:ResolvedProfileRuns -lt 1 -or
+      $script:ResolvedProfileRuns -gt 1000000) {
+    Throw-ActionableError -Object 'profile runs' `
+      -Expected 'an integer in [1,1000000]' `
+      -Actual ([string]$script:ResolvedProfileRuns) `
+      -ActionText 'use the frozen value 10 for formal profiling or choose a bounded exploratory count'
+  }
 }
 
 $script:ResolvedWarmup = [int]$script:WorkflowSettings.Benchmark.Warmup
@@ -1079,7 +1274,8 @@ if ($Action -eq 'detect') {
   }
 }
 
-$needsEvidence = $Action -in @('demo', 'consistency', 'benchmark', 'all')
+$needsEvidence = $Action -in @(
+    'demo', 'consistency', 'benchmark', 'profile', 'all')
 $script:RunDir = ''
 if ($needsEvidence) {
   $runId = (Get-Date -Format 'yyyyMMdd_HHmmss') + '_' +
@@ -1087,6 +1283,55 @@ if ($needsEvidence) {
   $script:RunDir = Join-Path $script:ResolvedBuildDir `
     (Join-Path 'stage1_evidence' $runId)
   New-Item -ItemType Directory -Path $script:RunDir -Force | Out-Null
+}
+
+if ($Action -eq 'profile') {
+  $profilePrefixCandidate = ''
+  if (-not [string]::IsNullOrWhiteSpace($ProfilePrefix)) {
+    $profilePrefixCandidate = ConvertTo-AbsolutePath $ProfilePrefix `
+      $script:InvocationDirectory
+  } else {
+    $profilePrefixEnvironment = [Environment]::GetEnvironmentVariable(
+        'YOLO_DEFECT_PROFILE_PREFIX',
+        [EnvironmentVariableTarget]::Process)
+    if (-not [string]::IsNullOrWhiteSpace($profilePrefixEnvironment)) {
+      $profilePrefixCandidate = ConvertTo-AbsolutePath `
+        $profilePrefixEnvironment $script:InvocationDirectory
+    }
+  }
+  if ([string]::IsNullOrWhiteSpace($profilePrefixCandidate)) {
+    $configStem = [regex]::Replace(
+        [IO.Path]::GetFileNameWithoutExtension($script:ProfileConfigPath),
+        '[^A-Za-z0-9._-]', '_')
+    if ([string]::IsNullOrWhiteSpace($configStem)) {
+      $configStem = 'runtime'
+    }
+    $profilePrefixCandidate = Join-Path $script:RunDir `
+      (Join-Path 'profile' ($configStem + '_ort'))
+  }
+  $script:ResolvedProfilePrefix = [IO.Path]::GetFullPath(
+      $profilePrefixCandidate)
+  $profilePrefixLeaf = Split-Path -Leaf $script:ResolvedProfilePrefix
+  if ([string]::IsNullOrWhiteSpace($profilePrefixLeaf)) {
+    Throw-ActionableError -Object 'profile prefix' `
+      -Expected 'a file prefix with a non-empty final component' `
+      -Actual $script:ResolvedProfilePrefix `
+      -ActionText 'append a filename prefix such as fp32_ort or int8_ort'
+  }
+  if (Test-Path -LiteralPath $script:ResolvedProfilePrefix) {
+    Throw-ActionableError -Object 'profile prefix' `
+      -Expected 'a new file prefix rather than an existing file or directory' `
+      -Actual $script:ResolvedProfilePrefix `
+      -ActionText 'choose a fresh prefix; ORT appends its timestamped JSON filename'
+  }
+  $profilePrefixParent = Split-Path -Parent `
+    $script:ResolvedProfilePrefix
+  if (Test-Path -LiteralPath $profilePrefixParent -PathType Leaf) {
+    Throw-ActionableError -Object 'profile prefix parent' `
+      -Expected 'a directory or a path that can be created as a directory' `
+      -Actual "regular file '$profilePrefixParent'" `
+      -ActionText 'choose a prefix below a writable directory'
+  }
 }
 
 $originalLocation = Get-Location
@@ -1130,6 +1375,10 @@ try {
       Invoke-Consistency
       Invoke-Benchmark
     }
+    'profile' {
+      Invoke-EnsureBuild
+      Invoke-Profile
+    }
     'all' {
       Invoke-CleanBuild
       Invoke-FullTests
@@ -1143,6 +1392,9 @@ try {
   Write-Host "Build directory: $script:ResolvedBuildDir"
   if ($needsEvidence) {
     Write-Host "Fresh evidence:  $script:RunDir"
+  }
+  if ($Action -eq 'profile') {
+    Write-Host "Profile trace:   $script:ProfileTracePath"
   }
 } finally {
   Set-Location $originalLocation

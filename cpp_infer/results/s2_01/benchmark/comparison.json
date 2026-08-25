@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_01_fp32_int8_cpp_benchmark_comparison",
+  "passed": true,
+  "correctness_prerequisite": {
+    "policy": "advisory",
+    "passed": false,
+    "blocking": false,
+    "accepted_for_comparison": true,
+    "evidence_type": "s2_01_fp32_int8_correctness_and_quality"
+  },
+  "protocol_binding": {
+    "protocol_id": "s2_01_static_ptq_qdq_s8s8_cpu_v1",
+    "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\protocols\\s2_01_ptq_protocol.json",
+    "canonical_lf_sha256": "0EC9A7B1CF5E4F246CF3AC15275EF06D7C67FB6C0CE11C5218391CFACE5B73F2",
+    "source_model_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "derived_model_sha256": "C0B4EDAF6B26B1495E22B9B504CF677EA9A08D10B051156AD55649F98C0EDE2F",
+    "derived_model_size_bytes": 3545141,
+    "warmup": 10,
+    "repeat": 100
+  },
+  "comparability": {
+    "same_machine_environment": true,
+    "same_release_build": true,
+    "same_provider_and_threads": true,
+    "same_sample_and_postprocess": true,
+    "same_warmup_repeat": true,
+    "profiling_disabled": true,
+    "separate_process_requirement": "Each source JSON must be produced by a distinct CLI process so process-lifetime peak memory is not inherited."
+  },
+  "models": {
+    "fp32": {
+      "model_id": "yolov8n_neu_det_final_train_2",
+      "sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+      "file_size_bytes": 12336935
+    },
+    "int8": {
+      "model_id": "yolov8n_neu_det_s2_01_int8_qdq_s8s8",
+      "sha256": "C0B4EDAF6B26B1495E22B9B504CF677EA9A08D10B051156AD55649F98C0EDE2F",
+      "file_size_bytes": 3545141
+    },
+    "size": {
+      "int8_minus_fp32_bytes": -8791794,
+      "int8_div_fp32": 0.2873599479935657,
+      "reduction_fraction": 0.7126400520064343
+    }
+  },
+  "session_initialization_ms": {
+    "fp32": 40.3094,
+    "int8": 94.9792,
+    "int8_minus_fp32": 54.66980000000001,
+    "fp32_div_int8": 0.4244023954718506,
+    "int8_div_fp32": 2.35625437242926,
+    "direction": "int8_worse"
+  },
+  "latency_ms": {
+    "image_decode": {
+      "mean": {
+        "fp32": 0.8197760000000004,
+        "int8": 0.8186110000000002,
+        "int8_minus_fp32": -0.0011650000000001937,
+        "fp32_div_int8": 1.0014231423716518,
+        "int8_div_fp32": 0.9985788800843155,
+        "direction": "int8_better"
+      },
+      "p50": {
+        "fp32": 0.8151,
+        "int8": 0.8038,
+        "int8_minus_fp32": -0.011300000000000088,
+        "fp32_div_int8": 1.0140582234386664,
+        "int8_div_fp32": 0.9861366703471965,
+        "direction": "int8_better"
+      },
+      "p95": {
+        "fp32": 0.9983,
+        "int8": 0.9336,
+        "int8_minus_fp32": -0.06469999999999998,
+        "fp32_div_int8": 1.0693016281062553,
+        "int8_div_fp32": 0.9351898226985876,
+        "direction": "int8_better"
+      }
+    },
+    "preprocess": {
+      "mean": {
+        "fp32": 5.569199000000001,
+        "int8": 5.771344,
+        "int8_minus_fp32": 0.2021449999999989,
+        "fp32_div_int8": 0.9649743629906657,
+        "int8_div_fp32": 1.0362969611967536,
+        "direction": "int8_worse"
+      },
+      "p50": {
+        "fp32": 5.4677,
+        "int8": 5.6625,
+        "int8_minus_fp32": 0.19479999999999986,
+        "fp32_div_int8": 0.965598233995585,
+        "int8_div_fp32": 1.0356274118916546,
+        "direction": "int8_worse"
+      },
+      "p95": {
+        "fp32": 6.8621,
+        "int8": 6.8241,
+        "int8_minus_fp32": -0.038000000000000256,
+        "fp32_div_int8": 1.0055684998754415,
+        "int8_div_fp32": 0.9944623366024977,
+        "direction": "int8_better"
+      }
+    },
+    "session_run": {
+      "mean": {
+        "fp32": 139.920077,
+        "int8": 191.91342600000007,
+        "int8_minus_fp32": 51.99334900000008,
+        "fp32_div_int8": 0.7290791473859674,
+        "int8_div_fp32": 1.3715931988802441,
+        "direction": "int8_worse"
+      },
+      "p50": {
+        "fp32": 141.6768,
+        "int8": 190.9285,
+        "int8_minus_fp32": 49.25170000000003,
+        "fp32_div_int8": 0.7420411305802956,
+        "int8_div_fp32": 1.3476341927542126,
+        "direction": "int8_worse"
+      },
+      "p95": {
+        "fp32": 156.4734,
+        "int8": 220.7692,
+        "int8_minus_fp32": 64.29580000000001,
+        "fp32_div_int8": 0.7087646283992513,
+        "int8_div_fp32": 1.4109056235756365,
+        "direction": "int8_worse"
+      }
+    },
+    "postprocess": {
+      "mean": {
+        "fp32": 0.3458580000000001,
+        "int8": 0.35726800000000003,
+        "int8_minus_fp32": 0.01140999999999992,
+        "fp32_div_int8": 0.9680631906579936,
+        "int8_div_fp32": 1.032990418032834,
+        "direction": "int8_worse"
+      },
+      "p50": {
+        "fp32": 0.3417,
+        "int8": 0.333,
+        "int8_minus_fp32": -0.008699999999999986,
+        "fp32_div_int8": 1.026126126126126,
+        "int8_div_fp32": 0.974539069359087,
+        "direction": "int8_better"
+      },
+      "p95": {
+        "fp32": 0.4458,
+        "int8": 0.4228,
+        "int8_minus_fp32": -0.022999999999999965,
+        "fp32_div_int8": 1.054399243140965,
+        "int8_div_fp32": 0.9484073575594437,
+        "direction": "int8_better"
+      }
+    },
+    "pipeline": {
+      "mean": {
+        "fp32": 146.92720000000006,
+        "int8": 199.228267,
+        "int8_minus_fp32": 52.30106699999993,
+        "fp32_div_int8": 0.7374816948038807,
+        "int8_div_fp32": 1.3559658592826918,
+        "direction": "int8_worse"
+      },
+      "p50": {
+        "fp32": 148.7791,
+        "int8": 198.4941,
+        "int8_minus_fp32": 49.715,
+        "fp32_div_int8": 0.7495391550680851,
+        "int8_div_fp32": 1.3341531169364516,
+        "direction": "int8_worse"
+      },
+      "p95": {
+        "fp32": 163.9209,
+        "int8": 229.2748,
+        "int8_minus_fp32": 65.35390000000001,
+        "fp32_div_int8": 0.7149538457780794,
+        "int8_div_fp32": 1.3986916860510161,
+        "direction": "int8_worse"
+      }
+    },
+    "end_to_end": {
+      "mean": {
+        "fp32": 147.74775100000005,
+        "int8": 200.04773000000006,
+        "int8_minus_fp32": 52.29997900000001,
+        "fp32_div_int8": 0.7385624970600767,
+        "int8_div_fp32": 1.3539815573910157,
+        "direction": "int8_worse"
+      },
+      "p50": {
+        "fp32": 149.5826,
+        "int8": 199.312,
+        "int8_minus_fp32": 49.7294,
+        "fp32_div_int8": 0.7504947017741029,
+        "int8_div_fp32": 1.3324544432306966,
+        "direction": "int8_worse"
+      },
+      "p95": {
+        "fp32": 164.8248,
+        "int8": 230.2798,
+        "int8_minus_fp32": 65.45499999999998,
+        "fp32_div_int8": 0.7157588290418874,
+        "int8_div_fp32": 1.3971186374865916,
+        "direction": "int8_worse"
+      }
+    }
+  },
+  "throughput_images_per_second": {
+    "pipeline": {
+      "fp32": 6.806091724336948,
+      "int8": 5.0193680598546795,
+      "int8_minus_fp32": -1.7867236644822686,
+      "fp32_div_int8": 1.3559658592826918,
+      "int8_div_fp32": 0.7374816948038807,
+      "direction": "int8_worse"
+    },
+    "end_to_end": {
+      "fp32": 6.768292533941851,
+      "int8": 4.9988070347011675,
+      "int8_minus_fp32": -1.7694854992406839,
+      "fp32_div_int8": 1.3539815573910157,
+      "int8_div_fp32": 0.7385624970600767,
+      "direction": "int8_worse"
+    }
+  },
+  "peak_working_set_bytes": {
+    "fp32": 158064640.0,
+    "int8": 158048256.0,
+    "int8_minus_fp32": -16384.0,
+    "fp32_div_int8": 1.0001036645415435,
+    "int8_div_fp32": 0.9998963462036797,
+    "direction": "int8_better"
+  },
+  "interpretation": {
+    "speed_is_not_a_pass_condition": true,
+    "pipeline_mean_outcome": "int8_worse",
+    "session_run_mean_outcome": "int8_worse"
+  },
+  "limitations": [
+    "Peak Working Set is a process-lifetime high-water mark, not incremental model memory.",
+    "One fixed image and warm operating-system caches do not represent every workload.",
+    "Initialization has one observation per process; no P50/P95 is claimed for it.",
+    "No CPU affinity, priority elevation, or idle-system lock is applied.",
+    "A slower INT8 result remains valid evidence and does not fail this comparison.",
+    "Correctness and quality are advisory for this exercise run; their failed gates remain visible and are not rewritten as passed."
+  ],
+  "runtime": {
+    "python_version": "3.9.25",
+    "platform": "Windows-10-10.0.26200-SP0"
+  }
+}

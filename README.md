@@ -22,8 +22,11 @@ concurrency, quantization, and TensorRT.
 
 > **Status — 2026-08-25:** Large Stage One's automated engineering gate and
 > user-owned L2 acceptance are complete. The Stage Two documentation preflight
-> is closed; **S2-01 has not started**. Current delivered claims remain the
-> Windows x86_64 ONNX Runtime CPU single-image chain described below.
+> is closed; **S2-01 implementation and machine evidence are complete and now
+> await user L1**. The final locally generated S2-01 artifact is the full
+> 64-Conv QDQ/S8S8 model. Product-difference and task-quality results are retained as advisory
+> diagnostics under the user-approved exercise scope; strict three-layer
+> acceptance is not claimed.
 
 ![Fixed inference demo](docs/assets/demo_inference_result.gif)
 
@@ -37,8 +40,8 @@ must still answer:
 - Can the same image produce deterministic, inspectable JSON and visualization?
 - Do independent Python and C++ implementations agree under declared numeric
   gates?
-- Are failures actionable, and are performance numbers published only after
-  correctness passes?
+- Are failures actionable, and are performance numbers bound to an explicit,
+  machine-readable correctness policy rather than silently detached from quality?
 - Can the same core later move across operating systems, architectures,
   workloads, and inference backends without duplicating product semantics?
 
@@ -81,7 +84,7 @@ YOLO decode -> score filter -> stable NMS -> coordinate restore
 
 ```text
 FP32 ONNX
-  -> static INT8 PTQ + ORT operator/node profiling
+  -> [delivered on Windows CPU] static INT8 PTQ + ORT operator/node profiling
   -> Windows and Linux x86_64 shared-source Runtime
   -> AArch64 cross-build + QEMU portability smoke
   -> directory/manifest + bounded queue + workers
@@ -107,10 +110,13 @@ Core architecture rules:
 - Future multi-image workers reuse the existing single-image
   `DetectorPipeline`; they do not copy preprocessing, inference, or
   postprocessing.
-- Correctness gates run before formal benchmarks.
+- Before publishing a benchmark, run a representative correctness smoke under
+  the same artifact/config. S2-01 additionally retains its original product and
+  task-quality outcomes as non-blocking diagnostics.
 - Backend abstraction remains the smallest boundary required by real backends.
-- Every result records the command, contract, artifact identity, sample,
-  environment, raw evidence, and limitation.
+- Performance claims state the artifact, sample, runtime conditions, and
+  limitations needed to interpret them; routine outputs do not require a new
+  evidence bundle or hash ledger.
 
 ## 3. Large Stage One Final Record
 
@@ -148,43 +154,18 @@ reproduction, is in
 
 ## 4. Quick Start
 
-### Requirements
-
-The verified Windows workflow uses an x64 MSVC environment, OpenCV C++ 4.8.0,
-the complete ONNX Runtime C++ 1.19.2 SDK, a compatible Python environment for
-consistency validation, and the pinned GoogleTest source policy. Machine paths
-belong in the ignored `cpp_infer/.stage1.local.psd1` or environment variables,
-never in tracked CMake or source files.
-
-Copy and fill the optional local template when portable discovery does not find
-the dependencies:
+Run the Windows task runner from an ordinary PowerShell or CMD at the repository
+root. It discovers and initializes the required Visual Studio environment:
 
 ```powershell
-Copy-Item .\cpp_infer\tools\stage1.local.example.psd1 .\cpp_infer\.stage1.local.psd1
-```
-
-### Canonical Commands
-
-Run from an ordinary PowerShell or CMD at the repository root:
-
-```powershell
-# Discover the workflow without starting a build.
 .\cpp_infer\tools\stage1.cmd help
-
-# Read-only toolchain and dependency validation.
 .\cpp_infer\tools\stage1.cmd doctor
-
-# Clean Release build -> 106 tests -> Demo -> consistency -> benchmark.
-.\cpp_infer\tools\stage1.cmd all
-
-# Run one arbitrary image; an optional second argument selects the output dir.
-.\cpp_infer\tools\stage1.cmd detect "D:\images\sample.jpg" "D:\outputs"
+.\cpp_infer\tools\stage1.cmd build
 ```
 
-`detect` remains a single-image convenience entry and reuses
-`DetectorPipeline`. It is not directory batch processing. The complete action
-matrix, low-level commands, environment paths, and safe temporary-build rules
-are documented in [Paths and commands](docs/paths_commands.md).
+The complete action matrix, current dependency paths, local-configuration
+precedence, low-level CMake/CTest audit commands, and environment troubleshooting
+live only in [Paths, toolchains, and environment diagnosis](docs/paths_commands.md).
 
 ## 5. Core Modules
 
@@ -193,31 +174,83 @@ are documented in [Paths and commands](docs/paths_commands.md).
 | Runtime/artifact/metadata contracts | Separate adjustable runtime policy, declared artifact semantics, and actual ORT-observed tensor/provider facts; reject mismatches before inference |
 | `ImagePreprocessor` | Decode or accept a `CV_8UC3` image; letterbox, BGR-to-RGB, normalize, produce contiguous NCHW data, and retain inverse-transform metadata |
 | `OnnxRunner` / `InferenceOutput` | Own ORT resources with RAII/PImpl, validate input/output, run synchronously, and copy output into an ORT-independent lifetime |
+| Static PTQ toolchain | Freeze calibration inputs and quantization configuration, run Conv-only QDQ/S8S8 PTQ, inspect selected/quantized/failed nodes, validate actual metadata, and emit a derived artifact card |
+| `ProfileRunner` and profile summarizer | Create an isolated profiling-enabled session, retain the ORT raw trace, aggregate node/operator/provider time and call counts, and keep trace timing outside formal benchmarks |
 | Postprocessor/NMS | Validate YOLO BCN output, select class scores, apply strict filtering and stable class-agnostic NMS, then restore and clip source coordinates |
 | `DetectorPipeline` and writers | Orchestrate one image and emit owned results, stable JSON, and deterministic GUI-free visualization while enforcing safe output paths |
-| Evidence harness | Test pure seams with synthetic fixtures, test the real vertical slice sparingly, compare Python/C++ detections, and publish structured benchmark/memory evidence |
+| Verification harness | Test meaningful seams with focused fixtures, exercise the real vertical slice sparingly, compare Python/C++ detections when relevant, and record scoped benchmark/memory results |
 
 ## 6. Stage Two Plan
 
-Stage Two uses five complete delivery units. Each unit freezes a minimum SPEC,
-implements one runnable capability, produces tests and machine-readable
-evidence, updates the three project entry documents, and then stops for L1
-acceptance.
+Stage Two uses five complete delivery units. Each unit defines a minimum SPEC,
+implements one runnable capability, performs proportional verification, records
+only the results needed to explain it, updates the three project entry documents,
+and then stops for L1 acceptance.
 
 | Unit | Delivery | Honest boundary | Status |
 |---|---|---|---|
-| S2-01 | Static INT8 PTQ, FP32/INT8 correctness/task-quality/performance comparison, ORT operator/node profiling | No QAT, D010 quantization, or profiler-as-benchmark claims | **Next; not started** |
+| S2-01 | Static INT8 PTQ, FP32/INT8 correctness/task-quality/performance comparison, ORT operator/node profiling | Windows CPU exercise closure; product/quality results are advisory; no QAT or profiler-as-benchmark claim | **Implementation/evidence complete; awaiting L1** |
 | S2-02 | Linux x86_64 native chain, shared-source portability, AArch64 cross-build and QEMU smoke | WSL2 is not a board; QEMU produces no performance claim | Planned |
 | S2-03 | Directory/manifest discovery, bounded queue, workers, backpressure, failure accounting, clean shutdown, throughput comparison | Concurrent single-image work is not true ONNX batch | Planned |
 | S2-04 | One real Linux x86_64 + RTX 4060 TensorRT execution path, FP16 correctness and performance | Local GPU/edge-node evidence only; not Jetson or embedded deployment | Planned |
 | S2-05 | Applicable full gates, result matrix, failure cases, three resume narratives, interview material, recruiting freeze | Adds no new technology stack | Planned |
+
+### S2-01 Windows CPU Record
+
+The final local artifact uses ONNX Runtime 1.19.2 static PTQ with `QDQ`, S8S8,
+MinMax calibration, per-channel weights, and all 64 source `Conv` nodes in the
+quantization target. Its external contract remains float32
+`images [1,3,800,800] -> output0 [1,10,13125]`; INT8 is internal graph
+representation, not an integer application I/O contract.
+
+| Evidence | FP32 | INT8 / outcome |
+|---|---:|---:|
+| Model file | 12,336,935 bytes | 3,545,141 bytes; **71.264% smaller** |
+| Python/C++ ORT legality | Passed | Passed; finite outputs and matching actual metadata |
+| Current Windows regression | 118/118 CTest passed | FP32/INT8 profile workflow smokes passed |
+| 361-image task quality | mAP50 `0.710815`; mAP50-95 `0.345786` | `0.707206` / `0.342174`; deltas `-0.003610/-0.003612` |
+| 30-image product comparison | 62 detections | 65 detections, 61 matches; original aggregate gate `false` |
+| Session initialization | `40.309 ms` | `94.979 ms` |
+| `Session::Run` mean/P50/P95 | `139.920/141.677/156.473 ms` | `191.913/190.929/220.769 ms`; **37.16% slower mean** |
+| Pipeline mean/P50/P95 | `146.927/148.779/163.921 ms` | `199.228/198.494/229.275 ms` |
+| Pipeline throughput | `6.806 img/s` | `5.019 img/s` |
+| Peak Working Set | `150.742 MiB` | `150.727 MiB`; effectively unchanged at process high-water scope |
+
+The profiler was run in separate 10-call sessions and placed every optimized
+node on `CPUExecutionProvider`. FP32 attributed `67.80%` of kernel-event time
+to `Conv`. INT8 attributed `64.55%` to remaining `Conv`, `10.55%` to
+`DequantizeLinear`, `6.18%` to `QuantizeLinear`, and only `0.47%` to
+`QLinearConv`; the optimized graph grew from 294 to 683 executed nodes. This
+explains the measured slowdown: file compression succeeded, but this graph/CPU
+combination retained expensive convolution work and added many Q/DQ boundaries.
+Profile event totals are diagnostic and include instrumentation overhead; they
+are never substituted for the unprofiled `Session::Run` benchmark.
+
+`models/best.int8.qdq.onnx` exists and was loaded by the recorded Python/C++
+runs, but derived ONNX files remain intentionally Git-ignored alongside the
+project's model-license boundary. A fresh clone regenerates the exact binary
+from the frozen protocol; Git carries its SHA-bound contract, card, tools, and
+machine evidence rather than silently claiming to distribute the model.
+
+Primary S2-01 evidence:
+
+- [Frozen PTQ protocol](cpp_infer/protocols/s2_01_ptq_protocol.json) and
+  [INT8 artifact contract](cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt)
+- [Quantization artifact card](cpp_infer/results/s2_01/quantization_report.json)
+- [Unmodified correctness/quality result](cpp_infer/results/s2_01/correctness_quality_v1_failed.json)
+- [FP32/INT8 benchmark comparison](cpp_infer/results/s2_01/benchmark/comparison.json)
+- [FP32 profile summary](cpp_infer/results/s2_01/profile/fp32_summary.json) and
+  [INT8 profile summary](cpp_infer/results/s2_01/profile/int8_summary.json)
+- [Advisory exercise-completion record](cpp_infer/results/s2_01/exercise_completion.json)
+- [S2-01 closure and reproducibility details](docs/details/s2_01_closure.md)
 
 ### Platform Matrix
 
 | Platform/backend | What it proves | Current status |
 |---|---|---|
 | Windows x86_64 + ORT CPU FP32 | Current product chain, correctness, tests, segmented benchmark, Peak Working Set | Verified |
-| Windows/Linux x86_64 + ORT CPU INT8 | Quantization quality, size, latency, memory, and profiling under frozen protocols | Planned in S2-01/S2-02 |
+| Windows x86_64 + ORT CPU INT8 | Static PTQ artifact, Runtime legality, size/quality/performance comparison, per-node profiling | Verified in S2-01 under advisory exercise policy |
+| WSL2/Linux x86_64 + ORT CPU INT8 | Shared-source Linux load/runtime portability, comparison, and peak RSS | Planned in S2-02 |
 | WSL2 Ubuntu 24.04 x86_64 + ORT CPU | Linux build/load/runtime portability, consistency, benchmark, peak RSS | Planned in S2-02 |
 | Linux AArch64 under QEMU | Cross-compilation and portability correctness only | Planned in S2-02; no performance claims |
 | Linux x86_64 + RTX 4060 + TensorRT | Real local TensorRT execution, FP16 correctness/performance, GPU memory | Planned in S2-04; not Jetson |
@@ -236,10 +269,12 @@ written as delivered results.
   Windows CPU host, sequential ORT execution, and no CPU-affinity/priority lock.
 - Peak Working Set is a process-lifetime high-water mark, not model-only or
   per-inference memory.
-- `CPUExecutionProvider` is session-level execution evidence. Per-node
-  placement requires the planned ORT profiling work.
-- The current Runtime is single-image and CPU-only. INT8, Linux, AArch64/QEMU,
-  bounded concurrency, and TensorRT remain planned until their own gates pass.
+- S2-01 ORT traces prove optimized-node placement on `CPUExecutionProvider`,
+  but trace durations include profiler overhead and do not identify exact CPU
+  instructions selected inside a kernel.
+- The current Runtime is single-image and CPU-only. Windows INT8 is delivered;
+  Linux, AArch64/QEMU, bounded concurrency, and TensorRT remain planned until
+  their own units produce evidence.
 - Historical Python ORT `24.4/72.1 FPS` used different implementations,
   providers, hardware, samples, and timing boundaries; it is context only and
   must not be ranked against the C++ result.
@@ -267,6 +302,7 @@ Authoritative and operational references:
 - [Recruiting route](docs/路线0712-new.md)
 - [Stage Two top-level design](docs/Proj1_S2.md)
 - [Stage One consolidated closure](docs/details/stage1_closure.md)
+- [S2-01 INT8/PTQ and profiling closure](docs/details/s2_01_closure.md)
 - [Paths, commands, and environment](docs/paths_commands.md)
 - [C++ Runtime technical reference](cpp_infer/README.md)
 

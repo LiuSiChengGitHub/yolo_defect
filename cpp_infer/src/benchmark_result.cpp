@@ -1,6 +1,7 @@
 #include "yolo_defect_cpp/benchmark_result.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <numeric>
 #include <sstream>
@@ -29,6 +30,13 @@ void validate_non_empty(const std::string& value,
         object, "a non-empty evidence value", "empty",
         "populate the benchmark metadata before serialization");
   }
+}
+
+bool is_sha256(const std::string& value) {
+  return value.size() == 64 &&
+         std::all_of(value.begin(), value.end(), [](unsigned char character) {
+           return std::isxdigit(character) != 0;
+         });
 }
 
 void validate_finite_non_negative(double value,
@@ -229,29 +237,48 @@ void validate_benchmark_result(const BenchmarkResult& result) {
             ", graph_optimization=" + runtime.graph_optimization_level,
         "restore the fixed OnnxRunner CPU session policy");
   }
+  if (!std::isfinite(runtime.session_initialization_ms) ||
+      runtime.session_initialization_ms < 0.0) {
+    throw_benchmark_error(
+        "runtime.session.initialization_ms",
+        "one finite non-negative Ort::Session construction duration",
+        std::to_string(runtime.session_initialization_ms),
+        "measure around the unprofiled Ort::Session constructor");
+  }
+  if (runtime.profiling_enabled) {
+    throw_benchmark_error(
+        "runtime.session.profiling_enabled", "false", "true",
+        "run ORT profiling in the separate profile workflow and recreate an "
+        "unprofiled session for the formal benchmark");
+  }
 
   const BenchmarkModelMetadata& model = result.model;
   validate_non_empty(model.model_id, "model.model_id");
   validate_non_empty(model.model_family, "model.model_family");
   validate_non_empty(model.model_path, "model.path");
   validate_non_empty(model.declared_sha256, "model.declared_sha256");
+  if (!is_sha256(model.declared_sha256)) {
+    throw_benchmark_error(
+        "model.declared_sha256", "64 hexadecimal characters",
+        model.declared_sha256,
+        "copy the actual digest into the selected FP32 or INT8 artifact "
+        "contract");
+  }
   const std::vector<std::int64_t> expected_input_shape = {1, 3, 800, 800};
-  if (model.model_id != "yolov8n_neu_det_final_train_2" ||
-      model.model_family != "yolov8" ||
-      model.declared_sha256 !=
-          "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68" ||
-      model.file_size_bytes != 12336935 || model.opset != 17 ||
+  if (model.model_family != "yolov8" || model.file_size_bytes == 0 ||
+      model.opset != 17 ||
       model.input_name != "images" ||
       model.input_shape != expected_input_shape ||
       model.input_dtype != "float32" || model.input_layout != "nchw") {
     throw_benchmark_error(
         "model.contract",
-        "the frozen YOLOv8/NEU-DET model, 12336935 bytes, opset 17, "
-        "images float32 [1,3,800,800] NCHW",
+        "a non-empty YOLOv8 FP32-or-INT8 artifact with opset 17 and "
+        "images float32 [1,3,800,800] NCHW external I/O",
         "id=" + model.model_id +
             ", size=" + std::to_string(model.file_size_bytes) +
             ", opset=" + std::to_string(model.opset),
-        "load the default validated S1-08 artifact and rerun S1-07");
+        "load one validated S2-01 artifact and pass its correctness gate "
+        "before benchmarking");
   }
   validate_non_empty(model.input_name, "model.input.name");
   validate_non_empty(model.input_dtype, "model.input.dtype");
@@ -270,15 +297,13 @@ void validate_benchmark_result(const BenchmarkResult& result) {
         "use the fixed readable baseline image");
   }
   if (sample.file_size_bytes != 23845 || sample.width != 200 ||
-      sample.height != 200 || sample.detection_count != 3) {
+      sample.height != 200) {
     throw_benchmark_error(
-        "sample.baseline", "crazing_241.jpg, 23845 bytes, 200x200x3, "
-        "3 detections",
+        "sample.baseline", "crazing_241.jpg, 23845 bytes, 200x200x3",
         "size=" + std::to_string(sample.file_size_bytes) +
             ", shape=" + std::to_string(sample.width) + "x" +
             std::to_string(sample.height) + "x" +
-            std::to_string(sample.channels) +
-            ", detections=" + std::to_string(sample.detection_count),
+            std::to_string(sample.channels),
         "use the frozen baseline image and rerun S1-07 consistency");
   }
   if (!std::isfinite(result.score_threshold) ||

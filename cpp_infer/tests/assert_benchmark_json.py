@@ -232,6 +232,10 @@ def validate_document(
     expected_image: str,
     expected_warmup: int,
     expected_repeat: int,
+    expected_model_id: str = EXPECTED_MODEL_ID,
+    expected_model_sha256: str = EXPECTED_MODEL_SHA256,
+    expected_model_size_bytes: int = EXPECTED_MODEL_SIZE_BYTES,
+    expected_detection_count: int = EXPECTED_DETECTION_COUNT,
 ) -> None:
     expect_exact_keys(
         document,
@@ -405,6 +409,8 @@ def validate_document(
             "intra_op_num_threads",
             "inter_op_num_threads",
             "graph_optimization_level",
+            "initialization_ms",
+            "profiling_enabled",
         },
         "runtime.session",
     )
@@ -427,6 +433,16 @@ def validate_document(
             "runtime.session.graph_optimization_level: expected 'all', actual "
             f"{session['graph_optimization_level']!r}"
         )
+    expect_finite_number(
+        session["initialization_ms"],
+        "runtime.session.initialization_ms",
+        minimum=0.0,
+    )
+    if session["profiling_enabled"] is not False:
+        fail(
+            "runtime.session.profiling_enabled: expected false for formal "
+            f"benchmark evidence, actual {session['profiling_enabled']!r}"
+        )
 
     model = document["model"]
     expect_exact_keys(
@@ -443,9 +459,9 @@ def validate_document(
         "model",
     )
     expected_model_strings = {
-        "model_id": EXPECTED_MODEL_ID,
+        "model_id": expected_model_id,
         "model_family": EXPECTED_MODEL_FAMILY,
-        "declared_sha256": EXPECTED_MODEL_SHA256,
+        "declared_sha256": expected_model_sha256,
     }
     for key, expected in expected_model_strings.items():
         actual = expect_string(model[key], f"model.{key}")
@@ -455,9 +471,9 @@ def validate_document(
     model_path, actual_model_size, actual_model_sha256 = sha256_file(
         model_path_value, "model.path"
     )
-    if actual_model_sha256 != EXPECTED_MODEL_SHA256:
+    if actual_model_sha256 != expected_model_sha256:
         fail(
-            f"model.path SHA-256: expected {EXPECTED_MODEL_SHA256}, actual "
+            f"model.path SHA-256: expected {expected_model_sha256}, actual "
             f"{actual_model_sha256} for {str(model_path)!r}"
         )
     if model["declared_sha256"] != actual_model_sha256:
@@ -468,9 +484,9 @@ def validate_document(
     recorded_model_size = expect_int(
         model["file_size_bytes"], "model.file_size_bytes", minimum=1
     )
-    if recorded_model_size != EXPECTED_MODEL_SIZE_BYTES:
+    if recorded_model_size != expected_model_size_bytes:
         fail(
-            f"model.file_size_bytes: expected {EXPECTED_MODEL_SIZE_BYTES}, "
+            f"model.file_size_bytes: expected {expected_model_size_bytes}, "
             f"actual {recorded_model_size}"
         )
     if recorded_model_size != actual_model_size:
@@ -572,10 +588,10 @@ def validate_document(
             "postprocess.detection_count",
             minimum=0,
         )
-        != EXPECTED_DETECTION_COUNT
+        != expected_detection_count
     ):
         fail(
-            f"postprocess.detection_count: expected {EXPECTED_DETECTION_COUNT}, "
+            f"postprocess.detection_count: expected {expected_detection_count}, "
             f"actual {postprocess['detection_count']!r}"
         )
 
@@ -680,6 +696,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--expected-image", required=True)
     parser.add_argument("--expected-warmup", type=int, default=1)
     parser.add_argument("--expected-repeat", type=int, default=2)
+    parser.add_argument("--expected-model-id", default=EXPECTED_MODEL_ID)
+    parser.add_argument("--expected-model-sha256", default=EXPECTED_MODEL_SHA256)
+    parser.add_argument(
+        "--expected-model-size-bytes", type=int, default=EXPECTED_MODEL_SIZE_BYTES
+    )
+    parser.add_argument(
+        "--expected-detection-count", type=int, default=EXPECTED_DETECTION_COUNT
+    )
     return parser.parse_args()
 
 
@@ -694,6 +718,24 @@ def main() -> int:
         fail(
             f"--expected-repeat: expected positive, actual "
             f"{args.expected_repeat}"
+        )
+    if (
+        len(args.expected_model_sha256) != 64
+        or any(character not in "0123456789ABCDEF" for character in args.expected_model_sha256)
+    ):
+        fail(
+            "--expected-model-sha256: expected 64 uppercase hexadecimal characters, "
+            f"actual {args.expected_model_sha256!r}"
+        )
+    if args.expected_model_size_bytes <= 0:
+        fail(
+            "--expected-model-size-bytes: expected positive, "
+            f"actual {args.expected_model_size_bytes}"
+        )
+    if args.expected_detection_count < 0:
+        fail(
+            "--expected-detection-count: expected non-negative, "
+            f"actual {args.expected_detection_count}"
         )
     try:
         encoded = args.json_path.read_bytes()
@@ -717,6 +759,10 @@ def main() -> int:
         args.expected_image,
         args.expected_warmup,
         args.expected_repeat,
+        args.expected_model_id,
+        args.expected_model_sha256,
+        args.expected_model_size_bytes,
+        args.expected_detection_count,
     )
     print(
         "S1-08 benchmark JSON passed strict schema, Release/CPU protocol, "
