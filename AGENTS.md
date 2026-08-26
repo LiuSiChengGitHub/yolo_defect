@@ -21,6 +21,7 @@ RuntimeConfig + ModelArtifactSpec -> actual ModelMetadata
 - 进入某个 S2 单元时，只读取 `docs/Proj1_S2.md` 的总则、目标架构和对应单元；其中旧路径、旧日期和旧优先级只是历史文字。未经用户明确要求不得改写该文档。
 - 当任务需要查找工具链路径、依赖版本或位置、环境入口命令或已知环境踩坑时，使用仓库 Skill：`.agents/skills/yolo-defect-dev/SKILL.md`，并按需读取 `docs/paths_commands.md`。不得仅因任务涉及构建、运行、测试、benchmark 或 profiling 就加载该 Skill；它不规定实现或验证方式。本文件不保存机器路径和工具链细节。
 - 单元收口、L1/L2、复盘或面试准备时才读取 `docs/learning_closure.md`；日常开发不加载九部分模板。
+- 用户说“九部分输出”的时候，读取 `docs/learning_closure.md`，完成文档中的要求。
 - README.md、README_zh.md 和 `cpp_infer/README.md` 只在入口事实变化或单元收口时定向读取和同步。
 - `docs/路线0712-new.md` 只在核对秋招方向、项目定位或投递策略时读取；archive 和旧规划不作为当前实现依据。
 
