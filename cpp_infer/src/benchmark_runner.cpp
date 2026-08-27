@@ -1,6 +1,7 @@
 #include "yolo_defect_cpp/benchmark_runner.h"
 
 #include "image_decoder.h"
+#include "platform_info.h"
 #include "yolo_defect_cpp/image_preprocessor.h"
 #include "yolo_defect_cpp/onnx_runner.h"
 #include "yolo_defect_cpp/postprocessor.h"
@@ -9,26 +10,14 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
-#include <ctime>
 #include <filesystem>
-#include <iomanip>
 #include <limits>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
-
-#ifdef _WIN32
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#include <psapi.h>
-#include <winternl.h>
-#endif
 
 #ifndef YOLO_DEFECT_BUILD_TYPE
 #define YOLO_DEFECT_BUILD_TYPE "unknown"
@@ -124,171 +113,15 @@ std::string evidence_path(const std::filesystem::path& path) {
   return absolute.generic_u8string();
 }
 
-std::string utc_timestamp() {
-  const std::time_t now = std::time(nullptr);
-  std::tm utc{};
-#ifdef _WIN32
-  if (gmtime_s(&utc, &now) != 0) {
-    throw_runner_error(
-        "timestamp_utc", "a UTC timestamp", "gmtime_s failed",
-        "verify the Windows system clock");
-  }
-#else
-  if (gmtime_r(&now, &utc) == nullptr) {
-    throw_runner_error(
-        "timestamp_utc", "a UTC timestamp", "gmtime_r failed",
-        "verify the system clock");
-  }
-#endif
-  std::ostringstream output;
-  output << std::put_time(&utc, "%Y-%m-%dT%H:%M:%SZ");
-  return output.str();
-}
-
-#ifdef _WIN32
-std::string wide_to_utf8(const std::wstring& value) {
-  if (value.empty()) {
-    return {};
-  }
-  const int required = WideCharToMultiByte(
-      CP_UTF8, WC_ERR_INVALID_CHARS, value.data(),
-      static_cast<int>(value.size()), nullptr, 0, nullptr, nullptr);
-  if (required <= 0) {
-    return "unavailable";
-  }
-  std::string converted(static_cast<std::size_t>(required), '\0');
-  if (WideCharToMultiByte(
-          CP_UTF8, WC_ERR_INVALID_CHARS, value.data(),
-          static_cast<int>(value.size()), converted.data(), required,
-          nullptr, nullptr) != required) {
-    return "unavailable";
-  }
-  return converted;
-}
-
-std::string windows_hostname() {
-  wchar_t buffer[MAX_COMPUTERNAME_LENGTH + 1]{};
-  DWORD length = MAX_COMPUTERNAME_LENGTH + 1;
-  if (!GetComputerNameW(buffer, &length)) {
-    return "unavailable";
-  }
-  return wide_to_utf8(std::wstring(buffer, length));
-}
-
-std::string windows_processor() {
-  const DWORD required =
-      GetEnvironmentVariableW(L"PROCESSOR_IDENTIFIER", nullptr, 0);
-  if (required == 0) {
-    return "unavailable";
-  }
-  std::vector<wchar_t> buffer(required);
-  const DWORD written = GetEnvironmentVariableW(
-      L"PROCESSOR_IDENTIFIER", buffer.data(), required);
-  if (written == 0 || written >= required) {
-    return "unavailable";
-  }
-  return wide_to_utf8(std::wstring(buffer.data(), written));
-}
-
-std::string windows_architecture() {
-  SYSTEM_INFO information{};
-  GetNativeSystemInfo(&information);
-  switch (information.wProcessorArchitecture) {
-    case PROCESSOR_ARCHITECTURE_AMD64:
-      return "x86_64";
-    case PROCESSOR_ARCHITECTURE_ARM64:
-      return "arm64";
-    case PROCESSOR_ARCHITECTURE_INTEL:
-      return "x86";
-    default:
-      return "unknown";
-  }
-}
-
-std::string windows_version() {
-  using RtlGetVersionFunction = LONG(WINAPI*)(PRTL_OSVERSIONINFOW);
-  const HMODULE module = GetModuleHandleW(L"ntdll.dll");
-  if (module == nullptr) {
-    return "unavailable";
-  }
-  const auto function = reinterpret_cast<RtlGetVersionFunction>(
-      GetProcAddress(module, "RtlGetVersion"));
-  if (function == nullptr) {
-    return "unavailable";
-  }
-  RTL_OSVERSIONINFOW version{};
-  version.dwOSVersionInfoSize = sizeof(version);
-  if (function(&version) != 0) {
-    return "unavailable";
-  }
-  return std::to_string(version.dwMajorVersion) + "." +
-         std::to_string(version.dwMinorVersion) + "." +
-         std::to_string(version.dwBuildNumber);
-}
-
-BenchmarkMemoryEvidence query_peak_memory() {
-  PROCESS_MEMORY_COUNTERS_EX counters{};
-  counters.cb = sizeof(counters);
-  if (!GetProcessMemoryInfo(
-          GetCurrentProcess(),
-          reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&counters),
-          sizeof(counters))) {
-    throw_runner_error(
-        "memory.peak_working_set", "a successful GetProcessMemoryInfo call",
-        "Win32 error " + std::to_string(GetLastError()),
-        "verify the Psapi runtime and process-query permissions");
-  }
-  BenchmarkMemoryEvidence evidence;
-  evidence.supported = true;
-  evidence.status = "supported";
-  evidence.metric = "peak_working_set";
-  evidence.bytes = static_cast<std::uint64_t>(counters.PeakWorkingSetSize);
-  evidence.mebibytes =
-      static_cast<double>(evidence.bytes) / (1024.0 * 1024.0);
-  evidence.scope =
-      "process lifetime including config/session initialization, warmup, "
-      "timed iterations, retained sample vectors, statistics, and benchmark "
-      "harness; queried before JSON serialization/write";
-  return evidence;
-}
-#else
-BenchmarkMemoryEvidence query_peak_memory() {
-  BenchmarkMemoryEvidence evidence;
-  evidence.supported = false;
-  evidence.status = "unsupported";
-  evidence.metric = "peak_rss";
-  evidence.scope = "process lifetime through timed iterations";
-  evidence.reason =
-      "S1-08 currently implements Peak Working Set only on Windows";
-  return evidence;
-}
-#endif
-
 BenchmarkEnvironment collect_environment(const ModelMetadata& metadata) {
   BenchmarkEnvironment environment;
-#ifdef _WIN32
-  environment.hostname = windows_hostname();
-  environment.processor = windows_processor();
-  environment.architecture = windows_architecture();
-  environment.os_name = "Windows";
-  environment.os_version = windows_version();
-  const DWORD active_processors = GetActiveProcessorCount(ALL_PROCESSOR_GROUPS);
-  environment.logical_cpu_count =
-      active_processors == 0
-          ? static_cast<std::size_t>(std::thread::hardware_concurrency())
-          : static_cast<std::size_t>(active_processors);
-#else
-  environment.hostname = "unavailable";
-  environment.processor = "unavailable";
-  environment.architecture = "unknown";
-  environment.os_name = "non-Windows";
-  environment.os_version = "unavailable";
-  environment.logical_cpu_count =
-      static_cast<std::size_t>(std::thread::hardware_concurrency());
-#endif
-  if (environment.logical_cpu_count == 0) {
-    environment.logical_cpu_count = 1;
-  }
+  const internal::PlatformInfo platform = internal::collect_platform_info();
+  environment.hostname = platform.hostname;
+  environment.processor = platform.processor;
+  environment.architecture = platform.architecture;
+  environment.logical_cpu_count = platform.logical_cpu_count;
+  environment.os_name = platform.os_name;
+  environment.os_version = platform.os_version;
   environment.compiler_id = YOLO_DEFECT_COMPILER_ID;
   environment.compiler_version = YOLO_DEFECT_COMPILER_VERSION;
   environment.build_type = YOLO_DEFECT_BUILD_TYPE;
@@ -526,7 +359,7 @@ class BenchmarkRunner::Impl {
     }
     const std::uint64_t model_size = regular_file_size(
         contract_.artifact.model_path, "model.file_size_bytes");
-    const std::string started_at = utc_timestamp();
+    const std::string started_at = internal::utc_timestamp();
 
     std::optional<IterationIdentity> expected_identity;
     for (std::size_t index = 0; index < request.warmup; ++index) {
@@ -637,7 +470,7 @@ class BenchmarkRunner::Impl {
         calculate_throughput_images_per_second(result.latency.pipeline);
     result.latency.end_to_end_throughput_images_per_second =
         calculate_throughput_images_per_second(result.latency.end_to_end);
-    result.memory = query_peak_memory();
+    result.memory = internal::query_peak_process_memory();
 
     result.timing_exclusions = {
         "RuntimeConfig/ModelArtifactSpec loading and validation",
@@ -645,12 +478,14 @@ class BenchmarkRunner::Impl {
         "inspection/validation; Ort::Session construction is recorded "
         "separately as one initialization observation",
         "initial image path validation and file-size queries",
-        "statistics calculation and Peak Working Set query",
+        "statistics calculation and process peak-memory query",
         "benchmark JSON serialization and filesystem write",
         "visualization/GUI rendering (not executed)"};
     result.limitations = {
-        "One 200x200 validation image, batch=1, one Windows CPU machine; "
-        "results do not represent the full dataset or other hardware.",
+        "One 200x200 validation image, batch=1, one " +
+            result.environment.os_name +
+            " CPU machine; results do not represent the full dataset or "
+            "other hardware.",
         "Repeated imread uses a warmed operating-system file cache and is "
         "not cold-disk latency.",
         "No CPU affinity, elevated process priority, or idle-system lock was "
@@ -661,10 +496,11 @@ class BenchmarkRunner::Impl {
         "session initialization is one Ort::Session construction observation; "
         "it does not provide initialization percentiles and can be affected "
         "by operating-system file cache state.",
-        "Peak Working Set is the process-lifetime peak including session "
-        "initialization, warmup, measured iterations, retained samples, "
-        "statistics, and harness state; it is not per-stage or incremental "
-        "inference memory.",
+        "The process-lifetime peak memory uses the platform metric '" +
+            result.memory.metric +
+            "' and includes session initialization, warmup, measured "
+            "iterations, retained samples, statistics, and harness state; "
+            "it is not per-stage or incremental inference memory.",
         "Actual provider is session-level evidence, not per-node placement "
         "profiling.",
         "Historical Python ORT 24.4/72.1 FPS used a different protocol and "

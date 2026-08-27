@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "evidence_type": "python_ort_vs_cpp_ort_detection_consistency",
+  "passed": true,
+  "manifest": {
+    "manifest_id": "neu_det_val_6x5_v1",
+    "path": "cpp_infer/tests/fixtures/consistency_manifest.json",
+    "sha256": "B3456FAAABD41F0961AE2CA368036A54FF43EEBFB28A88CC02F999FA342C1621",
+    "sample_count": 30,
+    "class_count": 6,
+    "samples_per_class": 5,
+    "class_sample_counts": {
+      "0": 5,
+      "1": 5,
+      "2": 5,
+      "3": 5,
+      "4": 5,
+      "5": 5
+    }
+  },
+  "contract": {
+    "config_path": "cpp_infer/configs/default_config.txt",
+    "config_sha256": "E100AF8D056D521037715C12AEC5576351B372228E48687A418EA5E76E410DF9",
+    "artifact_path": "cpp_infer/artifacts/yolov8_neu_det.artifact.txt",
+    "artifact_sha256": "87E3453AE3DB2F543B72F56ED639B275D6ABA9AF78EDC1F56A98914C84F26382",
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "model_declared_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "model_actual_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "opset": 17,
+    "input_name": "images",
+    "input_shape": [
+      1,
+      3,
+      800,
+      800
+    ],
+    "output_name": "output0",
+    "output_shape": [
+      1,
+      10,
+      13125
+    ],
+    "class_names": [
+      "crazing",
+      "inclusion",
+      "patches",
+      "pitted_surface",
+      "rolled-in_scale",
+      "scratches"
+    ],
+    "score_threshold": 0.25,
+    "nms_threshold": 0.45,
+    "nms_mode": "class_agnostic"
+  },
+  "runtime": {
+    "python_version": "3.12.3",
+    "python_onnxruntime_version": "1.19.2",
+    "python_opencv_version": "4.10.0",
+    "python_numpy_version": "2.0.2",
+    "python_available_providers": [
+      "AzureExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "python_session_providers": [
+      "CPUExecutionProvider"
+    ],
+    "cpp_onnxruntime_version": "1.19.2",
+    "cpp_opencv_version": "4.6.0",
+    "cpp_opencv_version_source": "CMake OpenCV_VERSION passed by the comparison command",
+    "cpp_session_provider": "CPUExecutionProvider",
+    "cpp_provider_evidence": "explicit_cpu_ep_registration_and_session_creation",
+    "execution_mode": "sequential",
+    "intra_op_num_threads": 1,
+    "inter_op_num_threads": 1,
+    "graph_optimization_level": "all",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39"
+  },
+  "requirements": {
+    "python_provider": "CPUExecutionProvider",
+    "detection_count": "exact",
+    "class_id": "exact",
+    "confidence_abs_error_max": 0.0001,
+    "bbox_coordinate_abs_error_max_pixels": 0.01,
+    "matching_iou_min": 0.999,
+    "matching_strategy": "class_id_then_greedy_max_iou_with_canonical_value_tie_break"
+  },
+  "result": {
+    "images_total": 30,
+    "images_passed": 30,
+    "images_failed": 0,
+    "python_detections_total": 62,
+    "cpp_detections_total": 62,
+    "matched_detections_total": 62,
+    "max_confidence_abs_error": 8.049977111568296e-07,
+    "mean_confidence_abs_error": 2.1640202085658433e-07,
+    "max_bbox_coordinate_abs_error_pixels": 9.135351561440075e-05,
+    "mean_bbox_coordinate_abs_error_pixels": 5.765221075668478e-06,
+    "min_matching_iou": 0.999998927116394,
+    "mean_matching_iou": 0.99999969716995
+  },
+  "source_class_results": [
+    {
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "images_total": 5,
+      "images_passed": 5,
+      "python_detections_total": 14,
+      "cpp_detections_total": 14,
+      "matched_detections_total": 14,
+      "max_confidence_abs_error": 5.360320129432772e-07,
+      "max_bbox_coordinate_abs_error_pixels": 3.068359376356966e-05,
+      "min_matching_iou": 0.9999993443489075
+    },
+    {
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "images_total": 5,
+      "images_passed": 5,
+      "python_detections_total": 11,
+      "cpp_detections_total": 11,
+      "matched_detections_total": 11,
+      "max_confidence_abs_error": 8.042690429754806e-07,
+      "max_bbox_coordinate_abs_error_pixels": 3.0019531237712727e-05,
+      "min_matching_iou": 0.9999990463256836
+    },
+    {
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "images_total": 5,
+      "images_passed": 5,
+      "python_detections_total": 9,
+      "cpp_detections_total": 9,
+      "matched_detections_total": 9,
+      "max_confidence_abs_error": 5.957688293811714e-07,
+      "max_bbox_coordinate_abs_error_pixels": 9.135351561440075e-05,
+      "min_matching_iou": 0.999998927116394
+    },
+    {
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "images_total": 5,
+      "images_passed": 5,
+      "python_detections_total": 6,
+      "cpp_detections_total": 6,
+      "matched_detections_total": 6,
+      "max_confidence_abs_error": 1.1958666989997369e-07,
+      "max_bbox_coordinate_abs_error_pixels": 6.076171874269676e-05,
+      "min_matching_iou": 0.9999994039535522
+    },
+    {
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "images_total": 5,
+      "images_passed": 5,
+      "python_detections_total": 9,
+      "cpp_detections_total": 9,
+      "matched_detections_total": 9,
+      "max_confidence_abs_error": 3.8777107236320774e-07,
+      "max_bbox_coordinate_abs_error_pixels": 3.08583984320876e-05,
+      "min_matching_iou": 0.9999989867210388
+    },
+    {
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "images_total": 5,
+      "images_passed": 5,
+      "python_detections_total": 13,
+      "cpp_detections_total": 13,
+      "matched_detections_total": 13,
+      "max_confidence_abs_error": 8.049977111568296e-07,
+      "max_bbox_coordinate_abs_error_pixels": 3.0414062507588824e-05,
+      "min_matching_iou": 0.9999990463256836
+    }
+  ],
+  "failed_images": [],
+  "limitations": [
+    "This compares Python ONNX Runtime with C++ ONNX Runtime for the same ONNX artifact; the matching best.pt is unavailable, so this is not a new three-way PyTorch/ONNX/C++ run.",
+    "Python OpenCV and C++ OpenCV versions are recorded separately; the frozen tolerances were not changed after execution.",
+    "Session provider evidence is not per-node execution-placement profiling.",
+    "This is implementation consistency on a fixed 30-image set, not model accuracy evaluation."
+  ]
+}

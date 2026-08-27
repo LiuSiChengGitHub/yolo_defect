@@ -1,4 +1,4 @@
-"""Strictly validate the S1-08 C++ Release benchmark evidence schema."""
+"""Strictly validate the cross-platform C++ Release benchmark evidence."""
 
 from __future__ import annotations
 
@@ -367,10 +367,22 @@ def validate_document(
             "environment.build.cxx_standard: expected 17, actual "
             f"{build['cxx_standard']!r}"
         )
-    expect_string(environment["opencv_version"], "environment.opencv_version")
-    expect_string(
+    opencv_version = expect_string(
+        environment["opencv_version"], "environment.opencv_version"
+    )
+    if re.fullmatch(r"4\..+", opencv_version) is None:
+        fail(
+            "environment.opencv_version: expected OpenCV 4.x, actual "
+            f"{opencv_version!r}"
+        )
+    onnxruntime_version = expect_string(
         environment["onnxruntime_version"], "environment.onnxruntime_version"
     )
+    if onnxruntime_version != "1.19.2":
+        fail(
+            "environment.onnxruntime_version: expected '1.19.2', actual "
+            f"{onnxruntime_version!r}"
+        )
 
     runtime = document["runtime"]
     expect_exact_keys(
@@ -634,10 +646,15 @@ def validate_document(
     status = expect_string(memory["status"], "memory.status")
     metric = expect_string(memory["metric"], "memory.metric")
     scope = expect_string(memory["scope"], "memory.scope")
-    if os_name == "Windows":
-        if status != "supported" or metric != "peak_working_set":
+    expected_memory_metric = {
+        "Windows": "peak_working_set",
+        "Linux": "peak_rss",
+    }.get(os_name)
+    if expected_memory_metric is not None:
+        if status != "supported" or metric != expected_memory_metric:
             fail(
-                "memory: expected supported Windows peak_working_set, actual "
+                f"memory: expected supported {os_name} "
+                f"{expected_memory_metric}, actual "
                 f"status={status!r}, metric={metric!r}"
             )
         memory_bytes = expect_int(memory["bytes"], "memory.bytes", minimum=1)
@@ -656,13 +673,14 @@ def validate_document(
             )
         if memory["reason"] is not None:
             fail(
-                "memory.reason: expected null on supported Windows, actual "
+                f"memory.reason: expected null on supported {os_name}, actual "
                 f"{memory['reason']!r}"
             )
     else:
         if status != "unsupported":
             fail(
-                "memory: expected explicit unsupported status off Windows, "
+                "memory: expected explicit unsupported status outside "
+                "Windows/Linux, "
                 f"actual status={status!r}"
             )
         if memory["bytes"] is not None or memory["mebibytes"] is not None:
@@ -685,7 +703,9 @@ def validate_document(
     limitations = expect_string_array(document["limitations"], "limitations")
     require_disclosure(limitations, ("one", "image"), "limitations")
     require_disclosure(limitations, ("file cache",), "limitations")
-    require_disclosure(limitations, ("peak working set",), "limitations")
+    require_disclosure(
+        limitations, ("process-lifetime", "peak", "memory"), "limitations"
+    )
     require_disclosure(limitations, ("per-node",), "limitations")
     require_disclosure(limitations, ("historical python ort",), "limitations")
 
@@ -765,7 +785,7 @@ def main() -> int:
         args.expected_detection_count,
     )
     print(
-        "S1-08 benchmark JSON passed strict schema, Release/CPU protocol, "
+        "Cross-platform benchmark JSON passed strict schema, Release/CPU protocol, "
         "six-segment finite statistics, throughput, memory, and disclosure "
         "validation."
     )

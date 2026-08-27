@@ -1,0 +1,4512 @@
+{
+  "schema_version": 1,
+  "evidence_type": "python_ort_vs_cpp_ort_per_image_consistency",
+  "manifest_id": "neu_det_val_6x5_v1",
+  "requirements": {
+    "python_provider": "CPUExecutionProvider",
+    "detection_count": "exact",
+    "class_id": "exact",
+    "confidence_abs_error_max": 0.0001,
+    "bbox_coordinate_abs_error_max_pixels": 0.01,
+    "matching_iou_min": 0.999,
+    "matching_strategy": "class_id_then_greedy_max_iou_with_canonical_value_tie_break"
+  },
+  "images": [
+    {
+      "sample_id": "crazing_241",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/val/crazing_241.jpg",
+      "image_sha256": "1D65EF27EAA9BF27608D954DFE57B40E401FC1AED435884400F35E8000BBF98D",
+      "python_detection_count": 3,
+      "cpp_detection_count": 3,
+      "python_class_id_counts": {
+        "0": 3
+      },
+      "cpp_class_id_counts": {
+        "0": 3
+      },
+      "python_detections": [
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.44579318165779114,
+          "bbox_xyxy": [
+            0.0,
+            53.68034362792969,
+            176.90679931640625,
+            146.2407989501953
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.41758260130882263,
+          "bbox_xyxy": [
+            21.250396728515625,
+            118.81275177001953,
+            188.81417846679688,
+            194.868408203125
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.30851203203201294,
+          "bbox_xyxy": [
+            22.772354125976562,
+            2.6882476806640625,
+            192.409423828125,
+            86.20254516601562
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.445792824,
+          "bbox_xyxy": [
+            0.0,
+            53.6803322,
+            176.90683,
+            146.240784
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.417582601,
+          "bbox_xyxy": [
+            21.2503815,
+            118.812775,
+            188.814178,
+            194.868408
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.308511496,
+          "bbox_xyxy": [
+            22.7723389,
+            2.68823242,
+            192.409409,
+            86.2025604
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 0,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.44579318165779114,
+            "bbox_xyxy": [
+              0.0,
+              53.68034362792969,
+              176.90679931640625,
+              146.2407989501953
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.445792824,
+            "bbox_xyxy": [
+              0.0,
+              53.6803322,
+              176.90683,
+              146.240784
+            ]
+          },
+          "confidence_abs_error": 3.5765779116125884e-07,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            1.142792968522599e-05,
+            3.068359376356966e-05,
+            1.495019532171682e-05
+          ],
+          "bbox_coordinate_abs_error_max": 3.068359376356966e-05,
+          "matching_iou": 0.9999995231628418
+        },
+        {
+          "class_id": 0,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.41758260130882263,
+            "bbox_xyxy": [
+              21.250396728515625,
+              118.81275177001953,
+              188.81417846679688,
+              194.868408203125
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.417582601,
+            "bbox_xyxy": [
+              21.2503815,
+              118.812775,
+              188.814178,
+              194.868408
+            ]
+          },
+          "confidence_abs_error": 3.0882263413190003e-10,
+          "bbox_coordinate_abs_errors": [
+            1.52285156254095e-05,
+            2.3229980470773626e-05,
+            4.6679687670803105e-07,
+            2.0312501192165655e-07
+          ],
+          "bbox_coordinate_abs_error_max": 2.3229980470773626e-05,
+          "matching_iou": 0.9999995827674866
+        },
+        {
+          "class_id": 0,
+          "python_index": 2,
+          "cpp_index": 2,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.30851203203201294,
+            "bbox_xyxy": [
+              22.772354125976562,
+              2.6882476806640625,
+              192.409423828125,
+              86.20254516601562
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.308511496,
+            "bbox_xyxy": [
+              22.7723389,
+              2.68823242,
+              192.409409,
+              86.2025604
+            ]
+          },
+          "confidence_abs_error": 5.360320129432772e-07,
+          "bbox_coordinate_abs_errors": [
+            1.5225976561339394e-05,
+            1.5260664062655138e-05,
+            1.4828124989207936e-05,
+            1.5233984370865983e-05
+          ],
+          "bbox_coordinate_abs_error_max": 1.5260664062655138e-05,
+          "matching_iou": 0.999999463558197
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 5.360320129432772e-07,
+        "max_bbox_coordinate_abs_error_pixels": 3.068359376356966e-05,
+        "min_matching_iou": 0.999999463558197
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "crazing_255",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/val/crazing_255.jpg",
+      "image_sha256": "A96B1FD4135862349A69A761E76DFBB3AF6FACCDC3EFB97E0D4E52A1F605076D",
+      "python_detection_count": 2,
+      "cpp_detection_count": 2,
+      "python_class_id_counts": {
+        "0": 2
+      },
+      "cpp_class_id_counts": {
+        "0": 2
+      },
+      "python_detections": [
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.5782608389854431,
+          "bbox_xyxy": [
+            75.72625732421875,
+            37.68382263183594,
+            199.58877563476562,
+            110.98873901367188
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.3779483437538147,
+          "bbox_xyxy": [
+            30.305862426757812,
+            139.93359375,
+            178.1029815673828,
+            191.4141845703125
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.578261077,
+          "bbox_xyxy": [
+            75.7262802,
+            37.6838226,
+            199.588776,
+            110.988739
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.377947867,
+          "bbox_xyxy": [
+            30.3058624,
+            139.933594,
+            178.102966,
+            191.414185
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 0,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.5782608389854431,
+            "bbox_xyxy": [
+              75.72625732421875,
+              37.68382263183594,
+              199.58877563476562,
+              110.98873901367188
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.578261077,
+            "bbox_xyxy": [
+              75.7262802,
+              37.6838226,
+              199.588776,
+              110.988739
+            ]
+          },
+          "confidence_abs_error": 2.3801455684147044e-07,
+          "bbox_coordinate_abs_errors": [
+            2.287578125503842e-05,
+            3.1835938330004865e-08,
+            3.652343707472028e-07,
+            1.3671879628418537e-08
+          ],
+          "bbox_coordinate_abs_error_max": 2.287578125503842e-05,
+          "matching_iou": 0.9999998211860657
+        },
+        {
+          "class_id": 0,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.3779483437538147,
+            "bbox_xyxy": [
+              30.305862426757812,
+              139.93359375,
+              178.1029815673828,
+              191.4141845703125
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.377947867,
+            "bbox_xyxy": [
+              30.3058624,
+              139.933594,
+              178.102966,
+              191.414185
+            ]
+          },
+          "confidence_abs_error": 4.7675381470435596e-07,
+          "bbox_coordinate_abs_errors": [
+            2.6757813742506187e-08,
+            2.499999993688107e-07,
+            1.556738280328318e-05,
+            4.2968750335603545e-07
+          ],
+          "bbox_coordinate_abs_error_max": 1.556738280328318e-05,
+          "matching_iou": 0.9999998807907104
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 4.7675381470435596e-07,
+        "max_bbox_coordinate_abs_error_pixels": 2.287578125503842e-05,
+        "min_matching_iou": 0.9999998211860657
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "crazing_270",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/val/crazing_270.jpg",
+      "image_sha256": "4C67250C57703F8FABB6D97CC0AD72000B690E8412C071F0A63FC5A03BB2A5B7",
+      "python_detection_count": 3,
+      "cpp_detection_count": 3,
+      "python_class_id_counts": {
+        "0": 3
+      },
+      "cpp_class_id_counts": {
+        "0": 3
+      },
+      "python_detections": [
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.43448343873023987,
+          "bbox_xyxy": [
+            0.0,
+            78.79498291015625,
+            186.91708374023438,
+            160.0686798095703
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.39299720525741577,
+          "bbox_xyxy": [
+            0.0,
+            124.95903778076172,
+            188.27725219726562,
+            175.36090087890625
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.36515143513679504,
+          "bbox_xyxy": [
+            0.0,
+            39.335723876953125,
+            183.89059448242188,
+            106.3101806640625
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.434483349,
+          "bbox_xyxy": [
+            0.0,
+            78.7949829,
+            186.917084,
+            160.068665
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.392997295,
+          "bbox_xyxy": [
+            0.0,
+            124.95903,
+            188.277252,
+            175.360886
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.365151554,
+          "bbox_xyxy": [
+            0.0,
+            39.3357315,
+            183.890625,
+            106.310173
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 0,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.43448343873023987,
+            "bbox_xyxy": [
+              0.0,
+              78.79498291015625,
+              186.91708374023438,
+              160.0686798095703
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.434483349,
+            "bbox_xyxy": [
+              0.0,
+              78.7949829,
+              186.917084,
+              160.068665
+            ]
+          },
+          "confidence_abs_error": 8.97302398494837e-08,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            1.0156256280424714e-08,
+            2.597656134639692e-07,
+            1.4809570302531938e-05
+          ],
+          "bbox_coordinate_abs_error_max": 1.4809570302531938e-05,
+          "matching_iou": 0.9999998211860657
+        },
+        {
+          "class_id": 0,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.39299720525741577,
+            "bbox_xyxy": [
+              0.0,
+              124.95903778076172,
+              188.27725219726562,
+              175.36090087890625
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.392997295,
+            "bbox_xyxy": [
+              0.0,
+              124.95903,
+              188.277252,
+              175.360886
+            ]
+          },
+          "confidence_abs_error": 8.974258425276105e-08,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            7.780761720255214e-06,
+            1.972656207271939e-07,
+            1.4878906256399205e-05
+          ],
+          "bbox_coordinate_abs_error_max": 1.4878906256399205e-05,
+          "matching_iou": 0.9999995231628418
+        },
+        {
+          "class_id": 0,
+          "python_index": 2,
+          "cpp_index": 2,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.36515143513679504,
+            "bbox_xyxy": [
+              0.0,
+              39.335723876953125,
+              183.89059448242188,
+              106.3101806640625
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.365151554,
+            "bbox_xyxy": [
+              0.0,
+              39.3357315,
+              183.890625,
+              106.310173
+            ]
+          },
+          "confidence_abs_error": 1.1886320494536307e-07,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            7.623046876403805e-06,
+            3.0517578125e-05,
+            7.664062493972779e-06
+          ],
+          "bbox_coordinate_abs_error_max": 3.0517578125e-05,
+          "matching_iou": 0.9999995827674866
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.1886320494536307e-07,
+        "max_bbox_coordinate_abs_error_pixels": 3.0517578125e-05,
+        "min_matching_iou": 0.9999995231628418
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "crazing_285",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/val/crazing_285.jpg",
+      "image_sha256": "F93B867670DC0F2AC94CF98DB4FA8ABCAEC09BD2B3A22098BC46A20CDEA1C891",
+      "python_detection_count": 2,
+      "cpp_detection_count": 2,
+      "python_class_id_counts": {
+        "0": 2
+      },
+      "cpp_class_id_counts": {
+        "0": 2
+      },
+      "python_detections": [
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.30126258730888367,
+          "bbox_xyxy": [
+            0.42325592041015625,
+            0.0277557373046875,
+            123.09873962402344,
+            56.623008728027344
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.285747766494751,
+          "bbox_xyxy": [
+            130.1748504638672,
+            167.960205078125,
+            199.6947784423828,
+            199.93853759765625
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.301262259,
+          "bbox_xyxy": [
+            0.423240662,
+            0.027759552,
+            123.098747,
+            56.6230049
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.285747677,
+          "bbox_xyxy": [
+            130.17485,
+            167.960205,
+            199.694778,
+            199.938538
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 0,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.30126258730888367,
+            "bbox_xyxy": [
+              0.42325592041015625,
+              0.0277557373046875,
+              123.09873962402344,
+              56.623008728027344
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.301262259,
+            "bbox_xyxy": [
+              0.423240662,
+              0.027759552,
+              123.098747,
+              56.6230049
+            ]
+          },
+          "confidence_abs_error": 3.28308883690287e-07,
+          "bbox_coordinate_abs_errors": [
+            1.5258410156260283e-05,
+            3.8146953124998384e-06,
+            7.375976565526798e-06,
+            3.8280273457758085e-06
+          ],
+          "bbox_coordinate_abs_error_max": 1.5258410156260283e-05,
+          "matching_iou": 0.9999997019767761
+        },
+        {
+          "class_id": 0,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.285747766494751,
+            "bbox_xyxy": [
+              130.1748504638672,
+              167.960205078125,
+              199.6947784423828,
+              199.93853759765625
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.285747677,
+            "bbox_xyxy": [
+              130.17485,
+              167.960205,
+              199.694778,
+              199.938538
+            ]
+          },
+          "confidence_abs_error": 8.949475099884197e-08,
+          "bbox_coordinate_abs_errors": [
+            4.6386719532165444e-07,
+            7.81249980263965e-08,
+            4.423827988375706e-07,
+            4.023437440991984e-07
+          ],
+          "bbox_coordinate_abs_error_max": 4.6386719532165444e-07,
+          "matching_iou": 1.0
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 3.28308883690287e-07,
+        "max_bbox_coordinate_abs_error_pixels": 1.5258410156260283e-05,
+        "min_matching_iou": 0.9999997019767761
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "crazing_300",
+      "source_class_id": 0,
+      "source_class_name": "crazing",
+      "image_path": "../../../data/images/val/crazing_300.jpg",
+      "image_sha256": "87595C05D2A5F7792C219DFA245DCE2CFC26784E165A5172FECAAB73EAEE288D",
+      "python_detection_count": 4,
+      "cpp_detection_count": 4,
+      "python_class_id_counts": {
+        "0": 4
+      },
+      "cpp_class_id_counts": {
+        "0": 4
+      },
+      "python_detections": [
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.5691817402839661,
+          "bbox_xyxy": [
+            1.712646484375,
+            148.40155029296875,
+            111.9085693359375,
+            200.0
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.31378108263015747,
+          "bbox_xyxy": [
+            0.25708770751953125,
+            42.542816162109375,
+            82.58990478515625,
+            138.42713928222656
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.3079286217689514,
+          "bbox_xyxy": [
+            116.42231750488281,
+            83.49079895019531,
+            199.8415069580078,
+            184.2403106689453
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.3017192780971527,
+          "bbox_xyxy": [
+            0.0,
+            50.573883056640625,
+            185.23097229003906,
+            139.89537048339844
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.569181502,
+          "bbox_xyxy": [
+            1.71265411,
+            148.40152,
+            111.908569,
+            200.0
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.313780665,
+          "bbox_xyxy": [
+            0.257087708,
+            42.5428162,
+            82.5899048,
+            138.427139
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.30792883,
+          "bbox_xyxy": [
+            116.422318,
+            83.4908142,
+            199.841507,
+            184.240326
+          ]
+        },
+        {
+          "class_id": 0,
+          "class_name": "crazing",
+          "confidence": 0.301719487,
+          "bbox_xyxy": [
+            0.0,
+            50.5738831,
+            185.230972,
+            139.89534
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 0,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.5691817402839661,
+            "bbox_xyxy": [
+              1.712646484375,
+              148.40155029296875,
+              111.9085693359375,
+              200.0
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.569181502,
+            "bbox_xyxy": [
+              1.71265411,
+              148.40152,
+              111.908569,
+              200.0
+            ]
+          },
+          "confidence_abs_error": 2.3828396611413893e-07,
+          "bbox_coordinate_abs_errors": [
+            7.625624999896274e-06,
+            3.029296874501597e-05,
+            3.3593750004001777e-07,
+            0.0
+          ],
+          "bbox_coordinate_abs_error_max": 3.029296874501597e-05,
+          "matching_iou": 0.9999993443489075
+        },
+        {
+          "class_id": 0,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.31378108263015747,
+            "bbox_xyxy": [
+              0.25708770751953125,
+              42.542816162109375,
+              82.58990478515625,
+              138.42713928222656
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.313780665,
+            "bbox_xyxy": [
+              0.257087708,
+              42.5428162,
+              82.5899048,
+              138.427139
+            ]
+          },
+          "confidence_abs_error": 4.1763015745654997e-07,
+          "bbox_coordinate_abs_errors": [
+            4.804687758763748e-10,
+            3.789062219539119e-08,
+            1.484374934079824e-08,
+            2.822265514623723e-07
+          ],
+          "bbox_coordinate_abs_error_max": 2.822265514623723e-07,
+          "matching_iou": 1.0
+        },
+        {
+          "class_id": 0,
+          "python_index": 2,
+          "cpp_index": 2,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.3079286217689514,
+            "bbox_xyxy": [
+              116.42231750488281,
+              83.49079895019531,
+              199.8415069580078,
+              184.2403106689453
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.30792883,
+            "bbox_xyxy": [
+              116.422318,
+              83.4908142,
+              199.841507,
+              184.240326
+            ]
+          },
+          "confidence_abs_error": 2.0823104857070618e-07,
+          "bbox_coordinate_abs_errors": [
+            4.951171916900421e-07,
+            1.524980469014281e-05,
+            4.199219461042958e-08,
+            1.5331054697753643e-05
+          ],
+          "bbox_coordinate_abs_error_max": 1.5331054697753643e-05,
+          "matching_iou": 0.9999997019767761
+        },
+        {
+          "class_id": 0,
+          "python_index": 3,
+          "cpp_index": 3,
+          "python_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.3017192780971527,
+            "bbox_xyxy": [
+              0.0,
+              50.573883056640625,
+              185.23097229003906,
+              139.89537048339844
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 0,
+            "class_name": "crazing",
+            "confidence": 0.301719487,
+            "bbox_xyxy": [
+              0.0,
+              50.5738831,
+              185.230972,
+              139.89534
+            ]
+          },
+          "confidence_abs_error": 2.0890284729846442e-07,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            4.335937831001502e-08,
+            2.900390541071829e-07,
+            3.048339843303438e-05
+          ],
+          "bbox_coordinate_abs_error_max": 3.048339843303438e-05,
+          "matching_iou": 0.9999996423721313
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 4.1763015745654997e-07,
+        "max_bbox_coordinate_abs_error_pixels": 3.048339843303438e-05,
+        "min_matching_iou": 0.9999993443489075
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "inclusion_241",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/val/inclusion_241.jpg",
+      "image_sha256": "5AF978330766FCF9ACD3823E99BCAC51352DCB5315F0E2D9D39109120C60DDC8",
+      "python_detection_count": 3,
+      "cpp_detection_count": 3,
+      "python_class_id_counts": {
+        "1": 3
+      },
+      "cpp_class_id_counts": {
+        "1": 3
+      },
+      "python_detections": [
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.7974936962127686,
+          "bbox_xyxy": [
+            125.68893432617188,
+            74.76615142822266,
+            142.60684204101562,
+            113.30753326416016
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.7479501366615295,
+          "bbox_xyxy": [
+            18.714580535888672,
+            124.5909423828125,
+            33.20219802856445,
+            170.2996826171875
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.5007092952728271,
+          "bbox_xyxy": [
+            0.1601390838623047,
+            179.761474609375,
+            30.633163452148438,
+            200.0
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.797493935,
+          "bbox_xyxy": [
+            125.688934,
+            74.7661438,
+            142.606842,
+            113.307526
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.747950315,
+          "bbox_xyxy": [
+            18.7145805,
+            124.590958,
+            33.2021942,
+            170.299698
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.500709057,
+          "bbox_xyxy": [
+            0.160139084,
+            179.761475,
+            30.6331596,
+            200.0
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 1,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.7974936962127686,
+            "bbox_xyxy": [
+              125.68893432617188,
+              74.76615142822266,
+              142.60684204101562,
+              113.30753326416016
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.797493935,
+            "bbox_xyxy": [
+              125.688934,
+              74.7661438,
+              142.606842,
+              113.307526
+            ]
+          },
+          "confidence_abs_error": 2.3878723143244684e-07,
+          "bbox_coordinate_abs_errors": [
+            3.261718717340045e-07,
+            7.62822266153762e-06,
+            4.10156246744009e-08,
+            7.264160160502797e-06
+          ],
+          "bbox_coordinate_abs_error_max": 7.62822266153762e-06,
+          "matching_iou": 0.9999995827674866
+        },
+        {
+          "class_id": 1,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.7479501366615295,
+            "bbox_xyxy": [
+              18.714580535888672,
+              124.5909423828125,
+              33.20219802856445,
+              170.2996826171875
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.747950315,
+            "bbox_xyxy": [
+              18.7145805,
+              124.590958,
+              33.2021942,
+              170.299698
+            ]
+          },
+          "confidence_abs_error": 1.783384704356905e-07,
+          "bbox_coordinate_abs_errors": [
+            3.5888671590100785e-08,
+            1.561718750053842e-05,
+            3.828564452135197e-06,
+            1.538281250645923e-05
+          ],
+          "bbox_coordinate_abs_error_max": 1.561718750053842e-05,
+          "matching_iou": 0.9999990463256836
+        },
+        {
+          "class_id": 1,
+          "python_index": 2,
+          "cpp_index": 2,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.5007092952728271,
+            "bbox_xyxy": [
+              0.1601390838623047,
+              179.761474609375,
+              30.633163452148438,
+              200.0
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.500709057,
+            "bbox_xyxy": [
+              0.160139084,
+              179.761475,
+              30.6331596,
+              200.0
+            ]
+          },
+          "confidence_abs_error": 2.3827282713551057e-07,
+          "bbox_coordinate_abs_errors": [
+            1.3769529960683258e-10,
+            3.906249901319825e-07,
+            3.852148438454606e-06,
+            0.0
+          ],
+          "bbox_coordinate_abs_error_max": 3.852148438454606e-06,
+          "matching_iou": 0.9999998807907104
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 2.3878723143244684e-07,
+        "max_bbox_coordinate_abs_error_pixels": 1.561718750053842e-05,
+        "min_matching_iou": 0.9999990463256836
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "inclusion_255",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/val/inclusion_255.jpg",
+      "image_sha256": "AA1149E239A31E679E30CC8B54CB5E7891F110AD1BEFDF8530CEF58A206D4188",
+      "python_detection_count": 2,
+      "cpp_detection_count": 2,
+      "python_class_id_counts": {
+        "1": 2
+      },
+      "cpp_class_id_counts": {
+        "1": 2
+      },
+      "python_detections": [
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.8157792091369629,
+          "bbox_xyxy": [
+            86.38168334960938,
+            0.0,
+            110.554931640625,
+            79.01997375488281
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.6393411159515381,
+          "bbox_xyxy": [
+            83.9771499633789,
+            104.05545043945312,
+            120.95679473876953,
+            199.91635131835938
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.815779209,
+          "bbox_xyxy": [
+            86.3816833,
+            0.0,
+            110.554932,
+            79.0199738
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.639341176,
+          "bbox_xyxy": [
+            83.97715,
+            104.05545,
+            120.956795,
+            199.916351
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 1,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.8157792091369629,
+            "bbox_xyxy": [
+              86.38168334960938,
+              0.0,
+              110.554931640625,
+              79.01997375488281
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.815779209,
+            "bbox_xyxy": [
+              86.3816833,
+              0.0,
+              110.554932,
+              79.0199738
+            ]
+          },
+          "confidence_abs_error": 1.3696288547748736e-10,
+          "bbox_coordinate_abs_errors": [
+            4.960936905717972e-08,
+            0.0,
+            3.5937499376359483e-07,
+            4.511718998401193e-08
+          ],
+          "bbox_coordinate_abs_error_max": 3.5937499376359483e-07,
+          "matching_iou": 1.0
+        },
+        {
+          "class_id": 1,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.6393411159515381,
+            "bbox_xyxy": [
+              83.9771499633789,
+              104.05545043945312,
+              120.95679473876953,
+              199.91635131835938
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.639341176,
+            "bbox_xyxy": [
+              83.97715,
+              104.05545,
+              120.956795,
+              199.916351
+            ]
+          },
+          "confidence_abs_error": 6.004846186957735e-08,
+          "bbox_coordinate_abs_errors": [
+            3.662108838398126e-08,
+            4.394531316620487e-07,
+            2.612304683680122e-07,
+            3.1835938330004865e-07
+          ],
+          "bbox_coordinate_abs_error_max": 4.394531316620487e-07,
+          "matching_iou": 1.0
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 6.004846186957735e-08,
+        "max_bbox_coordinate_abs_error_pixels": 4.394531316620487e-07,
+        "min_matching_iou": 1.0
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "inclusion_270",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/val/inclusion_270.jpg",
+      "image_sha256": "3C3E1D109A401B6CB4ABEAA4DA07BF3D621794041C8B02E80768282614F5073A",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "1": 1
+      },
+      "cpp_class_id_counts": {
+        "1": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.8229151964187622,
+          "bbox_xyxy": [
+            24.282371520996094,
+            0.2749786376953125,
+            62.736183166503906,
+            197.9405975341797
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.822914958,
+          "bbox_xyxy": [
+            24.2823639,
+            0.274978638,
+            62.7361908,
+            197.940582
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 1,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.8229151964187622,
+            "bbox_xyxy": [
+              24.282371520996094,
+              0.2749786376953125,
+              62.736183166503906,
+              197.9405975341797
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.822914958,
+            "bbox_xyxy": [
+              24.2823639,
+              0.274978638,
+              62.7361908,
+              197.940582
+            ]
+          },
+          "confidence_abs_error": 2.3841876217733926e-07,
+          "bbox_coordinate_abs_errors": [
+            7.6209960937489996e-06,
+            3.0468749745438117e-10,
+            7.633496096559611e-06,
+            1.553417968125359e-05
+          ],
+          "bbox_coordinate_abs_error_max": 1.553417968125359e-05,
+          "matching_iou": 0.9999995231628418
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 2.3841876217733926e-07,
+        "max_bbox_coordinate_abs_error_pixels": 1.553417968125359e-05,
+        "min_matching_iou": 0.9999995231628418
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "inclusion_285",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/val/inclusion_285.jpg",
+      "image_sha256": "7E4866042E496E3E7AF263172C498FF5A3D75584797CE827E4AD3DD869DE43EA",
+      "python_detection_count": 2,
+      "cpp_detection_count": 2,
+      "python_class_id_counts": {
+        "1": 2
+      },
+      "cpp_class_id_counts": {
+        "1": 2
+      },
+      "python_detections": [
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.6158885955810547,
+          "bbox_xyxy": [
+            57.45154571533203,
+            0.0,
+            99.3012924194336,
+            190.84197998046875
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.448168009519577,
+          "bbox_xyxy": [
+            4.450319290161133,
+            0.0,
+            22.368532180786133,
+            25.110536575317383
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.615888476,
+          "bbox_xyxy": [
+            57.4515495,
+            0.0,
+            99.3012848,
+            190.84201
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.44816801,
+          "bbox_xyxy": [
+            4.45031929,
+            0.0,
+            22.3685303,
+            25.1105347
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 1,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.6158885955810547,
+            "bbox_xyxy": [
+              57.45154571533203,
+              0.0,
+              99.3012924194336,
+              190.84197998046875
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.615888476,
+            "bbox_xyxy": [
+              57.4515495,
+              0.0,
+              99.3012848,
+              190.84201
+            ]
+          },
+          "confidence_abs_error": 1.1958105472498204e-07,
+          "bbox_coordinate_abs_errors": [
+            3.7846679674657935e-06,
+            0.0,
+            7.619433588956781e-06,
+            3.0019531237712727e-05
+          ],
+          "bbox_coordinate_abs_error_max": 3.0019531237712727e-05,
+          "matching_iou": 0.9999995827674866
+        },
+        {
+          "class_id": 1,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.448168009519577,
+            "bbox_xyxy": [
+              4.450319290161133,
+              0.0,
+              22.368532180786133,
+              25.110536575317383
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.44816801,
+            "bbox_xyxy": [
+              4.45031929,
+              0.0,
+              22.3685303,
+              25.1105347
+            ]
+          },
+          "confidence_abs_error": 4.80422979176609e-10,
+          "bbox_coordinate_abs_errors": [
+            1.6113244072357702e-10,
+            0.0,
+            1.8807861330571995e-06,
+            1.875317384048003e-06
+          ],
+          "bbox_coordinate_abs_error_max": 1.8807861330571995e-06,
+          "matching_iou": 0.9999998211860657
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.1958105472498204e-07,
+        "max_bbox_coordinate_abs_error_pixels": 3.0019531237712727e-05,
+        "min_matching_iou": 0.9999995827674866
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "inclusion_300",
+      "source_class_id": 1,
+      "source_class_name": "inclusion",
+      "image_path": "../../../data/images/val/inclusion_300.jpg",
+      "image_sha256": "0AA52D34C0E0BAF7E5288F54CB48307C5C76492081BA736CBBDEA1EDFB94C47B",
+      "python_detection_count": 3,
+      "cpp_detection_count": 3,
+      "python_class_id_counts": {
+        "1": 3
+      },
+      "cpp_class_id_counts": {
+        "1": 3
+      },
+      "python_detections": [
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.7747000455856323,
+          "bbox_xyxy": [
+            145.53663635253906,
+            51.09478759765625,
+            164.58619689941406,
+            115.91935729980469
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.6579615473747253,
+          "bbox_xyxy": [
+            150.864501953125,
+            118.80763244628906,
+            167.263671875,
+            160.77293395996094
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.39028453826904297,
+          "bbox_xyxy": [
+            133.7668914794922,
+            136.54397583007812,
+            146.7733917236328,
+            165.10879516601562
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.774700284,
+          "bbox_xyxy": [
+            145.536636,
+            51.0947876,
+            164.586197,
+            115.919357
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.657961786,
+          "bbox_xyxy": [
+            150.864502,
+            118.807632,
+            167.263672,
+            160.772934
+          ]
+        },
+        {
+          "class_id": 1,
+          "class_name": "inclusion",
+          "confidence": 0.390283734,
+          "bbox_xyxy": [
+            133.766891,
+            136.543976,
+            146.773392,
+            165.108795
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 1,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.7747000455856323,
+            "bbox_xyxy": [
+              145.53663635253906,
+              51.09478759765625,
+              164.58619689941406,
+              115.91935729980469
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.774700284,
+            "bbox_xyxy": [
+              145.536636,
+              51.0947876,
+              164.586197,
+              115.919357
+            ]
+          },
+          "confidence_abs_error": 2.384143676925632e-07,
+          "bbox_coordinate_abs_errors": [
+            3.5253907526566763e-07,
+            2.3437465301867633e-09,
+            1.005859360247996e-07,
+            2.9980468241319613e-07
+          ],
+          "bbox_coordinate_abs_error_max": 3.5253907526566763e-07,
+          "matching_iou": 1.0
+        },
+        {
+          "class_id": 1,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.6579615473747253,
+            "bbox_xyxy": [
+              150.864501953125,
+              118.80763244628906,
+              167.263671875,
+              160.77293395996094
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.657961786,
+            "bbox_xyxy": [
+              150.864502,
+              118.807632,
+              167.263672,
+              160.772934
+            ]
+          },
+          "confidence_abs_error": 2.386252746511275e-07,
+          "bbox_coordinate_abs_errors": [
+            4.6874987447154126e-08,
+            4.462890643708306e-07,
+            1.2500001389526005e-07,
+            4.0039054738372215e-08
+          ],
+          "bbox_coordinate_abs_error_max": 4.462890643708306e-07,
+          "matching_iou": 1.0
+        },
+        {
+          "class_id": 1,
+          "python_index": 2,
+          "cpp_index": 2,
+          "python_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.39028453826904297,
+            "bbox_xyxy": [
+              133.7668914794922,
+              136.54397583007812,
+              146.7733917236328,
+              165.10879516601562
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 1,
+            "class_name": "inclusion",
+            "confidence": 0.390283734,
+            "bbox_xyxy": [
+              133.766891,
+              136.543976,
+              146.773392,
+              165.108795
+            ]
+          },
+          "confidence_abs_error": 8.042690429754806e-07,
+          "bbox_coordinate_abs_errors": [
+            4.794922006112756e-07,
+            1.6992186147035682e-07,
+            2.7636718868961907e-07,
+            1.6601563856966095e-07
+          ],
+          "bbox_coordinate_abs_error_max": 4.794922006112756e-07,
+          "matching_iou": 0.9999999403953552
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 8.042690429754806e-07,
+        "max_bbox_coordinate_abs_error_pixels": 4.794922006112756e-07,
+        "min_matching_iou": 0.9999999403953552
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "patches_241",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/val/patches_241.jpg",
+      "image_sha256": "D8EE841AFE3D24B39A3F1F5656780B75CE9B1E1B6BB11CB6953A99D0CBAAFFDE",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "2": 1
+      },
+      "cpp_class_id_counts": {
+        "2": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.7150930166244507,
+          "bbox_xyxy": [
+            69.56472778320312,
+            36.714263916015625,
+            125.26406860351562,
+            175.22085571289062
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.715092897,
+          "bbox_xyxy": [
+            69.5647278,
+            36.7142639,
+            125.264069,
+            175.22084
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 2,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.7150930166244507,
+            "bbox_xyxy": [
+              69.56472778320312,
+              36.714263916015625,
+              125.26406860351562,
+              175.22085571289062
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.715092897,
+            "bbox_xyxy": [
+              69.5647278,
+              36.7142639,
+              125.264069,
+              175.22084
+            ]
+          },
+          "confidence_abs_error": 1.1962445067847938e-07,
+          "bbox_coordinate_abs_errors": [
+            1.6796875002000888e-08,
+            1.60156261586053e-08,
+            3.9648438132644515e-07,
+            1.5712890615304786e-05
+          ],
+          "bbox_coordinate_abs_error_max": 1.5712890615304786e-05,
+          "matching_iou": 0.9999998807907104
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.1962445067847938e-07,
+        "max_bbox_coordinate_abs_error_pixels": 1.5712890615304786e-05,
+        "min_matching_iou": 0.9999998807907104
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "patches_255",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/val/patches_255.jpg",
+      "image_sha256": "877905B79E570196B42D6E2BEFD56A28578A93CAAA1AD87ADCC64C6E7E2D887A",
+      "python_detection_count": 3,
+      "cpp_detection_count": 3,
+      "python_class_id_counts": {
+        "2": 3
+      },
+      "cpp_class_id_counts": {
+        "2": 3
+      },
+      "python_detections": [
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.8693292140960693,
+          "bbox_xyxy": [
+            117.61822509765625,
+            127.48877716064453,
+            180.55264282226562,
+            200.0
+          ]
+        },
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.7715839147567749,
+          "bbox_xyxy": [
+            0.2556629180908203,
+            67.29530334472656,
+            26.82346534729004,
+            108.02583312988281
+          ]
+        },
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.6969462037086487,
+          "bbox_xyxy": [
+            143.49319458007812,
+            11.625922203063965,
+            181.22369384765625,
+            38.03350830078125
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.869329214,
+          "bbox_xyxy": [
+            117.618225,
+            127.488777,
+            180.552643,
+            200.0
+          ]
+        },
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.771584094,
+          "bbox_xyxy": [
+            0.255661011,
+            67.2953033,
+            26.8234634,
+            108.025833
+          ]
+        },
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.696946323,
+          "bbox_xyxy": [
+            143.493164,
+            11.6259193,
+            181.223694,
+            38.0335045
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 2,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.8693292140960693,
+            "bbox_xyxy": [
+              117.61822509765625,
+              127.48877716064453,
+              180.55264282226562,
+              200.0
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.869329214,
+            "bbox_xyxy": [
+              117.618225,
+              127.488777,
+              180.552643,
+              200.0
+            ]
+          },
+          "confidence_abs_error": 9.60693746776542e-11,
+          "bbox_coordinate_abs_errors": [
+            9.765625463842298e-08,
+            1.6064453234321263e-07,
+            1.777343641151674e-07,
+            0.0
+          ],
+          "bbox_coordinate_abs_error_max": 1.777343641151674e-07,
+          "matching_iou": 1.0
+        },
+        {
+          "class_id": 2,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.7715839147567749,
+            "bbox_xyxy": [
+              0.2556629180908203,
+              67.29530334472656,
+              26.82346534729004,
+              108.02583312988281
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.771584094,
+            "bbox_xyxy": [
+              0.255661011,
+              67.2953033,
+              26.8234634,
+              108.025833
+            ]
+          },
+          "confidence_abs_error": 1.792432251512821e-07,
+          "bbox_coordinate_abs_errors": [
+            1.907090820318924e-06,
+            4.472656200960046e-08,
+            1.9472900376626967e-06,
+            1.298828067319846e-07
+          ],
+          "bbox_coordinate_abs_error_max": 1.9472900376626967e-06,
+          "matching_iou": 0.9999998211860657
+        },
+        {
+          "class_id": 2,
+          "python_index": 2,
+          "cpp_index": 2,
+          "python_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.6969462037086487,
+            "bbox_xyxy": [
+              143.49319458007812,
+              11.625922203063965,
+              181.22369384765625,
+              38.03350830078125
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.696946323,
+            "bbox_xyxy": [
+              143.493164,
+              11.6259193,
+              181.223694,
+              38.0335045
+            ]
+          },
+          "confidence_abs_error": 1.192913513525795e-07,
+          "bbox_coordinate_abs_errors": [
+            3.0580078117736775e-05,
+            2.9030639652205537e-06,
+            1.523437447303877e-07,
+            3.8007812506180016e-06
+          ],
+          "bbox_coordinate_abs_error_max": 3.0580078117736775e-05,
+          "matching_iou": 0.999998927116394
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.792432251512821e-07,
+        "max_bbox_coordinate_abs_error_pixels": 3.0580078117736775e-05,
+        "min_matching_iou": 0.999998927116394
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "patches_270",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/val/patches_270.jpg",
+      "image_sha256": "839E441D971B5032B74387B4C6AD73E4A763066AE091E72D34FF2D8F33B5CCDA",
+      "python_detection_count": 2,
+      "cpp_detection_count": 2,
+      "python_class_id_counts": {
+        "2": 2
+      },
+      "cpp_class_id_counts": {
+        "2": 2
+      },
+      "python_detections": [
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.8979724645614624,
+          "bbox_xyxy": [
+            89.40708923339844,
+            70.54685974121094,
+            145.06468200683594,
+            171.3197479248047
+          ]
+        },
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.8192514181137085,
+          "bbox_xyxy": [
+            88.92884826660156,
+            0.03737640380859375,
+            144.889892578125,
+            33.5008544921875
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.897972345,
+          "bbox_xyxy": [
+            89.4071045,
+            70.5468597,
+            145.064682,
+            171.319748
+          ]
+        },
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.819251418,
+          "bbox_xyxy": [
+            88.9288483,
+            0.0373802185,
+            144.889877,
+            33.5008469
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 2,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.8979724645614624,
+            "bbox_xyxy": [
+              89.40708923339844,
+              70.54685974121094,
+              145.06468200683594,
+              171.3197479248047
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.897972345,
+            "bbox_xyxy": [
+              89.4071045,
+              70.5468597,
+              145.064682,
+              171.319748
+            ]
+          },
+          "confidence_abs_error": 1.1956146239722187e-07,
+          "bbox_coordinate_abs_errors": [
+            1.526660156514481e-05,
+            4.121093866160663e-08,
+            6.835932708781911e-09,
+            7.519531664001988e-08
+          ],
+          "bbox_coordinate_abs_error_max": 1.526660156514481e-05,
+          "matching_iou": 0.9999997019767761
+        },
+        {
+          "class_id": 2,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.8192514181137085,
+            "bbox_xyxy": [
+              88.92884826660156,
+              0.03737640380859375,
+              144.889892578125,
+              33.5008544921875
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.819251418,
+            "bbox_xyxy": [
+              88.9288483,
+              0.0373802185,
+              144.889877,
+              33.5008469
+            ]
+          },
+          "confidence_abs_error": 1.1370848707059622e-10,
+          "bbox_coordinate_abs_errors": [
+            3.339843601679604e-08,
+            3.814691406249515e-06,
+            1.5578124987314368e-05,
+            7.5921875009044015e-06
+          ],
+          "bbox_coordinate_abs_error_max": 1.5578124987314368e-05,
+          "matching_iou": 0.9999994039535522
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.1956146239722187e-07,
+        "max_bbox_coordinate_abs_error_pixels": 1.5578124987314368e-05,
+        "min_matching_iou": 0.9999994039535522
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "patches_285",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/val/patches_285.jpg",
+      "image_sha256": "7DEF0954602B375C6D4A4C57DDF5A78851549F58F91F4B5E6370343815B029BA",
+      "python_detection_count": 2,
+      "cpp_detection_count": 2,
+      "python_class_id_counts": {
+        "2": 2
+      },
+      "cpp_class_id_counts": {
+        "2": 2
+      },
+      "python_detections": [
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.8837835192680359,
+          "bbox_xyxy": [
+            150.43701171875,
+            0.005588531494140625,
+            200.0,
+            47.37519454956055
+          ]
+        },
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.6179402470588684,
+          "bbox_xyxy": [
+            61.696659088134766,
+            0.0,
+            126.98419189453125,
+            137.47421264648438
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.883783519,
+          "bbox_xyxy": [
+            150.437012,
+            0.00558853149,
+            200.0,
+            47.3751945
+          ]
+        },
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.617940485,
+          "bbox_xyxy": [
+            61.6966629,
+            0.0,
+            126.9842,
+            137.474304
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 2,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.8837835192680359,
+            "bbox_xyxy": [
+              150.43701171875,
+              0.005588531494140625,
+              200.0,
+              47.37519454956055
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.883783519,
+            "bbox_xyxy": [
+              150.437012,
+              0.00558853149,
+              200.0,
+              47.3751945
+            ]
+          },
+          "confidence_abs_error": 2.680359267870358e-10,
+          "bbox_coordinate_abs_errors": [
+            2.8125000994805305e-07,
+            4.140625342596849e-12,
+            0.0,
+            4.956054766580564e-08
+          ],
+          "bbox_coordinate_abs_error_max": 2.8125000994805305e-07,
+          "matching_iou": 1.0
+        },
+        {
+          "class_id": 2,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.6179402470588684,
+            "bbox_xyxy": [
+              61.696659088134766,
+              0.0,
+              126.98419189453125,
+              137.47421264648438
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.617940485,
+            "bbox_xyxy": [
+              61.6966629,
+              0.0,
+              126.9842,
+              137.474304
+            ]
+          },
+          "confidence_abs_error": 2.3794113157560304e-07,
+          "bbox_coordinate_abs_errors": [
+            3.811865234126799e-06,
+            0.0,
+            8.10546875129603e-06,
+            9.135351561440075e-05
+          ],
+          "bbox_coordinate_abs_error_max": 9.135351561440075e-05,
+          "matching_iou": 0.9999991655349731
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 2.3794113157560304e-07,
+        "max_bbox_coordinate_abs_error_pixels": 9.135351561440075e-05,
+        "min_matching_iou": 0.9999991655349731
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "patches_300",
+      "source_class_id": 2,
+      "source_class_name": "patches",
+      "image_path": "../../../data/images/val/patches_300.jpg",
+      "image_sha256": "C97E4426198AD6989DDF6C2CF1449E6231B1A6D05CC75443398C4CCC77C51D08",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "2": 1
+      },
+      "cpp_class_id_counts": {
+        "2": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.5629469752311707,
+          "bbox_xyxy": [
+            47.493560791015625,
+            20.002548217773438,
+            102.376220703125,
+            102.01445007324219
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 2,
+          "class_name": "patches",
+          "confidence": 0.562947571,
+          "bbox_xyxy": [
+            47.493557,
+            20.0025558,
+            102.376221,
+            102.01445
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 2,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.5629469752311707,
+            "bbox_xyxy": [
+              47.493560791015625,
+              20.002548217773438,
+              102.376220703125,
+              102.01445007324219
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 2,
+            "class_name": "patches",
+            "confidence": 0.562947571,
+            "bbox_xyxy": [
+              47.493557,
+              20.0025558,
+              102.376221,
+              102.01445
+            ]
+          },
+          "confidence_abs_error": 5.957688293811714e-07,
+          "bbox_coordinate_abs_errors": [
+            3.7910156223119884e-06,
+            7.582226562163896e-06,
+            2.968750010268195e-07,
+            7.324219097881723e-08
+          ],
+          "bbox_coordinate_abs_error_max": 7.582226562163896e-06,
+          "matching_iou": 0.9999998211860657
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 5.957688293811714e-07,
+        "max_bbox_coordinate_abs_error_pixels": 7.582226562163896e-06,
+        "min_matching_iou": 0.9999998211860657
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "pitted_surface_241",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/val/pitted_surface_241.jpg",
+      "image_sha256": "311893098116D7261E0B6A16E668067C7B6ABF509FC77286FAD3236EB66700F1",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "3": 1
+      },
+      "cpp_class_id_counts": {
+        "3": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.6312441825866699,
+          "bbox_xyxy": [
+            29.844009399414062,
+            1.8359527587890625,
+            198.96853637695312,
+            195.07557678222656
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.631244063,
+          "bbox_xyxy": [
+            29.8440552,
+            1.83595276,
+            198.968536,
+            195.075577
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 3,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.6312441825866699,
+            "bbox_xyxy": [
+              29.844009399414062,
+              1.8359527587890625,
+              198.96853637695312,
+              195.07557678222656
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.631244063,
+            "bbox_xyxy": [
+              29.8440552,
+              1.83595276,
+              198.968536,
+              195.075577
+            ]
+          },
+          "confidence_abs_error": 1.1958666989997369e-07,
+          "bbox_coordinate_abs_errors": [
+            4.58005859371724e-05,
+            1.2109375724378424e-09,
+            3.7695312471441866e-07,
+            2.1777344727524905e-07
+          ],
+          "bbox_coordinate_abs_error_max": 4.58005859371724e-05,
+          "matching_iou": 0.9999997019767761
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.1958666989997369e-07,
+        "max_bbox_coordinate_abs_error_pixels": 4.58005859371724e-05,
+        "min_matching_iou": 0.9999997019767761
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "pitted_surface_255",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/val/pitted_surface_255.jpg",
+      "image_sha256": "7D9A04EA3A7B664AE945103616F22EF85164B8A217A61890F02E26017C11AD05",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "3": 1
+      },
+      "cpp_class_id_counts": {
+        "3": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.8862067461013794,
+          "bbox_xyxy": [
+            10.413970947265625,
+            0.3042755126953125,
+            200.0,
+            199.9976348876953
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.886206746,
+          "bbox_xyxy": [
+            10.4139404,
+            0.304275513,
+            200.0,
+            199.997635
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 3,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.8862067461013794,
+            "bbox_xyxy": [
+              10.413970947265625,
+              0.3042755126953125,
+              200.0,
+              199.9976348876953
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.886206746,
+            "bbox_xyxy": [
+              10.4139404,
+              0.304275513,
+              200.0,
+              199.997635
+            ]
+          },
+          "confidence_abs_error": 1.013793493598314e-10,
+          "bbox_coordinate_abs_errors": [
+            3.054726562545795e-05,
+            3.0468749745438117e-10,
+            0.0,
+            1.1230468999201548e-07
+          ],
+          "bbox_coordinate_abs_error_max": 3.054726562545795e-05,
+          "matching_iou": 0.9999998211860657
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.013793493598314e-10,
+        "max_bbox_coordinate_abs_error_pixels": 3.054726562545795e-05,
+        "min_matching_iou": 0.9999998211860657
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "pitted_surface_270",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/val/pitted_surface_270.jpg",
+      "image_sha256": "4D4074AF862F2A649838D3E4EA4503D74DE1A05B3D242EEB3EFF323F9B2E1EBD",
+      "python_detection_count": 2,
+      "cpp_detection_count": 2,
+      "python_class_id_counts": {
+        "3": 2
+      },
+      "cpp_class_id_counts": {
+        "3": 2
+      },
+      "python_detections": [
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.7638524770736694,
+          "bbox_xyxy": [
+            15.764328002929688,
+            0.292144775390625,
+            200.0,
+            199.00653076171875
+          ]
+        },
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.33658409118652344,
+          "bbox_xyxy": [
+            0.36644744873046875,
+            0.32452392578125,
+            87.4826431274414,
+            198.55752563476562
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.763852477,
+          "bbox_xyxy": [
+            15.7643433,
+            0.292129517,
+            200.0,
+            199.006516
+          ]
+        },
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.33658421,
+          "bbox_xyxy": [
+            0.366447449,
+            0.324523926,
+            87.4826508,
+            198.557526
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 3,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.7638524770736694,
+            "bbox_xyxy": [
+              15.764328002929688,
+              0.292144775390625,
+              200.0,
+              199.00653076171875
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.763852477,
+            "bbox_xyxy": [
+              15.7643433,
+              0.292129517,
+              200.0,
+              199.006516
+            ]
+          },
+          "confidence_abs_error": 7.366940391051457e-11,
+          "bbox_coordinate_abs_errors": [
+            1.5297070312669803e-05,
+            1.5258390624994789e-05,
+            0.0,
+            1.4761718745148755e-05
+          ],
+          "bbox_coordinate_abs_error_max": 1.5297070312669803e-05,
+          "matching_iou": 0.9999997615814209
+        },
+        {
+          "class_id": 3,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.33658409118652344,
+            "bbox_xyxy": [
+              0.36644744873046875,
+              0.32452392578125,
+              87.4826431274414,
+              198.55752563476562
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.33658421,
+            "bbox_xyxy": [
+              0.366447449,
+              0.324523926,
+              87.4826508,
+              198.557526
+            ]
+          },
+          "confidence_abs_error": 1.1881347655728902e-07,
+          "bbox_coordinate_abs_errors": [
+            2.695312306677522e-10,
+            2.1875001809945616e-10,
+            7.67255859557281e-06,
+            3.652343707472028e-07
+          ],
+          "bbox_coordinate_abs_error_max": 7.67255859557281e-06,
+          "matching_iou": 0.9999998807907104
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.1881347655728902e-07,
+        "max_bbox_coordinate_abs_error_pixels": 1.5297070312669803e-05,
+        "min_matching_iou": 0.9999997615814209
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "pitted_surface_285",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/val/pitted_surface_285.jpg",
+      "image_sha256": "67BA9FBC2930C05BC1F4563F9124A711B16F1BE6424CF1DAB9278B9EDF45FEFE",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "3": 1
+      },
+      "cpp_class_id_counts": {
+        "3": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.6587398052215576,
+          "bbox_xyxy": [
+            13.912445068359375,
+            2.9365234375,
+            161.00653076171875,
+            199.85409545898438
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.658739805,
+          "bbox_xyxy": [
+            13.9124603,
+            2.93650818,
+            161.00647,
+            199.854095
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 3,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.6587398052215576,
+            "bbox_xyxy": [
+              13.912445068359375,
+              2.9365234375,
+              161.00653076171875,
+              199.85409545898438
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.658739805,
+            "bbox_xyxy": [
+              13.9124603,
+              2.93650818,
+              161.00647,
+              199.854095
+            ]
+          },
+          "confidence_abs_error": 2.2155766110643071e-10,
+          "bbox_coordinate_abs_errors": [
+            1.5231640624335796e-05,
+            1.5257499999865587e-05,
+            6.076171874269676e-05,
+            4.5898437406322046e-07
+          ],
+          "bbox_coordinate_abs_error_max": 6.076171874269676e-05,
+          "matching_iou": 0.9999994039535522
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 2.2155766110643071e-10,
+        "max_bbox_coordinate_abs_error_pixels": 6.076171874269676e-05,
+        "min_matching_iou": 0.9999994039535522
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "pitted_surface_300",
+      "source_class_id": 3,
+      "source_class_name": "pitted_surface",
+      "image_path": "../../../data/images/val/pitted_surface_300.jpg",
+      "image_sha256": "8ED56DF34F6BCBCB5C60384C1C37B05D01365DFBB81B1A8855FBBE260718A32A",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "3": 1
+      },
+      "cpp_class_id_counts": {
+        "3": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.8331260681152344,
+          "bbox_xyxy": [
+            6.997955322265625,
+            0.0,
+            200.0,
+            199.2491912841797
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 3,
+          "class_name": "pitted_surface",
+          "confidence": 0.833126068,
+          "bbox_xyxy": [
+            6.99795532,
+            0.0,
+            200.0,
+            199.249176
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 3,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.8331260681152344,
+            "bbox_xyxy": [
+              6.997955322265625,
+              0.0,
+              200.0,
+              199.2491912841797
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 3,
+            "class_name": "pitted_surface",
+            "confidence": 0.833126068,
+            "bbox_xyxy": [
+              6.99795532,
+              0.0,
+              200.0,
+              199.249176
+            ]
+          },
+          "confidence_abs_error": 1.1523437759564104e-10,
+          "bbox_coordinate_abs_errors": [
+            2.2656250209251994e-09,
+            0.0,
+            0.0,
+            1.528417968188478e-05
+          ],
+          "bbox_coordinate_abs_error_max": 1.528417968188478e-05,
+          "matching_iou": 0.9999999403953552
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.1523437759564104e-10,
+        "max_bbox_coordinate_abs_error_pixels": 1.528417968188478e-05,
+        "min_matching_iou": 0.9999999403953552
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "rolled-in_scale_241",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/val/rolled-in_scale_241.jpg",
+      "image_sha256": "3AE0C8E0B0DDAB539BCB0AB86E04909543015FBBD4B0BF5EB12232E2274DEA2B",
+      "python_detection_count": 2,
+      "cpp_detection_count": 2,
+      "python_class_id_counts": {
+        "4": 2
+      },
+      "cpp_class_id_counts": {
+        "4": 2
+      },
+      "python_detections": [
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.6840000152587891,
+          "bbox_xyxy": [
+            106.81712341308594,
+            0.0,
+            165.98341369628906,
+            101.49383544921875
+          ]
+        },
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.45625242590904236,
+          "bbox_xyxy": [
+            49.06874084472656,
+            105.81791687011719,
+            159.03001403808594,
+            199.46946716308594
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.683999896,
+          "bbox_xyxy": [
+            106.817123,
+            0.0,
+            165.983414,
+            101.493835
+          ]
+        },
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.456252664,
+          "bbox_xyxy": [
+            49.0687523,
+            105.81794,
+            159.029999,
+            199.469482
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 4,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.6840000152587891,
+            "bbox_xyxy": [
+              106.81712341308594,
+              0.0,
+              165.98341369628906,
+              101.49383544921875
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.683999896,
+            "bbox_xyxy": [
+              106.817123,
+              0.0,
+              165.983414,
+              101.493835
+            ]
+          },
+          "confidence_abs_error": 1.1925878906637877e-07,
+          "bbox_coordinate_abs_errors": [
+            4.130859423412403e-07,
+            0.0,
+            3.0371094794645614e-07,
+            4.492187457572072e-07
+          ],
+          "bbox_coordinate_abs_error_max": 4.492187457572072e-07,
+          "matching_iou": 1.0
+        },
+        {
+          "class_id": 4,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.45625242590904236,
+            "bbox_xyxy": [
+              49.06874084472656,
+              105.81791687011719,
+              159.03001403808594,
+              199.46946716308594
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.456252664,
+            "bbox_xyxy": [
+              49.0687523,
+              105.81794,
+              159.029999,
+              199.469482
+            ]
+          },
+          "confidence_abs_error": 2.3809095761606613e-07,
+          "bbox_coordinate_abs_errors": [
+            1.14552734373774e-05,
+            2.3129882805505986e-05,
+            1.5038085933838374e-05,
+            1.4836914061788775e-05
+          ],
+          "bbox_coordinate_abs_error_max": 2.3129882805505986e-05,
+          "matching_iou": 0.9999993443489075
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 2.3809095761606613e-07,
+        "max_bbox_coordinate_abs_error_pixels": 2.3129882805505986e-05,
+        "min_matching_iou": 0.9999993443489075
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "rolled-in_scale_255",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/val/rolled-in_scale_255.jpg",
+      "image_sha256": "A72BCF50BDD2205F21E997197CFD9B4773F53CF38059D358C225AD7C88A140B2",
+      "python_detection_count": 3,
+      "cpp_detection_count": 3,
+      "python_class_id_counts": {
+        "4": 3
+      },
+      "cpp_class_id_counts": {
+        "4": 3
+      },
+      "python_detections": [
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.6022043824195862,
+          "bbox_xyxy": [
+            8.546913146972656,
+            171.06224060058594,
+            85.32742309570312,
+            200.0
+          ]
+        },
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.2795180082321167,
+          "bbox_xyxy": [
+            160.60446166992188,
+            0.0,
+            199.93966674804688,
+            69.29745483398438
+          ]
+        },
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.2558344900608063,
+          "bbox_xyxy": [
+            0.4849090576171875,
+            86.13922119140625,
+            80.23399353027344,
+            199.769775390625
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.602204502,
+          "bbox_xyxy": [
+            8.54691315,
+            171.062256,
+            85.3274155,
+            200.0
+          ]
+        },
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.279517949,
+          "bbox_xyxy": [
+            160.604492,
+            0.0,
+            199.939667,
+            69.2974396
+          ]
+        },
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.255834162,
+          "bbox_xyxy": [
+            0.484909058,
+            86.1392212,
+            80.2339935,
+            199.769775
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 4,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.6022043824195862,
+            "bbox_xyxy": [
+              8.546913146972656,
+              171.06224060058594,
+              85.32742309570312,
+              200.0
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.602204502,
+            "bbox_xyxy": [
+              8.54691315,
+              171.062256,
+              85.3274155,
+              200.0
+            ]
+          },
+          "confidence_abs_error": 1.1958041379322992e-07,
+          "bbox_coordinate_abs_errors": [
+            3.027343709050001e-09,
+            1.5399414053263172e-05,
+            7.595703124252395e-06,
+            0.0
+          ],
+          "bbox_coordinate_abs_error_max": 1.5399414053263172e-05,
+          "matching_iou": 0.9999993443489075
+        },
+        {
+          "class_id": 4,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.2795180082321167,
+            "bbox_xyxy": [
+              160.60446166992188,
+              0.0,
+              199.93966674804688,
+              69.29745483398438
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.279517949,
+            "bbox_xyxy": [
+              160.604492,
+              0.0,
+              199.939667,
+              69.2974396
+            ]
+          },
+          "confidence_abs_error": 5.9232116711438465e-08,
+          "bbox_coordinate_abs_errors": [
+            3.0330078118367965e-05,
+            0.0,
+            2.519531108191586e-07,
+            1.5233984370865983e-05
+          ],
+          "bbox_coordinate_abs_error_max": 3.0330078118367965e-05,
+          "matching_iou": 0.9999989867210388
+        },
+        {
+          "class_id": 4,
+          "python_index": 2,
+          "cpp_index": 2,
+          "python_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.2558344900608063,
+            "bbox_xyxy": [
+              0.4849090576171875,
+              86.13922119140625,
+              80.23399353027344,
+              199.769775390625
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.255834162,
+            "bbox_xyxy": [
+              0.484909058,
+              86.1392212,
+              80.2339935,
+              199.769775
+            ]
+          },
+          "confidence_abs_error": 3.280608062983248e-07,
+          "bbox_coordinate_abs_errors": [
+            3.8281250391847266e-10,
+            8.593744382778823e-09,
+            3.027344064321369e-08,
+            3.906249901319825e-07
+          ],
+          "bbox_coordinate_abs_error_max": 3.906249901319825e-07,
+          "matching_iou": 1.0
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 3.280608062983248e-07,
+        "max_bbox_coordinate_abs_error_pixels": 3.0330078118367965e-05,
+        "min_matching_iou": 0.9999989867210388
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "rolled-in_scale_270",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/val/rolled-in_scale_270.jpg",
+      "image_sha256": "5A93C2C21A0CE009675AAC1ED811CCBA0595C25EF5653BC1D3F915E8832C8741",
+      "python_detection_count": 2,
+      "cpp_detection_count": 2,
+      "python_class_id_counts": {
+        "4": 2
+      },
+      "cpp_class_id_counts": {
+        "4": 2
+      },
+      "python_detections": [
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.7050431966781616,
+          "bbox_xyxy": [
+            24.358413696289062,
+            3.9966659545898438,
+            108.54298400878906,
+            88.62252807617188
+          ]
+        },
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.6227275133132935,
+          "bbox_xyxy": [
+            19.022541046142578,
+            131.88336181640625,
+            118.55747985839844,
+            200.0
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.705043316,
+          "bbox_xyxy": [
+            24.3584137,
+            3.99666595,
+            108.542984,
+            88.6225204
+          ]
+        },
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.622727871,
+          "bbox_xyxy": [
+            19.0225372,
+            131.883362,
+            118.557449,
+            200.0
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 4,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.7050431966781616,
+            "bbox_xyxy": [
+              24.358413696289062,
+              3.9966659545898438,
+              108.54298400878906,
+              88.62252807617188
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.705043316,
+            "bbox_xyxy": [
+              24.3584137,
+              3.99666595,
+              108.542984,
+              88.6225204
+            ]
+          },
+          "confidence_abs_error": 1.1932183840990263e-07,
+          "bbox_coordinate_abs_errors": [
+            3.71093733519956e-09,
+            4.589843616287226e-09,
+            8.78905836998456e-09,
+            7.676171875914406e-06
+          ],
+          "bbox_coordinate_abs_error_max": 7.676171875914406e-06,
+          "matching_iou": 0.9999998807907104
+        },
+        {
+          "class_id": 4,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.6227275133132935,
+            "bbox_xyxy": [
+              19.022541046142578,
+              131.88336181640625,
+              118.55747985839844,
+              200.0
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.622727871,
+            "bbox_xyxy": [
+              19.0225372,
+              131.883362,
+              118.557449,
+              200.0
+            ]
+          },
+          "confidence_abs_error": 3.576867065868683e-07,
+          "bbox_coordinate_abs_errors": [
+            3.846142579533307e-06,
+            1.8359375530963007e-07,
+            3.08583984320876e-05,
+            0.0
+          ],
+          "bbox_coordinate_abs_error_max": 3.08583984320876e-05,
+          "matching_iou": 0.9999996423721313
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 3.576867065868683e-07,
+        "max_bbox_coordinate_abs_error_pixels": 3.08583984320876e-05,
+        "min_matching_iou": 0.9999996423721313
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "rolled-in_scale_285",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/val/rolled-in_scale_285.jpg",
+      "image_sha256": "A8CCA6D91EA7FB73283D88EFD2D30E067B6D09CE645E5E85438441683F134E99",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "4": 1
+      },
+      "cpp_class_id_counts": {
+        "4": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.2941284477710724,
+          "bbox_xyxy": [
+            19.47076416015625,
+            15.792633056640625,
+            171.06256103515625,
+            125.61393737792969
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.29412806,
+          "bbox_xyxy": [
+            19.4707794,
+            15.7926331,
+            171.062561,
+            125.613907
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 4,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.2941284477710724,
+            "bbox_xyxy": [
+              19.47076416015625,
+              15.792633056640625,
+              171.06256103515625,
+              125.61393737792969
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.29412806,
+            "bbox_xyxy": [
+              19.4707794,
+              15.7926331,
+              171.062561,
+              125.613907
+            ]
+          },
+          "confidence_abs_error": 3.8777107236320774e-07,
+          "bbox_coordinate_abs_errors": [
+            1.5239843751402304e-05,
+            4.335937475730134e-08,
+            3.515626190164767e-08,
+            3.0377929689962002e-05
+          ],
+          "bbox_coordinate_abs_error_max": 3.0377929689962002e-05,
+          "matching_iou": 0.9999996423721313
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 3.8777107236320774e-07,
+        "max_bbox_coordinate_abs_error_pixels": 3.0377929689962002e-05,
+        "min_matching_iou": 0.9999996423721313
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "rolled-in_scale_300",
+      "source_class_id": 4,
+      "source_class_name": "rolled-in_scale",
+      "image_path": "../../../data/images/val/rolled-in_scale_300.jpg",
+      "image_sha256": "2599551F47CDB8515D126969FE26A968F9519BF6A2EBEB7978FBEEDDD0DD9300",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "4": 1
+      },
+      "cpp_class_id_counts": {
+        "4": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.5091457962989807,
+          "bbox_xyxy": [
+            36.956626892089844,
+            0.0,
+            117.22806549072266,
+            48.71800231933594
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 4,
+          "class_name": "rolled-in_scale",
+          "confidence": 0.509145677,
+          "bbox_xyxy": [
+            36.9566269,
+            0.0,
+            117.22805,
+            48.7179947
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 4,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.5091457962989807,
+            "bbox_xyxy": [
+              36.956626892089844,
+              0.0,
+              117.22806549072266,
+              48.71800231933594
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 4,
+            "class_name": "rolled-in_scale",
+            "confidence": 0.509145677,
+            "bbox_xyxy": [
+              36.9566269,
+              0.0,
+              117.22805,
+              48.7179947
+            ]
+          },
+          "confidence_abs_error": 1.1929898069418243e-07,
+          "bbox_coordinate_abs_errors": [
+            7.910159638413461e-09,
+            0.0,
+            1.5490722660160827e-05,
+            7.6193359390686055e-06
+          ],
+          "bbox_coordinate_abs_error_max": 1.5490722660160827e-05,
+          "matching_iou": 0.9999996423721313
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.1929898069418243e-07,
+        "max_bbox_coordinate_abs_error_pixels": 1.5490722660160827e-05,
+        "min_matching_iou": 0.9999996423721313
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "scratches_241",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/val/scratches_241.jpg",
+      "image_sha256": "808C8053268C526A8230DD0D1C286AF89A2F4D9E2FA015E64A9B3C0DEFC37F56",
+      "python_detection_count": 4,
+      "cpp_detection_count": 4,
+      "python_class_id_counts": {
+        "5": 4
+      },
+      "cpp_class_id_counts": {
+        "5": 4
+      },
+      "python_detections": [
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.7172185182571411,
+          "bbox_xyxy": [
+            0.0,
+            109.069580078125,
+            188.98529052734375,
+            132.7487030029297
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.6736433506011963,
+          "bbox_xyxy": [
+            131.3564453125,
+            168.65478515625,
+            197.7608642578125,
+            199.64239501953125
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.6342729926109314,
+          "bbox_xyxy": [
+            0.0,
+            26.575231552124023,
+            192.92276000976562,
+            45.49077606201172
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.4554237723350525,
+          "bbox_xyxy": [
+            74.83043670654297,
+            76.07664489746094,
+            104.80977630615234,
+            84.81044006347656
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.717218697,
+          "bbox_xyxy": [
+            0.0,
+            109.06958,
+            188.985306,
+            132.748703
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.673643112,
+          "bbox_xyxy": [
+            131.356445,
+            168.65477,
+            197.760864,
+            199.64238
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.634273231,
+          "bbox_xyxy": [
+            0.0,
+            26.5752316,
+            192.922745,
+            45.4907761
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.455424488,
+          "bbox_xyxy": [
+            74.8304367,
+            76.0766449,
+            104.809776,
+            84.8104401
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 5,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.7172185182571411,
+            "bbox_xyxy": [
+              0.0,
+              109.069580078125,
+              188.98529052734375,
+              132.7487030029297
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.717218697,
+            "bbox_xyxy": [
+              0.0,
+              109.06958,
+              188.985306,
+              132.748703
+            ]
+          },
+          "confidence_abs_error": 1.787428588473361e-07,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            7.81249980263965e-08,
+            1.5472656258452844e-05,
+            2.9296813863766147e-09
+          ],
+          "bbox_coordinate_abs_error_max": 1.5472656258452844e-05,
+          "matching_iou": 0.9999999403953552
+        },
+        {
+          "class_id": 5,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.6736433506011963,
+            "bbox_xyxy": [
+              131.3564453125,
+              168.65478515625,
+              197.7608642578125,
+              199.64239501953125
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.673643112,
+            "bbox_xyxy": [
+              131.356445,
+              168.65477,
+              197.760864,
+              199.64238
+            ]
+          },
+          "confidence_abs_error": 2.386011962451917e-07,
+          "bbox_coordinate_abs_errors": [
+            3.12499992105586e-07,
+            1.5156249986603143e-05,
+            2.5781250201362127e-07,
+            1.5019531247162377e-05
+          ],
+          "bbox_coordinate_abs_error_max": 1.5156249986603143e-05,
+          "matching_iou": 0.9999990463256836
+        },
+        {
+          "class_id": 5,
+          "python_index": 2,
+          "cpp_index": 2,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.6342729926109314,
+            "bbox_xyxy": [
+              0.0,
+              26.575231552124023,
+              192.92276000976562,
+              45.49077606201172
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.634273231,
+            "bbox_xyxy": [
+              0.0,
+              26.5752316,
+              192.922745,
+              45.4907761
+            ]
+          },
+          "confidence_abs_error": 2.3838906859641185e-07,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            4.7875975184297204e-08,
+            1.5009765633067218e-05,
+            3.7988279188994056e-08
+          ],
+          "bbox_coordinate_abs_error_max": 1.5009765633067218e-05,
+          "matching_iou": 0.9999999403953552
+        },
+        {
+          "class_id": 5,
+          "python_index": 3,
+          "cpp_index": 3,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.4554237723350525,
+            "bbox_xyxy": [
+              74.83043670654297,
+              76.07664489746094,
+              104.80977630615234,
+              84.81044006347656
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.455424488,
+            "bbox_xyxy": [
+              74.8304367,
+              76.0766449,
+              104.809776,
+              84.8104401
+            ]
+          },
+          "confidence_abs_error": 7.156649475259513e-07,
+          "bbox_coordinate_abs_errors": [
+            6.5429617279733066e-09,
+            2.539067622819857e-09,
+            3.061523443648184e-07,
+            3.652343139037839e-08
+          ],
+          "bbox_coordinate_abs_error_max": 3.061523443648184e-07,
+          "matching_iou": 1.0
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 7.156649475259513e-07,
+        "max_bbox_coordinate_abs_error_pixels": 1.5472656258452844e-05,
+        "min_matching_iou": 0.9999990463256836
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "scratches_255",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/val/scratches_255.jpg",
+      "image_sha256": "CBCE8CEC9FCD71DD78F91976544B9544AF1C346172EFA4C335959F3FF6FD68B6",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "5": 1
+      },
+      "cpp_class_id_counts": {
+        "5": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.7654058933258057,
+          "bbox_xyxy": [
+            3.9118499755859375,
+            136.87271118164062,
+            199.6621551513672,
+            166.77902221679688
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.765405893,
+          "bbox_xyxy": [
+            3.91184998,
+            136.872711,
+            199.662155,
+            166.779022
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 5,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.7654058933258057,
+            "bbox_xyxy": [
+              3.9118499755859375,
+              136.87271118164062,
+              199.6621551513672,
+              166.77902221679688
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.765405893,
+            "bbox_xyxy": [
+              3.91184998,
+              136.872711,
+              199.662155,
+              166.779022
+            ]
+          },
+          "confidence_abs_error": 3.2580571573959105e-10,
+          "bbox_coordinate_abs_errors": [
+            4.414062448887535e-09,
+            1.816406154375727e-07,
+            1.5136717479435902e-07,
+            2.1679687733922037e-07
+          ],
+          "bbox_coordinate_abs_error_max": 2.1679687733922037e-07,
+          "matching_iou": 1.0
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 3.2580571573959105e-10,
+        "max_bbox_coordinate_abs_error_pixels": 2.1679687733922037e-07,
+        "min_matching_iou": 1.0
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "scratches_270",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/val/scratches_270.jpg",
+      "image_sha256": "CF07FC75C1B3FC8E03CE7EBFEB7E6881D3DAC5967012F06A1FAEC86BDB1D7A87",
+      "python_detection_count": 3,
+      "cpp_detection_count": 3,
+      "python_class_id_counts": {
+        "5": 3
+      },
+      "cpp_class_id_counts": {
+        "5": 3
+      },
+      "python_detections": [
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.7515883445739746,
+          "bbox_xyxy": [
+            0.0,
+            113.11831665039062,
+            192.31842041015625,
+            150.59591674804688
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.6857563853263855,
+          "bbox_xyxy": [
+            0.0,
+            60.17445373535156,
+            191.40206909179688,
+            78.47320556640625
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.361466646194458,
+          "bbox_xyxy": [
+            158.03781127929688,
+            121.51738739013672,
+            200.0,
+            150.54388427734375
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.751587629,
+          "bbox_xyxy": [
+            0.0,
+            113.118309,
+            192.31842,
+            150.595917
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.685756624,
+          "bbox_xyxy": [
+            0.0,
+            60.1744461,
+            191.402069,
+            78.4731979
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.361466885,
+          "bbox_xyxy": [
+            158.037811,
+            121.517395,
+            200.0,
+            150.543884
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 5,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.7515883445739746,
+            "bbox_xyxy": [
+              0.0,
+              113.11831665039062,
+              192.31842041015625,
+              150.59591674804688
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.751587629,
+            "bbox_xyxy": [
+              0.0,
+              113.118309,
+              192.31842,
+              150.595917
+            ]
+          },
+          "confidence_abs_error": 7.155739746300682e-07,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            7.650390628555215e-06,
+            4.1015624674400897e-07,
+            2.519531108191586e-07
+          ],
+          "bbox_coordinate_abs_error_max": 7.650390628555215e-06,
+          "matching_iou": 0.9999997615814209
+        },
+        {
+          "class_id": 5,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.6857563853263855,
+            "bbox_xyxy": [
+              0.0,
+              60.17445373535156,
+              191.40206909179688,
+              78.47320556640625
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.685756624,
+            "bbox_xyxy": [
+              0.0,
+              60.1744461,
+              191.402069,
+              78.4731979
+            ]
+          },
+          "confidence_abs_error": 2.386736145387758e-07,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            7.63535156522721e-06,
+            9.179686344396032e-08,
+            7.666406247608393e-06
+          ],
+          "bbox_coordinate_abs_error_max": 7.666406247608393e-06,
+          "matching_iou": 0.9999991655349731
+        },
+        {
+          "class_id": 5,
+          "python_index": 2,
+          "cpp_index": 2,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.361466646194458,
+            "bbox_xyxy": [
+              158.03781127929688,
+              121.51738739013672,
+              200.0,
+              150.54388427734375
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.361466885,
+            "bbox_xyxy": [
+              158.037811,
+              121.517395,
+              200.0,
+              150.543884
+            ]
+          },
+          "confidence_abs_error": 2.388055420077251e-07,
+          "bbox_coordinate_abs_errors": [
+            2.792968700759957e-07,
+            7.6098632746379735e-06,
+            0.0,
+            2.7734375862564775e-07
+          ],
+          "bbox_coordinate_abs_error_max": 7.6098632746379735e-06,
+          "matching_iou": 0.9999997019767761
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 7.155739746300682e-07,
+        "max_bbox_coordinate_abs_error_pixels": 7.666406247608393e-06,
+        "min_matching_iou": 0.9999991655349731
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "scratches_285",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/val/scratches_285.jpg",
+      "image_sha256": "5255774B455B8B94EEFA05C803D031A4F3AC8E2B7A3936D2D694B29935ACCB60",
+      "python_detection_count": 1,
+      "cpp_detection_count": 1,
+      "python_class_id_counts": {
+        "5": 1
+      },
+      "cpp_class_id_counts": {
+        "5": 1
+      },
+      "python_detections": [
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.6102930903434753,
+          "bbox_xyxy": [
+            0.0,
+            47.40660095214844,
+            186.86163330078125,
+            69.58740997314453
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.610292912,
+          "bbox_xyxy": [
+            0.0,
+            47.406601,
+            186.861618,
+            69.58741
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 5,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.6102930903434753,
+            "bbox_xyxy": [
+              0.0,
+              47.40660095214844,
+              186.86163330078125,
+              69.58740997314453
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.610292912,
+            "bbox_xyxy": [
+              0.0,
+              47.406601,
+              186.861618,
+              69.58741
+            ]
+          },
+          "confidence_abs_error": 1.7834347532108552e-07,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            4.7851564488610165e-08,
+            1.530078125711043e-05,
+            2.6855474288822734e-08
+          ],
+          "bbox_coordinate_abs_error_max": 1.530078125711043e-05,
+          "matching_iou": 0.9999999403953552
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 1.7834347532108552e-07,
+        "max_bbox_coordinate_abs_error_pixels": 1.530078125711043e-05,
+        "min_matching_iou": 0.9999999403953552
+      },
+      "passed": true,
+      "failures": []
+    },
+    {
+      "sample_id": "scratches_300",
+      "source_class_id": 5,
+      "source_class_name": "scratches",
+      "image_path": "../../../data/images/val/scratches_300.jpg",
+      "image_sha256": "16419BC0544FFE145AA39C786BE8AF7D45C1B740B144E4366429FB8C7912713E",
+      "python_detection_count": 4,
+      "cpp_detection_count": 4,
+      "python_class_id_counts": {
+        "5": 4
+      },
+      "cpp_class_id_counts": {
+        "5": 4
+      },
+      "python_detections": [
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.42824918031692505,
+          "bbox_xyxy": [
+            0.0,
+            18.159202575683594,
+            188.22056579589844,
+            34.937110900878906
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.40508681535720825,
+          "bbox_xyxy": [
+            96.61725616455078,
+            3.8571205139160156,
+            199.1343994140625,
+            32.79684066772461
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.3132355213165283,
+          "bbox_xyxy": [
+            180.32708740234375,
+            0.0,
+            199.98724365234375,
+            10.020393371582031
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.2975473999977112,
+          "bbox_xyxy": [
+            2.0190887451171875,
+            17.181312561035156,
+            87.32122802734375,
+            35.16325378417969
+          ]
+        }
+      ],
+      "cpp_detections": [
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.42824918,
+          "bbox_xyxy": [
+            0.0,
+            18.1592026,
+            188.220581,
+            34.9371109
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.405086279,
+          "bbox_xyxy": [
+            96.6172485,
+            3.85712051,
+            199.134369,
+            32.7968407
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.313235641,
+          "bbox_xyxy": [
+            180.327087,
+            0.0,
+            199.987244,
+            10.0203943
+          ]
+        },
+        {
+          "class_id": 5,
+          "class_name": "scratches",
+          "confidence": 0.297546595,
+          "bbox_xyxy": [
+            2.01909637,
+            17.1813164,
+            87.3212357,
+            35.1632538
+          ]
+        }
+      ],
+      "matches": [
+        {
+          "class_id": 5,
+          "python_index": 0,
+          "cpp_index": 0,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.42824918031692505,
+            "bbox_xyxy": [
+              0.0,
+              18.159202575683594,
+              188.22056579589844,
+              34.937110900878906
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.42824918,
+            "bbox_xyxy": [
+              0.0,
+              18.1592026,
+              188.220581,
+              34.9371109
+            ]
+          },
+          "confidence_abs_error": 3.169250417656144e-10,
+          "bbox_coordinate_abs_errors": [
+            0.0,
+            2.4316406666002877e-08,
+            1.5204101572408035e-05,
+            8.789058369984559e-10
+          ],
+          "bbox_coordinate_abs_error_max": 1.5204101572408035e-05,
+          "matching_iou": 0.9999999403953552
+        },
+        {
+          "class_id": 5,
+          "python_index": 1,
+          "cpp_index": 1,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.40508681535720825,
+            "bbox_xyxy": [
+              96.61725616455078,
+              3.8571205139160156,
+              199.1343994140625,
+              32.79684066772461
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.405086279,
+            "bbox_xyxy": [
+              96.6172485,
+              3.85712051,
+              199.134369,
+              32.7968407
+            ]
+          },
+          "confidence_abs_error": 5.363572082583978e-07,
+          "bbox_coordinate_abs_errors": [
+            7.664550778940793e-06,
+            3.91601551186227e-09,
+            3.0414062507588824e-05,
+            3.2275387695790414e-08
+          ],
+          "bbox_coordinate_abs_error_max": 3.0414062507588824e-05,
+          "matching_iou": 0.9999996423721313
+        },
+        {
+          "class_id": 5,
+          "python_index": 2,
+          "cpp_index": 2,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.3132355213165283,
+            "bbox_xyxy": [
+              180.32708740234375,
+              0.0,
+              199.98724365234375,
+              10.020393371582031
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.313235641,
+            "bbox_xyxy": [
+              180.327087,
+              0.0,
+              199.987244,
+              10.0203943
+            ]
+          },
+          "confidence_abs_error": 1.1968347168878068e-07,
+          "bbox_coordinate_abs_errors": [
+            4.023437440991984e-07,
+            0.0,
+            3.4765625400723366e-07,
+            9.284179682822469e-07
+          ],
+          "bbox_coordinate_abs_error_max": 9.284179682822469e-07,
+          "matching_iou": 0.9999998807907104
+        },
+        {
+          "class_id": 5,
+          "python_index": 3,
+          "cpp_index": 3,
+          "python_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.2975473999977112,
+            "bbox_xyxy": [
+              2.0190887451171875,
+              17.181312561035156,
+              87.32122802734375,
+              35.16325378417969
+            ]
+          },
+          "cpp_detection": {
+            "class_id": 5,
+            "class_name": "scratches",
+            "confidence": 0.297546595,
+            "bbox_xyxy": [
+              2.01909637,
+              17.1813164,
+              87.3212357,
+              35.1632538
+            ]
+          },
+          "confidence_abs_error": 8.049977111568296e-07,
+          "bbox_coordinate_abs_errors": [
+            7.624882812695688e-06,
+            3.8389648437942014e-06,
+            7.672656252566412e-06,
+            1.5820312171399564e-08
+          ],
+          "bbox_coordinate_abs_error_max": 7.672656252566412e-06,
+          "matching_iou": 0.9999995827674866
+        }
+      ],
+      "unmatched_python_indices": [],
+      "unmatched_cpp_indices": [],
+      "metrics": {
+        "max_confidence_abs_error": 8.049977111568296e-07,
+        "max_bbox_coordinate_abs_error_pixels": 3.0414062507588824e-05,
+        "min_matching_iou": 0.9999995827674866
+      },
+      "passed": true,
+      "failures": []
+    }
+  ]
+}

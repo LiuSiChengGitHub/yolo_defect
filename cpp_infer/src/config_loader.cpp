@@ -49,7 +49,7 @@ ExecutionProvider parse_provider(
     detail::throw_field_error(
         parsed, kSchemaName, "provider", "unsupported enum value", "[cpu]",
         value,
-        "use cpu for the pinned Windows x64 CPU ONNX Runtime SDK");
+        "use cpu for the pinned ONNX Runtime CPU SDK on this platform");
   }
   return ExecutionProvider::kCpu;
 }

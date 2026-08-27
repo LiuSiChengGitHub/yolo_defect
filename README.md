@@ -20,15 +20,14 @@ that artifact: executable contracts, C++ inference, deterministic outputs,
 correctness gates, benchmark evidence, and a controlled path toward Linux,
 concurrency, quantization, and TensorRT.
 
-> **Status — 2026-08-27:** Large Stage One's automated engineering gate and
-> user-owned L2 acceptance are complete. The Stage Two documentation preflight
-> is closed; **S2-01 implementation and machine evidence are complete and now
-> await user L1**. The final locally generated S2-01 artifact is the full
-> 64-Conv QDQ/U8S8 Round 2 model. It fixes the Round 1 S8S8 execution-path
-> regression and is smaller and faster than FP32 on the recorded CPU protocol.
-> Product-difference and task-quality results are retained as advisory
-> diagnostics under the user-approved exercise scope; strict three-layer
-> acceptance is not claimed.
+> **Status — 2026-08-28:** Large Stage One and user-owned L2 are complete.
+> S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are
+> complete under the recorded advisory exercise policy. **S2-02 Gate A is now
+> complete on WSL2/Linux x86_64:** the shared-source Release Runtime, tests,
+> fixed-image product path, Python/C++ consistency, short benchmark/peak RSS,
+> and ELF dependency checks passed, followed by a green Windows regression.
+> Work stops for user L1 and direction. Gate B (AArch64 cross-build/QEMU) has
+> not started, so S2-02 as a whole is not claimed complete.
 
 ![Fixed inference demo](docs/assets/demo_inference_result.gif)
 
@@ -87,7 +86,7 @@ YOLO decode -> score filter -> stable NMS -> coordinate restore
 ```text
 FP32 ONNX
   -> [delivered on Windows CPU] static INT8 PTQ + ORT operator/node profiling
-  -> Windows and Linux x86_64 shared-source Runtime
+  -> [Gate A delivered] Windows and Linux x86_64 shared-source Runtime
   -> AArch64 cross-build + QEMU portability smoke
   -> directory/manifest + bounded queue + workers
   -> Linux x86_64 + RTX 4060 TensorRT path
@@ -165,9 +164,27 @@ root. It discovers and initializes the required Visual Studio environment:
 .\cpp_infer\tools\stage1.cmd build
 ```
 
+In WSL2/Linux x86_64, select the pinned Linux SDKs and use the Bash entry:
+
+```bash
+export ONNXRUNTIME_ROOT=/path/to/onnxruntime-linux-x64-1.19.2
+export YOLO_DEFECT_PYTHON=/path/to/python
+export YOLO_DEFECT_GTEST_SOURCE=/usr/src/googletest
+
+bash cpp_infer/tools/stage1.sh doctor
+bash cpp_infer/tools/stage1.sh clean-build
+bash cpp_infer/tools/stage1.sh test
+bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
+bash cpp_infer/tools/stage1.sh consistency
+bash cpp_infer/tools/stage1.sh benchmark
+bash cpp_infer/tools/stage1.sh all
+```
+
 The complete action matrix, current dependency paths, local-configuration
 precedence, low-level CMake/CTest audit commands, and environment troubleshooting
 live only in [Paths, toolchains, and environment diagnosis](docs/paths_commands.md).
+The exact Gate A machine snapshot, evidence, and interpretation are in the
+[S2-02 Gate A closure](docs/details/s2_02_gate_a_closure.md).
 
 ## 5. Core Modules
 
@@ -180,6 +197,8 @@ live only in [Paths, toolchains, and environment diagnosis](docs/paths_commands.
 | `ProfileRunner` and profile summarizer | Create an isolated profiling-enabled session, retain the ORT raw trace, aggregate node/operator/provider time and call counts, and keep trace timing outside formal benchmarks |
 | Postprocessor/NMS | Validate YOLO BCN output, select class scores, apply strict filtering and stable class-agnostic NMS, then restore and clip source coordinates |
 | `DetectorPipeline` and writers | Orchestrate one image and emit owned results, stable JSON, and deterministic GUI-free visualization while enforcing safe output paths |
+| Cross-platform build/platform layer | Keep the shared Runtime/preprocess/postprocess/Pipeline source unchanged while CMake selects Windows `.lib`/`.dll` staging or Linux `libonnxruntime.so` plus build RPATH; a thin `platform_info` adapter reports Windows Peak Working Set or Linux `getrusage` peak RSS |
+| `project_core` portability smoke | Isolate standard-library-only YOLO decode/NMS/coordinate-restore behavior so a future Gate B target can prove core portability without pretending that full AArch64 ORT/OpenCV inference already exists |
 | Verification harness | Test meaningful seams with focused fixtures, exercise the real vertical slice sparingly, compare Python/C++ detections when relevant, and record scoped benchmark/memory results |
 
 ## 6. Stage Two Plan
@@ -192,7 +211,7 @@ and then stops for L1 acceptance.
 | Unit | Delivery | Honest boundary | Status |
 |---|---|---|---|
 | S2-01 | Static INT8 PTQ, FP32/INT8 correctness/task-quality/performance comparison, ORT operator/node profiling | Windows CPU exercise closure; product/quality results are advisory; no QAT or profiler-as-benchmark claim | **Implementation/evidence complete; awaiting L1** |
-| S2-02 | Linux x86_64 native chain, shared-source portability, AArch64 cross-build and QEMU smoke | WSL2 is not a board; QEMU produces no performance claim | Planned |
+| S2-02 | Linux x86_64 native chain, shared-source portability, AArch64 cross-build and QEMU smoke | WSL2 is not a board; QEMU produces no performance claim | **Gate A complete; awaiting L1/direction; Gate B not started** |
 | S2-03 | Directory/manifest discovery, bounded queue, workers, backpressure, failure accounting, clean shutdown, throughput comparison | Concurrent single-image work is not true ONNX batch | Planned |
 | S2-04 | One real Linux x86_64 + RTX 4060 TensorRT execution path, FP16 correctness and performance | Local GPU/edge-node evidence only; not Jetson or embedded deployment | Planned |
 | S2-05 | Applicable full gates, result matrix, failure cases, three resume narratives, interview material, recruiting freeze | Adds no new technology stack | Planned |
@@ -252,15 +271,39 @@ Primary S2-01 evidence:
 - [Round 2 closure, failure analysis, and reproducibility details](docs/details/s2_01_round2_closure.md)
 - [Round 1 S8S8 historical closure](docs/details/s2_01_closure.md)
 
+### S2-02 Gate A Linux x86_64 Record
+
+Gate A keeps the existing Runtime, preprocessing, postprocessing, and
+`DetectorPipeline` as the single business path. CMake now selects the pinned
+Windows `.lib`/`.dll` contract or Linux `libonnxruntime.so` with build RPATH;
+the thin `platform_info` adapter selects Windows Peak Working Set or Linux
+`getrusage` peak RSS. A standard-library-only `project_core` smoke covers YOLO
+decode, class-agnostic NMS, and coordinate restore as preparation for Gate B.
+
+| Gate A evidence | Recorded result |
+|---|---|
+| Linux clean Release | WSL2/Linux x86_64, Ninja, 119/119 CTest passed |
+| Fixed product path | `crazing_241.jpg`, three detections, valid JSON and readable PNG |
+| Python/C++ consistency | 30/30 images and 62/62 matched detections passed the frozen gates |
+| Short performance smoke | One warmup-1/repeat-2 sample: end-to-end mean `135.896991 ms`, `7.358515 img/s`, peak RSS `196.570312 MiB`; the durable closure 1/2 rerun measured `151.273896 ms`, `6.610526 img/s`, `196.757812 MiB`, confirming high variance |
+| Dynamic loading | Nine built ELF executables checked with `ldd`; no dependency reported `not found`, and ORT resolved through the configured Linux SDK/RPATH |
+| Windows regression | Release/NMake 119/119 CTest passed |
+
+The committed fixed-image outputs are under
+[`cpp_infer/results/s2_02/linux_x86_64/`](cpp_infer/results/s2_02/linux_x86_64/).
+Commands, the machine snapshot, and the full evidence interpretation are in
+[Paths, toolchains, and environment diagnosis](docs/paths_commands.md) and the
+[S2-02 Gate A closure](docs/details/s2_02_gate_a_closure.md).
+
 ### Platform Matrix
 
 | Platform/backend | What it proves | Current status |
 |---|---|---|
 | Windows x86_64 + ORT CPU FP32 | Current product chain, correctness, tests, segmented benchmark, Peak Working Set | Verified |
 | Windows x86_64 + ORT CPU INT8 | Static PTQ artifact, Runtime legality, size/quality/performance comparison, per-node profiling | Verified in S2-01 under advisory exercise policy |
-| WSL2/Linux x86_64 + ORT CPU INT8 | Shared-source Linux load/runtime portability, comparison, and peak RSS | Planned in S2-02 |
-| WSL2 Ubuntu 24.04 x86_64 + ORT CPU | Linux build/load/runtime portability, consistency, benchmark, peak RSS | Planned in S2-02 |
-| Linux AArch64 under QEMU | Cross-compilation and portability correctness only | Planned in S2-02; no performance claims |
+| WSL2/Linux x86_64 + ORT CPU INT8 | Potential shared-source Linux INT8 path | Not separately exercised in Gate A; no Linux INT8 comparison claim |
+| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux build/load/runtime portability, consistency, short benchmark, peak RSS | **S2-02 Gate A verified; awaiting L1/direction** |
+| Linux AArch64 under QEMU | Cross-compilation and portability correctness only | **Gate B not started**; no performance claims |
 | Linux x86_64 + RTX 4060 + TensorRT | Real local TensorRT execution, FP16 correctness/performance, GPU memory | Planned in S2-04; not Jetson |
 
 The current resume can be used without waiting for Stage Two. Completed S2
@@ -273,16 +316,19 @@ written as delivered results.
   artifact; it is not detector mAP or a new PyTorch/ONNX/C++ three-way run.
 - The matching `.pt` checkpoint is not present. The current ONNX lineage is
   owner-confirmed, not currently re-exportable from this workspace.
-- The formal benchmark is one `200x200` image, batch 1, warm file cache, one
-  Windows CPU host, sequential ORT execution, and no CPU-affinity/priority lock.
-- Peak Working Set is a process-lifetime high-water mark, not model-only or
-  per-inference memory.
+- The formal tracked benchmark is one `200x200` image, batch 1, warm file cache,
+  one Windows CPU host, sequential ORT execution, and no CPU-affinity/priority
+  lock. Gate A's Linux warmup-1/repeat-2 samples varied materially and are only
+  functional performance smokes, not a formal result or a cross-OS comparison.
+- Windows Peak Working Set and Linux `getrusage` peak RSS are process-lifetime
+  high-water metrics with platform-specific semantics; neither is model-only or
+  per-inference memory, and their values are not directly comparable.
 - S2-01 ORT traces prove optimized-node placement on `CPUExecutionProvider`,
   but trace durations include profiler overhead and do not identify exact CPU
   instructions selected inside a kernel.
-- The current Runtime is single-image and CPU-only. Windows INT8 is delivered;
-  Linux, AArch64/QEMU, bounded concurrency, and TensorRT remain planned until
-  their own units produce evidence.
+- The current Runtime is single-image and CPU-only. Windows INT8 and S2-02 Gate
+  A's WSL2/Linux x86_64 FP32 path are delivered. Gate B/AArch64/QEMU has not
+  started; bounded concurrency and TensorRT also remain planned.
 - Historical Python ORT `24.4/72.1 FPS` used different implementations,
   providers, hardware, samples, and timing boundaries; it is context only and
   must not be ranked against the C++ result.
@@ -311,6 +357,7 @@ Authoritative and operational references:
 - [Stage Two top-level design](docs/Proj1_S2.md)
 - [Stage One consolidated closure](docs/details/stage1_closure.md)
 - [S2-01 INT8/PTQ and profiling closure](docs/details/s2_01_closure.md)
+- [S2-02 Gate A Linux x86_64 closure](docs/details/s2_02_gate_a_closure.md)
 - [Paths, commands, and environment](docs/paths_commands.md)
 - [C++ Runtime technical reference](cpp_infer/README.md)
 

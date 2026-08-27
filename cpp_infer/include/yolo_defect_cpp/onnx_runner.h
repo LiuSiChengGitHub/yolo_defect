@@ -3,6 +3,7 @@
 
 #include "yolo_defect_cpp/config_loader.h"
 #include "yolo_defect_cpp/model_metadata.h"
+#include "yolo_defect_cpp/project_core.h"
 
 #include <cstdint>
 #include <filesystem>
@@ -11,11 +12,6 @@
 #include <vector>
 
 namespace yolo_defect_cpp {
-
-struct InferenceOutput {
-  std::vector<std::int64_t> shape;
-  std::vector<float> values;
-};
 
 struct TimedInferenceOutput {
   InferenceOutput output;

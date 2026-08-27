@@ -156,3 +156,124 @@ if ($LASTEXITCODE -ne 0) { throw 'CTest failed.' }
 - product runtime 失败：沿 config/artifact/metadata、preprocess、`Session::Run`、postprocess、output 边界定位。
 - benchmark/profile 结果只适用于记录的机器与协议；PWS 是进程高水位，不是模型独占内存。
 - 工作树可能已有未提交修改；构建或清理前先检查 `git status`，不要覆盖或删除无关文件。
+
+## 8. S2-02 Gate A：WSL2/Linux x86_64 环境与入口
+
+### 8.1 当前已验证环境
+
+Gate A 当前只代表 **WSL2/Linux x86_64**，不是原生 Linux 实机、AArch64 板卡或 QEMU：
+
+| 依赖 | 当前版本或位置 |
+|---|---|
+| 系统 | WSL2 Ubuntu `24.04.4 LTS`，x86_64，kernel `6.18.33.2-microsoft-standard-WSL2` |
+| GCC / G++ | `13.3.0` |
+| CMake / CTest | `3.28.3` |
+| Ninja | `1.11.1` |
+| pkg-config | `1.8.1` |
+| OpenCV C++ | `4.6.0`；Ubuntu `/usr` 下的 distro headers/libraries，由 `pkg-config opencv4` 与 CMake package 解析 |
+| ONNX Runtime C++ SDK | `1.19.2`：`/home/everbreath/.local/opt/onnxruntime-linux-x64-1.19.2` |
+| Python reference | Python `3.12.3`：`/home/everbreath/.venvs/yolo-defect-gate-a/bin/python`；ORT `1.19.2`、OpenCV Python `4.10.0`、NumPy `2.0.2`，实际 provider 含 `CPUExecutionProvider` |
+| GoogleTest | Ubuntu distro source `/usr/src/googletest`，版本 `1.14.0` |
+
+Linux C++ SDK 来自 Microsoft 官方发布包
+[`onnxruntime-linux-x64-1.19.2.tgz`](https://github.com/microsoft/onnxruntime/releases/download/v1.19.2/onnxruntime-linux-x64-1.19.2.tgz)。Python wheel 仍不能替代 C++ SDK 的 headers 与 `libonnxruntime.so`。
+
+### 8.2 环境准备与重新进入
+
+Ubuntu 侧安装过的最小 apt 包为：
+
+```bash
+sudo apt update
+sudo apt install -y \
+  build-essential cmake ninja-build pkg-config libopencv-dev \
+  python3-venv python3-pip libgtest-dev gdb
+```
+
+Python reference 环境的固定依赖为：
+
+```bash
+python3 -m venv /home/everbreath/.venvs/yolo-defect-gate-a
+/home/everbreath/.venvs/yolo-defect-gate-a/bin/python -m pip install \
+  onnxruntime==1.19.2 opencv-python-headless==4.10.0.84 numpy==2.0.2
+```
+
+每次新 WSL shell 从仓库根目录进入时设置：
+
+```bash
+cd /mnt/d/01_Base/CodingSpace/yolo_defect
+export ONNXRUNTIME_ROOT=/home/everbreath/.local/opt/onnxruntime-linux-x64-1.19.2
+export YOLO_DEFECT_PYTHON=/home/everbreath/.venvs/yolo-defect-gate-a/bin/python
+export YOLO_DEFECT_GTEST_SOURCE=/usr/src/googletest
+bash cpp_infer/tools/stage1.sh doctor
+```
+
+`stage1.sh` 会在通过 SDK 检查后为当前进程补充 `LD_LIBRARY_PATH`；Linux build 还把该 SDK 的 `lib` 写入 build RPATH。需要直接运行其他自编译程序时，可显式设置：
+
+```bash
+export LD_LIBRARY_PATH="${ONNXRUNTIME_ROOT}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+```
+
+### 8.3 Linux 统一入口
+
+查看帮助和只读检查：
+
+```bash
+bash cpp_infer/tools/stage1.sh help
+bash cpp_infer/tools/stage1.sh doctor
+```
+
+| Action | 行为 |
+|---|---|
+| `help` | 显示参数，不构建 |
+| `doctor` | 只读检查 WSL/Linux x86_64、工具链、ORT ELF、OpenCV、Python 与 GTest source |
+| `build` | 没有构建树时 clean configure，否则增量 Ninja Release 构建；随后检查 ELF/`ldd` |
+| `clean-build` | 只清理受保护的 `/tmp/.../yolo_defect_stage1_*` 构建目录，再完整构建 |
+| `test` | 构建当前源码并运行完整 CTest |
+| `detect <image> [output-dir]` | 复用 `DetectorPipeline` 运行任意单图；可选 `--config` 与 `--overwrite` |
+| `demo` | 验证固定 `crazing_241` 的 JSON/PNG 与 3 个 detections |
+| `consistency` | 固定 30 图 Python ORT/C++ ORT 比较 |
+| `benchmark` | 先跑 consistency，再运行分段 benchmark；默认 warmup `10`、repeat `100`，可覆盖 |
+| `all` | clean build、完整 CTest、Demo、consistency 与默认 benchmark；只用于完整 gate |
+
+常见动作：
+
+```bash
+bash cpp_infer/tools/stage1.sh clean-build
+bash cpp_infer/tools/stage1.sh test
+bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
+bash cpp_infer/tools/stage1.sh demo
+bash cpp_infer/tools/stage1.sh consistency
+bash cpp_infer/tools/stage1.sh benchmark --warmup 1 --repeat 2
+```
+
+默认 run JSON 写到受保护 build tree 下的临时目录。需要把某次 Gate 结果直接留在仓库时，显式选择一个尚无 `demo`、`consistency`、`benchmark` 子目录的专用目录；脚本会拒绝覆盖旧 run，仍只调用现有 Demo、consistency 和 benchmark 逻辑，不组装新的 evidence schema。下面是本次首次收口时使用的目录，复跑请换一个新目录名：
+
+```bash
+export YOLO_DEFECT_RUN_DIR="$PWD/cpp_infer/results/s2_02/linux_x86_64"
+bash cpp_infer/tools/stage1.sh benchmark --warmup 1 --repeat 2
+unset YOLO_DEFECT_RUN_DIR
+```
+
+### 8.4 无 ORT/OpenCV 的 core-only smoke
+
+`YOLO_DEFECT_CORE_ONLY=ON` 只构建 dependency-free `project_core` 与 portability smoke，跳过 OpenCV、ORT、Python 和 GoogleTest discovery。它用于验证纯 C++17 的 YOLO decode、class-agnostic NMS 与坐标恢复边界，也为 Gate B 提供最小交叉编译入口；它不等于完整 Runtime inference。
+
+```bash
+cmake -S cpp_infer -B /tmp/yolo_defect_s2_02_core_only -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_TESTING=ON \
+  -DYOLO_DEFECT_CORE_ONLY=ON
+cmake --build /tmp/yolo_defect_s2_02_core_only --parallel
+ctest --test-dir /tmp/yolo_defect_s2_02_core_only --output-on-failure
+ldd /tmp/yolo_defect_s2_02_core_only/bin/yolo_defect_project_core_smoke
+```
+
+当前 Linux 结果是 `1/1` smoke 通过，`ldd` 不含 ONNX Runtime 或 OpenCV 依赖。
+
+### 8.5 WSL 操作注意事项
+
+- 从非交互式 `wsl.exe ... bash -lc ...` 调用 `sudo` 时，密码提示可能没有可用终端而失败或挂起。安装 apt 包应在交互式 WSL shell 中运行，或先在该 shell 执行 `sudo -v`；不要把密码写入脚本。
+- 从 PowerShell 拼接 `wsl.exe ... bash -lc ...` 时，Bash 的 `$name`/`${name}` 可能先被宿主 shell 展开。复杂命令优先进入 WSL shell 后运行仓库脚本，或直接传固定 WSL 路径；不要依赖多层 shell 中未验证的变量引用。
+- 默认构建和 fresh result JSON 位于 `/tmp/yolo_defect_stage1_linux_release`。WSL 会话重启、系统清理或手工删除后它们可能消失；`/tmp` 不是长期结果库。收口运行应设置 `YOLO_DEFECT_RUN_DIR`，直接写入仓库内命名目录。
+- Linux benchmark 的 peak RSS 与 Windows Peak Working Set 是不同 OS 指标，不能直接当成同一测量口径比较。
+- Gate A 的实测环境是 WSL2；AArch64 cross compile 与 QEMU 属于 Gate B，不能由本节命令或结果推导为已完成。

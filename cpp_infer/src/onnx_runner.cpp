@@ -204,11 +204,11 @@ std::runtime_error make_ort_error(const RuntimeContract& contract,
       "ONNX session/metadata error for model '" +
       contract.artifact.model_path.string() +
       "': expected a loadable ONNX model compatible with the pinned ORT "
-      "1.19.2 Windows x64 CPU SDK; actual ORT error code " +
+      "1.19.2 CPU SDK selected for this platform; actual ORT error code " +
       std::to_string(static_cast<int>(error.GetOrtErrorCode())) + ": " +
       error.what() +
       "; action: verify the model path and SHA-256, ONNX export/opset, "
-      "CPU provider availability, and that the staged DLL matches "
+      "CPU provider availability, and that the loaded shared library matches "
       "ONNXRUNTIME_ROOT.");
 }
 
@@ -407,7 +407,8 @@ std::runtime_error make_run_ort_error(
       std::to_string(static_cast<int>(error.GetOrtErrorCode())) + ": " +
       error.what() +
       "; action: verify input shape/data, model integrity, provider "
-      "availability, and that the staged DLL matches ONNXRUNTIME_ROOT.");
+      "availability, and that the loaded ORT shared library matches "
+      "ONNXRUNTIME_ROOT.");
 }
 
 }  // namespace
@@ -433,8 +434,8 @@ class OnnxRunner::Impl {
           contract.artifact.model_path.string() +
           "': expected available providers to contain CPUExecutionProvider; "
           "actual " + format_string_list(metadata_.available_providers) +
-          "; action: verify that the staged onnxruntime.dll comes from the "
-          "official Windows x64 CPU SDK selected by ONNXRUNTIME_ROOT.");
+          "; action: verify that the loaded ONNX Runtime shared library comes "
+          "from the official CPU SDK selected by ONNXRUNTIME_ROOT.");
     }
 
     session_options_.SetExecutionMode(ExecutionMode::ORT_SEQUENTIAL);
@@ -569,7 +570,7 @@ class OnnxRunner::Impl {
           "ORT error code " +
               std::to_string(static_cast<int>(error.GetOrtErrorCode())) +
               ": " + error.what(),
-          "check profile output permissions and the staged ORT DLL");
+          "check profile output permissions and the loaded ORT shared library");
     }
   }
 

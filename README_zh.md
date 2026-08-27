@@ -16,11 +16,12 @@ YOLOv8 和 NEU-DET 是首个 Runtime 实现所使用的稳定模型与数据集�
 本仓库的价值在于围绕该产物建立工程闭环：可执行契约、C++ 推理、确定性输出、
 正确性门禁、Benchmark 证据，以及受控推进 Linux、并发、量化和 TensorRT 的路径。
 
-> **状态 — 2026-08-27：** 大阶段一自动工程门与用户负责的 L2 验收均已完成。
-> 大阶段二文档前置准备已经收口；**S2-01 实现与机器证据已经完成，当前等待用户
-> L1**。最终在本机生成的是全 64 个 Conv 的 QDQ/U8S8 Round 2 模型；它修复了
-> Round 1 S8S8 的执行路径退化，在记录的 CPU 协议下同时小于且快于 FP32。按用户批准的个人练习口径，
-> 产品差异与任务质量结果保留为 advisory 诊断项，不声称通过原始三层严格验收。
+> **状态 — 2026-08-28：** 大阶段一与用户负责的 L2 已完成；S2-01 的 Windows
+> CPU INT8/PTQ/profiling 实现与证据已按记录的 advisory 练习口径完成。
+> **S2-02 Gate A 的 WSL2/Linux x86_64 Native 已完成：** 共享源码 Release Runtime、
+> 测试、固定单图产品链、Python/C++ 一致性、短 Benchmark/peak RSS 与 ELF 依赖检查
+> 均通过，随后 Windows 回归保持全绿。当前停止并等待用户 L1/后续方向；Gate B
+> （AArch64 交叉构建与 QEMU）尚未开始，因此不声称 S2-02 整个单元已经完成。
 
 ![固定推理 Demo](docs/assets/demo_inference_result.gif)
 
@@ -75,7 +76,7 @@ YOLO decode -> score filter -> stable NMS -> coordinate restore
 ```text
 FP32 ONNX
   -> [Windows CPU 已交付] static INT8 PTQ + ORT operator/node profiling
-  -> Windows and Linux x86_64 shared-source Runtime
+  -> [Gate A 已交付] Windows and Linux x86_64 shared-source Runtime
   -> AArch64 cross-build + QEMU portability smoke
   -> directory/manifest + bounded queue + workers
   -> Linux x86_64 + RTX 4060 TensorRT path
@@ -146,8 +147,26 @@ contract + metadata -> model-specific preprocess
 .\cpp_infer\tools\stage1.cmd build
 ```
 
+在 WSL2/Linux x86_64 中选择固定版本的 Linux SDK，并使用 Bash 入口：
+
+```bash
+export ONNXRUNTIME_ROOT=/path/to/onnxruntime-linux-x64-1.19.2
+export YOLO_DEFECT_PYTHON=/path/to/python
+export YOLO_DEFECT_GTEST_SOURCE=/usr/src/googletest
+
+bash cpp_infer/tools/stage1.sh doctor
+bash cpp_infer/tools/stage1.sh clean-build
+bash cpp_infer/tools/stage1.sh test
+bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
+bash cpp_infer/tools/stage1.sh consistency
+bash cpp_infer/tools/stage1.sh benchmark
+bash cpp_infer/tools/stage1.sh all
+```
+
 完整 action 矩阵、当前依赖路径、本机配置优先级、底层 CMake/CTest 审计命令
 和环境故障诊断只保存在[路径、工具链与环境诊断](docs/paths_commands.md)。
+Gate A 的准确机器快照、证据与解释见
+[S2-02 Gate A 收口](docs/details/s2_02_gate_a_closure.md)。
 
 ## 5. 核心模块
 
@@ -160,6 +179,8 @@ contract + metadata -> model-specific preprocess
 | `ProfileRunner` 与 profile 汇总器 | 创建隔离的 profiling session，保留 ORT raw trace，按 node/operator/provider 汇总耗时与调用次数，并把 trace 耗时排除在正式 Benchmark 外 |
 | 后处理/NMS | 验证 YOLO BCN 输出，选择类别分数，执行严格过滤与稳定的类别无关 NMS，再恢复并裁剪源图坐标 |
 | `DetectorPipeline` 与 writers | 编排单张图片并输出自持有结果、稳定 JSON 和确定性的无 GUI 可视化，同时强制安全输出路径 |
+| 跨平台构建/平台层 | 保持 Runtime、预处理、后处理和 Pipeline 共用同一源码；CMake 选择 Windows `.lib`/`.dll` staging 或 Linux `libonnxruntime.so` 加 build RPATH，薄 `platform_info` 适配器分别报告 Windows Peak Working Set 与 Linux `getrusage` peak RSS |
+| `project_core` 可移植性 smoke | 抽出仅依赖标准库的 YOLO decode/NMS/坐标恢复行为，为未来 Gate B 提供 core smoke，但不冒充已经完成 AArch64 ORT/OpenCV 全链推理 |
 | 验证工具链 | 用聚焦 fixture 测试有意义的逻辑接缝，谨慎运行真实垂直链，在相关时比较 Python/C++ 检测并记录限定范围的 Benchmark/内存结果 |
 
 ## 6. 大阶段二计划
@@ -170,7 +191,7 @@ contract + metadata -> model-specific preprocess
 | 单元 | 交付内容 | 诚实边界 | 状态 |
 |---|---|---|---|
 | S2-01 | Static INT8 PTQ、FP32/INT8 正确性/任务质量/性能对比、ORT operator/node profiling | Windows CPU 个人练习收口；产品/质量结果为 advisory；不做 QAT，也不把 profiler 冒充 Benchmark | **实现/证据完成；等待 L1** |
-| S2-02 | Linux x86_64 原生链路、共享源码可移植性、AArch64 交叉构建与 QEMU smoke | WSL2 不是开发板；QEMU 不产出性能结论 | 计划中 |
+| S2-02 | Linux x86_64 原生链路、共享源码可移植性、AArch64 交叉构建与 QEMU smoke | WSL2 不是开发板；QEMU 不产出性能结论 | **Gate A 已完成；等待 L1/方向；Gate B 尚未开始** |
 | S2-03 | 目录/manifest 发现、有界队列、workers、背压、失败计数、干净退出、吞吐对比 | 并发单图任务不等于真正的 ONNX batch | 计划中 |
 | S2-04 | 一条真实 Linux x86_64 + RTX 4060 TensorRT 执行路径、FP16 正确性与性能 | 仅为本地 GPU/边缘节点证据；不是 Jetson 或嵌入式部署 | 计划中 |
 | S2-05 | 适用的完整门禁、结果矩阵、失败案例、三套简历叙事、面试材料、recruiting freeze | 不增加新技术栈 | 计划中 |
@@ -225,15 +246,37 @@ S2-01 主要证据：
 - [Round 2 收口、失败分析与复现详情](docs/details/s2_01_round2_closure.md)
 - [Round 1 S8S8 历史收口](docs/details/s2_01_closure.md)
 
+### S2-02 Gate A Linux x86_64 记录
+
+Gate A 保持现有 Runtime、预处理、后处理和 `DetectorPipeline` 为唯一业务主链。
+CMake 现在按平台选择 Windows `.lib`/`.dll` 契约或带 build RPATH 的 Linux
+`libonnxruntime.so`；薄 `platform_info` 适配器选择 Windows Peak Working Set 或
+Linux `getrusage` peak RSS。仅依赖标准库的 `project_core` smoke 覆盖 YOLO decode、
+类别无关 NMS 与坐标恢复，为 Gate B 做准备。
+
+| Gate A 证据 | 实测结果 |
+|---|---|
+| Linux clean Release | WSL2/Linux x86_64、Ninja，119/119 CTest 通过 |
+| 固定产品链 | `crazing_241.jpg`，3 个检测，JSON 合法且 PNG 可读 |
+| Python/C++ 一致性 | 30/30 张图片、62/62 个匹配检测通过冻结门限 |
+| 短性能 smoke | 一次 warmup-1/repeat-2 样本：端到端 mean `135.896991 ms`、`7.358515 img/s`、peak RSS `196.570312 MiB`；持久化收口的 1/2 复跑为 `151.273896 ms`、`6.610526 img/s`、`196.757812 MiB`，显示波动很大 |
+| 动态加载 | 用 `ldd` 检查 9 个已构建 ELF 可执行文件；无依赖报告 `not found`，ORT 经配置的 Linux SDK/RPATH 解析 |
+| Windows 回归 | Release/NMake 119/119 CTest 通过 |
+
+已提交的固定单图产物位于
+[`cpp_infer/results/s2_02/linux_x86_64/`](cpp_infer/results/s2_02/linux_x86_64/)。
+命令、机器快照与完整证据解释见[路径、工具链与环境诊断](docs/paths_commands.md)和
+[S2-02 Gate A 收口](docs/details/s2_02_gate_a_closure.md)。
+
 ### 平台矩阵
 
 | 平台/后端 | 能证明什么 | 当前状态 |
 |---|---|---|
 | Windows x86_64 + ORT CPU FP32 | 当前产品链、正确性、测试、分段 Benchmark、Peak Working Set | 已验证 |
 | Windows x86_64 + ORT CPU INT8 | Static PTQ 产物、Runtime 合法性、大小/质量/性能比较、逐节点 profiling | S2-01 已按 advisory 练习口径验证 |
-| WSL2/Linux x86_64 + ORT CPU INT8 | 共享源码 Linux 加载/运行可移植性、比较与 peak RSS | 计划在 S2-02 完成 |
-| WSL2 Ubuntu 24.04 x86_64 + ORT CPU | Linux 构建/加载/Runtime 可移植性、一致性、Benchmark、peak RSS | 计划在 S2-02 完成 |
-| Linux AArch64 under QEMU | 仅证明交叉编译和可移植性正确性 | 计划在 S2-02 完成；不发布性能结论 |
+| WSL2/Linux x86_64 + ORT CPU INT8 | 潜在的共享源码 Linux INT8 路径 | Gate A 未单独实测；不作 Linux INT8 对比结论 |
+| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux 构建/加载/Runtime 可移植性、一致性、短 Benchmark、peak RSS | **S2-02 Gate A 已验证；等待 L1/方向** |
+| Linux AArch64 under QEMU | 仅证明交叉编译和可移植性正确性 | **Gate B 尚未开始**；不发布性能结论 |
 | Linux x86_64 + RTX 4060 + TensorRT | 真实本地 TensorRT 执行、FP16 正确性/性能、GPU 内存 | 计划在 S2-04 完成；不是 Jetson |
 
 当前简历无需等待大阶段二即可使用。已完成的 S2 单元可以滚动更新简历；
@@ -245,13 +288,17 @@ S2-01 主要证据：
   也不是新的 PyTorch/ONNX/C++ 三方对比。
 - 匹配的 `.pt` checkpoint 当前不存在。现有 ONNX 的来源由项目所有者确认，
   但目前无法在本工作区重新导出。
-- 正式 Benchmark 仅使用一张 `200x200` 图片、batch 1、暖文件缓存、
+- 正式已跟踪 Benchmark 仅使用一张 `200x200` 图片、batch 1、暖文件缓存、
   一台 Windows CPU 主机、串行 ORT 执行，并且没有锁定 CPU affinity/priority。
-- Peak Working Set 是进程生命周期的高水位，不是模型专属或单次推理内存。
+  Gate A 的 Linux warmup-1/repeat-2 样本波动明显，只是功能性性能 smoke，
+  不是正式结果，也不能用作跨操作系统速度比较。
+- Windows Peak Working Set 与 Linux `getrusage` peak RSS 都是进程生命周期高水位，
+  但平台语义不同；二者都不是模型专属或单次推理内存，数值也不能直接比较。
 - S2-01 ORT trace 已证明优化后节点由 `CPUExecutionProvider` 执行，但 trace
   时长含 profiler 开销，也不能说明 kernel 内部最终选择了哪条 CPU 指令。
-- 当前 Runtime 仍为 CPU 单图；Windows INT8 已交付，Linux、AArch64/QEMU、
-  有界并发和 TensorRT 仍需各自单元提供证据。
+- 当前 Runtime 仍为 CPU 单图；Windows INT8 与 S2-02 Gate A 的 WSL2/Linux
+  x86_64 FP32 路径已交付。Gate B/AArch64/QEMU 尚未开始；有界并发和 TensorRT
+  也仍在计划中。
 - 历史 Python ORT `24.4/72.1 FPS` 使用不同实现、provider、硬件、样本和计时边界；
   只能作为背景，不能与 C++ 结果排名比较。
 - 源码、模型与数据集许可证是彼此独立的检查点。MIT 源码许可证不会自动为已分发的
@@ -276,6 +323,7 @@ D010 集成、Qt、本地 LLM、Agent 工作流和真实 ARM/Jetson 设备保持
 - [大阶段二顶层设计](docs/Proj1_S2.md)
 - [大阶段一合并收口](docs/details/stage1_closure.md)
 - [S2-01 INT8/PTQ 与 profiling 收口](docs/details/s2_01_closure.md)
+- [S2-02 Gate A Linux x86_64 收口](docs/details/s2_02_gate_a_closure.md)
 - [路径、命令与环境](docs/paths_commands.md)
 - [C++ Runtime 技术参考](cpp_infer/README.md)
 

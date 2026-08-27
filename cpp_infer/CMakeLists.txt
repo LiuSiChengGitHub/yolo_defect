@@ -6,13 +6,60 @@ project(yolo_defect_cpp
   LANGUAGES CXX
 )
 
-if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-  message(FATAL_ERROR
-    "The pinned Windows x64 ONNX Runtime SDK requires a 64-bit toolchain. "
-    "Re-enter the x64 Visual Studio developer environment.")
+option(YOLO_DEFECT_CORE_ONLY
+  "Build only the dependency-free project-core portability smoke"
+  OFF)
+
+include(CTest)
+
+add_library(yolo_defect_project_core STATIC
+  src/project_core.cpp
+)
+add_library(yolo_defect::project_core ALIAS yolo_defect_project_core)
+target_compile_features(yolo_defect_project_core PUBLIC cxx_std_17)
+target_include_directories(yolo_defect_project_core
+  PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+)
+set_target_properties(yolo_defect_project_core PROPERTIES
+  CXX_EXTENSIONS OFF
+)
+
+if(BUILD_TESTING OR YOLO_DEFECT_CORE_ONLY)
+  add_executable(yolo_defect_project_core_smoke
+    tests/project_core_smoke.cpp
+  )
+  target_compile_features(yolo_defect_project_core_smoke PRIVATE cxx_std_17)
+  target_link_libraries(
+    yolo_defect_project_core_smoke PRIVATE yolo_defect::project_core)
+  set_target_properties(yolo_defect_project_core_smoke PROPERTIES
+    CXX_EXTENSIONS OFF
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+  )
+  if(BUILD_TESTING)
+    add_test(
+      NAME yolo_defect_project_core_smoke
+      COMMAND $<TARGET_FILE:yolo_defect_project_core_smoke>
+    )
+    set_tests_properties(yolo_defect_project_core_smoke PROPERTIES
+      LABELS "project_core;portability;smoke;quality_gate")
+  endif()
 endif()
 
-find_package(OpenCV 4.8 REQUIRED COMPONENTS core imgcodecs imgproc)
+if(YOLO_DEFECT_CORE_ONLY)
+  message(STATUS
+    "YOLO_DEFECT_CORE_ONLY=ON: skipping OpenCV, ONNX Runtime, Python, and GoogleTest")
+  return()
+endif()
+
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+  message(FATAL_ERROR
+    "The supported ONNX Runtime SDK packages require a 64-bit toolchain. "
+    "Select an x64 Windows toolchain or a 64-bit Linux target and point "
+    "ONNXRUNTIME_ROOT at the matching official SDK.")
+endif()
+
+find_package(OpenCV 4 REQUIRED COMPONENTS core imgcodecs imgproc)
 
 set(_onnxruntime_root_default "")
 if(DEFINED ENV{ONNXRUNTIME_ROOT})
@@ -26,7 +73,7 @@ if(ONNXRUNTIME_ROOT STREQUAL "")
   message(FATAL_ERROR
     "ONNXRUNTIME_ROOT is required. Configure with "
     "-DONNXRUNTIME_ROOT=<official extracted C++ SDK root>. "
-    "A Python wheel DLL is not a complete C++ SDK.")
+    "A Python wheel is not a complete C++ SDK on Windows or Linux.")
 endif()
 
 get_filename_component(ONNXRUNTIME_ROOT "${ONNXRUNTIME_ROOT}" ABSOLUTE)
@@ -37,25 +84,47 @@ set(ONNXRUNTIME_CXX_API_HEADER
   "${ONNXRUNTIME_ROOT}/include/onnxruntime_cxx_api.h")
 set(ONNXRUNTIME_CPU_PROVIDER_HEADER
   "${ONNXRUNTIME_ROOT}/include/cpu_provider_factory.h")
-set(ONNXRUNTIME_IMPORT_LIBRARY
-  "${ONNXRUNTIME_ROOT}/lib/onnxruntime.lib")
-set(ONNXRUNTIME_RUNTIME_DLL
-  "${ONNXRUNTIME_ROOT}/lib/onnxruntime.dll")
-
-foreach(required_file
+set(_onnxruntime_required_files
     ONNXRUNTIME_VERSION_FILE
     ONNXRUNTIME_C_API_HEADER
     ONNXRUNTIME_CXX_API_HEADER
-    ONNXRUNTIME_CPU_PROVIDER_HEADER
+    ONNXRUNTIME_CPU_PROVIDER_HEADER)
+
+if(WIN32)
+  set(ONNXRUNTIME_IMPORT_LIBRARY
+    "${ONNXRUNTIME_ROOT}/lib/onnxruntime.lib")
+  set(ONNXRUNTIME_RUNTIME_LIBRARY
+    "${ONNXRUNTIME_ROOT}/lib/onnxruntime.dll")
+  list(APPEND _onnxruntime_required_files
     ONNXRUNTIME_IMPORT_LIBRARY
-    ONNXRUNTIME_RUNTIME_DLL)
+    ONNXRUNTIME_RUNTIME_LIBRARY)
+  set(_onnxruntime_platform_expectation
+    "import library and runtime DLL")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set(ONNXRUNTIME_RUNTIME_LIBRARY
+    "${ONNXRUNTIME_ROOT}/lib/libonnxruntime.so")
+  list(APPEND _onnxruntime_required_files
+    ONNXRUNTIME_RUNTIME_LIBRARY)
+  set(_onnxruntime_platform_expectation
+    "shared library lib/libonnxruntime.so")
+else()
+  message(FATAL_ERROR
+    "Unsupported full Runtime platform '${CMAKE_SYSTEM_NAME}'. Gate A supports "
+    "Windows and Linux; use -DYOLO_DEFECT_CORE_ONLY=ON for the dependency-free "
+    "project-core portability smoke on another target.")
+endif()
+
+foreach(required_file IN LISTS _onnxruntime_required_files)
   if(NOT EXISTS "${${required_file}}" OR IS_DIRECTORY "${${required_file}}")
     message(FATAL_ERROR
       "Incomplete ONNX Runtime C++ SDK: ${required_file} is missing at "
       "'${${required_file}}'. Expected VERSION_NUMBER, C/C++ headers, "
-      "import library, and runtime DLL under ONNXRUNTIME_ROOT.")
+      "CPU provider header, and ${_onnxruntime_platform_expectation} under "
+      "ONNXRUNTIME_ROOT for ${CMAKE_SYSTEM_NAME}.")
   endif()
 endforeach()
+unset(_onnxruntime_required_files)
+unset(_onnxruntime_platform_expectation)
 
 file(READ "${ONNXRUNTIME_VERSION_FILE}" ONNXRUNTIME_VERSION)
 string(STRIP "${ONNXRUNTIME_VERSION}" ONNXRUNTIME_VERSION)
@@ -66,11 +135,18 @@ if(NOT ONNXRUNTIME_VERSION STREQUAL "1.19.2")
 endif()
 
 add_library(onnxruntime::onnxruntime SHARED IMPORTED GLOBAL)
-set_target_properties(onnxruntime::onnxruntime PROPERTIES
-  IMPORTED_IMPLIB "${ONNXRUNTIME_IMPORT_LIBRARY}"
-  IMPORTED_LOCATION "${ONNXRUNTIME_RUNTIME_DLL}"
-  INTERFACE_INCLUDE_DIRECTORIES "${ONNXRUNTIME_ROOT}/include"
-)
+if(WIN32)
+  set_target_properties(onnxruntime::onnxruntime PROPERTIES
+    IMPORTED_IMPLIB "${ONNXRUNTIME_IMPORT_LIBRARY}"
+    IMPORTED_LOCATION "${ONNXRUNTIME_RUNTIME_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${ONNXRUNTIME_ROOT}/include"
+  )
+else()
+  set_target_properties(onnxruntime::onnxruntime PROPERTIES
+    IMPORTED_LOCATION "${ONNXRUNTIME_RUNTIME_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${ONNXRUNTIME_ROOT}/include"
+  )
+endif()
 
 add_library(yolo_defect_runtime STATIC
   src/artifact_spec.cpp
@@ -84,6 +160,7 @@ add_library(yolo_defect_runtime STATIC
   src/key_value_parser.cpp
   src/model_metadata.cpp
   src/onnx_runner.cpp
+  src/platform_info.cpp
   src/postprocessor.cpp
   src/profile_runner.cpp
   src/result_writer.cpp
@@ -98,6 +175,8 @@ target_include_directories(yolo_defect_runtime
     ${OpenCV_INCLUDE_DIRS}
 )
 target_link_libraries(yolo_defect_runtime
+  PUBLIC
+    yolo_defect::project_core
   PRIVATE
     ${OpenCV_LIBS}
     onnxruntime::onnxruntime
@@ -125,26 +204,31 @@ set_target_properties(yolo_defect_cpp PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
-function(stage_onnxruntime_dll target_name)
-  add_custom_command(TARGET "${target_name}" POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-      "$<TARGET_FILE:onnxruntime::onnxruntime>"
-      "$<TARGET_FILE_DIR:${target_name}>"
-    COMMENT
-      "Staging the pinned ONNX Runtime DLL for ${target_name}"
-    VERBATIM
-  )
+function(configure_onnxruntime_runtime target_name)
+  if(WIN32)
+    add_custom_command(TARGET "${target_name}" POST_BUILD
+      COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+        "$<TARGET_FILE:onnxruntime::onnxruntime>"
+        "$<TARGET_FILE_DIR:${target_name}>"
+      COMMENT
+        "Staging the pinned ONNX Runtime DLL for ${target_name}"
+      VERBATIM
+    )
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set_property(TARGET "${target_name}" APPEND PROPERTY
+      BUILD_RPATH "${ONNXRUNTIME_ROOT}/lib")
+  endif()
 endfunction()
 
-stage_onnxruntime_dll(yolo_defect_cpp)
-
-include(CTest)
+configure_onnxruntime_runtime(yolo_defect_cpp)
 
 if(BUILD_TESTING)
   include(FetchContent)
 
-  set(gtest_force_shared_crt ON CACHE BOOL
-    "Use the parent MSVC runtime library for GoogleTest" FORCE)
+  if(MSVC)
+    set(gtest_force_shared_crt ON CACHE BOOL
+      "Use the parent MSVC runtime library for GoogleTest" FORCE)
+  endif()
   set(INSTALL_GTEST OFF CACHE BOOL
     "Do not install the build-only GoogleTest dependency" FORCE)
   set(BUILD_GMOCK OFF CACHE BOOL
@@ -267,7 +351,7 @@ if(BUILD_TESTING)
     CXX_EXTENSIONS OFF
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
   )
-  stage_onnxruntime_dll(yolo_defect_inference_tests)
+  configure_onnxruntime_runtime(yolo_defect_inference_tests)
 
   add_executable(yolo_defect_postprocess_tests
     tests/postprocessor_test.cpp

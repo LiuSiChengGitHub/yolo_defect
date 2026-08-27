@@ -204,13 +204,17 @@ void validate_benchmark_result(const BenchmarkResult& result) {
                      "environment.opencv_version");
   validate_non_empty(environment.onnxruntime_version,
                      "environment.onnxruntime_version");
-  if (environment.opencv_version != "4.8.0" ||
-      environment.onnxruntime_version != "1.19.2") {
+  const bool has_opencv_4 =
+      environment.opencv_version.size() > 2 &&
+      environment.opencv_version[0] == '4' &&
+      environment.opencv_version[1] == '.';
+  if (!has_opencv_4 || environment.onnxruntime_version != "1.19.2") {
     throw_benchmark_error(
-        "environment.runtime_versions", "OpenCV 4.8.0 and ORT 1.19.2",
+        "environment.runtime_versions", "OpenCV 4.x and ORT 1.19.2",
         "OpenCV=" + environment.opencv_version +
             ", ORT=" + environment.onnxruntime_version,
-        "use the pinned S1-08 OpenCV and ONNX Runtime dependencies");
+        "use a supported Linux/Windows OpenCV 4.x package and the pinned "
+        "ONNX Runtime SDK");
   }
 
   const BenchmarkRuntimeMetadata& runtime = result.runtime;
@@ -367,14 +371,21 @@ void validate_benchmark_result(const BenchmarkResult& result) {
   validate_non_empty(memory.status, "memory.status");
   validate_non_empty(memory.metric, "memory.metric");
   validate_non_empty(memory.scope, "memory.scope");
-  if (memory.supported) {
-    if (memory.status != "supported" || memory.bytes == 0 ||
+  const bool is_windows = environment.os_name == "Windows";
+  const bool is_linux = environment.os_name == "Linux";
+  const std::string expected_metric =
+      is_windows ? "peak_working_set" : (is_linux ? "peak_rss" : "");
+  if (is_windows || is_linux) {
+    if (!memory.supported || memory.status != "supported" ||
+        memory.metric != expected_metric || memory.bytes == 0 ||
         !std::isfinite(memory.mebibytes) || memory.mebibytes <= 0.0) {
       throw_benchmark_error(
-          "memory", "supported Peak Working Set with positive bytes/MiB",
+          "memory", "supported " + expected_metric +
+                        " with positive bytes/MiB",
           "status=" + memory.status +
+              ", metric=" + memory.metric +
               ", bytes=" + std::to_string(memory.bytes),
-          "query the process memory API after timed iterations");
+          "query the platform process-memory API after timed iterations");
     }
     const double expected_mebibytes =
         static_cast<double>(memory.bytes) / (1024.0 * 1024.0);
@@ -384,13 +395,15 @@ void validate_benchmark_result(const BenchmarkResult& result) {
       throw_benchmark_error(
           "memory.mebibytes", "bytes / (1024 * 1024)",
           std::to_string(memory.mebibytes),
-          "derive MiB from the recorded Peak Working Set byte count");
+          "derive MiB from the recorded platform peak-memory byte count");
     }
-  } else if (memory.status != "unsupported" || memory.reason.empty()) {
+  } else if (memory.supported || memory.status != "unsupported" ||
+             memory.reason.empty()) {
     throw_benchmark_error(
         "memory", "unsupported with a non-empty reason",
-        "status=" + memory.status + ", reason=" + memory.reason,
-        "report unsupported explicitly instead of publishing zero memory");
+        "supported=" + std::string(memory.supported ? "true" : "false") +
+            ", status=" + memory.status + ", reason=" + memory.reason,
+        "report unsupported explicitly outside Windows and Linux");
   }
   if (result.timing_exclusions.empty() || result.limitations.empty()) {
     throw_benchmark_error(

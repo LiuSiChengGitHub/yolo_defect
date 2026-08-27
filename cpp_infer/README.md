@@ -2,7 +2,7 @@
 
 This directory is the C++ Runtime workspace for the **Industrial Vision Edge AI Runtime and C++ Engineering System**.
 
-Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU static INT8 PTQ, same-protocol comparison, ORT Profiling, and machine evidence are complete and await user L1.** The final locally generated S2-01 artifact is the full 64-Conv QDQ/U8S8 Round 2 model: it is 71.269% smaller than FP32 and its formal `Session::Run` mean is 38.726% faster. Round 1 S8S8 remains a documented negative experiment. Python/C++ Runtime legality passed; the original product/quality gates remain machine-readable and advisory rather than being rewritten. The fixed single-image CLI still connects the validated Runtime/artifact contract, OpenCV preprocessing, an ONNX Runtime CPU session, owned raw output, YOLOv8 postprocess, stable detection JSON, and GUI-free visualization. The root bilingual READMEs are the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
+Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the recorded advisory exercise policy; S2-02 Gate A's WSL2/Linux x86_64 Native implementation and evidence are complete.** Gate A preserves the same single-image Runtime, preprocessing, postprocessing, and `DetectorPipeline` across Windows and Linux. Linux and Windows each pass 119/119 CTest, and the Linux fixed-image, consistency, short benchmark/peak RSS, and ELF dependency checks are recorded below. Work stops for user L1/direction. Gate B (AArch64 cross-build/QEMU) has not started, so this does not claim completion of the whole S2-02 unit. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
 
 | Gate | Status |
 |---|---|
@@ -13,6 +13,9 @@ Current status: **the Large-Stage-One automatic engineering gate and user-owned 
 | S2 preparatory documentation closure | Complete |
 | S2-01 implementation and evidence | Complete under advisory exercise policy |
 | S2-01 user L1 | Awaiting |
+| S2-02 Gate A Linux x86_64 Native | Implementation/evidence complete |
+| S2-02 Gate A user L1 / direction | Awaiting |
+| S2-02 Gate B AArch64/QEMU | Not started |
 
 ## Current single-image chain
 
@@ -68,6 +71,16 @@ frozen FP32 ONNX + 180-image calibration manifest + declared QDQ INT8 protocol
 -> cross-bound advisory exercise-completion JSON
 ```
 
+S2-02 Gate A keeps that same business path and confines platform differences:
+
+```text
+shared Runtime + preprocess + postprocess + DetectorPipeline
+-> CMake: Windows .lib/.dll staging | Linux libonnxruntime.so + build RPATH
+-> platform_info: Windows Peak Working Set | Linux getrusage peak RSS
+-> stage1.cmd/PowerShell | stage1.sh/Bash orchestration
+-> shared tests + fixed image + consistency + scoped benchmark
+```
+
 ## Layout and responsibilities
 
 ```text
@@ -93,6 +106,7 @@ cpp_infer/
 │   ├── model_metadata.h
 │   ├── onnx_runner.h
 │   ├── profile_runner.h
+│   ├── project_core.h
 │   ├── postprocessor.h
 │   └── result_writer.h
 ├── src/
@@ -109,7 +123,10 @@ cpp_infer/
 │   ├── key_value_parser.h
 │   ├── model_metadata.cpp
 │   ├── onnx_runner.cpp
+│   ├── platform_info.cpp
+│   ├── platform_info.h
 │   ├── profile_runner.cpp
+│   ├── project_core.cpp
 │   ├── postprocessor.cpp
 │   ├── result_writer.cpp
 │   └── main.cpp
@@ -128,6 +145,8 @@ cpp_infer/
 │   ├── profile/
 │   ├── round2/
 │   └── exercise_completion.json
+├── results/s2_02/linux_x86_64/
+│   └── detect/
 ├── protocols/
 │   ├── s2_01_ptq_protocol.json
 │   └── s2_01_ptq_protocol_r2_u8s8.json
@@ -139,6 +158,7 @@ cpp_infer/
 │   ├── assemble_s2_01_evidence.py
 │   ├── compare_consistency.py
 │   ├── stage1.cmd
+│   ├── stage1.sh
 │   ├── stage1.ps1
 │   ├── stage1.defaults.psd1
 │   └── stage1.local.example.psd1
@@ -149,6 +169,7 @@ cpp_infer/
     ├── preprocessor_mat_test.cpp
     ├── inference_runner_test.cpp
     ├── model_metadata_validator_test.cpp
+    ├── project_core_smoke.cpp
     ├── test_consistency.py
     ├── benchmark_test.cpp
     ├── assert_benchmark.cmake
@@ -163,6 +184,7 @@ cpp_infer/
 
 - `RuntimeConfig` owns runtime policy: score/NMS thresholds, configured provider, and the artifact declaration path.
 - `ModelArtifactSpec` owns model identity, declared SHA-256, provenance/license, tensor I/O, classes, and preprocess/postprocess/NMS semantics.
+- `project_core` contains standard-library-only YOLO raw-output validation, decode, class-agnostic NMS, and coordinate restore. The normal Runtime links it, while `yolo_defect_project_core_smoke` gives future Gate B a dependency-free portability seam; it is not full AArch64 inference evidence.
 - `ImagePreprocessor` exposes file-path and `const cv::Mat&` entries. Both use the same letterbox/RGB/normalize/NCHW implementation.
 - `OnnxRunner` owns ORT resources through RAII/PImpl. `run()` borrows the preprocess vector only for synchronous `Session::Run`, then copies output into ORT-independent storage.
 - `OnnxRunnerOptions::profile_file_prefix` enables ORT profiling before session construction; the runner finalizes it exactly once through `EndProfilingAllocated` and validates the returned trace path.
@@ -173,7 +195,9 @@ cpp_infer/
 - `ResultWriter` validates the result, escapes JSON strings, uses locale-independent stable numeric formatting, creates parent directories, enforces overwrite policy, and renders deterministic labels/colors without a GUI.
 - The internal `image_decoder` seam measures only `cv::imread` while preserving the same normalized `CV_8UC3` image contract used by normal preprocessing.
 - `BenchmarkResult` defines the Release benchmark protocol, six latency segments, environment/runtime/model/sample metadata, throughput, memory evidence, timing exclusions, and limitations. Its pure statistics helper uses empirical nearest-rank ceiling for P50/P95 and derives batch-1 throughput from mean latency.
-- `BenchmarkRunner` creates and validates the CPU session before repeated timing, performs untimed warmup, rejects result drift between iterations, measures decode/preprocess/`Session::Run`/postprocess/pipeline/end-to-end with `std::chrono::steady_clock`, and queries process memory after the timed iterations.
+- `BenchmarkRunner` creates and validates the CPU session before repeated timing, performs untimed warmup, rejects result drift between iterations, measures decode/preprocess/`Session::Run`/postprocess/pipeline/end-to-end with `std::chrono::steady_clock`, and queries the thin platform adapter after the timed iterations.
+- `platform_info` owns the narrow operating-system boundary for timestamps, host/compiler metadata, and process peak memory: `GetProcessMemoryInfo` Peak Working Set on Windows and `getrusage(RUSAGE_SELF).ru_maxrss` peak RSS on Linux.
+- CMake models ORT as one imported target but validates/stages `onnxruntime.lib` plus `onnxruntime.dll` on Windows and links `libonnxruntime.so` with a Linux build RPATH. The Runtime/preprocess/postprocess/Pipeline source is not forked per operating system.
 - `BenchmarkWriter` serializes finite schema-v1 JSON with the classic locale, creates output parents, refuses overwrite by default, and protects config, artifact, model, and source-image paths. JSON serialization and filesystem writing happen after the measured loop.
 - `consistency_manifest.json` freezes six artifact classes, five validation images per class, declaration-relative paths, image SHA-256 values, and the acceptance requirements before comparison runs.
 - `compare_consistency.py` strictly reloads the same Runtime/artifact declarations, verifies file hashes and model metadata, runs Python ORT with only `CPUExecutionProvider`, invokes the existing C++ CLI, performs order-independent matching, and atomically replaces each machine-readable evidence file.
@@ -185,6 +209,7 @@ cpp_infer/
 - `evaluate_s2_01_correctness.py` runs the same FP32/INT8 product semantics over the frozen product and labeled quality manifests and invokes the Release C++ CLI for legality/consistency evidence. Its original failed product gate remains machine-readable.
 - `summarize_ort_profile.py` counts `Session/model_run` and per-node calls, validates CPU placement and an optimized-graph FP32/INT8 signature, and aggregates top nodes/operators with percentages and cumulative percentages. Raw trace time remains diagnostic.
 - `assemble_s2_01_evidence.py` defaults to strict correctness. Its explicit `--correctness-policy advisory` mode still requires model/protocol/manifest/runtime/benchmark/trace bindings, preserves every failed quality boolean, and emits `strict_acceptance_passed=false` rather than laundering the result.
+- `stage1.sh` is the thin WSL2/Linux x86_64 workflow. It checks the pinned Linux SDK/toolchain, uses a guarded `/tmp` Ninja Release tree, verifies built ELF dependencies with `ldd`, and orchestrates the same product/test/consistency/benchmark behavior as the Windows entry where applicable.
 - GTest targets link `yolo_defect::runtime`; they never compile or reuse `main.cpp`.
 
 ## S2-01 static PTQ, comparison, and ORT Profiling
@@ -246,6 +271,42 @@ reproduction entry points are in
 [`s2_01_round2_closure.md`](../docs/details/s2_01_round2_closure.md). The
 original S8S8 record remains in
 [`s2_01_closure.md`](../docs/details/s2_01_closure.md).
+
+## S2-02 Gate A: WSL2/Linux x86_64 Native
+
+Gate A removed the Windows-only build and measurement assumptions without
+forking product semantics. `RuntimeConfig`, artifact/metadata validation,
+OpenCV preprocessing, `OnnxRunner`, the standard-library postprocess core,
+`DetectorPipeline`, JSON, and visualization remain shared business code.
+CMake resolves the platform-specific ORT runtime contract, `platform_info`
+owns the small OS boundary, and `stage1.sh` supplies Linux orchestration.
+
+The recorded clean Release closure produced:
+
+| Evidence | Result |
+|---|---|
+| Linux build/test | WSL2/Linux x86_64, Ninja Release, 119/119 CTest passed |
+| Fixed-image path | `crazing_241.jpg`, three detections, valid JSON and readable PNG |
+| Python ORT/C++ ORT | 30/30 images and 62/62 matched detections passed the frozen gates |
+| Short benchmark smoke | One warmup-1/repeat-2 sample: end-to-end mean `135.896991 ms`, `7.358515 img/s`, peak RSS `196.570312 MiB`; the durable closure 1/2 rerun measured `151.273896 ms`, `6.610526 img/s`, `196.757812 MiB`, confirming high variance |
+| Linux dynamic loading | Nine built ELF executables inspected with `ldd`; no dependency was `not found`, and the CLI resolved `libonnxruntime.so` from the configured SDK/RPATH |
+| Windows regression | NMake Release, 119/119 CTest passed |
+
+The fixed-image JSON/PNG are tracked under
+[`results/s2_02/linux_x86_64/`](results/s2_02/linux_x86_64/). Exact toolchain
+locations and workflow diagnosis remain in
+[`paths_commands.md`](../docs/paths_commands.md); the full machine snapshot,
+commands, evidence, and interpretation are in
+[`s2_02_gate_a_closure.md`](../docs/details/s2_02_gate_a_closure.md).
+
+This evidence is WSL2/Linux x86_64 only. The warmup-1/repeat-2 samples vary
+materially and are functional performance smokes, not a formal benchmark or a
+cross-OS comparison.
+Linux peak RSS and Windows Peak Working Set have different platform semantics
+and are not directly comparable. Gate B has not started: there is no AArch64
+cross-build, QEMU execution, ARM64 ORT inference, or QEMU performance claim.
+The standard-library-only `project_core` executable is preparation for that
+future gate, not evidence that the gate already passed.
 
 ## Frozen YOLOv8 baseline semantics
 
@@ -311,7 +372,7 @@ detections[]
 
 All JSON strings are UTF-8 validated and safely escape quotes, backslashes, standard control characters, embedded NUL, and other bytes below U+0020. Numbers are finite JSON numbers formatted with the classic locale and stable precision. A valid no-detection result is always `"detections": []` rather than `null` or a missing field.
 
-## Development environment and Windows task runner
+## Development environment and platform task runners
 
 Current MSVC/CMake/CTest, ONNX Runtime, OpenCV, Python, GoogleTest, local-path
 precedence, TEMP rules, raw CMake audit commands, and shell pitfalls live only in
@@ -333,6 +394,29 @@ PowerShell workflow. A plain PowerShell that cannot find `ctest`, `cmake`,
 with `stage1.cmd doctor` before treating it as a source or test failure. Use
 `test`, `all`, `benchmark`, or `profile` only when the requested change
 and the project's proportional-validation policy call for them.
+
+In WSL2/Linux x86_64, select the documented Linux SDKs and run the Bash entry
+from the repository root:
+
+```bash
+export ONNXRUNTIME_ROOT=/path/to/onnxruntime-linux-x64-1.19.2
+export YOLO_DEFECT_PYTHON=/path/to/python
+export YOLO_DEFECT_GTEST_SOURCE=/usr/src/googletest
+
+bash cpp_infer/tools/stage1.sh doctor
+bash cpp_infer/tools/stage1.sh clean-build
+bash cpp_infer/tools/stage1.sh test
+bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
+bash cpp_infer/tools/stage1.sh consistency
+bash cpp_infer/tools/stage1.sh benchmark
+bash cpp_infer/tools/stage1.sh all
+```
+
+`doctor` is read-only. `all` performs a clean build, full CTest, Demo,
+consistency, and the workflow's normal benchmark, so it is a closure action
+rather than the default after every edit. Use the exact current environment
+paths from [`paths_commands.md`](../docs/paths_commands.md), not the placeholders
+above.
 
 ## Verified S1-05 evidence
 
@@ -674,7 +758,7 @@ Required core-behavior-plus-GTest exercise:
 3. **GREEN:** temporarily change the comparison in `postprocessor.cpp` from strict `>` to inclusive `>=`, update the other exact-threshold expectations, rebuild the same target, and require the focused test to pass. Explain how equality changes detections and why a real contract change would also require the Python reference, consistency evidence, and README updates.
 4. Because schema-v1 freezes strict `>`, return to the checkpoint without merging the practice branch, rebuild, rerun the original focused test and complete CTest, and verify no temporary exercise diff remains. Do not leave `>=` in the product merely to finish the exercise.
 
-The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01 implementation and evidence complete under the explicit advisory-quality exercise policy; user L1 pending; S2-02 not started**.
+The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01 implementation and evidence complete under the explicit advisory-quality exercise policy; S2-02 Gate A WSL2/Linux x86_64 implementation and evidence complete; user L1/direction pending; Gate B not started**.
 
 ## Current limits
 
@@ -686,6 +770,10 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - S1-07 proves Python ORT/C++ ORT implementation consistency for one fixed 30-image set under the frozen contract. It is not an accuracy evaluation or proof for every possible image/platform/library version; it is the required correctness gate that precedes performance publication.
 - S1-08 is a warm-cache, single-image, batch-1 result from one Windows CPU machine with no affinity/priority/idle-system controls. It does not establish full-dataset latency, cold-disk behavior, cross-platform performance, or a statistically controlled hardware comparison.
 - Peak Working Set is a process-lifetime high-water mark that includes session initialization and benchmark harness state. It is not a per-stage allocation profile, current RSS, or incremental model memory.
+- S2-02 Gate A was verified only inside WSL2/Linux x86_64. WSL is a useful Linux development environment, but this result is not physical edge-board or embedded-device evidence.
+- Gate A's Linux warmup-1/repeat-2 samples varied materially and are functional performance smokes. They are neither the formal 10/100 protocol nor a Windows-versus-Linux speed comparison.
+- Linux `getrusage` peak RSS and Windows Peak Working Set are both process-lifetime high-water measurements, but their platform semantics differ and their numeric values must not be compared directly.
+- Gate B has not started. `project_core` is a standard-library-only seam prepared for a future AArch64/QEMU smoke; no AArch64 build, QEMU execution, ARM64 ORT inference, or emulated performance result is claimed.
 - The S2-01 advisory completion is not the original strict acceptance: the 30-image product aggregate remains false, and Round 2's mAP50 drop exceeds its original 0.010 limit by 0.000356. The machine record exposes both facts rather than rewriting them.
 - ORT profile summaries describe the optimized execution graph. A source Conv represented by QDQ in the ONNX file may appear as `QLinearConv`, `Conv`, and Q/DQ transition nodes after optimization; the trace does not prove exact hardware instructions.
 - The matching `best.pt` is absent from the workspace and Git history. Historical PT/ONNX evidence covers 50 sorted `crazing` images and only count/confidence summaries; S1-07 is a separate same-ONNX Python ORT/C++ ORT comparison and must not be described as a newly rerun PyTorch/Python-ORT/C++ three-way experiment.
@@ -695,7 +783,7 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - Class-agnostic NMS remains deliberate baseline behavior and can suppress a lower-scoring box from another class when boxes overlap.
 - The visualization is deterministic for the pinned OpenCV build; it is evidence output, not an annotation editor or GUI.
 
-Large Stage One is complete, and S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the user-approved advisory exercise scope. Work stops here for user L1; S2-02 has not begun. The remaining route is: (2) Linux x86_64 and AArch64/QEMU portability; (3) directory/manifest multi-image bounded concurrency; (4) TensorRT on Linux x86_64 with the desktop RTX 4060; and (5) full evidence, resume, and interview closure followed by recruiting freeze. These capabilities remain planned until their own unit evidence is produced; QEMU results will not be published as device-performance evidence, and the desktop RTX 4060 path will not be described as Jetson deployment.
+Large Stage One is complete, S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the user-approved advisory exercise scope, and S2-02 Gate A's WSL2/Linux x86_64 Native implementation and evidence are complete. Work stops here for user L1/direction; Gate B has not begun, so S2-02 as a whole remains open. The remaining route starts with AArch64 cross-build/QEMU portability, then directory/manifest multi-image bounded concurrency, TensorRT on Linux x86_64 with the desktop RTX 4060, and final evidence/resume/interview closure followed by recruiting freeze. QEMU results will not be published as device-performance evidence, and the desktop RTX 4060 path will not be described as Jetson deployment.
 
 ## License checkpoint
 

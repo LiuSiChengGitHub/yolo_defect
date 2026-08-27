@@ -34,7 +34,8 @@ void validate_provider(const ModelMetadata& actual,
         expected, "runtime.available_providers",
         "a list containing " + expected_provider,
         format_string_list(actual.available_providers),
-        "verify that the loaded ONNX Runtime DLL matches the configured SDK "
+        "verify that the loaded ONNX Runtime shared library matches the "
+        "configured SDK "
         "and includes the requested execution provider");
   }
   if (actual.session_provider != expected_provider) {

@@ -120,7 +120,7 @@ void print_help(const char* program_name) {
       << "  rejected unless --overwrite is explicit; paths matching protected\n"
       << "  inputs are rejected before writing. Relative CLI image/output paths\n"
       << "  use the current working directory. No GUI, batch processing,\n"
-      << "  concurrency, service, or cross-platform matrix exists.\n";
+      << "  concurrency, or service mode exists.\n";
 }
 
 void print_banner() {
