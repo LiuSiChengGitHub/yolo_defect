@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "protocol_id": "s2_01_static_ptq_qdq_u8s8_cpu_r2",
+  "source_model": {
+    "path": "../../models/best.onnx",
+    "sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "size_bytes": 12336935
+  },
+  "calibration": {
+    "manifest_path": "../tests/fixtures/s2_01_calibration_manifest.json",
+    "manifest_id": "neu_det_train_ptq_calibration_6x30_v1",
+    "manifest_sha256_canonical_lf": "6C0735C6E1510F725E1168A3C57E7107259CC1934D32DEB3E619C1BF6712AA9D",
+    "sample_count": 180,
+    "expected_class_counts": {
+      "crazing": 30,
+      "inclusion": 30,
+      "patches": 30,
+      "pitted_surface": 30,
+      "rolled-in_scale": 30,
+      "scratches": 30
+    },
+    "preprocess": {
+      "type": "letterbox_rgb_0_1_nchw",
+      "decode": "OpenCV IMREAD_COLOR uint8 BGR",
+      "input_shape": [1, 3, 800, 800],
+      "resize_interpolation": "INTER_LINEAR",
+      "letterbox_pad_value": 114,
+      "resize_rounding": "floor(positive_value+0.5)",
+      "color_conversion": "BGR_to_RGB",
+      "normalization": "float32_divide_by_255",
+      "layout": "NCHW",
+      "tensor_contiguity": "C_contiguous"
+    }
+  },
+  "quantization": {
+    "preprocess": {
+      "skip_optimization": true,
+      "skip_symbolic_shape": true,
+      "skip_onnx_shape": false
+    },
+    "format": "QDQ",
+    "activation_type": "QUInt8",
+    "weight_type": "QInt8",
+    "op_types_to_quantize": ["Conv"],
+    "expected_selected_node_count": 64,
+    "per_channel": true,
+    "reduce_range": false,
+    "calibrate_method": "MinMax",
+    "nodes_to_exclude": [],
+    "use_external_data_format": false,
+    "extra_options": {
+      "ActivationSymmetric": false,
+      "WeightSymmetric": true,
+      "CalibTensorRangeSymmetric": false,
+      "CalibMovingAverage": false,
+      "ForceQuantizeNoInputCheck": false,
+      "AddQDQPairToWeight": false,
+      "DedicatedQDQPair": false,
+      "QDQKeepRemovableActivations": false
+    }
+  },
+  "model_contract": {
+    "input_name": "images",
+    "input_shape": [1, 3, 800, 800],
+    "input_dtype": "float32",
+    "output_name": "output0",
+    "output_shape": [1, 10, 13125],
+    "output_dtype": "float32"
+  },
+  "environment": {
+    "onnx_version": "1.19.1",
+    "onnxruntime_version": "1.19.2",
+    "numpy_version": "2.0.2",
+    "opencv_version": "4.13.0",
+    "execution_provider": "CPUExecutionProvider"
+  },
+  "correctness": {
+    "consistency_manifest": {
+      "path": "../tests/fixtures/consistency_manifest.json",
+      "manifest_id": "neu_det_val_6x5_v1",
+      "sha256_canonical_lf": "4A10742F373D1A999839996D45BEAD84F3340F3A37C35A18E9EBF534147F1E46",
+      "sample_count": 30
+    },
+    "quality_manifest": {
+      "path": "../tests/fixtures/s2_01_quality_manifest.json",
+      "manifest_id": "neu_det_val_361_quality_v1",
+      "sha256_canonical_lf": "CED5CE80B119B1446066B18072B2AD1C7BE7A6DA30429B5C01D617F2AA2BCEF8",
+      "sample_count": 361,
+      "ground_truth_box_count": 857
+    },
+    "gate_sources": {
+      "matching_protocol": "quality_manifest.product_matching_protocol",
+      "product_matching": "quality_manifest.product_matching_gates",
+      "task_quality": "quality_manifest.quality_gates"
+    }
+  },
+  "benchmark": {
+    "build_type": "Release",
+    "execution_provider": "CPUExecutionProvider",
+    "execution_mode": "sequential",
+    "intra_op_num_threads": 1,
+    "inter_op_num_threads": 1,
+    "graph_optimization_level": "all",
+    "warmup": 10,
+    "repeat": 100,
+    "profiling_enabled": false,
+    "sample": {
+      "sample_id": "crazing_241",
+      "image_path": "../../data/images/val/crazing_241.jpg",
+      "image_sha256": "1D65EF27EAA9BF27608D954DFE57B40E401FC1AED435884400F35E8000BBF98D"
+    }
+  },
+  "profiling": {
+    "execution_provider": "CPUExecutionProvider",
+    "runs": 10,
+    "sample_source": "benchmark.sample",
+    "separate_from_formal_benchmark": true,
+    "performance_gate": false
+  },
+  "output": {
+    "model_path": "../../models/best.int8.qdq.u8s8.onnx",
+    "report_path": "../results/s2_01/round2/u8s8/quantization_report.json"
+  }
+}

@@ -4,7 +4,7 @@
 
 项目中文名为 **工业视觉边缘 AI Runtime 与 C++ 工程化系统**，英文名为 **Industrial Vision Edge AI Runtime and C++ Engineering System**。它服务于 2026 秋招简历和面试，重点是通过真实开发过程理解现代 C++、跨平台构建、推理工程、性能分析、并发和边缘部署，而不是按生产上线标准堆叠防御工程。
 
-当前状态：**大阶段一与用户 L2 已完成；S2-01 的 Windows CPU static INT8 PTQ、同协议比较、ORT Profiling 和文档已完成，等待用户 L1；S2-02 尚未开始。** S2-01 以全 64 Conv QDQ/S8S8 为最终练习产物；Python/C++ Runtime 合法性通过，产品差异和任务质量保留原始结果但仅作 advisory，不声称通过原严格 acceptance。
+当前状态：**大阶段一与用户 L2 已完成；S2-01 的 Windows CPU static INT8 PTQ、同协议比较、ORT Profiling 和文档已完成，等待用户 L1；S2-02 尚未开始。** S2-01 最终练习产物是全 64 Conv 的 QDQ/U8S8 Round 2 模型；Round 1 QDQ/S8S8 保留为“量化后变慢”的诊断案例。Python/C++ Runtime 合法性通过，产品差异和任务质量保留原始结果但仅作 advisory，不声称通过原严格 acceptance。
 
 已验证主链：
 

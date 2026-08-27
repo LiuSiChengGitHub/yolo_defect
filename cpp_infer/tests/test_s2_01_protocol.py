@@ -509,6 +509,31 @@ class S201ProtocolTest(unittest.TestCase):
             protocol.FROZEN_SELECTED_CONV_COUNT - len(excluded),
         )
 
+    def test_loads_round2_u8s8_as_single_variable_change(self) -> None:
+        document = self._protocol_document()
+        document["protocol_id"] = protocol.PROTOCOL_ID_R2_U8S8
+        document["quantization"] = copy.deepcopy(
+            protocol.expected_quantization_for_protocol(
+                protocol.PROTOCOL_ID_R2_U8S8
+            )
+        )
+
+        loaded = self._load(document)
+
+        self.assertEqual(protocol.PROTOCOL_ID_R2_U8S8, loaded.protocol_id)
+        self.assertEqual("QUInt8", loaded.quantization["activation_type"])
+        self.assertEqual("QInt8", loaded.quantization["weight_type"])
+        self.assertEqual([], loaded.quantization["nodes_to_exclude"])
+        baseline = protocol.expected_quantization_for_protocol(
+            protocol.PROTOCOL_ID_V1
+        )
+        changed_keys = {
+            key
+            for key in baseline
+            if baseline[key] != loaded.quantization[key]
+        }
+        self.assertEqual({"activation_type"}, changed_keys)
+
     def test_rejects_cross_protocol_calibration_methods(self) -> None:
         cases = (
             (protocol.PROTOCOL_ID_V1, "Entropy"),

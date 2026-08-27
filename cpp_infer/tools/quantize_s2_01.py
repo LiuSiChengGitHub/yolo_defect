@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create and audit the frozen S2-01 static QDQ/S8S8 artifact.
+"""Create and audit a declared S2-01 static QDQ INT8 artifact.
 
 All heavyweight dependencies are imported only after the dependency-free
 protocol loader has verified source/model bytes, the canonical-LF calibration
@@ -171,14 +171,16 @@ def load_dependencies(protocol: FrozenS201Protocol) -> Dependencies:
         )
     if (
         QuantType.QInt8.name != "QInt8"
+        or QuantType.QUInt8.name != "QUInt8"
         or CalibrationMethod.MinMax.name != "MinMax"
         or CalibrationMethod.Entropy.name != "Entropy"
     ):
         fail(
             "python.quantization.enums",
-            "QInt8, MinMax, and Entropy",
+            "QInt8, QUInt8, MinMax, and Entropy",
             (
-                f"{QuantType.QInt8!r}, {CalibrationMethod.MinMax!r}, "
+                f"{QuantType.QInt8!r}, {QuantType.QUInt8!r}, "
+                f"{CalibrationMethod.MinMax!r}, "
                 f"{CalibrationMethod.Entropy!r}"
             ),
             "restore the pinned quantization enums",
@@ -235,6 +237,22 @@ def _resolve_calibration_method(deps: Dependencies, declared_name: str) -> Any:
             "restore the protocol or ONNX Runtime 1.19.2 enum mapping",
         )
     return method
+
+
+def _resolve_quant_type(deps: Dependencies, declared_name: str) -> Any:
+    quant_types = {
+        "QInt8": deps.QuantType.QInt8,
+        "QUInt8": deps.QuantType.QUInt8,
+    }
+    quant_type = quant_types.get(declared_name)
+    if quant_type is None or getattr(quant_type, "name", None) != declared_name:
+        fail(
+            "quantization.quant_type",
+            "a declared QInt8 or QUInt8 enum from the pinned ORT",
+            repr(declared_name),
+            "restore the protocol or ONNX Runtime quantization enum mapping",
+        )
+    return quant_type
 
 
 def _calibration_method_evidence(
@@ -1111,7 +1129,7 @@ def run_quantization(
     with temporary_context as temporary_directory:
         temporary_root = Path(temporary_directory)
         preprocessed_path = temporary_root / "source.preprocessed.onnx"
-        derived_path = temporary_root / "derived.int8.qdq.s8s8.onnx"
+        derived_path = temporary_root / "derived.int8.qdq.onnx"
 
         source_model = _load_and_check_model(
             protocol.source_model_path, deps, "source_model.onnx"
@@ -1175,6 +1193,10 @@ def run_quantization(
         calibration_method = _resolve_calibration_method(
             deps, quantization["calibrate_method"]
         )
+        activation_type = _resolve_quant_type(
+            deps, quantization["activation_type"]
+        )
+        weight_type = _resolve_quant_type(deps, quantization["weight_type"])
         try:
             deps.quantize_static(
                 model_input=str(preprocessed_path),
@@ -1186,8 +1208,8 @@ def run_quantization(
                 ),
                 per_channel=quantization["per_channel"],
                 reduce_range=quantization["reduce_range"],
-                activation_type=deps.QuantType.QInt8,
-                weight_type=deps.QuantType.QInt8,
+                activation_type=activation_type,
+                weight_type=weight_type,
                 nodes_to_quantize=None,
                 nodes_to_exclude=list(quantization["nodes_to_exclude"]),
                 use_external_data_format=quantization[
@@ -1200,10 +1222,12 @@ def run_quantization(
             fail(
                 "quantize_static",
                 "successful frozen "
-                f"{quantization['calibrate_method']} QDQ/S8S8 static PTQ",
+                f"{quantization['calibrate_method']} QDQ/"
+                f"{quantization['activation_type']}/"
+                f"{quantization['weight_type']} static PTQ",
                 f"{type(error).__name__}: {error}",
                 "inspect the first calibration or graph diagnostic; do not "
-                "change the frozen v1 parameters in place",
+                "change the selected protocol in place",
             )
         if reader.consumed_sample_ids != [
             sample.sample_id for sample in protocol.calibration_samples
@@ -1326,7 +1350,11 @@ def run_quantization(
                 "schema_version": protocol.document["schema_version"],
             },
             "artifact_contract": {
-                "artifact_kind": "onnx_static_ptq_int8_qdq_s8s8",
+                "artifact_kind": (
+                    "onnx_static_ptq_int8_qdq_"
+                    f"{quantization['activation_type'].lower()}_"
+                    f"{quantization['weight_type'].lower()}"
+                ),
                 "source_model": {
                     "path": str(protocol.source_model_path),
                     "sha256": protocol.source_model_sha256,
@@ -1488,7 +1516,7 @@ def run_quantization(
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Run frozen S2-01 ONNX Runtime static QDQ/S8S8 PTQ and publish "
+            "Run declared S2-01 ONNX Runtime static QDQ INT8 PTQ and publish "
             "an audited INT8 model/card."
         )
     )
@@ -1531,6 +1559,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"excluded_conv="
         f"{report['graph_audit']['selection']['excluded_conv_count']}; "
         f"calibrate_method={protocol.quantization['calibrate_method']}; "
+        f"activation_type={protocol.quantization['activation_type']}; "
+        f"weight_type={protocol.quantization['weight_type']}; "
         f"model={protocol.output_model_path}; "
         f"report={protocol.output_report_path}"
     )

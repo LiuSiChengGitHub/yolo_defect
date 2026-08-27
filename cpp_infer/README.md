@@ -2,7 +2,7 @@
 
 This directory is the C++ Runtime workspace for the **Industrial Vision Edge AI Runtime and C++ Engineering System**.
 
-Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU static INT8 PTQ, same-protocol comparison, ORT Profiling, and machine evidence are complete and await user L1.** The final locally generated S2-01 artifact is the full 64-Conv QDQ/S8S8 v1 model. Python/C++ Runtime legality passed; the original 30-image product gate remains `false` and is retained, not rewritten, under the user-approved advisory exercise policy. The fixed single-image CLI still connects the validated Runtime/artifact contract, OpenCV preprocessing, an ONNX Runtime CPU session, owned raw output, YOLOv8 postprocess, stable detection JSON, and GUI-free visualization. The root bilingual READMEs are the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
+Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU static INT8 PTQ, same-protocol comparison, ORT Profiling, and machine evidence are complete and await user L1.** The final locally generated S2-01 artifact is the full 64-Conv QDQ/U8S8 Round 2 model: it is 71.269% smaller than FP32 and its formal `Session::Run` mean is 38.726% faster. Round 1 S8S8 remains a documented negative experiment. Python/C++ Runtime legality passed; the original product/quality gates remain machine-readable and advisory rather than being rewritten. The fixed single-image CLI still connects the validated Runtime/artifact contract, OpenCV preprocessing, an ONNX Runtime CPU session, owned raw output, YOLOv8 postprocess, stable detection JSON, and GUI-free visualization. The root bilingual READMEs are the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
 
 | Gate | Status |
 |---|---|
@@ -59,7 +59,7 @@ The S2-01 path reuses the same product semantics and keeps formal timing and
 profiling in separate sessions:
 
 ```text
-frozen FP32 ONNX + 180-image calibration manifest + QDQ/S8S8 protocol
+frozen FP32 ONNX + 180-image calibration manifest + declared QDQ INT8 protocol
 -> static Conv PTQ -> audited INT8 ONNX + artifact/config/card
 -> Python/C++ Runtime legality + advisory product/task-quality comparison
 -> two independent unprofiled Release benchmark processes
@@ -75,10 +75,12 @@ cpp_infer/
 ├── CMakeLists.txt
 ├── artifacts/
 │   ├── yolov8_neu_det.artifact.txt
-│   └── yolov8_neu_det_int8_qdq.artifact.txt
+│   ├── yolov8_neu_det_int8_qdq.artifact.txt
+│   └── yolov8_neu_det_int8_qdq_u8s8.artifact.txt
 ├── configs/
 │   ├── default_config.txt
-│   └── int8_config.txt
+│   ├── int8_config.txt
+│   └── int8_u8s8_config.txt
 ├── include/yolo_defect_cpp/
 │   ├── artifact_spec.h
 │   ├── benchmark_result.h
@@ -124,8 +126,11 @@ cpp_infer/
 │   ├── correctness_quality_v1_failed.json
 │   ├── benchmark/
 │   ├── profile/
+│   ├── round2/
 │   └── exercise_completion.json
-├── protocols/s2_01_ptq_protocol.json
+├── protocols/
+│   ├── s2_01_ptq_protocol.json
+│   └── s2_01_ptq_protocol_r2_u8s8.json
 ├── tools/
 │   ├── quantize_s2_01.py
 │   ├── evaluate_s2_01_correctness.py
@@ -184,68 +189,63 @@ cpp_infer/
 
 ## S2-01 static PTQ, comparison, and ORT Profiling
 
-The frozen v1 protocol is
-[`s2_01_ptq_protocol.json`](protocols/s2_01_ptq_protocol.json), canonical-LF
-SHA-256 `0EC9A7B1CF5E4F246CF3AC15275EF06D7C67FB6C0CE11C5218391CFACE5B73F2`.
-It binds the 12,336,935-byte FP32 source SHA
-`7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68`,
-180 calibration images and hashes, OpenCV letterbox/RGB/normalize/NCHW,
-QDQ/S8S8 MinMax per-channel Conv PTQ, downstream manifests, the 10/100
-benchmark, and the separate 10-call profile protocol.
+Round 1 used the all-64-Conv QDQ/S8S8 v1 protocol. Its model was 71.264%
+smaller, but the ORT 1.19.2 optimized graph retained 57 float `Conv` nodes and
+formed only 7 `QLinearConv` nodes. Added Q/DQ boundaries and loss of the FP32
+SiLU/QuickGelu fusion made formal `Session::Run` 37.16% slower. That result and
+the earlier selective-Conv experiments remain intact as diagnosis history.
 
-The locally generated derived model is `models/best.int8.qdq.onnx`, 3,545,141 bytes,
-SHA-256 `C0B4EDAF6B26B1495E22B9B504CF677EA9A08D10B051156AD55649F98C0EDE2F`.
-The graph audit records all 64 target Conv nodes quantized, no intentional
-exclusions, no target-unquantized nodes, and no failures. Python and C++ ORT
-both create CPU sessions and observe the same external float32 metadata:
-`images [1,3,800,800] -> output0 [1,10,13125]`, with finite output.
-The binary exists in this workspace and was loaded by both runtimes, but root
-`.gitignore` intentionally excludes derived ONNX files. A fresh clone must
-regenerate it from the frozen protocol; the tracked deliverables are the
-SHA-bound contract/card, implementation, manifests, and evidence.
+Round 2 uses
+[`s2_01_ptq_protocol_r2_u8s8.json`](protocols/s2_01_ptq_protocol_r2_u8s8.json).
+It keeps the same 12,336,935-byte FP32 source, 180-image calibration manifest,
+MinMax, per-channel weights, all 64 Conv targets, external metadata, product and
+quality manifests, and 10/100 performance protocol. Its only quantization
+parameter change from v1 is activation `QInt8 -> QUInt8`; weight remains
+`QInt8`, so the internal representation is U8S8 QDQ.
 
-The frozen 361-image labeled comparison changed mAP50 from `0.710815` to
-`0.707206` and mAP50-95 from `0.345786` to `0.342174`. The 30-image product
-comparison found 62 FP32 detections, 65 INT8 detections, and 61 matches; its
-strict aggregate remains `passed=false`. Under the later user scope decision,
-these values are advisory and do not block the PTQ/profiling exercise. The
-completion record therefore says both `passed=true` for the revised deliverable
-and `strict_acceptance_passed=false` for the original gate.
+The derived model is `models/best.int8.qdq.u8s8.onnx`, 3,544,494 bytes and
+71.269% smaller than FP32. Python and Release C++ ORT both create CPU sessions,
+run finite output, and observe float32
+`images [1,3,800,800] -> output0 [1,10,13125]`. The graph audit records
+64 selected and quantized Conv nodes, no exclusions, and no failed target.
 
-The final current-source Windows regression passed 118/118 CTest cases. The
-unified `stage1.cmd profile` action was also run once with the FP32 config and
-once with the INT8 config; both validated the returned non-empty trace, run
-count, CPU provider, prefix, and JSON syntax.
+The 30-image comparison has 62 FP32 detections, 65 U8S8 detections, and 61
+matches; its original product aggregate remains false. Across 361 labeled
+images, mAP50 changes `0.710815 -> 0.700459` and mAP50-95 changes
+`0.345786 -> 0.342379`. The original mAP50 gate is missed by 0.000356 beyond
+its allowed drop, so the unmodified result remains false and advisory.
 
-Formal unprofiled Release evidence uses two independent processes,
+Formal unprofiled Release evidence uses independent FP32/U8S8 processes,
 `CPUExecutionProvider`, sequential execution, intra/inter threads `1/1`, one
 fixed image, warmup 10, and repeat 100:
 
-| Metric | FP32 | INT8 |
+| Metric | FP32 | U8S8 |
 |---|---:|---:|
-| model size | 12,336,935 B | 3,545,141 B (-71.264%) |
-| session initialization | 40.309 ms | 94.979 ms |
-| `Session::Run` mean/P50/P95 | 139.920/141.677/156.473 ms | 191.913/190.929/220.769 ms |
-| pipeline mean/P50/P95 | 146.927/148.779/163.921 ms | 199.228/198.494/229.275 ms |
-| end-to-end mean/P50/P95 | 147.748/149.583/164.825 ms | 200.048/199.312/230.280 ms |
-| pipeline throughput | 6.806 img/s | 5.019 img/s |
-| Peak Working Set | 150.742 MiB | 150.727 MiB |
+| model size | 12,336,935 B | 3,544,494 B (-71.269%) |
+| session initialization | 61.986 ms | 94.858 ms |
+| `Session::Run` mean/P50/P95 | 155.106/155.124/169.639 ms | 95.040/95.570/110.768 ms |
+| pipeline mean/P50/P95 | 163.477/163.221/182.008 ms | 103.872/104.042/121.654 ms |
+| pipeline throughput | 6.117 img/s | 9.627 img/s |
+| Peak Working Set | 150.980 MiB | 148.832 MiB |
 
-INT8 is therefore a valid negative speed result on this host: mean
-`Session::Run` is 1.3716x FP32 and pipeline throughput falls about 26.25%.
-The current 10-run raw profiles explain the direction. All nodes were placed on
-the CPU EP. FP32 has 294 executed optimized nodes and attributes 67.80% of
-kernel-event time to Conv. INT8 has 683 nodes and attributes 64.55% to Conv,
-10.55% to DequantizeLinear, 6.18% to QuantizeLinear, and 0.47% to QLinearConv.
-The Q/DQ pair alone contributes 16.73% of the diagnostic event total. ORT's
-optimized op inventory is not a claim about exact CPU instructions, and the
-profile event total includes instrumentation overhead.
+Mean `Session::Run` is 38.726% lower, pipeline mean is 36.461% lower, and
+throughput is 57.383% higher. Initialization remains slower and is reported as
+a separate one-time cost.
 
-Machine evidence is under [`results/s2_01/`](results/s2_01/); the compact
-cross-bound record is
-[`exercise_completion.json`](results/s2_01/exercise_completion.json). Full
-commands, hashes, top-node tables, limitations, and manual reproduction steps
-are in [`s2_01_closure.md`](../docs/details/s2_01_closure.md).
+The separate 10-run U8S8 trace records 640 `QLinearConv` calls and no float
+`Conv`: all 64 Conv nodes now execute through the integer operator on every
+run. The optimized graph has 439 nodes versus Round 1's 683. QLinearConv takes
+35.18% of diagnostic kernel-event time; DQ 13.34%, Resize 13.22%, Mul 10.51%,
+Concat 8.79%, Q 6.09%, and Sigmoid 5.53%. This both explains the speedup and
+identifies remaining boundary/activation hotspots. Profile timing includes
+instrumentation overhead and is not substituted for the unprofiled benchmark.
+
+Machine evidence is under [`results/s2_01/round2/`](results/s2_01/round2/).
+The full failure-to-fix narrative, exact evidence links, limitations, and
+reproduction entry points are in
+[`s2_01_round2_closure.md`](../docs/details/s2_01_round2_closure.md). The
+original S8S8 record remains in
+[`s2_01_closure.md`](../docs/details/s2_01_closure.md).
 
 ## Frozen YOLOv8 baseline semantics
 
@@ -686,7 +686,7 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - S1-07 proves Python ORT/C++ ORT implementation consistency for one fixed 30-image set under the frozen contract. It is not an accuracy evaluation or proof for every possible image/platform/library version; it is the required correctness gate that precedes performance publication.
 - S1-08 is a warm-cache, single-image, batch-1 result from one Windows CPU machine with no affinity/priority/idle-system controls. It does not establish full-dataset latency, cold-disk behavior, cross-platform performance, or a statistically controlled hardware comparison.
 - Peak Working Set is a process-lifetime high-water mark that includes session initialization and benchmark harness state. It is not a per-stage allocation profile, current RSS, or incremental model memory.
-- The S2-01 advisory completion is not the original strict acceptance: the 30-image product aggregate remains false, although the 361-image task-quality deltas passed the originally declared tolerances. The machine record exposes both facts.
+- The S2-01 advisory completion is not the original strict acceptance: the 30-image product aggregate remains false, and Round 2's mAP50 drop exceeds its original 0.010 limit by 0.000356. The machine record exposes both facts rather than rewriting them.
 - ORT profile summaries describe the optimized execution graph. A source Conv represented by QDQ in the ONNX file may appear as `QLinearConv`, `Conv`, and Q/DQ transition nodes after optimization; the trace does not prove exact hardware instructions.
 - The matching `best.pt` is absent from the workspace and Git history. Historical PT/ONNX evidence covers 50 sorted `crazing` images and only count/confidence summaries; S1-07 is a separate same-ONNX Python ORT/C++ ORT comparison and must not be described as a newly rerun PyTorch/Python-ORT/C++ three-way experiment.
 - Python OpenCV 4.13.0 and C++ OpenCV 4.8.0 are recorded separately. The 30-image evidence passed the original requirements, but this does not establish bitwise equality across arbitrary OpenCV builds.

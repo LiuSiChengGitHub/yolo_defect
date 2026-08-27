@@ -20,11 +20,13 @@ that artifact: executable contracts, C++ inference, deterministic outputs,
 correctness gates, benchmark evidence, and a controlled path toward Linux,
 concurrency, quantization, and TensorRT.
 
-> **Status — 2026-08-25:** Large Stage One's automated engineering gate and
+> **Status — 2026-08-27:** Large Stage One's automated engineering gate and
 > user-owned L2 acceptance are complete. The Stage Two documentation preflight
 > is closed; **S2-01 implementation and machine evidence are complete and now
 > await user L1**. The final locally generated S2-01 artifact is the full
-> 64-Conv QDQ/S8S8 model. Product-difference and task-quality results are retained as advisory
+> 64-Conv QDQ/U8S8 Round 2 model. It fixes the Round 1 S8S8 execution-path
+> regression and is smaller and faster than FP32 on the recorded CPU protocol.
+> Product-difference and task-quality results are retained as advisory
 > diagnostics under the user-approved exercise scope; strict three-layer
 > acceptance is not claimed.
 
@@ -174,7 +176,7 @@ live only in [Paths, toolchains, and environment diagnosis](docs/paths_commands.
 | Runtime/artifact/metadata contracts | Separate adjustable runtime policy, declared artifact semantics, and actual ORT-observed tensor/provider facts; reject mismatches before inference |
 | `ImagePreprocessor` | Decode or accept a `CV_8UC3` image; letterbox, BGR-to-RGB, normalize, produce contiguous NCHW data, and retain inverse-transform metadata |
 | `OnnxRunner` / `InferenceOutput` | Own ORT resources with RAII/PImpl, validate input/output, run synchronously, and copy output into an ORT-independent lifetime |
-| Static PTQ toolchain | Freeze calibration inputs and quantization configuration, run Conv-only QDQ/S8S8 PTQ, inspect selected/quantized/failed nodes, validate actual metadata, and emit a derived artifact card |
+| Static PTQ toolchain | Freeze calibration inputs and quantization configuration, run Conv-only QDQ PTQ with declared activation/weight types, inspect selected/quantized/failed nodes, validate actual metadata, and emit a derived artifact card |
 | `ProfileRunner` and profile summarizer | Create an isolated profiling-enabled session, retain the ORT raw trace, aggregate node/operator/provider time and call counts, and keep trace timing outside formal benchmarks |
 | Postprocessor/NMS | Validate YOLO BCN output, select class scores, apply strict filtering and stable class-agnostic NMS, then restore and clip source coordinates |
 | `DetectorPipeline` and writers | Orchestrate one image and emit owned results, stable JSON, and deterministic GUI-free visualization while enforcing safe output paths |
@@ -197,52 +199,58 @@ and then stops for L1 acceptance.
 
 ### S2-01 Windows CPU Record
 
-The final local artifact uses ONNX Runtime 1.19.2 static PTQ with `QDQ`, S8S8,
+The final local artifact uses ONNX Runtime 1.19.2 static PTQ with `QDQ`, U8S8,
 MinMax calibration, per-channel weights, and all 64 source `Conv` nodes in the
-quantization target. Its external contract remains float32
+quantization target. It changes only the activation type from the Round 1 S8S8
+protocol; its external contract remains float32
 `images [1,3,800,800] -> output0 [1,10,13125]`; INT8 is internal graph
 representation, not an integer application I/O contract.
 
 | Evidence | FP32 | INT8 / outcome |
 |---|---:|---:|
-| Model file | 12,336,935 bytes | 3,545,141 bytes; **71.264% smaller** |
+| Model file | 12,336,935 bytes | 3,544,494 bytes; **71.269% smaller** |
 | Python/C++ ORT legality | Passed | Passed; finite outputs and matching actual metadata |
 | Current Windows regression | 118/118 CTest passed | FP32/INT8 profile workflow smokes passed |
-| 361-image task quality | mAP50 `0.710815`; mAP50-95 `0.345786` | `0.707206` / `0.342174`; deltas `-0.003610/-0.003612` |
+| 361-image task quality | mAP50 `0.710815`; mAP50-95 `0.345786` | `0.700459` / `0.342379`; deltas `-0.010356/-0.003407` |
 | 30-image product comparison | 62 detections | 65 detections, 61 matches; original aggregate gate `false` |
-| Session initialization | `40.309 ms` | `94.979 ms` |
-| `Session::Run` mean/P50/P95 | `139.920/141.677/156.473 ms` | `191.913/190.929/220.769 ms`; **37.16% slower mean** |
-| Pipeline mean/P50/P95 | `146.927/148.779/163.921 ms` | `199.228/198.494/229.275 ms` |
-| Pipeline throughput | `6.806 img/s` | `5.019 img/s` |
-| Peak Working Set | `150.742 MiB` | `150.727 MiB`; effectively unchanged at process high-water scope |
+| Session initialization | `61.986 ms` | `94.858 ms`; slower one-time setup |
+| `Session::Run` mean/P50/P95 | `155.106/155.124/169.639 ms` | `95.040/95.570/110.768 ms`; **38.726% faster mean** |
+| Pipeline mean/P50/P95 | `163.477/163.221/182.008 ms` | `103.872/104.042/121.654 ms`; **36.461% faster mean** |
+| Pipeline throughput | `6.117 img/s` | `9.627 img/s`; **57.383% higher** |
+| Peak Working Set | `150.980 MiB` | `148.832 MiB`; small process-high-water change only |
 
-The profiler was run in separate 10-call sessions and placed every optimized
-node on `CPUExecutionProvider`. FP32 attributed `67.80%` of kernel-event time
-to `Conv`. INT8 attributed `64.55%` to remaining `Conv`, `10.55%` to
-`DequantizeLinear`, `6.18%` to `QuantizeLinear`, and only `0.47%` to
-`QLinearConv`; the optimized graph grew from 294 to 683 executed nodes. This
-explains the measured slowdown: file compression succeeded, but this graph/CPU
-combination retained expensive convolution work and added many Q/DQ boundaries.
-Profile event totals are diagnostic and include instrumentation overhead; they
-are never substituted for the unprofiled `Session::Run` benchmark.
+Round 1 had quantized all 64 Conv nodes in the static QDQ file but ORT's
+optimized S8S8 execution graph retained 57 float `Conv` nodes and produced only
+7 `QLinearConv` nodes, plus 120 Q and 317 DQ calls per run. That explains its
+37.16% `Session::Run` regression. Round 2 changed only activation `QInt8` to
+`QUInt8`: its 10-run trace records 640 `QLinearConv` calls and no float `Conv`,
+or all 64 integer convolutions per run. `QLinearConv` is now the leading
+operator at 35.18% of diagnostic kernel-event time; DQ, Resize, Mul, Concat, Q,
+and Sigmoid expose the next optimization opportunities. All optimized nodes
+were placed on `CPUExecutionProvider`.
 
-`models/best.int8.qdq.onnx` exists and was loaded by the recorded Python/C++
+This is the intended learning result: model-file QDQ coverage is not sufficient
+performance evidence; the optimized execution graph and an unprofiled benchmark
+must confirm integer-kernel coverage. Profile event totals contain
+instrumentation overhead and are never substituted for `Session::Run` timing.
+
+`models/best.int8.qdq.u8s8.onnx` exists and was loaded by the recorded Python/C++
 runs, but derived ONNX files remain intentionally Git-ignored alongside the
-project's model-license boundary. A fresh clone regenerates the exact binary
+project’s model-license boundary. A fresh clone regenerates the exact binary
 from the frozen protocol; Git carries its SHA-bound contract, card, tools, and
 machine evidence rather than silently claiming to distribute the model.
 
 Primary S2-01 evidence:
 
-- [Frozen PTQ protocol](cpp_infer/protocols/s2_01_ptq_protocol.json) and
-  [INT8 artifact contract](cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt)
-- [Quantization artifact card](cpp_infer/results/s2_01/quantization_report.json)
-- [Unmodified correctness/quality result](cpp_infer/results/s2_01/correctness_quality_v1_failed.json)
-- [FP32/INT8 benchmark comparison](cpp_infer/results/s2_01/benchmark/comparison.json)
-- [FP32 profile summary](cpp_infer/results/s2_01/profile/fp32_summary.json) and
-  [INT8 profile summary](cpp_infer/results/s2_01/profile/int8_summary.json)
-- [Advisory exercise-completion record](cpp_infer/results/s2_01/exercise_completion.json)
-- [S2-01 closure and reproducibility details](docs/details/s2_01_closure.md)
+- [Round 2 PTQ protocol](cpp_infer/protocols/s2_01_ptq_protocol_r2_u8s8.json) and
+  [U8S8 artifact contract](cpp_infer/artifacts/yolov8_neu_det_int8_qdq_u8s8.artifact.txt)
+- [Quantization artifact card](cpp_infer/results/s2_01/round2/u8s8/quantization_report.json)
+- [Unmodified correctness/quality result](cpp_infer/results/s2_01/round2/correctness_u8s8.json)
+- [FP32/U8S8 benchmark comparison](cpp_infer/results/s2_01/round2/benchmark/comparison_u8s8.json)
+- [FP32 profile summary](cpp_infer/results/s2_01/round2/profile/fp32_summary.json) and
+  [U8S8 profile summary](cpp_infer/results/s2_01/round2/profile/int8_u8s8_summary.json)
+- [Round 2 closure, failure analysis, and reproducibility details](docs/details/s2_01_round2_closure.md)
+- [Round 1 S8S8 historical closure](docs/details/s2_01_closure.md)
 
 ### Platform Matrix
 

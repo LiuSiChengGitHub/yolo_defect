@@ -104,6 +104,9 @@ source-graph prefixes ending at ``model.2``, ``model.1``, and ``model.0``
 respectively (6, 2, and 1 Conv nodes).  All block-ablation protocols retain
 MinMax and exclude every non-target Conv in source order.  No other parameter
 difference or arbitrary selective policy is accepted under these identifiers.
+The round-2 U8S8 protocol returns to all 64 Conv nodes and changes only the
+activation type from QInt8 to QUInt8.  The resulting optimized graph and
+profile determine whether the CPU EP actually selects integer Conv kernels.
 """
 
 from __future__ import annotations
@@ -156,6 +159,7 @@ PROTOCOL_ID_V8 = "s2_01_static_ptq_qdq_s8s8_deep_backbone_cpu_v8"
 PROTOCOL_ID_V9 = "s2_01_static_ptq_qdq_s8s8_prefix_model0_2_cpu_v9"
 PROTOCOL_ID_V10 = "s2_01_static_ptq_qdq_s8s8_prefix_model0_1_cpu_v10"
 PROTOCOL_ID_V11 = "s2_01_static_ptq_qdq_s8s8_prefix_model0_cpu_v11"
+PROTOCOL_ID_R2_U8S8 = "s2_01_static_ptq_qdq_u8s8_cpu_r2"
 SUPPORTED_PROTOCOL_IDS: Tuple[str, ...] = (
     PROTOCOL_ID_V1,
     PROTOCOL_ID_V2,
@@ -168,6 +172,7 @@ SUPPORTED_PROTOCOL_IDS: Tuple[str, ...] = (
     PROTOCOL_ID_V9,
     PROTOCOL_ID_V10,
     PROTOCOL_ID_V11,
+    PROTOCOL_ID_R2_U8S8,
 )
 
 FROZEN_EARLY_BACKBONE_TARGET_CONV_NODES: Tuple[str, ...] = (
@@ -791,7 +796,7 @@ def _expect_frozen_mapping(
             object_name,
             json.dumps(expected, sort_keys=True, separators=(",", ":")),
             json.dumps(mapping, sort_keys=True, separators=(",", ":")),
-            "restore the predeclared S2-01 v1 protocol before quantization",
+            "restore the selected predeclared S2-01 protocol before quantization",
         )
     return mapping
 
@@ -799,9 +804,9 @@ def _expect_frozen_mapping(
 def expected_quantization_for_protocol(
     protocol_id: str,
 ) -> Mapping[str, Any]:
-    """Return the exact v1..v11 PTQ mapping without shared mutable lists."""
+    """Return an exact PTQ mapping without shared mutable lists."""
 
-    if protocol_id == PROTOCOL_ID_V1:
+    if protocol_id in (PROTOCOL_ID_V1, PROTOCOL_ID_R2_U8S8):
         excluded_nodes: Sequence[str] = ()
     elif protocol_id in (PROTOCOL_ID_V2, PROTOCOL_ID_V3):
         excluded_nodes = FROZEN_HEAD_FP32_EXCLUDED_CONV_NODES
@@ -826,7 +831,7 @@ def expected_quantization_for_protocol(
             "protocol.protocol_id",
             f"one of {list(SUPPORTED_PROTOCOL_IDS)}",
             repr(protocol_id),
-            "select one of the eleven frozen S2-01 PTQ protocols",
+            "select one of the supported S2-01 PTQ protocols",
         )
     expected = dict(EXPECTED_QUANTIZATION)
     expected["preprocess"] = dict(EXPECTED_QUANTIZATION["preprocess"])
@@ -837,6 +842,8 @@ def expected_quantization_for_protocol(
     expected["extra_options"] = dict(EXPECTED_QUANTIZATION["extra_options"])
     if protocol_id == PROTOCOL_ID_V3:
         expected["calibrate_method"] = "Entropy"
+    if protocol_id == PROTOCOL_ID_R2_U8S8:
+        expected["activation_type"] = "QUInt8"
     return expected
 
 
@@ -1695,7 +1702,7 @@ def load_s2_01_protocol(path: Path) -> FrozenS201Protocol:
             "protocol.protocol_id",
             f"one of {list(SUPPORTED_PROTOCOL_IDS)}",
             protocol_id,
-            "select one of the eleven frozen S2-01 PTQ protocols",
+            "select one of the supported S2-01 PTQ protocols",
         )
 
     source = _expect_mapping(document["source_model"], "protocol.source_model")

@@ -16,9 +16,10 @@ YOLOv8 和 NEU-DET 是首个 Runtime 实现所使用的稳定模型与数据集�
 本仓库的价值在于围绕该产物建立工程闭环：可执行契约、C++ 推理、确定性输出、
 正确性门禁、Benchmark 证据，以及受控推进 Linux、并发、量化和 TensorRT 的路径。
 
-> **状态 — 2026-08-25：** 大阶段一自动工程门与用户负责的 L2 验收均已完成。
+> **状态 — 2026-08-27：** 大阶段一自动工程门与用户负责的 L2 验收均已完成。
 > 大阶段二文档前置准备已经收口；**S2-01 实现与机器证据已经完成，当前等待用户
-> L1**。最终在本机生成的是全 64 个 Conv 的 QDQ/S8S8 模型。按用户批准的个人练习口径，
+> L1**。最终在本机生成的是全 64 个 Conv 的 QDQ/U8S8 Round 2 模型；它修复了
+> Round 1 S8S8 的执行路径退化，在记录的 CPU 协议下同时小于且快于 FP32。按用户批准的个人练习口径，
 > 产品差异与任务质量结果保留为 advisory 诊断项，不声称通过原始三层严格验收。
 
 ![固定推理 Demo](docs/assets/demo_inference_result.gif)
@@ -155,7 +156,7 @@ contract + metadata -> model-specific preprocess
 | Runtime/artifact/metadata 契约 | 分离可调 Runtime 策略、声明的产物语义和 ORT 实际观察到的张量/provider 事实；在推理前拒绝不匹配 |
 | `ImagePreprocessor` | 解码或接收 `CV_8UC3` 图片；执行 letterbox、BGR-to-RGB、归一化，生成连续 NCHW 数据，并保留逆变换元数据 |
 | `OnnxRunner` / `InferenceOutput` | 通过 RAII/PImpl 管理 ORT 资源，验证输入/输出，同步执行，并把输出复制到生命周期独立于 ORT 的存储中 |
-| Static PTQ 工具链 | 冻结校准输入与量化配置，执行 Conv-only QDQ/S8S8 PTQ，检查选中/量化/失败节点，验证 actual metadata，并生成派生产物卡 |
+| Static PTQ 工具链 | 冻结校准输入与量化配置，按声明的 activation/weight 类型执行 Conv-only QDQ PTQ，检查选中/量化/失败节点，验证 actual metadata，并生成派生产物卡 |
 | `ProfileRunner` 与 profile 汇总器 | 创建隔离的 profiling session，保留 ORT raw trace，按 node/operator/provider 汇总耗时与调用次数，并把 trace 耗时排除在正式 Benchmark 外 |
 | 后处理/NMS | 验证 YOLO BCN 输出，选择类别分数，执行严格过滤与稳定的类别无关 NMS，再恢复并裁剪源图坐标 |
 | `DetectorPipeline` 与 writers | 编排单张图片并输出自持有结果、稳定 JSON 和确定性的无 GUI 可视化，同时强制安全输出路径 |
@@ -176,48 +177,53 @@ contract + metadata -> model-specific preprocess
 
 ### S2-01 Windows CPU 记录
 
-最终本地产物使用 ONNX Runtime 1.19.2 static PTQ，配置为 `QDQ`、S8S8、
+最终本地产物使用 ONNX Runtime 1.19.2 static PTQ，配置为 `QDQ`、U8S8、
 MinMax 校准、per-channel 权重，并将源图全部 64 个 `Conv` 纳入量化目标。
-外部契约仍为 float32 `images [1,3,800,800] -> output0 [1,10,13125]`；
+它相对 Round 1 S8S8 协议只改变 activation 类型。外部契约仍为 float32
+`images [1,3,800,800] -> output0 [1,10,13125]`；
 INT8 是图内部表示，不是应用侧整数 I/O 契约。
 
 | 证据 | FP32 | INT8 / 结果 |
 |---|---:|---:|
-| 模型文件 | 12,336,935 bytes | 3,545,141 bytes；**缩小 71.264%** |
+| 模型文件 | 12,336,935 bytes | 3,544,494 bytes；**缩小 71.269%** |
 | Python/C++ ORT 合法性 | 通过 | 通过；输出有限且 actual metadata 一致 |
 | 当前 Windows 回归 | 118/118 CTest 通过 | FP32/INT8 profile workflow smoke 通过 |
-| 361 图任务质量 | mAP50 `0.710815`；mAP50-95 `0.345786` | `0.707206` / `0.342174`；delta `-0.003610/-0.003612` |
+| 361 图任务质量 | mAP50 `0.710815`；mAP50-95 `0.345786` | `0.700459` / `0.342379`；delta `-0.010356/-0.003407` |
 | 30 图产品差异 | 62 个检测 | 65 个检测、61 个匹配；原始 aggregate gate 为 `false` |
-| Session 初始化 | `40.309 ms` | `94.979 ms` |
-| `Session::Run` mean/P50/P95 | `139.920/141.677/156.473 ms` | `191.913/190.929/220.769 ms`；**mean 慢 37.16%** |
-| Pipeline mean/P50/P95 | `146.927/148.779/163.921 ms` | `199.228/198.494/229.275 ms` |
-| Pipeline 吞吐 | `6.806 img/s` | `5.019 img/s` |
-| Peak Working Set | `150.742 MiB` | `150.727 MiB`；按进程高水位口径基本不变 |
+| Session 初始化 | `61.986 ms` | `94.858 ms`；一次性 setup 更慢 |
+| `Session::Run` mean/P50/P95 | `155.106/155.124/169.639 ms` | `95.040/95.570/110.768 ms`；**mean 快 38.726%** |
+| Pipeline mean/P50/P95 | `163.477/163.221/182.008 ms` | `103.872/104.042/121.654 ms`；**mean 快 36.461%** |
+| Pipeline 吞吐 | `6.117 img/s` | `9.627 img/s`；**提升 57.383%** |
+| Peak Working Set | `150.980 MiB` | `148.832 MiB`；仅是进程高水位的小幅变化 |
 
-Profiler 在与正式 Benchmark 分离的两个 10-call session 中运行，全部优化后节点
-都由 `CPUExecutionProvider` 执行。FP32 的 `Conv` 占 kernel-event 时间 `67.80%`；
-INT8 中剩余 `Conv` 占 `64.55%`，`DequantizeLinear` 占 `10.55%`，
-`QuantizeLinear` 占 `6.18%`，`QLinearConv` 仅占 `0.47%`，执行节点数由
-294 增至 683。由此可以解释变慢：文件压缩成功，但该图与本机 CPU 的组合仍保留了
-昂贵卷积，并增加大量 Q/DQ 边界。Profile event 总时长含插桩开销，只用于诊断，
-绝不替代未开 profiler 的 `Session::Run` 正式结果。
+Round 1 虽在静态 QDQ 文件中量化了全部 64 个 Conv，但 ORT 优化后的 S8S8
+执行图仍有 57 个 float `Conv`，只有 7 个 `QLinearConv`，每次运行还包含
+120 个 Q 和 317 个 DQ，因此 `Session::Run` 反而慢 37.16%。Round 2 只将
+activation 从 `QInt8` 改成 `QUInt8`；10-run trace 出现 640 次
+`QLinearConv` 且没有普通 `Conv`，即每次 64 个整数卷积。`QLinearConv` 现在占
+诊断 kernel-event 时间 35.18%，DQ、Resize、Mul、Concat、Q 和 Sigmoid 则成为
+下一批热点；全部优化后节点均位于 `CPUExecutionProvider`。
 
-`models/best.int8.qdq.onnx` 当前存在，并已由记录中的 Python/C++ 运行实际加载；
+这形成了本单元最重要的学习结论：ONNX 文件中存在 QDQ 不等于实际得到整数
+kernel 加速，必须同时检查优化执行图，并用关闭 profiler 的正式 Benchmark 验证。
+Profile event 总时长包含插桩开销，不能替代 `Session::Run`。
+
+`models/best.int8.qdq.u8s8.onnx` 当前存在，并已由记录中的 Python/C++ 运行实际加载；
 但派生 ONNX 继续遵守项目的模型许可证边界而被 Git 忽略。新 clone 应从冻结 protocol
 重建同 SHA 二进制；Git 交付的是绑定 SHA 的 contract、card、工具和机器证据，
 而不是暗示仓库正在分发该模型。
 
 S2-01 主要证据：
 
-- [冻结 PTQ 协议](cpp_infer/protocols/s2_01_ptq_protocol.json)与
-  [INT8 产物契约](cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt)
-- [量化产物卡](cpp_infer/results/s2_01/quantization_report.json)
-- [未改写的正确性/质量结果](cpp_infer/results/s2_01/correctness_quality_v1_failed.json)
-- [FP32/INT8 Benchmark 比较](cpp_infer/results/s2_01/benchmark/comparison.json)
-- [FP32 profile 摘要](cpp_infer/results/s2_01/profile/fp32_summary.json)与
-  [INT8 profile 摘要](cpp_infer/results/s2_01/profile/int8_summary.json)
-- [Advisory 练习完成记录](cpp_infer/results/s2_01/exercise_completion.json)
-- [S2-01 收口与复现详情](docs/details/s2_01_closure.md)
+- [Round 2 PTQ 协议](cpp_infer/protocols/s2_01_ptq_protocol_r2_u8s8.json)与
+  [U8S8 产物契约](cpp_infer/artifacts/yolov8_neu_det_int8_qdq_u8s8.artifact.txt)
+- [量化产物卡](cpp_infer/results/s2_01/round2/u8s8/quantization_report.json)
+- [未改写的正确性/质量结果](cpp_infer/results/s2_01/round2/correctness_u8s8.json)
+- [FP32/U8S8 Benchmark 比较](cpp_infer/results/s2_01/round2/benchmark/comparison_u8s8.json)
+- [FP32 profile 摘要](cpp_infer/results/s2_01/round2/profile/fp32_summary.json)与
+  [U8S8 profile 摘要](cpp_infer/results/s2_01/round2/profile/int8_u8s8_summary.json)
+- [Round 2 收口、失败分析与复现详情](docs/details/s2_01_round2_closure.md)
+- [Round 1 S8S8 历史收口](docs/details/s2_01_closure.md)
 
 ### 平台矩阵
 

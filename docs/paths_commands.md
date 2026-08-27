@@ -27,7 +27,7 @@ cpp_infer\tools\stage1.cmd build
 cpp_infer\tools\stage1.cmd test
 cpp_infer\tools\stage1.cmd detect "data\images\val\crazing_241.jpg"
 cpp_infer\tools\stage1.cmd profile
-cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_config.txt -ProfileRuns 10
+cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_u8s8_config.txt -ProfileRuns 10
 ```
 
 | Action | 行为 |
@@ -56,7 +56,8 @@ cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_config.txt -Pr
 | CMake / CTest | 4.1.1-msvc1，Visual Studio 附带并由 `VsDevCmd.bat` 加入 PATH |
 | ONNX Runtime C++ SDK | 1.19.2：`D:\01_Base\Tools\onnxruntime-win-x64-1.19.2` |
 | OpenCV C++ | 4.8.0：`D:\01_Base\Tools\opencv\build\x64\vc16\lib`，DLL 位于同级 `bin` |
-| Python reference | `C:\Users\Everbreath\.conda\envs\TestBase\python.exe`；Python 3.9.25、ORT 1.19.2、OpenCV 4.13.0、NumPy 2.0.2 |
+| Python Runtime reference | `C:\Users\Everbreath\.conda\envs\TestBase\python.exe`；Python 3.9.25、ORT 1.19.2、OpenCV 4.13.0、NumPy 2.0.2；供 `stage1.cmd` 的 consistency/profile 前置检查 |
+| Python PTQ tooling | `C:\Users\Everbreath\.conda\envs\yolo_defect\python.exe`；ONNX 1.19.1、ORT 1.19.2、OpenCV 4.13.0、NumPy 2.0.2；正式运行 `quantize_s2_01.py` 和 S2-01 Python 工具 |
 | GoogleTest | v1.17.0；实际 source 目录由本机忽略配置提供，依赖版本由 CMake 固定 |
 
 运行 `doctor` 查看本次进程实际解析到的路径，不要仅依赖本表。
@@ -95,9 +96,11 @@ cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_config.txt -Pr
 | [`../cpp_infer/tools/stage1.defaults.psd1`](../cpp_infer/tools/stage1.defaults.psd1) | tracked、机器无关的 workflow 默认值 |
 | [`../cpp_infer/tools/stage1.local.example.psd1`](../cpp_infer/tools/stage1.local.example.psd1) | `cpp_infer/.stage1.local.psd1` 模板 |
 | [`../cpp_infer/configs/default_config.txt`](../cpp_infer/configs/default_config.txt) | 默认 FP32 RuntimeConfig |
-| [`../cpp_infer/configs/int8_config.txt`](../cpp_infer/configs/int8_config.txt) | S2-01 INT8 RuntimeConfig |
+| [`../cpp_infer/configs/int8_config.txt`](../cpp_infer/configs/int8_config.txt) | S2-01 Round 1 S8S8 RuntimeConfig（历史对照） |
+| [`../cpp_infer/configs/int8_u8s8_config.txt`](../cpp_infer/configs/int8_u8s8_config.txt) | S2-01 Round 2 U8S8 RuntimeConfig |
 | [`../cpp_infer/artifacts/yolov8_neu_det.artifact.txt`](../cpp_infer/artifacts/yolov8_neu_det.artifact.txt) | FP32 模型语义契约 |
-| [`../cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt`](../cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt) | INT8 模型语义契约；派生 ONNX 本体受 `.gitignore` 管理 |
+| [`../cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt`](../cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt) | S2-01 Round 1 S8S8 模型语义契约（历史对照）；派生 ONNX 本体受 `.gitignore` 管理 |
+| [`../cpp_infer/artifacts/yolov8_neu_det_int8_qdq_u8s8.artifact.txt`](../cpp_infer/artifacts/yolov8_neu_det_int8_qdq_u8s8.artifact.txt) | S2-01 Round 2 U8S8 模型语义契约 |
 | [`../models/best.onnx`](../models/best.onnx) | 当前 FP32 ONNX |
 | [`../data/images/val/crazing_241.jpg`](../data/images/val/crazing_241.jpg) | 固定单图 Demo/benchmark 样本 |
 

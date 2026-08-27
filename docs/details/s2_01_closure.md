@@ -1,5 +1,7 @@
 # S2-01 INT8 PTQ 与 ORT Profiling 技术收口
 
+> **Round 1 历史快照：**本文记录 QDQ/S8S8 首轮实验及其负向速度结果。当前最终产物、根因复盘和 QDQ/U8S8 加速结果见 [`s2_01_round2_closure.md`](s2_01_round2_closure.md)；不要把本文中的 S8S8 数据写成当前最终结论。
+
 > 本文中的环境版本、路径、命令和实验结果是 S2-01 收口时的历史证据快照，不是当前工具链配置指南。当前操作入口与故障诊断统一以 [`../paths_commands.md`](../paths_commands.md) 为准。
 
 > 收口日期：2026-08-25

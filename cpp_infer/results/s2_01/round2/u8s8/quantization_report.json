@@ -1,0 +1,2653 @@
+{
+  "artifact_contract": {
+    "artifact_kind": "onnx_static_ptq_int8_qdq_quint8_qint8",
+    "cpp_runtime_legality_required_separately": true,
+    "derived_model_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\models\\best.int8.qdq.u8s8.onnx",
+    "external_model_io": {
+      "input_dtype": "float32",
+      "input_name": "images",
+      "input_shape": [
+        1,
+        3,
+        800,
+        800
+      ],
+      "output_dtype": "float32",
+      "output_name": "output0",
+      "output_shape": [
+        1,
+        10,
+        13125
+      ]
+    },
+    "python_runtime_legality_provider": "CPUExecutionProvider",
+    "quantized_op_scope": {
+      "excluded_conv_count": 0,
+      "excluded_conv_nodes": [],
+      "op_types_to_quantize": [
+        "Conv"
+      ],
+      "selected_conv_count": 64,
+      "target_conv_count": 64,
+      "unselected_source_nodes_remain_in_declared_precision": true
+    },
+    "source_model": {
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\models\\best.onnx",
+      "sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+      "size_bytes": 12336935
+    }
+  },
+  "artifacts": {
+    "derived": {
+      "actual_metadata": {
+        "initializer_count": 627,
+        "initializer_dtype_counts": {
+          "FLOAT": 250,
+          "INT32": 126,
+          "INT8": 128,
+          "UINT8": 123
+        },
+        "inputs": [
+          {
+            "dtype": "FLOAT",
+            "name": "images",
+            "shape": [
+              1,
+              3,
+              800,
+              800
+            ]
+          }
+        ],
+        "ir_version": 8,
+        "metadata_properties": {
+          "args": "{'batch': 1, 'half': False, 'dynamic': False, 'simplify': True, 'opset': None, 'nms': False}",
+          "author": "Ultralytics",
+          "batch": "1",
+          "channels": "3",
+          "date": "2026-03-30T14:17:48.264011",
+          "description": "Ultralytics best model trained on D:\\Base\\CodingSpace\\yolo_defect\\scripts\\..\\data/data.yaml",
+          "docs": "https://docs.ultralytics.com",
+          "end2end": "False",
+          "imgsz": "[800, 800]",
+          "license": "AGPL-3.0 License (https://ultralytics.com/license)",
+          "names": "{0: 'crazing', 1: 'inclusion', 2: 'patches', 3: 'pitted_surface', 4: 'rolled-in_scale', 5: 'scratches'}",
+          "onnx.infer": "onnxruntime.quant",
+          "onnx.quant.pre_process": "onnxruntime.quant",
+          "stride": "32",
+          "task": "detect",
+          "version": "8.4.24"
+        },
+        "node_count": 634,
+        "op_counts": {
+          "Add": 9,
+          "Concat": 17,
+          "Constant": 24,
+          "Conv": 64,
+          "DequantizeLinear": 250,
+          "Div": 2,
+          "Gather": 1,
+          "MaxPool": 3,
+          "Mul": 59,
+          "QuantizeLinear": 123,
+          "Reshape": 8,
+          "Resize": 2,
+          "Shape": 1,
+          "Sigmoid": 57,
+          "Slice": 2,
+          "Softmax": 1,
+          "Split": 8,
+          "Sub": 2,
+          "Transpose": 1
+        },
+        "opset_imports": [
+          {
+            "domain": "ai.onnx",
+            "version": 17
+          }
+        ],
+        "outputs": [
+          {
+            "dtype": "FLOAT",
+            "name": "output0",
+            "shape": [
+              1,
+              10,
+              13125
+            ]
+          }
+        ],
+        "producer_name": "onnx.quantize",
+        "producer_version": "0.1.0",
+        "value_info_count": 268
+      },
+      "onnx_checker": "passed",
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\models\\best.int8.qdq.u8s8.onnx",
+      "published": true,
+      "sha256": "9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1",
+      "size_bytes": 3544494,
+      "size_mebibytes": 3.3802928924560547
+    },
+    "preprocessed": {
+      "actual_metadata": {
+        "initializer_count": 127,
+        "initializer_dtype_counts": {
+          "FLOAT": 127
+        },
+        "inputs": [
+          {
+            "dtype": "FLOAT",
+            "name": "images",
+            "shape": [
+              1,
+              3,
+              800,
+              800
+            ]
+          }
+        ],
+        "ir_version": 8,
+        "metadata_properties": {
+          "args": "{'batch': 1, 'half': False, 'dynamic': False, 'simplify': True, 'opset': None, 'nms': False}",
+          "author": "Ultralytics",
+          "batch": "1",
+          "channels": "3",
+          "date": "2026-03-30T14:17:48.264011",
+          "description": "Ultralytics best model trained on D:\\Base\\CodingSpace\\yolo_defect\\scripts\\..\\data/data.yaml",
+          "docs": "https://docs.ultralytics.com",
+          "end2end": "False",
+          "imgsz": "[800, 800]",
+          "license": "AGPL-3.0 License (https://ultralytics.com/license)",
+          "names": "{0: 'crazing', 1: 'inclusion', 2: 'patches', 3: 'pitted_surface', 4: 'rolled-in_scale', 5: 'scratches'}",
+          "onnx.quant.pre_process": "onnxruntime.quant",
+          "stride": "32",
+          "task": "detect",
+          "version": "8.4.24"
+        },
+        "node_count": 261,
+        "op_counts": {
+          "Add": 9,
+          "Concat": 17,
+          "Constant": 24,
+          "Conv": 64,
+          "Div": 2,
+          "Gather": 1,
+          "MaxPool": 3,
+          "Mul": 59,
+          "Reshape": 8,
+          "Resize": 2,
+          "Shape": 1,
+          "Sigmoid": 57,
+          "Slice": 2,
+          "Softmax": 1,
+          "Split": 8,
+          "Sub": 2,
+          "Transpose": 1
+        },
+        "opset_imports": [
+          {
+            "domain": "ai.onnx",
+            "version": 17
+          }
+        ],
+        "outputs": [
+          {
+            "dtype": "FLOAT",
+            "name": "output0",
+            "shape": [
+              1,
+              10,
+              13125
+            ]
+          }
+        ],
+        "producer_name": "pytorch",
+        "producer_version": "2.0.0",
+        "value_info_count": 268
+      },
+      "onnx_checker": "passed",
+      "path": null,
+      "published": false,
+      "scope": "temporary quantization intermediate; SHA and metadata retained in this report, bytes not published",
+      "sha256": "0A8D445CEA48B98E88706EC0262F3B2DB4D2E3B9566B96EC6171B5E7C8501CB6",
+      "size_bytes": 12352738,
+      "size_mebibytes": 11.780488967895508
+    },
+    "source": {
+      "actual_metadata": {
+        "initializer_count": 127,
+        "initializer_dtype_counts": {
+          "FLOAT": 127
+        },
+        "inputs": [
+          {
+            "dtype": "FLOAT",
+            "name": "images",
+            "shape": [
+              1,
+              3,
+              800,
+              800
+            ]
+          }
+        ],
+        "ir_version": 8,
+        "metadata_properties": {
+          "args": "{'batch': 1, 'half': False, 'dynamic': False, 'simplify': True, 'opset': None, 'nms': False}",
+          "author": "Ultralytics",
+          "batch": "1",
+          "channels": "3",
+          "date": "2026-03-30T14:17:48.264011",
+          "description": "Ultralytics best model trained on D:\\Base\\CodingSpace\\yolo_defect\\scripts\\..\\data/data.yaml",
+          "docs": "https://docs.ultralytics.com",
+          "end2end": "False",
+          "imgsz": "[800, 800]",
+          "license": "AGPL-3.0 License (https://ultralytics.com/license)",
+          "names": "{0: 'crazing', 1: 'inclusion', 2: 'patches', 3: 'pitted_surface', 4: 'rolled-in_scale', 5: 'scratches'}",
+          "stride": "32",
+          "task": "detect",
+          "version": "8.4.24"
+        },
+        "node_count": 261,
+        "op_counts": {
+          "Add": 9,
+          "Concat": 17,
+          "Constant": 24,
+          "Conv": 64,
+          "Div": 2,
+          "Gather": 1,
+          "MaxPool": 3,
+          "Mul": 59,
+          "Reshape": 8,
+          "Resize": 2,
+          "Shape": 1,
+          "Sigmoid": 57,
+          "Slice": 2,
+          "Softmax": 1,
+          "Split": 8,
+          "Sub": 2,
+          "Transpose": 1
+        },
+        "opset_imports": [
+          {
+            "domain": "ai.onnx",
+            "version": 17
+          }
+        ],
+        "outputs": [
+          {
+            "dtype": "FLOAT",
+            "name": "output0",
+            "shape": [
+              1,
+              10,
+              13125
+            ]
+          }
+        ],
+        "producer_name": "pytorch",
+        "producer_version": "2.0.0",
+        "value_info_count": 0
+      },
+      "onnx_checker": "passed",
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\models\\best.onnx",
+      "published": true,
+      "sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+      "size_bytes": 12336935,
+      "size_mebibytes": 11.76541805267334
+    }
+  },
+  "calibration": {
+    "consumption_order": "manifest_order",
+    "manifest_id": "neu_det_train_ptq_calibration_6x30_v1",
+    "manifest_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\tests\\fixtures\\s2_01_calibration_manifest.json",
+    "manifest_sha256_canonical_lf": "6C0735C6E1510F725E1168A3C57E7107259CC1934D32DEB3E619C1BF6712AA9D",
+    "preprocess": {
+      "color_conversion": "BGR_to_RGB",
+      "decode": "OpenCV IMREAD_COLOR uint8 BGR",
+      "input_shape": [
+        1,
+        3,
+        800,
+        800
+      ],
+      "layout": "NCHW",
+      "letterbox_pad_value": 114,
+      "normalization": "float32_divide_by_255",
+      "resize_interpolation": "INTER_LINEAR",
+      "resize_rounding": "floor(positive_value+0.5)",
+      "tensor_contiguity": "C_contiguous",
+      "type": "letterbox_rgb_0_1_nchw"
+    },
+    "preprocess_implementation": {
+      "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\tools\\compare_consistency.py",
+      "raw_sha256": "571A439AC33EA3161A8BCAD3B05A3F70D507E40E64A883DC6ADB6A8D3D16DCFB"
+    },
+    "sample_count_consumed": 180,
+    "sample_count_expected": 180,
+    "sample_count_hash_verified": 180
+  },
+  "command": [
+    "C:\\Users\\Everbreath\\.conda\\envs\\yolo_defect\\python.exe",
+    "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\tools\\quantize_s2_01.py",
+    "--protocol",
+    "cpp_infer\\protocols\\s2_01_ptq_protocol_r2_u8s8.json"
+  ],
+  "environment": {
+    "available_providers": [
+      "TensorrtExecutionProvider",
+      "CUDAExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "calibration_and_validation_provider": "CPUExecutionProvider",
+    "machine": "AMD64",
+    "packages": {
+      "numpy": "2.0.2",
+      "onnx": "1.19.1",
+      "onnxruntime": "1.19.2",
+      "onnxruntime_distributions": {
+        "onnxruntime-gpu": "1.19.2"
+      },
+      "opencv": "4.13.0"
+    },
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+    "python_executable": "C:\\Users\\Everbreath\\.conda\\envs\\yolo_defect\\python.exe",
+    "python_version": "3.9.25"
+  },
+  "evidence_type": "s2_01_static_ptq_artifact_card",
+  "frozen_downstream_protocol": {
+    "benchmark": {
+      "declaration": {
+        "build_type": "Release",
+        "execution_mode": "sequential",
+        "execution_provider": "CPUExecutionProvider",
+        "graph_optimization_level": "all",
+        "inter_op_num_threads": 1,
+        "intra_op_num_threads": 1,
+        "profiling_enabled": false,
+        "repeat": 100,
+        "sample": {
+          "image_path": "../../data/images/val/crazing_241.jpg",
+          "image_sha256": "1D65EF27EAA9BF27608D954DFE57B40E401FC1AED435884400F35E8000BBF98D",
+          "sample_id": "crazing_241"
+        },
+        "warmup": 10
+      },
+      "resolved_sample_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\data\\images\\val\\crazing_241.jpg"
+    },
+    "correctness": {
+      "consistency_manifest_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\tests\\fixtures\\consistency_manifest.json",
+      "declaration": {
+        "consistency_manifest": {
+          "manifest_id": "neu_det_val_6x5_v1",
+          "path": "../tests/fixtures/consistency_manifest.json",
+          "sample_count": 30,
+          "sha256_canonical_lf": "4A10742F373D1A999839996D45BEAD84F3340F3A37C35A18E9EBF534147F1E46"
+        },
+        "gate_sources": {
+          "matching_protocol": "quality_manifest.product_matching_protocol",
+          "product_matching": "quality_manifest.product_matching_gates",
+          "task_quality": "quality_manifest.quality_gates"
+        },
+        "quality_manifest": {
+          "ground_truth_box_count": 857,
+          "manifest_id": "neu_det_val_361_quality_v1",
+          "path": "../tests/fixtures/s2_01_quality_manifest.json",
+          "sample_count": 361,
+          "sha256_canonical_lf": "CED5CE80B119B1446066B18072B2AD1C7BE7A6DA30429B5C01D617F2AA2BCEF8"
+        }
+      },
+      "product_matching_gates": {
+        "confidence_abs_error_mean_max": 0.05,
+        "confidence_abs_error_p95_max": 0.1,
+        "fp32_retention_min": 0.95,
+        "int8_agreement_precision_min": 0.95,
+        "matched_iou_p05_min": 0.75,
+        "matched_mean_iou_min": 0.9,
+        "pair_iou_min": 0.5
+      },
+      "product_matching_protocol": {
+        "assignment": "greedy_one_to_one_descending_iou",
+        "box_iou": "float32_continuous_xyxy",
+        "detection_key": "class_id,negative_confidence,bbox_x1,bbox_y1,bbox_x2,bbox_y2",
+        "edge_tie_break": "fp32_detection_key_then_int8_detection_key_then_original_indices",
+        "pair_acceptance": "matching_iou_greater_than_or_equal_to_pair_iou_min",
+        "percentile_interpolation": "linear_between_adjacent_order_statistics_at_p_times_n_minus_1",
+        "scope": "per_image_then_exact_class_id",
+        "unmatched_policy": "every_detection_not_in_an_accepted_pair_is_unmatched"
+      },
+      "quality_evaluation": {
+        "ap_interpolation": "COCO_101_point_precision_envelope",
+        "box_geometry": "continuous xyxy; area=(x2-x1)*(y2-y1)",
+        "ground_truth_policy": "count every YOLO TXT box; VOC difficult/truncated flags are not represented",
+        "iou_thresholds": [
+          0.5,
+          0.55,
+          0.6,
+          0.65,
+          0.7,
+          0.75,
+          0.8,
+          0.85,
+          0.9,
+          0.95
+        ],
+        "label_format": "YOLO normalized class_id center_x center_y width height",
+        "max_detections_per_image": null,
+        "metric_claim": "COCO_style_101_point_without_area_ranges_or_max_dets",
+        "nms_mode": "class_agnostic",
+        "nms_threshold": 0.45,
+        "product_score_threshold": 0.25,
+        "quality_score_floor": 0.001,
+        "score_comparison": "strict_greater_than"
+      },
+      "quality_gates": {
+        "map50_95_absolute_drop_max": 0.02,
+        "map50_absolute_drop_max": 0.01,
+        "per_class_ap50_absolute_drop_max": 0.05
+      },
+      "quality_manifest_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\tests\\fixtures\\s2_01_quality_manifest.json"
+    },
+    "profiling": {
+      "execution_provider": "CPUExecutionProvider",
+      "performance_gate": false,
+      "runs": 10,
+      "sample_source": "benchmark.sample",
+      "separate_from_formal_benchmark": true
+    }
+  },
+  "graph_audit": {
+    "classification_note": "QDQ preserves Conv op_type; a Conv is classified as quantized only when its activation and INT8 per-channel weight Q/DQ structure and output QuantizeLinear are present. Protocol-excluded Conv nodes are classified separately as intentional_unquantized and must retain a direct FP32 weight initializer.",
+    "conv_details": [
+      {
+        "activation_dequantize_node": "images_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.0/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.0/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 16,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.0.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.0.conv.weight_DequantizeLinear",
+        "weight_output_channels": 16
+      },
+      {
+        "activation_dequantize_node": "/model.0/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 32,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 32
+      },
+      {
+        "activation_dequantize_node": "/model.1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.2/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.2/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 32,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.2.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.2.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 32
+      },
+      {
+        "activation_dequantize_node": "/model.2/Split_output_1_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.2/m.0/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.2/m.0/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 16,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.2.m.0.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.2.m.0.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 16
+      },
+      {
+        "activation_dequantize_node": "/model.2/m.0/cv1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.2/m.0/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.2/m.0/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 16,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.2.m.0.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.2.m.0.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 16
+      },
+      {
+        "activation_dequantize_node": "/model.2/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.2/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.2/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 32,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.2.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.2.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 32
+      },
+      {
+        "activation_dequantize_node": "/model.2/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.3/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.3/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.3.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.3.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.3/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.4/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.4/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.4.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.4.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.4/Split_output_1_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.4/m.0/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.4/m.0/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 32,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.4.m.0.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.4.m.0.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 32
+      },
+      {
+        "activation_dequantize_node": "/model.4/m.0/cv1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.4/m.0/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.4/m.0/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 32,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.4.m.0.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.4.m.0.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 32
+      },
+      {
+        "activation_dequantize_node": "/model.4/m.0/Add_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.4/m.1/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.4/m.1/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 32,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.4.m.1.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.4.m.1.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 32
+      },
+      {
+        "activation_dequantize_node": "/model.4/m.1/cv1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.4/m.1/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.4/m.1/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 32,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.4.m.1.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.4.m.1.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 32
+      },
+      {
+        "activation_dequantize_node": "/model.4/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.4/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.4/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.4.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.4.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.4/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.5/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.5/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.5.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.5.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.5/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.6/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.6/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.6.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.6.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.6/Split_output_1_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.6/m.0/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.6/m.0/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.6.m.0.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.6.m.0.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.6/m.0/cv1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.6/m.0/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.6/m.0/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.6.m.0.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.6.m.0.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.6/m.0/Add_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.6/m.1/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.6/m.1/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.6.m.1.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.6.m.1.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.6/m.1/cv1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.6/m.1/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.6/m.1/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.6.m.1.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.6.m.1.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.6/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.6/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.6/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.6.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.6.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.6/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.7/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.7/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 256,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.7.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.7.conv.weight_DequantizeLinear",
+        "weight_output_channels": 256
+      },
+      {
+        "activation_dequantize_node": "/model.7/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.8/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.8/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 256,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.8.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.8.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 256
+      },
+      {
+        "activation_dequantize_node": "/model.8/Split_output_1_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.8/m.0/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.8/m.0/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.8.m.0.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.8.m.0.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.8/m.0/cv1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.8/m.0/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.8/m.0/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.8.m.0.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.8.m.0.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.8/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.8/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.8/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 256,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.8.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.8.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 256
+      },
+      {
+        "activation_dequantize_node": "/model.8/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.9/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.9/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.9.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.9.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.9/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.9/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.9/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 256,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.9.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.9.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 256
+      },
+      {
+        "activation_dequantize_node": "/model.11/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.12/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.12/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.12.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.12.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.12/Split_output_1_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.12/m.0/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.12/m.0/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.12.m.0.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.12.m.0.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.12/m.0/cv1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.12/m.0/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.12/m.0/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.12.m.0.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.12.m.0.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.12/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.12/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.12/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.12.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.12.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.14/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.15/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.15/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.15.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.15.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.15/Split_output_1_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.15/m.0/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.15/m.0/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 32,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.15.m.0.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.15.m.0.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 32
+      },
+      {
+        "activation_dequantize_node": "/model.15/m.0/cv1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.15/m.0/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.15/m.0/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 32,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.15.m.0.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.15.m.0.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 32
+      },
+      {
+        "activation_dequantize_node": "/model.15/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.15/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.15/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.15.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.15.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.15/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.16/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.16/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.16.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.16.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.17/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.18/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.18/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.18.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.18.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.18/Split_output_1_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.18/m.0/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.18/m.0/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.18.m.0.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.18.m.0.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.18/m.0/cv1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.18/m.0/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.18/m.0/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.18.m.0.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.18.m.0.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.18/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.18/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.18/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.18.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.18.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.18/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.19/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.19/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.19.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.19.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.20/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.21/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.21/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 256,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.21.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.21.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 256
+      },
+      {
+        "activation_dequantize_node": "/model.21/Split_output_1_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.21/m.0/cv1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.21/m.0/cv1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.21.m.0.cv1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.21.m.0.cv1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.21/m.0/cv1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.21/m.0/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.21/m.0/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 128,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.21.m.0.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.21.m.0.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 128
+      },
+      {
+        "activation_dequantize_node": "/model.21/Concat_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.21/cv2/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.21/cv2/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 256,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.21.cv2.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.21.cv2.conv.weight_DequantizeLinear",
+        "weight_output_channels": 256
+      },
+      {
+        "activation_dequantize_node": "/model.15/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv2.0/cv2.0.0/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv2.0/cv2.0.0/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv2.0.0.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv2.0.0.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv2.0/cv2.0.0/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv2.0/cv2.0.1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv2.0/cv2.0.1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv2.0.1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv2.0.1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv2.0/cv2.0.1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv2.0/cv2.0.2/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv2.0/cv2.0.2/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv2.0.2.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv2.0.2.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.18/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv2.1/cv2.1.0/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv2.1/cv2.1.0/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv2.1.0.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv2.1.0.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv2.1/cv2.1.0/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv2.1/cv2.1.1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv2.1/cv2.1.1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv2.1.1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv2.1.1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv2.1/cv2.1.1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv2.1/cv2.1.2/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv2.1/cv2.1.2/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv2.1.2.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv2.1.2.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.21/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv2.2/cv2.2.0/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv2.2/cv2.2.0/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv2.2.0.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv2.2.0.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv2.2/cv2.2.0/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv2.2/cv2.2.1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv2.2/cv2.2.1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv2.2.1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv2.2.1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv2.2/cv2.2.1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv2.2/cv2.2.2/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv2.2/cv2.2.2/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv2.2.2.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv2.2.2.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.15/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv3.0/cv3.0.0/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv3.0/cv3.0.0/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv3.0.0.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv3.0.0.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv3.0/cv3.0.0/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv3.0/cv3.0.1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv3.0/cv3.0.1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv3.0.1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv3.0.1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv3.0/cv3.0.1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv3.0/cv3.0.2/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv3.0/cv3.0.2/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 6,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv3.0.2.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv3.0.2.weight_DequantizeLinear",
+        "weight_output_channels": 6
+      },
+      {
+        "activation_dequantize_node": "/model.18/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv3.1/cv3.1.0/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv3.1/cv3.1.0/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv3.1.0.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv3.1.0.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv3.1/cv3.1.0/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv3.1/cv3.1.1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv3.1/cv3.1.1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv3.1.1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv3.1.1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv3.1/cv3.1.1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv3.1/cv3.1.2/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv3.1/cv3.1.2/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 6,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv3.1.2.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv3.1.2.weight_DequantizeLinear",
+        "weight_output_channels": 6
+      },
+      {
+        "activation_dequantize_node": "/model.21/cv2/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv3.2/cv3.2.0/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv3.2/cv3.2.0/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv3.2.0.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv3.2.0.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv3.2/cv3.2.0/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv3.2/cv3.2.1/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv3.2/cv3.2.1/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 64,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv3.2.1.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv3.2.1.conv.weight_DequantizeLinear",
+        "weight_output_channels": 64
+      },
+      {
+        "activation_dequantize_node": "/model.22/cv3.2/cv3.2.1/act/Mul_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/cv3.2/cv3.2.2/Conv",
+        "output_quantize_nodes": [
+          "/model.22/cv3.2/cv3.2.2/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 6,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.cv3.2.2.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.cv3.2.2.weight_DequantizeLinear",
+        "weight_output_channels": 6
+      },
+      {
+        "activation_dequantize_node": "/model.22/dfl/Softmax_output_0_DequantizeLinear",
+        "intentional_unquantized": false,
+        "name": "/model.22/dfl/conv/Conv",
+        "output_quantize_nodes": [
+          "/model.22/dfl/conv/Conv_output_0_QuantizeLinear"
+        ],
+        "per_channel_scale_elements": 1,
+        "policy": "quantization_target",
+        "quantized": true,
+        "quantized_weight_initializer": "model.22.dfl.conv.weight_quantized",
+        "reasons": [],
+        "weight_dequantize_node": "model.22.dfl.conv.weight_DequantizeLinear",
+        "weight_output_channels": 1
+      }
+    ],
+    "derived_graph": {
+      "dequantize_linear_count": 250,
+      "initializer_count": 627,
+      "initializer_dtype_counts": {
+        "FLOAT": 250,
+        "INT32": 126,
+        "INT8": 128,
+        "UINT8": 123
+      },
+      "node_count": 634,
+      "op_counts": {
+        "Add": 9,
+        "Concat": 17,
+        "Constant": 24,
+        "Conv": 64,
+        "DequantizeLinear": 250,
+        "Div": 2,
+        "Gather": 1,
+        "MaxPool": 3,
+        "Mul": 59,
+        "QuantizeLinear": 123,
+        "Reshape": 8,
+        "Resize": 2,
+        "Shape": 1,
+        "Sigmoid": 57,
+        "Slice": 2,
+        "Softmax": 1,
+        "Split": 8,
+        "Sub": 2,
+        "Transpose": 1
+      },
+      "quantize_linear_count": 123
+    },
+    "result": {
+      "excluded_policy_violation_count": 0,
+      "excluded_policy_violations": [],
+      "failed_conv_count": 0,
+      "failed_conv_nodes": [],
+      "intentional_unquantized_conv_count": 0,
+      "intentional_unquantized_conv_nodes": [],
+      "quantized_conv_count": 64,
+      "quantized_conv_nodes": [
+        "/model.0/conv/Conv",
+        "/model.1/conv/Conv",
+        "/model.2/cv1/conv/Conv",
+        "/model.2/m.0/cv1/conv/Conv",
+        "/model.2/m.0/cv2/conv/Conv",
+        "/model.2/cv2/conv/Conv",
+        "/model.3/conv/Conv",
+        "/model.4/cv1/conv/Conv",
+        "/model.4/m.0/cv1/conv/Conv",
+        "/model.4/m.0/cv2/conv/Conv",
+        "/model.4/m.1/cv1/conv/Conv",
+        "/model.4/m.1/cv2/conv/Conv",
+        "/model.4/cv2/conv/Conv",
+        "/model.5/conv/Conv",
+        "/model.6/cv1/conv/Conv",
+        "/model.6/m.0/cv1/conv/Conv",
+        "/model.6/m.0/cv2/conv/Conv",
+        "/model.6/m.1/cv1/conv/Conv",
+        "/model.6/m.1/cv2/conv/Conv",
+        "/model.6/cv2/conv/Conv",
+        "/model.7/conv/Conv",
+        "/model.8/cv1/conv/Conv",
+        "/model.8/m.0/cv1/conv/Conv",
+        "/model.8/m.0/cv2/conv/Conv",
+        "/model.8/cv2/conv/Conv",
+        "/model.9/cv1/conv/Conv",
+        "/model.9/cv2/conv/Conv",
+        "/model.12/cv1/conv/Conv",
+        "/model.12/m.0/cv1/conv/Conv",
+        "/model.12/m.0/cv2/conv/Conv",
+        "/model.12/cv2/conv/Conv",
+        "/model.15/cv1/conv/Conv",
+        "/model.15/m.0/cv1/conv/Conv",
+        "/model.15/m.0/cv2/conv/Conv",
+        "/model.15/cv2/conv/Conv",
+        "/model.16/conv/Conv",
+        "/model.18/cv1/conv/Conv",
+        "/model.18/m.0/cv1/conv/Conv",
+        "/model.18/m.0/cv2/conv/Conv",
+        "/model.18/cv2/conv/Conv",
+        "/model.19/conv/Conv",
+        "/model.21/cv1/conv/Conv",
+        "/model.21/m.0/cv1/conv/Conv",
+        "/model.21/m.0/cv2/conv/Conv",
+        "/model.21/cv2/conv/Conv",
+        "/model.22/cv2.0/cv2.0.0/conv/Conv",
+        "/model.22/cv2.0/cv2.0.1/conv/Conv",
+        "/model.22/cv2.0/cv2.0.2/Conv",
+        "/model.22/cv2.1/cv2.1.0/conv/Conv",
+        "/model.22/cv2.1/cv2.1.1/conv/Conv",
+        "/model.22/cv2.1/cv2.1.2/Conv",
+        "/model.22/cv2.2/cv2.2.0/conv/Conv",
+        "/model.22/cv2.2/cv2.2.1/conv/Conv",
+        "/model.22/cv2.2/cv2.2.2/Conv",
+        "/model.22/cv3.0/cv3.0.0/conv/Conv",
+        "/model.22/cv3.0/cv3.0.1/conv/Conv",
+        "/model.22/cv3.0/cv3.0.2/Conv",
+        "/model.22/cv3.1/cv3.1.0/conv/Conv",
+        "/model.22/cv3.1/cv3.1.1/conv/Conv",
+        "/model.22/cv3.1/cv3.1.2/Conv",
+        "/model.22/cv3.2/cv3.2.0/conv/Conv",
+        "/model.22/cv3.2/cv3.2.1/conv/Conv",
+        "/model.22/cv3.2/cv3.2.2/Conv",
+        "/model.22/dfl/conv/Conv"
+      ],
+      "unquantized_conv_count": 0,
+      "unquantized_conv_nodes": []
+    },
+    "selection": {
+      "excluded_conv_count": 0,
+      "excluded_conv_nodes": [],
+      "expected_excluded_count": 0,
+      "expected_selected_count": 64,
+      "expected_target_count": 64,
+      "op_types_to_quantize": [
+        "Conv"
+      ],
+      "selected_conv_nodes": [
+        "/model.0/conv/Conv",
+        "/model.1/conv/Conv",
+        "/model.2/cv1/conv/Conv",
+        "/model.2/m.0/cv1/conv/Conv",
+        "/model.2/m.0/cv2/conv/Conv",
+        "/model.2/cv2/conv/Conv",
+        "/model.3/conv/Conv",
+        "/model.4/cv1/conv/Conv",
+        "/model.4/m.0/cv1/conv/Conv",
+        "/model.4/m.0/cv2/conv/Conv",
+        "/model.4/m.1/cv1/conv/Conv",
+        "/model.4/m.1/cv2/conv/Conv",
+        "/model.4/cv2/conv/Conv",
+        "/model.5/conv/Conv",
+        "/model.6/cv1/conv/Conv",
+        "/model.6/m.0/cv1/conv/Conv",
+        "/model.6/m.0/cv2/conv/Conv",
+        "/model.6/m.1/cv1/conv/Conv",
+        "/model.6/m.1/cv2/conv/Conv",
+        "/model.6/cv2/conv/Conv",
+        "/model.7/conv/Conv",
+        "/model.8/cv1/conv/Conv",
+        "/model.8/m.0/cv1/conv/Conv",
+        "/model.8/m.0/cv2/conv/Conv",
+        "/model.8/cv2/conv/Conv",
+        "/model.9/cv1/conv/Conv",
+        "/model.9/cv2/conv/Conv",
+        "/model.12/cv1/conv/Conv",
+        "/model.12/m.0/cv1/conv/Conv",
+        "/model.12/m.0/cv2/conv/Conv",
+        "/model.12/cv2/conv/Conv",
+        "/model.15/cv1/conv/Conv",
+        "/model.15/m.0/cv1/conv/Conv",
+        "/model.15/m.0/cv2/conv/Conv",
+        "/model.15/cv2/conv/Conv",
+        "/model.16/conv/Conv",
+        "/model.18/cv1/conv/Conv",
+        "/model.18/m.0/cv1/conv/Conv",
+        "/model.18/m.0/cv2/conv/Conv",
+        "/model.18/cv2/conv/Conv",
+        "/model.19/conv/Conv",
+        "/model.21/cv1/conv/Conv",
+        "/model.21/m.0/cv1/conv/Conv",
+        "/model.21/m.0/cv2/conv/Conv",
+        "/model.21/cv2/conv/Conv",
+        "/model.22/cv2.0/cv2.0.0/conv/Conv",
+        "/model.22/cv2.0/cv2.0.1/conv/Conv",
+        "/model.22/cv2.0/cv2.0.2/Conv",
+        "/model.22/cv2.1/cv2.1.0/conv/Conv",
+        "/model.22/cv2.1/cv2.1.1/conv/Conv",
+        "/model.22/cv2.1/cv2.1.2/Conv",
+        "/model.22/cv2.2/cv2.2.0/conv/Conv",
+        "/model.22/cv2.2/cv2.2.1/conv/Conv",
+        "/model.22/cv2.2/cv2.2.2/Conv",
+        "/model.22/cv3.0/cv3.0.0/conv/Conv",
+        "/model.22/cv3.0/cv3.0.1/conv/Conv",
+        "/model.22/cv3.0/cv3.0.2/Conv",
+        "/model.22/cv3.1/cv3.1.0/conv/Conv",
+        "/model.22/cv3.1/cv3.1.1/conv/Conv",
+        "/model.22/cv3.1/cv3.1.2/Conv",
+        "/model.22/cv3.2/cv3.2.0/conv/Conv",
+        "/model.22/cv3.2/cv3.2.1/conv/Conv",
+        "/model.22/cv3.2/cv3.2.2/Conv",
+        "/model.22/dfl/conv/Conv"
+      ],
+      "selected_count": 64,
+      "source_unselected_nodes": [
+        {
+          "name": "/model.0/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.0/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.2/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.2/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "Constant_9",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.2/Split",
+          "op_type": "Split"
+        },
+        {
+          "name": "/model.2/m.0/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.2/m.0/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.2/m.0/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.2/m.0/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.2/m.0/Add",
+          "op_type": "Add"
+        },
+        {
+          "name": "/model.2/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.2/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.2/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.3/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.3/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.4/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.4/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "Constant_28",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.4/Split",
+          "op_type": "Split"
+        },
+        {
+          "name": "/model.4/m.0/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.4/m.0/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.4/m.0/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.4/m.0/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.4/m.0/Add",
+          "op_type": "Add"
+        },
+        {
+          "name": "/model.4/m.1/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.4/m.1/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.4/m.1/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.4/m.1/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.4/m.1/Add",
+          "op_type": "Add"
+        },
+        {
+          "name": "/model.4/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.4/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.4/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.5/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.5/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.6/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.6/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "Constant_54",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.6/Split",
+          "op_type": "Split"
+        },
+        {
+          "name": "/model.6/m.0/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.6/m.0/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.6/m.0/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.6/m.0/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.6/m.0/Add",
+          "op_type": "Add"
+        },
+        {
+          "name": "/model.6/m.1/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.6/m.1/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.6/m.1/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.6/m.1/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.6/m.1/Add",
+          "op_type": "Add"
+        },
+        {
+          "name": "/model.6/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.6/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.6/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.7/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.7/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.8/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.8/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "Constant_80",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.8/Split",
+          "op_type": "Split"
+        },
+        {
+          "name": "/model.8/m.0/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.8/m.0/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.8/m.0/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.8/m.0/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.8/m.0/Add",
+          "op_type": "Add"
+        },
+        {
+          "name": "/model.8/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.8/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.8/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.9/m/MaxPool",
+          "op_type": "MaxPool"
+        },
+        {
+          "name": "/model.9/m_1/MaxPool",
+          "op_type": "MaxPool"
+        },
+        {
+          "name": "/model.9/m_2/MaxPool",
+          "op_type": "MaxPool"
+        },
+        {
+          "name": "/model.9/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.9/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.9/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.10/Constant",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.10/Resize",
+          "op_type": "Resize"
+        },
+        {
+          "name": "/model.11/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.12/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.12/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.12/Split",
+          "op_type": "Split"
+        },
+        {
+          "name": "/model.12/m.0/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.12/m.0/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.12/m.0/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.12/m.0/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.12/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.12/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.12/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.13/Constant",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.13/Resize",
+          "op_type": "Resize"
+        },
+        {
+          "name": "/model.14/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.15/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.15/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.15/Split",
+          "op_type": "Split"
+        },
+        {
+          "name": "/model.15/m.0/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.15/m.0/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.15/m.0/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.15/m.0/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.15/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.15/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.15/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.16/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.16/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.17/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.18/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.18/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.18/Split",
+          "op_type": "Split"
+        },
+        {
+          "name": "/model.18/m.0/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.18/m.0/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.18/m.0/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.18/m.0/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.18/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.18/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.18/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.19/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.19/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.20/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.21/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.21/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.21/Split",
+          "op_type": "Split"
+        },
+        {
+          "name": "/model.21/m.0/cv1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.21/m.0/cv1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.21/m.0/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.21/m.0/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.21/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.21/cv2/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.21/cv2/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/cv2.0/cv2.0.0/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv2.0/cv2.0.0/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/cv2.0/cv2.0.1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv2.0/cv2.0.1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/Constant",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Constant_1",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Constant_2",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Reshape",
+          "op_type": "Reshape"
+        },
+        {
+          "name": "/model.22/cv2.1/cv2.1.0/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv2.1/cv2.1.0/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/cv2.1/cv2.1.1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv2.1/cv2.1.1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/Reshape_1",
+          "op_type": "Reshape"
+        },
+        {
+          "name": "/model.22/cv2.2/cv2.2.0/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv2.2/cv2.2.0/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/cv2.2/cv2.2.1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv2.2/cv2.2.1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/Reshape_2",
+          "op_type": "Reshape"
+        },
+        {
+          "name": "/model.22/Concat",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.22/cv3.0/cv3.0.0/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv3.0/cv3.0.0/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/cv3.0/cv3.0.1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv3.0/cv3.0.1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/Constant_3",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Constant_4",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Constant_5",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Reshape_3",
+          "op_type": "Reshape"
+        },
+        {
+          "name": "/model.22/cv3.1/cv3.1.0/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv3.1/cv3.1.0/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/cv3.1/cv3.1.1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv3.1/cv3.1.1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/Reshape_4",
+          "op_type": "Reshape"
+        },
+        {
+          "name": "/model.22/cv3.2/cv3.2.0/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv3.2/cv3.2.0/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/cv3.2/cv3.2.1/act/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/cv3.2/cv3.2.1/act/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/Reshape_5",
+          "op_type": "Reshape"
+        },
+        {
+          "name": "/model.22/Concat_1",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.22/dfl/Constant",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/dfl/Reshape",
+          "op_type": "Reshape"
+        },
+        {
+          "name": "/model.22/dfl/Transpose",
+          "op_type": "Transpose"
+        },
+        {
+          "name": "/model.22/dfl/Softmax",
+          "op_type": "Softmax"
+        },
+        {
+          "name": "/model.22/dfl/Constant_1",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/dfl/Reshape_1",
+          "op_type": "Reshape"
+        },
+        {
+          "name": "/model.22/Shape",
+          "op_type": "Shape"
+        },
+        {
+          "name": "/model.22/Constant_6",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Gather",
+          "op_type": "Gather"
+        },
+        {
+          "name": "/model.22/Constant_7",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Constant_8",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Add",
+          "op_type": "Add"
+        },
+        {
+          "name": "/model.22/Constant_9",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Div",
+          "op_type": "Div"
+        },
+        {
+          "name": "/model.22/Constant_10",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Mul",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/Slice",
+          "op_type": "Slice"
+        },
+        {
+          "name": "/model.22/Constant_11",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Mul_1",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/Slice_1",
+          "op_type": "Slice"
+        },
+        {
+          "name": "/model.22/Constant_12",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Sub",
+          "op_type": "Sub"
+        },
+        {
+          "name": "/model.22/Constant_13",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Add_1",
+          "op_type": "Add"
+        },
+        {
+          "name": "/model.22/Add_2",
+          "op_type": "Add"
+        },
+        {
+          "name": "/model.22/Constant_14",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Div_1",
+          "op_type": "Div"
+        },
+        {
+          "name": "/model.22/Sub_1",
+          "op_type": "Sub"
+        },
+        {
+          "name": "/model.22/Concat_2",
+          "op_type": "Concat"
+        },
+        {
+          "name": "/model.22/Constant_15",
+          "op_type": "Constant"
+        },
+        {
+          "name": "/model.22/Mul_2",
+          "op_type": "Mul"
+        },
+        {
+          "name": "/model.22/Sigmoid",
+          "op_type": "Sigmoid"
+        },
+        {
+          "name": "/model.22/Concat_3",
+          "op_type": "Concat"
+        }
+      ],
+      "source_unselected_op_counts": {
+        "Add": 9,
+        "Concat": 17,
+        "Constant": 24,
+        "Div": 2,
+        "Gather": 1,
+        "MaxPool": 3,
+        "Mul": 59,
+        "Reshape": 8,
+        "Resize": 2,
+        "Shape": 1,
+        "Sigmoid": 57,
+        "Slice": 2,
+        "Softmax": 1,
+        "Split": 8,
+        "Sub": 2,
+        "Transpose": 1
+      },
+      "target_conv_count": 64,
+      "target_conv_nodes": [
+        "/model.0/conv/Conv",
+        "/model.1/conv/Conv",
+        "/model.2/cv1/conv/Conv",
+        "/model.2/m.0/cv1/conv/Conv",
+        "/model.2/m.0/cv2/conv/Conv",
+        "/model.2/cv2/conv/Conv",
+        "/model.3/conv/Conv",
+        "/model.4/cv1/conv/Conv",
+        "/model.4/m.0/cv1/conv/Conv",
+        "/model.4/m.0/cv2/conv/Conv",
+        "/model.4/m.1/cv1/conv/Conv",
+        "/model.4/m.1/cv2/conv/Conv",
+        "/model.4/cv2/conv/Conv",
+        "/model.5/conv/Conv",
+        "/model.6/cv1/conv/Conv",
+        "/model.6/m.0/cv1/conv/Conv",
+        "/model.6/m.0/cv2/conv/Conv",
+        "/model.6/m.1/cv1/conv/Conv",
+        "/model.6/m.1/cv2/conv/Conv",
+        "/model.6/cv2/conv/Conv",
+        "/model.7/conv/Conv",
+        "/model.8/cv1/conv/Conv",
+        "/model.8/m.0/cv1/conv/Conv",
+        "/model.8/m.0/cv2/conv/Conv",
+        "/model.8/cv2/conv/Conv",
+        "/model.9/cv1/conv/Conv",
+        "/model.9/cv2/conv/Conv",
+        "/model.12/cv1/conv/Conv",
+        "/model.12/m.0/cv1/conv/Conv",
+        "/model.12/m.0/cv2/conv/Conv",
+        "/model.12/cv2/conv/Conv",
+        "/model.15/cv1/conv/Conv",
+        "/model.15/m.0/cv1/conv/Conv",
+        "/model.15/m.0/cv2/conv/Conv",
+        "/model.15/cv2/conv/Conv",
+        "/model.16/conv/Conv",
+        "/model.18/cv1/conv/Conv",
+        "/model.18/m.0/cv1/conv/Conv",
+        "/model.18/m.0/cv2/conv/Conv",
+        "/model.18/cv2/conv/Conv",
+        "/model.19/conv/Conv",
+        "/model.21/cv1/conv/Conv",
+        "/model.21/m.0/cv1/conv/Conv",
+        "/model.21/m.0/cv2/conv/Conv",
+        "/model.21/cv2/conv/Conv",
+        "/model.22/cv2.0/cv2.0.0/conv/Conv",
+        "/model.22/cv2.0/cv2.0.1/conv/Conv",
+        "/model.22/cv2.0/cv2.0.2/Conv",
+        "/model.22/cv2.1/cv2.1.0/conv/Conv",
+        "/model.22/cv2.1/cv2.1.1/conv/Conv",
+        "/model.22/cv2.1/cv2.1.2/Conv",
+        "/model.22/cv2.2/cv2.2.0/conv/Conv",
+        "/model.22/cv2.2/cv2.2.1/conv/Conv",
+        "/model.22/cv2.2/cv2.2.2/Conv",
+        "/model.22/cv3.0/cv3.0.0/conv/Conv",
+        "/model.22/cv3.0/cv3.0.1/conv/Conv",
+        "/model.22/cv3.0/cv3.0.2/Conv",
+        "/model.22/cv3.1/cv3.1.0/conv/Conv",
+        "/model.22/cv3.1/cv3.1.1/conv/Conv",
+        "/model.22/cv3.1/cv3.1.2/Conv",
+        "/model.22/cv3.2/cv3.2.0/conv/Conv",
+        "/model.22/cv3.2/cv3.2.1/conv/Conv",
+        "/model.22/cv3.2/cv3.2.2/Conv",
+        "/model.22/dfl/conv/Conv"
+      ]
+    }
+  },
+  "limitations": [
+    "This card proves Python ONNX checker/session legality and QDQ graph structure; the separate C++ Runtime gate remains required.",
+    "Calibration uses exactly 180 frozen images and does not imply task-quality acceptance on the labeled evaluation split.",
+    "The preprocessed ONNX is a temporary lineage intermediate and is reproducible only with the pinned tool/environment/protocol.",
+    "Python uses CPUExecutionProvider explicitly even when the wheel also exposes CUDA or TensorRT providers."
+  ],
+  "model_size_comparison": {
+    "derived_int8_size_bytes": 3544494,
+    "int8_to_fp32_ratio": 0.2873075038492138,
+    "size_delta_bytes": -8792441,
+    "size_reduction_percent": 71.26924961507862,
+    "source_fp32_size_bytes": 12336935
+  },
+  "passed": true,
+  "protocol": {
+    "canonical_lf_sha256": "FA90658321874F7AF4CC5C45513C537662F0316A09D7A9E539A515BD5979AC0D",
+    "path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\protocols\\s2_01_ptq_protocol_r2_u8s8.json",
+    "protocol_id": "s2_01_static_ptq_qdq_u8s8_cpu_r2",
+    "raw_sha256": "FA90658321874F7AF4CC5C45513C537662F0316A09D7A9E539A515BD5979AC0D",
+    "schema_version": 1
+  },
+  "quantization": {
+    "api": "onnxruntime.quantization.quantize_static",
+    "api_signature": "(model_input: Union[str, pathlib.Path, onnx.onnx_ml_pb2.ModelProto], model_output: Union[str, pathlib.Path], calibration_data_reader: onnxruntime.quantization.calibrate.CalibrationDataReader, quant_format=<QuantFormat.QDQ: 1>, op_types_to_quantize=None, per_channel=False, reduce_range=False, activation_type=<QuantType.QInt8: 0>, weight_type=<QuantType.QInt8: 0>, nodes_to_quantize=None, nodes_to_exclude=None, use_external_data_format=False, calibrate_method=<CalibrationMethod.MinMax: 0>, extra_options=None)",
+    "calibration_method": {
+      "entropy_histogram": null,
+      "name": "MinMax",
+      "symmetric": false,
+      "symmetric_source": "protocol.quantization.extra_options.CalibTensorRangeSymmetric"
+    },
+    "calibration_reader": "one contiguous float32 NCHW tensor per call",
+    "parameters": {
+      "activation_type": "QUInt8",
+      "calibrate_method": "MinMax",
+      "expected_selected_node_count": 64,
+      "extra_options": {
+        "ActivationSymmetric": false,
+        "AddQDQPairToWeight": false,
+        "CalibMovingAverage": false,
+        "CalibTensorRangeSymmetric": false,
+        "DedicatedQDQPair": false,
+        "ForceQuantizeNoInputCheck": false,
+        "QDQKeepRemovableActivations": false,
+        "WeightSymmetric": true
+      },
+      "format": "QDQ",
+      "nodes_to_exclude": [],
+      "op_types_to_quantize": [
+        "Conv"
+      ],
+      "per_channel": true,
+      "preprocess": {
+        "skip_onnx_shape": false,
+        "skip_optimization": true,
+        "skip_symbolic_shape": true
+      },
+      "reduce_range": false,
+      "use_external_data_format": false,
+      "weight_type": "QInt8"
+    }
+  },
+  "runtime_validation": {
+    "derived_python_ort": {
+      "actual_providers": [
+        "CPUExecutionProvider"
+      ],
+      "execution_mode": "sequential",
+      "graph_optimization_level": "all",
+      "input": {
+        "name": "images",
+        "shape": [
+          1,
+          3,
+          800,
+          800
+        ],
+        "type": "tensor(float)"
+      },
+      "inter_op_num_threads": 1,
+      "intra_op_num_threads": 1,
+      "model_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\models\\.s2_01_ptq_9_5cwbmr\\derived.int8.qdq.onnx",
+      "output": {
+        "all_finite": true,
+        "element_count": 131250,
+        "maximum": 799.499267578125,
+        "mean": 104.97097683491003,
+        "minimum": 2.9802322387695312e-08,
+        "name": "output0",
+        "shape": [
+          1,
+          10,
+          13125
+        ],
+        "type": "tensor(float)"
+      },
+      "requested_provider": "CPUExecutionProvider",
+      "session_initialization_ms": 130.3530999999971,
+      "session_run_ms": 119.6487000000026,
+      "status": "passed"
+    },
+    "smoke_sample": {
+      "image_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\data\\images\\train\\crazing_1.jpg",
+      "image_sha256": "5278CD3695ADBCBD7A16A7E4B2C6BC27F18095AB8A1E034D2B06C0FC42020ECA",
+      "letterbox_transform": {
+        "input_height": 800,
+        "input_width": 800,
+        "original_channels": 3,
+        "original_height": 200,
+        "original_width": 200,
+        "pad_bottom": 0,
+        "pad_left": 0,
+        "pad_right": 0,
+        "pad_top": 0,
+        "resized_height": 800,
+        "resized_width": 800,
+        "scale": 4.0
+      },
+      "sample_id": "crazing_1"
+    },
+    "source_python_ort": {
+      "actual_providers": [
+        "CPUExecutionProvider"
+      ],
+      "execution_mode": "sequential",
+      "graph_optimization_level": "all",
+      "input": {
+        "name": "images",
+        "shape": [
+          1,
+          3,
+          800,
+          800
+        ],
+        "type": "tensor(float)"
+      },
+      "inter_op_num_threads": 1,
+      "intra_op_num_threads": 1,
+      "model_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\models\\best.onnx",
+      "output": {
+        "all_finite": true,
+        "element_count": 131250,
+        "maximum": 797.7659912109375,
+        "mean": 105.18412861191908,
+        "minimum": 0.0,
+        "name": "output0",
+        "shape": [
+          1,
+          10,
+          13125
+        ],
+        "type": "tensor(float)"
+      },
+      "requested_provider": "CPUExecutionProvider",
+      "session_initialization_ms": 54.532200000000586,
+      "session_run_ms": 159.4061999999994,
+      "status": "passed"
+    }
+  },
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-26T16:16:10Z",
+  "tooling": {
+    "protocol_tool_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\tools\\s2_01_protocol.py",
+    "protocol_tool_raw_sha256": "54B261D0F219E4BCBFACF172B8354B33052C8875E7637F41BB168827151AAAD9",
+    "quantize_tool_path": "D:\\01_Base\\CodingSpace\\yolo_defect\\cpp_infer\\tools\\quantize_s2_01.py",
+    "quantize_tool_raw_sha256": "FDBA100BEEF43B270422663BE764AA49B8B000FCD297B95CC1BDCF5D49F2AF91"
+  }
+}
