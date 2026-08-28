@@ -59,7 +59,66 @@ if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     "ONNXRUNTIME_ROOT at the matching official SDK.")
 endif()
 
-find_package(OpenCV 4 REQUIRED COMPONENTS core imgcodecs imgproc)
+if(CMAKE_CROSSCOMPILING)
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" OR
+     NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
+    message(FATAL_ERROR
+      "Full cross-build supports target Linux AArch64 only. Actual target is "
+      "'${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}'. Use the documented "
+      "linux-aarch64-gnu toolchain or build project-core only.")
+  endif()
+  if(YOLO_DEFECT_AARCH64_SYSROOT STREQUAL "")
+    message(FATAL_ERROR
+      "YOLO_DEFECT_AARCH64_SYSROOT is required for a full AArch64 build. "
+      "Point it at the target-only OpenCV tree produced by "
+      "tools/bootstrap_aarch64_deps.sh; do not point it at host /usr.")
+  endif()
+  get_filename_component(
+    YOLO_DEFECT_AARCH64_SYSROOT "${YOLO_DEFECT_AARCH64_SYSROOT}" ABSOLUTE)
+  set(OpenCV_INCLUDE_DIRS
+    "${YOLO_DEFECT_AARCH64_SYSROOT}/usr/include/opencv4")
+  set(OpenCV_VERSION "4.6.0")
+  set(_opencv_version_header
+    "${OpenCV_INCLUDE_DIRS}/opencv2/core/version.hpp")
+  if(NOT EXISTS "${_opencv_version_header}")
+    message(FATAL_ERROR
+      "Target OpenCV headers are incomplete: expected "
+      "'${_opencv_version_header}'. Re-run bootstrap_aarch64_deps.sh.")
+  endif()
+  file(READ "${_opencv_version_header}" _opencv_version_text)
+  if(NOT _opencv_version_text MATCHES
+       "#define[ \t]+CV_VERSION_MAJOR[ \t]+4" OR
+     NOT _opencv_version_text MATCHES
+       "#define[ \t]+CV_VERSION_MINOR[ \t]+6" OR
+     NOT _opencv_version_text MATCHES
+       "#define[ \t]+CV_VERSION_REVISION[ \t]+0")
+    message(FATAL_ERROR
+      "Target OpenCV headers do not match the pinned Ubuntu 4.6.0 ABI at "
+      "'${_opencv_version_header}'.")
+  endif()
+  unset(_opencv_version_text)
+  unset(_opencv_version_header)
+
+  set(OpenCV_LIBS "")
+  foreach(_opencv_component IN ITEMS core imgproc imgcodecs)
+    set(_opencv_library
+      "${YOLO_DEFECT_AARCH64_SYSROOT}/usr/lib/aarch64-linux-gnu/libopencv_${_opencv_component}.so.4.6.0")
+    if(NOT EXISTS "${_opencv_library}")
+      message(FATAL_ERROR
+        "Target OpenCV ${_opencv_component} library is missing at "
+        "'${_opencv_library}'. Re-run bootstrap_aarch64_deps.sh.")
+    endif()
+    add_library(yolo_defect_opencv_${_opencv_component} SHARED IMPORTED)
+    set_target_properties(yolo_defect_opencv_${_opencv_component} PROPERTIES
+      IMPORTED_LOCATION "${_opencv_library}"
+      INTERFACE_INCLUDE_DIRECTORIES "${OpenCV_INCLUDE_DIRS}")
+    list(APPEND OpenCV_LIBS yolo_defect_opencv_${_opencv_component})
+    unset(_opencv_library)
+  endforeach()
+  unset(_opencv_component)
+else()
+  find_package(OpenCV 4 REQUIRED COMPONENTS core imgcodecs imgproc)
+endif()
 
 set(_onnxruntime_root_default "")
 if(DEFINED ENV{ONNXRUNTIME_ROOT})
@@ -148,6 +207,32 @@ else()
   )
 endif()
 
+if(CMAKE_CROSSCOMPILING)
+  foreach(_target_library IN ITEMS
+      "${ONNXRUNTIME_RUNTIME_LIBRARY}"
+      "${YOLO_DEFECT_AARCH64_SYSROOT}/usr/lib/aarch64-linux-gnu/libopencv_core.so.4.6.0"
+      "${YOLO_DEFECT_AARCH64_SYSROOT}/usr/lib/aarch64-linux-gnu/libopencv_imgproc.so.4.6.0"
+      "${YOLO_DEFECT_AARCH64_SYSROOT}/usr/lib/aarch64-linux-gnu/libopencv_imgcodecs.so.4.6.0")
+    execute_process(
+      COMMAND "${CMAKE_READELF}" -h "${_target_library}"
+      OUTPUT_VARIABLE _target_elf_header
+      ERROR_VARIABLE _target_elf_error
+      RESULT_VARIABLE _target_elf_result)
+    if(NOT _target_elf_result EQUAL 0 OR
+       NOT _target_elf_header MATCHES "Machine:[ \t]+AArch64")
+      message(FATAL_ERROR
+        "Target dependency architecture mismatch at '${_target_library}'. "
+        "Expected AArch64 ELF; actual readelf result: "
+        "${_target_elf_error}${_target_elf_header}. Select ARM64 libraries, "
+        "not host x86_64 libraries.")
+    endif()
+  endforeach()
+  unset(_target_elf_error)
+  unset(_target_elf_header)
+  unset(_target_elf_result)
+  unset(_target_library)
+endif()
+
 add_library(yolo_defect_runtime STATIC
   src/artifact_spec.cpp
   src/benchmark_result.cpp
@@ -199,6 +284,14 @@ add_executable(yolo_defect_cpp
 )
 target_compile_features(yolo_defect_cpp PRIVATE cxx_std_17)
 target_link_libraries(yolo_defect_cpp PRIVATE yolo_defect::runtime)
+if(CMAKE_CROSSCOMPILING)
+  target_link_options(yolo_defect_cpp PRIVATE
+    "LINKER:-rpath-link,${YOLO_DEFECT_AARCH64_SYSROOT}/usr/lib/aarch64-linux-gnu"
+    "LINKER:-rpath-link,${YOLO_DEFECT_AARCH64_SYSROOT}/lib/aarch64-linux-gnu"
+    "LINKER:-rpath-link,${YOLO_DEFECT_AARCH64_SYSROOT}/usr/lib/aarch64-linux-gnu/blas"
+    "LINKER:-rpath-link,${YOLO_DEFECT_AARCH64_SYSROOT}/usr/lib/aarch64-linux-gnu/lapack"
+    "LINKER:-rpath-link,${YOLO_DEFECT_AARCH64_SYSROOT}/usr/lib")
+endif()
 set_target_properties(yolo_defect_cpp PROPERTIES
   CXX_EXTENSIONS OFF
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
@@ -215,8 +308,14 @@ function(configure_onnxruntime_runtime target_name)
       VERBATIM
     )
   elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set_property(TARGET "${target_name}" APPEND PROPERTY
-      BUILD_RPATH "${ONNXRUNTIME_ROOT}/lib")
+    if(CMAKE_CROSSCOMPILING)
+      set_target_properties("${target_name}" PROPERTIES
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "\$ORIGIN/../lib")
+    else()
+      set_property(TARGET "${target_name}" APPEND PROPERTY
+        BUILD_RPATH "${ONNXRUNTIME_ROOT}/lib")
+    endif()
   endif()
 endfunction()
 

@@ -22,12 +22,13 @@ concurrency, quantization, and TensorRT.
 
 > **Status — 2026-08-28:** Large Stage One and user-owned L2 are complete.
 > S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are
-> complete under the recorded advisory exercise policy. **S2-02 Gate A is now
-> complete on WSL2/Linux x86_64:** the shared-source Release Runtime, tests,
-> fixed-image product path, Python/C++ consistency, short benchmark/peak RSS,
-> and ELF dependency checks passed, followed by a green Windows regression.
-> Work stops for user L1 and direction. Gate B (AArch64 cross-build/QEMU) has
-> not started, so S2-02 as a whole is not claimed complete.
+> complete under the recorded advisory exercise policy. **S2-02 Gate A and
+> Gate B are now implemented and evidenced:** WSL2/Linux x86_64 passed the
+> shared-source native gate, and the same Runtime/CLI was cross-compiled to
+> Linux AArch64, inspected as target ELF, and executed under QEMU user-mode.
+> The fixed-image ARM64 OpenCV/ORT CPU path produced a validated three-detection
+> JSON. Work stops for user L1; S2-03 has not started. QEMU is not an ARM board
+> and no emulated performance result is claimed.
 
 ![Fixed inference demo](docs/assets/demo_inference_result.gif)
 
@@ -87,7 +88,7 @@ YOLO decode -> score filter -> stable NMS -> coordinate restore
 FP32 ONNX
   -> [delivered on Windows CPU] static INT8 PTQ + ORT operator/node profiling
   -> [Gate A delivered] Windows and Linux x86_64 shared-source Runtime
-  -> AArch64 cross-build + QEMU portability smoke
+  -> [Gate B delivered] AArch64 cross-build + QEMU functional portability
   -> directory/manifest + bounded queue + workers
   -> Linux x86_64 + RTX 4060 TensorRT path
   -> full evidence, resume variants, interview closure, recruiting freeze
@@ -180,11 +181,22 @@ bash cpp_infer/tools/stage1.sh benchmark
 bash cpp_infer/tools/stage1.sh all
 ```
 
+For Gate B on the same WSL2 x86_64 host, bootstrap target-only dependencies and
+run the AArch64 workflow:
+
+```bash
+bash cpp_infer/tools/bootstrap_aarch64_deps.sh fetch
+bash cpp_infer/tools/stage2_aarch64.sh doctor
+bash cpp_infer/tools/stage2_aarch64.sh all
+```
+
 The complete action matrix, current dependency paths, local-configuration
 precedence, low-level CMake/CTest audit commands, and environment troubleshooting
 live only in [Paths, toolchains, and environment diagnosis](docs/paths_commands.md).
 The exact Gate A machine snapshot, evidence, and interpretation are in the
-[S2-02 Gate A closure](docs/details/s2_02_gate_a_closure.md).
+[S2-02 Gate A closure](docs/details/s2_02_gate_a_closure.md); Gate B's host/target
+boundary and QEMU evidence are in the
+[S2-02 Gate B closure](docs/details/s2_02_gate_b_closure.md).
 
 ## 5. Core Modules
 
@@ -197,8 +209,8 @@ The exact Gate A machine snapshot, evidence, and interpretation are in the
 | `ProfileRunner` and profile summarizer | Create an isolated profiling-enabled session, retain the ORT raw trace, aggregate node/operator/provider time and call counts, and keep trace timing outside formal benchmarks |
 | Postprocessor/NMS | Validate YOLO BCN output, select class scores, apply strict filtering and stable class-agnostic NMS, then restore and clip source coordinates |
 | `DetectorPipeline` and writers | Orchestrate one image and emit owned results, stable JSON, and deterministic GUI-free visualization while enforcing safe output paths |
-| Cross-platform build/platform layer | Keep the shared Runtime/preprocess/postprocess/Pipeline source unchanged while CMake selects Windows `.lib`/`.dll` staging or Linux `libonnxruntime.so` plus build RPATH; a thin `platform_info` adapter reports Windows Peak Working Set or Linux `getrusage` peak RSS |
-| `project_core` portability smoke | Isolate standard-library-only YOLO decode/NMS/coordinate-restore behavior so a future Gate B target can prove core portability without pretending that full AArch64 ORT/OpenCV inference already exists |
+| Cross-platform build/platform layer | Keep shared Runtime/preprocess/postprocess/Pipeline source unchanged while CMake selects Windows `.lib`/`.dll`, native Linux `.so`, or explicit ARM64 target libraries/toolchain; a thin `platform_info` adapter reports Windows Peak Working Set or Linux `getrusage` peak RSS |
+| `project_core` portability smoke | Isolate standard-library-only YOLO decode/NMS/coordinate-restore behavior; Gate B cross-compiles and runs it under QEMU before the separately verified full ARM64 OpenCV/ORT path |
 | Verification harness | Test meaningful seams with focused fixtures, exercise the real vertical slice sparingly, compare Python/C++ detections when relevant, and record scoped benchmark/memory results |
 
 ## 6. Stage Two Plan
@@ -211,7 +223,7 @@ and then stops for L1 acceptance.
 | Unit | Delivery | Honest boundary | Status |
 |---|---|---|---|
 | S2-01 | Static INT8 PTQ, FP32/INT8 correctness/task-quality/performance comparison, ORT operator/node profiling | Windows CPU exercise closure; product/quality results are advisory; no QAT or profiler-as-benchmark claim | **Implementation/evidence complete; awaiting L1** |
-| S2-02 | Linux x86_64 native chain, shared-source portability, AArch64 cross-build and QEMU smoke | WSL2 is not a board; QEMU produces no performance claim | **Gate A complete; awaiting L1/direction; Gate B not started** |
+| S2-02 | Linux x86_64 native chain, shared-source portability, AArch64 cross-build and QEMU smoke | WSL2/QEMU is not a board; QEMU produces no performance claim | **Gate A/Gate B implementation and evidence complete; awaiting user L1** |
 | S2-03 | Directory/manifest discovery, bounded queue, workers, backpressure, failure accounting, clean shutdown, throughput comparison | Concurrent single-image work is not true ONNX batch | Planned |
 | S2-04 | One real Linux x86_64 + RTX 4060 TensorRT execution path, FP16 correctness and performance | Local GPU/edge-node evidence only; not Jetson or embedded deployment | Planned |
 | S2-05 | Applicable full gates, result matrix, failure cases, three resume narratives, interview material, recruiting freeze | Adds no new technology stack | Planned |
@@ -278,7 +290,7 @@ Gate A keeps the existing Runtime, preprocessing, postprocessing, and
 Windows `.lib`/`.dll` contract or Linux `libonnxruntime.so` with build RPATH;
 the thin `platform_info` adapter selects Windows Peak Working Set or Linux
 `getrusage` peak RSS. A standard-library-only `project_core` smoke covers YOLO
-decode, class-agnostic NMS, and coordinate restore as preparation for Gate B.
+decode, class-agnostic NMS, and coordinate restore and is reused by Gate B.
 
 | Gate A evidence | Recorded result |
 |---|---|
@@ -295,6 +307,28 @@ Commands, the machine snapshot, and the full evidence interpretation are in
 [Paths, toolchains, and environment diagnosis](docs/paths_commands.md) and the
 [S2-02 Gate A closure](docs/details/s2_02_gate_a_closure.md).
 
+### S2-02 Gate B AArch64/QEMU Record
+
+Gate B uses an x86_64 WSL2 host and a Linux AArch64 target. The GNU toolchain
+file keeps CMake/Ninja as host tools while importing only ARM64 OpenCV and the
+official ARM64 ONNX Runtime SDK from a private target tree. The production
+Runtime and CLI use the same sources as Windows and native Linux; only CMake,
+dependency staging, and the Bash workflow know about cross execution.
+
+| Gate B evidence | Recorded result |
+|---|---|
+| Cross-build | Ninja Release generated AArch64 `project_core`, full Runtime archive, and production CLI |
+| ELF/dependency proof | CLI is AArch64 ELF with `/lib/ld-linux-aarch64.so.1`; ARM64 loader resolved 138 target libraries, zero `not found`, and no x86_64 library |
+| QEMU functional smoke | Startup/help, config + artifact, two actionable failures, and real decode/NMS/coordinate restore passed |
+| Full emulated inference | Fixed image ran through ARM64 OpenCV + ORT CPU and existing postprocess; validated JSON contains three detections |
+| Native regression | WSL2/Linux x86_64 clean Release, nine `ldd` checks, and 119/119 CTest passed |
+| Deliberate exclusions | No QEMU benchmark/power result, physical board, Jetson, Docker multi-arch, or S2-03 work |
+
+Raw outputs are under
+[`cpp_infer/results/s2_02/aarch64_qemu/`](cpp_infer/results/s2_02/aarch64_qemu/).
+Commands and interpretation are in the
+[S2-02 Gate B closure](docs/details/s2_02_gate_b_closure.md).
+
 ### Platform Matrix
 
 | Platform/backend | What it proves | Current status |
@@ -302,8 +336,8 @@ Commands, the machine snapshot, and the full evidence interpretation are in
 | Windows x86_64 + ORT CPU FP32 | Current product chain, correctness, tests, segmented benchmark, Peak Working Set | Verified |
 | Windows x86_64 + ORT CPU INT8 | Static PTQ artifact, Runtime legality, size/quality/performance comparison, per-node profiling | Verified in S2-01 under advisory exercise policy |
 | WSL2/Linux x86_64 + ORT CPU INT8 | Potential shared-source Linux INT8 path | Not separately exercised in Gate A; no Linux INT8 comparison claim |
-| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux build/load/runtime portability, consistency, short benchmark, peak RSS | **S2-02 Gate A verified; awaiting L1/direction** |
-| Linux AArch64 under QEMU | Cross-compilation and portability correctness only | **Gate B not started**; no performance claims |
+| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux build/load/runtime portability, consistency, short benchmark, peak RSS | **S2-02 Gate A verified** |
+| Linux AArch64 under QEMU | Cross-build plus core/contracts and fixed-image ARM64 ORT CPU functional correctness | **S2-02 Gate B verified under emulation**; not a board and no performance claims |
 | Linux x86_64 + RTX 4060 + TensorRT | Real local TensorRT execution, FP16 correctness/performance, GPU memory | Planned in S2-04; not Jetson |
 
 The current resume can be used without waiting for Stage Two. Completed S2
@@ -326,9 +360,10 @@ written as delivered results.
 - S2-01 ORT traces prove optimized-node placement on `CPUExecutionProvider`,
   but trace durations include profiler overhead and do not identify exact CPU
   instructions selected inside a kernel.
-- The current Runtime is single-image and CPU-only. Windows INT8 and S2-02 Gate
-  A's WSL2/Linux x86_64 FP32 path are delivered. Gate B/AArch64/QEMU has not
-  started; bounded concurrency and TensorRT also remain planned.
+- The current Runtime is single-image and CPU-only. Windows INT8, S2-02 Gate A
+  native Linux, and Gate B AArch64/QEMU functional paths are delivered. QEMU
+  does not establish board latency, throughput, power, thermals, or deployment
+  stability; bounded concurrency and TensorRT remain planned.
 - Historical Python ORT `24.4/72.1 FPS` used different implementations,
   providers, hardware, samples, and timing boundaries; it is context only and
   must not be ranked against the C++ result.
@@ -358,6 +393,7 @@ Authoritative and operational references:
 - [Stage One consolidated closure](docs/details/stage1_closure.md)
 - [S2-01 INT8/PTQ and profiling closure](docs/details/s2_01_closure.md)
 - [S2-02 Gate A Linux x86_64 closure](docs/details/s2_02_gate_a_closure.md)
+- [S2-02 Gate B AArch64/QEMU closure](docs/details/s2_02_gate_b_closure.md)
 - [Paths, commands, and environment](docs/paths_commands.md)
 - [C++ Runtime technical reference](cpp_infer/README.md)
 

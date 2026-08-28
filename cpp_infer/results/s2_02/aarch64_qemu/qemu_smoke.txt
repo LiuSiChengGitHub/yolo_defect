@@ -1,0 +1,90 @@
+[project core]
+project-core portability smoke passed: decode -> class-agnostic NMS -> coordinate restore
+
+[CLI startup]
+yolo_defect_cpp - S1-08 reproducible CPU benchmark CLI
+V2 Runtime: industrial vision AI deployment workspace
+Current scope: validated single-image detection, S1-07 consistency evidence, S1-08 Release CPU benchmark evidence, and S2-01 ORT profiling
+Run with --help for single-image, benchmark, and profile commands.
+Batch processing, concurrency, and service are not part of this Runtime scope.
+
+[CLI help]
+yolo_defect_cpp - S1-08 reproducible CPU benchmark CLI
+
+Usage:
+  /tmp/yolo_defect_stage2_aarch64_full/deploy/bin/yolo_defect_cpp [--help]
+  /tmp/yolo_defect_stage2_aarch64_full/deploy/bin/yolo_defect_cpp --config <config_path>
+  /tmp/yolo_defect_stage2_aarch64_full/deploy/bin/yolo_defect_cpp --config <config_path> --image <image_path>
+  /tmp/yolo_defect_stage2_aarch64_full/deploy/bin/yolo_defect_cpp --config <config_path> --inspect-model
+  /tmp/yolo_defect_stage2_aarch64_full/deploy/bin/yolo_defect_cpp --config <config_path> --image <image_path> --raw-output-summary
+  /tmp/yolo_defect_stage2_aarch64_full/deploy/bin/yolo_defect_cpp --config <config_path> --image <image_path> [--output-json <path>] [--output-image <path>] [--overwrite]
+  /tmp/yolo_defect_stage2_aarch64_full/deploy/bin/yolo_defect_cpp --config <config_path> --image <image_path> --benchmark --warmup <count> --repeat <count> --benchmark-json <path> [--overwrite]
+  /tmp/yolo_defect_stage2_aarch64_full/deploy/bin/yolo_defect_cpp --config <config_path> --image <image_path> --profile --profile-prefix <path> [--profile-runs <count>]
+
+Scope:
+  Loads and validates RuntimeConfig + ModelArtifactSpec.
+  Optional --image keeps the existing OpenCV preprocess smoke.
+  --inspect-model creates an ORT CPU session, reads actual model
+  metadata, and validates it against the artifact contract.
+  --raw-output-summary preprocesses one image, runs one synchronous
+  raw inference, and prints only bounded tensor summaries.
+  --output-json and --output-image run the S1-05 single-image
+  pipeline: preprocess, ORT inference, tested postprocess, and files.
+  --benchmark runs the Release-only S1-08 batch-1 CPU protocol.
+  Defaults are --warmup 10 and --repeat 100. It reports mean/P50/P95
+  for image decode, preprocess, Session::Run, postprocess, pipeline,
+  and end-to-end, then writes machine-readable --benchmark-json.
+  Session/model initialization, statistics, JSON writing, and drawing
+  are outside repeated timing; drawing is not executed.
+  --profile creates a separate profiling-enabled ORT session, runs
+  the fixed preprocessed image (default 10 times), calls EndProfiling,
+  and reports the actual ORT-generated JSON trace path. Profile timing
+  contains instrumentation overhead and is not benchmark evidence.
+  Output parents are created recursively. Existing regular files are
+  rejected unless --overwrite is explicit; paths matching protected
+  inputs are rejected before writing. Relative CLI image/output paths
+  use the current working directory. No GUI, batch processing,
+  concurrency, or service mode exists.
+
+[config + artifact contract from /tmp]
+S1-01 Runtime/artifact contract summary
+runtime_config_path: /mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/configs/default_config.txt
+runtime_schema_version: 1
+artifact_spec_path: /mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/artifacts/yolov8_neu_det.artifact.txt
+artifact_schema_version: 1
+model_id: yolov8n_neu_det_final_train_2
+model_family: yolov8
+model_path: /mnt/d/01_Base/CodingSpace/yolo_defect/models/best.onnx
+declared_model_sha256: 7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68
+opset: 17
+source: owner export from runs/detect/final_train_2/weights/best.pt
+provenance: owner_confirmed; exact source checkpoint unavailable in current workspace and Git history
+artifact_license: AGPL-3.0 License (https://ultralytics.com/license)
+input_name: images
+input_shape: [1,3,800,800]
+input_dtype: float32
+input_layout: nchw
+output_name: output0
+output_shape: [1,10,13125]
+output_dtype: float32
+output_layout: bcn
+class_count: 6
+class_names: crazing, inclusion, patches, pitted_surface, rolled-in_scale, scratches
+score_threshold: 0.250000
+nms_threshold: 0.450000
+configured_provider: cpu
+preprocess_type: letterbox_rgb_0_1_nchw
+postprocess_type: yolov8_raw
+nms_mode: class_agnostic
+scope: declaration contract only; this command did not create an ONNX Runtime session or run inference.
+
+[negative contracts]
+[expected failure] invalid RuntimeConfig threshold
+Error: RuntimeConfig '/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/tests/fixtures/runtime/invalid_nms_threshold.txt', line 4, field 'nms_threshold': threshold is outside the valid range; expected a finite value in [0, 1]; actual '1.100000'; action: choose a threshold between 0 and 1 inclusive.
+Run with --help to see the current CLI scope.
+[pass] invalid RuntimeConfig threshold rejected with actionable diagnostic
+[expected failure] unknown ModelArtifactSpec field
+Error: ModelArtifactSpec '/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/tests/fixtures/artifact/unknown_field.artifact.txt', line 22, field 'backend': unknown field; expected one of [artifact_license, class_names, input_dtype, input_layout, input_name, input_shape, model_family, model_id, model_path, model_sha256, nms_mode, opset, output_dtype, output_layout, output_name, output_shape, postprocess_type, preprocess_type, provenance, schema_version, source]; actual 'backend'; action: remove it or replace it with a supported field name.
+Run with --help to see the current CLI scope.
+[pass] unknown ModelArtifactSpec field rejected with actionable diagnostic
+[pass] QEMU startup/help/contracts/core smoke completed

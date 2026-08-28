@@ -277,3 +277,98 @@ ldd /tmp/yolo_defect_s2_02_core_only/bin/yolo_defect_project_core_smoke
 - 默认构建和 fresh result JSON 位于 `/tmp/yolo_defect_stage1_linux_release`。WSL 会话重启、系统清理或手工删除后它们可能消失；`/tmp` 不是长期结果库。收口运行应设置 `YOLO_DEFECT_RUN_DIR`，直接写入仓库内命名目录。
 - Linux benchmark 的 peak RSS 与 Windows Peak Working Set 是不同 OS 指标，不能直接当成同一测量口径比较。
 - Gate A 的实测环境是 WSL2；AArch64 cross compile 与 QEMU 属于 Gate B，不能由本节命令或结果推导为已完成。
+
+## 9. S2-02 Gate B：Linux x86_64 host → Linux AArch64 target
+
+### 9.1 实测工具链与依赖位置
+
+| 项目 | Gate B 实测值 / 默认位置 |
+|---|---|
+| Host / target | WSL2 Ubuntu `24.04.4 LTS` x86_64 / Linux AArch64 |
+| Cross compiler | `aarch64-linux-gnu-g++` `13.3.0`，target triple `aarch64-linux-gnu` |
+| Target binutils | `2.42` |
+| QEMU user-mode | `qemu-aarch64` `8.2.2` |
+| Target loader prefix | `/usr/aarch64-linux-gnu` |
+| CMake toolchain | `cpp_infer/cmake/toolchains/linux-aarch64-gnu.cmake` |
+| ARM64 ORT `1.19.2` | `$HOME/.local/opt/yolo-defect-aarch64/onnxruntime-linux-aarch64-1.19.2` |
+| ARM64 OpenCV `4.6.0` private sysroot | `$HOME/.local/opt/yolo-defect-aarch64/ubuntu-noble-opencv-4.6.0` |
+| Core / full build | `/tmp/yolo_defect_stage2_aarch64_core` / `/tmp/yolo_defect_stage2_aarch64_full` |
+| Deployment layout | full build 下的 `deploy/bin`（CLI）与 `deploy/lib`（ORT）；Ubuntu target libraries 保留在 private sysroot |
+
+官方 ARM64 ORT 下载入口为 [onnxruntime-linux-aarch64-1.19.2.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.19.2/onnxruntime-linux-aarch64-1.19.2.tgz)。OpenCV 使用 Ubuntu Noble 的 ARM64 预编译包，没有从源码构建。
+
+### 9.2 一次性 host 准备
+
+先安装 host 上运行的交叉工具和 QEMU：
+
+```bash
+sudo apt update
+sudo apt install -y \
+  gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
+  libc6-dev-arm64-cross binutils-aarch64-linux-gnu qemu-user
+```
+
+Ubuntu 的 amd64 archive 与 ARM64 ports 使用不同镜像。启用 multiarch 时，给现有 `/etc/apt/sources.list.d/ubuntu.sources` 的每个 deb822 stanza 增加 `Architectures: amd64`，再增加：
+
+```text
+# /etc/apt/sources.list.d/ubuntu-ports-arm64.sources
+Types: deb
+URIs: http://ports.ubuntu.com/ubuntu-ports
+Suites: noble noble-updates noble-backports
+Components: main restricted universe multiverse
+Architectures: arm64
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+Types: deb
+URIs: http://ports.ubuntu.com/ubuntu-ports
+Suites: noble-security
+Components: main restricted universe multiverse
+Architectures: arm64
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+```
+
+然后执行：
+
+```bash
+sudo dpkg --add-architecture arm64
+sudo apt update
+bash cpp_infer/tools/bootstrap_aarch64_deps.sh fetch
+```
+
+bootstrap 只执行 `apt-get download` 和 `dpkg-deb -x`，不会安装 ARM64 OpenCV 包。原因是直接安装 `libopencv-dev:arm64` 或 `libopencv-imgcodecs*:arm64` 会要求移除现有 amd64 OpenCV dev chain；私有 sysroot 保持 host/target 隔离。
+
+### 9.3 Gate B 统一入口
+
+```bash
+bash cpp_infer/tools/stage2_aarch64.sh help
+bash cpp_infer/tools/stage2_aarch64.sh doctor
+bash cpp_infer/tools/stage2_aarch64.sh clean-build
+bash cpp_infer/tools/stage2_aarch64.sh inspect
+bash cpp_infer/tools/stage2_aarch64.sh smoke
+bash cpp_infer/tools/stage2_aarch64.sh infer
+bash cpp_infer/tools/stage2_aarch64.sh all
+```
+
+| Action | 行为 |
+|---|---|
+| `doctor` | 检查 x86_64 host tools、AArch64 compiler/loader、ARM64 ORT/OpenCV ELF |
+| `build` / `clean-build` | Ninja Release 交叉编译 project-core tree 和完整 Runtime/CLI tree；clean 仅允许两个固定 `/tmp` 边界 |
+| `inspect` | `file/readelf` 检查 core smoke、Runtime object、CLI、ORT；用 ARM64 loader 列出动态依赖并逐个拒绝 x86_64 library |
+| `smoke` | QEMU 实际运行 project-core decode/NMS/坐标恢复、CLI startup/help、config/artifact 和两条错误路径 |
+| `infer` | QEMU 下运行固定图片 → ARM64 OpenCV/ORT CPU → Detection JSON，并调用既有 validator |
+| `all` | doctor → clean-build → inspect → smoke → infer；不包含 benchmark |
+
+可覆盖的 machine-local 路径都使用环境变量，不写死到源码：`YOLO_DEFECT_AARCH64_DEPS_ROOT`、`YOLO_DEFECT_AARCH64_ORT_ROOT`、`YOLO_DEFECT_AARCH64_SYSROOT`、`YOLO_DEFECT_AARCH64_DEB_CACHE_ROOT`、`YOLO_DEFECT_AARCH64_LOADER_PREFIX`、两个 build dir 与 result dir。
+
+两个默认 build tree 位于 `/tmp`。如果从 PowerShell 分多次启动 `wsl.exe`，WSL 发行版可能在两次命令之间停止并清空 `/tmp`；需要拆开运行 action 时，应留在同一个交互式 WSL shell 中。完整复现优先单次运行 `stage2_aarch64.sh all`。
+
+### 9.4 本次实测结果与边界
+
+- core smoke、Runtime object、production CLI、ORT 均为 AArch64 ELF；CLI interpreter 为 `/lib/ld-linux-aarch64.so.1`。
+- ARM64 loader 实际解析 138 个 target `.so`，`not found = 0`，逐个 `file/readelf` 均为 AArch64。
+- QEMU 实际通过 startup、`--help`、config/artifact、两条 negative contract 和 decode/NMS/坐标恢复 synthetic smoke。
+- 固定图完整 ARM64 ORT CPU 推理实际执行，得到 3 个 detections，JSON validator 通过。
+- 原生 WSL2/Linux x86_64 clean Release 与 `119/119` CTest 回归通过。
+- 没有执行 QEMU benchmark、功耗测试、AArch64 全量 GTest/CTest、Docker multi-arch 或真实板卡；QEMU 不能写成 ARM 板卡性能证据。
+
+完整解释与状态表见 [`details/s2_02_gate_b_closure.md`](details/s2_02_gate_b_closure.md)。

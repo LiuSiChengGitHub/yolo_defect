@@ -2,7 +2,7 @@
 
 This directory is the C++ Runtime workspace for the **Industrial Vision Edge AI Runtime and C++ Engineering System**.
 
-Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the recorded advisory exercise policy; S2-02 Gate A's WSL2/Linux x86_64 Native implementation and evidence are complete.** Gate A preserves the same single-image Runtime, preprocessing, postprocessing, and `DetectorPipeline` across Windows and Linux. Linux and Windows each pass 119/119 CTest, and the Linux fixed-image, consistency, short benchmark/peak RSS, and ELF dependency checks are recorded below. Work stops for user L1/direction. Gate B (AArch64 cross-build/QEMU) has not started, so this does not claim completion of the whole S2-02 unit. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
+Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the recorded advisory exercise policy; S2-02 Gate A and Gate B implementation/evidence are complete.** Gate A preserves the same single-image Runtime across Windows and native Linux x86_64. Gate B cross-compiles that Runtime/CLI to Linux AArch64, proves the target ELF/dependency boundary, runs the project-core/contracts under QEMU user-mode, and completes the fixed-image ARM64 OpenCV/ORT CPU path with a validated three-detection JSON. Work stops for user L1; S2-03 has not started. QEMU is not a physical ARM board and no emulated performance result is claimed. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
 
 | Gate | Status |
 |---|---|
@@ -13,9 +13,8 @@ Current status: **the Large-Stage-One automatic engineering gate and user-owned 
 | S2 preparatory documentation closure | Complete |
 | S2-01 implementation and evidence | Complete under advisory exercise policy |
 | S2-01 user L1 | Awaiting |
-| S2-02 Gate A Linux x86_64 Native | Implementation/evidence complete |
-| S2-02 Gate A user L1 / direction | Awaiting |
-| S2-02 Gate B AArch64/QEMU | Not started |
+| S2-02 Gate A + Gate B implementation/evidence | Complete |
+| S2-02 user L1 | Awaiting |
 
 ## Current single-image chain
 
@@ -147,6 +146,13 @@ cpp_infer/
 │   └── exercise_completion.json
 ├── results/s2_02/linux_x86_64/
 │   └── detect/
+├── results/s2_02/aarch64_qemu/
+│   ├── detect/
+│   ├── elf_inspection.txt
+│   ├── loader_resolution.txt
+│   └── qemu_smoke.txt
+├── cmake/toolchains/
+│   └── linux-aarch64-gnu.cmake
 ├── protocols/
 │   ├── s2_01_ptq_protocol.json
 │   └── s2_01_ptq_protocol_r2_u8s8.json
@@ -157,6 +163,8 @@ cpp_infer/
 │   ├── summarize_ort_profile.py
 │   ├── assemble_s2_01_evidence.py
 │   ├── compare_consistency.py
+│   ├── bootstrap_aarch64_deps.sh
+│   ├── stage2_aarch64.sh
 │   ├── stage1.cmd
 │   ├── stage1.sh
 │   ├── stage1.ps1
@@ -184,7 +192,7 @@ cpp_infer/
 
 - `RuntimeConfig` owns runtime policy: score/NMS thresholds, configured provider, and the artifact declaration path.
 - `ModelArtifactSpec` owns model identity, declared SHA-256, provenance/license, tensor I/O, classes, and preprocess/postprocess/NMS semantics.
-- `project_core` contains standard-library-only YOLO raw-output validation, decode, class-agnostic NMS, and coordinate restore. The normal Runtime links it, while `yolo_defect_project_core_smoke` gives future Gate B a dependency-free portability seam; it is not full AArch64 inference evidence.
+- `project_core` contains standard-library-only YOLO raw-output validation, decode, class-agnostic NMS, and coordinate restore. The normal Runtime links it; Gate B cross-compiles and runs its smoke under QEMU before separately exercising the full ARM64 OpenCV/ORT Runtime.
 - `ImagePreprocessor` exposes file-path and `const cv::Mat&` entries. Both use the same letterbox/RGB/normalize/NCHW implementation.
 - `OnnxRunner` owns ORT resources through RAII/PImpl. `run()` borrows the preprocess vector only for synchronous `Session::Run`, then copies output into ORT-independent storage.
 - `OnnxRunnerOptions::profile_file_prefix` enables ORT profiling before session construction; the runner finalizes it exactly once through `EndProfilingAllocated` and validates the returned trace path.
@@ -197,7 +205,7 @@ cpp_infer/
 - `BenchmarkResult` defines the Release benchmark protocol, six latency segments, environment/runtime/model/sample metadata, throughput, memory evidence, timing exclusions, and limitations. Its pure statistics helper uses empirical nearest-rank ceiling for P50/P95 and derives batch-1 throughput from mean latency.
 - `BenchmarkRunner` creates and validates the CPU session before repeated timing, performs untimed warmup, rejects result drift between iterations, measures decode/preprocess/`Session::Run`/postprocess/pipeline/end-to-end with `std::chrono::steady_clock`, and queries the thin platform adapter after the timed iterations.
 - `platform_info` owns the narrow operating-system boundary for timestamps, host/compiler metadata, and process peak memory: `GetProcessMemoryInfo` Peak Working Set on Windows and `getrusage(RUSAGE_SELF).ru_maxrss` peak RSS on Linux.
-- CMake models ORT as one imported target but validates/stages `onnxruntime.lib` plus `onnxruntime.dll` on Windows and links `libonnxruntime.so` with a Linux build RPATH. The Runtime/preprocess/postprocess/Pipeline source is not forked per operating system.
+- CMake models ORT as one imported target but validates/stages `onnxruntime.lib` plus `onnxruntime.dll` on Windows, links native Linux `libonnxruntime.so`, and imports only ARM64 ORT/OpenCV from the explicit private sysroot during cross-build. The Runtime/preprocess/postprocess/Pipeline source is not forked per operating system or CPU architecture.
 - `BenchmarkWriter` serializes finite schema-v1 JSON with the classic locale, creates output parents, refuses overwrite by default, and protects config, artifact, model, and source-image paths. JSON serialization and filesystem writing happen after the measured loop.
 - `consistency_manifest.json` freezes six artifact classes, five validation images per class, declaration-relative paths, image SHA-256 values, and the acceptance requirements before comparison runs.
 - `compare_consistency.py` strictly reloads the same Runtime/artifact declarations, verifies file hashes and model metadata, runs Python ORT with only `CPUExecutionProvider`, invokes the existing C++ CLI, performs order-independent matching, and atomically replaces each machine-readable evidence file.
@@ -210,6 +218,7 @@ cpp_infer/
 - `summarize_ort_profile.py` counts `Session/model_run` and per-node calls, validates CPU placement and an optimized-graph FP32/INT8 signature, and aggregates top nodes/operators with percentages and cumulative percentages. Raw trace time remains diagnostic.
 - `assemble_s2_01_evidence.py` defaults to strict correctness. Its explicit `--correctness-policy advisory` mode still requires model/protocol/manifest/runtime/benchmark/trace bindings, preserves every failed quality boolean, and emits `strict_acceptance_passed=false` rather than laundering the result.
 - `stage1.sh` is the thin WSL2/Linux x86_64 workflow. It checks the pinned Linux SDK/toolchain, uses a guarded `/tmp` Ninja Release tree, verifies built ELF dependencies with `ldd`, and orchestrates the same product/test/consistency/benchmark behavior as the Windows entry where applicable.
+- `bootstrap_aarch64_deps.sh` downloads the official ARM64 ORT SDK and extracts Ubuntu ARM64 OpenCV packages into a private target tree without installing them over the host development packages. `stage2_aarch64.sh` cross-builds, inspects, and functionally executes the AArch64 artifacts under QEMU; it contains no benchmark action.
 - GTest targets link `yolo_defect::runtime`; they never compile or reuse `main.cpp`.
 
 ## S2-01 static PTQ, comparison, and ORT Profiling
@@ -303,10 +312,30 @@ This evidence is WSL2/Linux x86_64 only. The warmup-1/repeat-2 samples vary
 materially and are functional performance smokes, not a formal benchmark or a
 cross-OS comparison.
 Linux peak RSS and Windows Peak Working Set have different platform semantics
-and are not directly comparable. Gate B has not started: there is no AArch64
-cross-build, QEMU execution, ARM64 ORT inference, or QEMU performance claim.
-The standard-library-only `project_core` executable is preparation for that
-future gate, not evidence that the gate already passed.
+and are not directly comparable. Gate A itself remains native x86_64 evidence;
+the separate Gate B record below owns every AArch64/QEMU claim.
+
+## S2-02 Gate B: Linux AArch64 Cross Compile + QEMU
+
+Gate B keeps CMake/Ninja/cross-G++ as x86_64 host tools and imports target-only
+ARM64 OpenCV and official ORT 1.19.2 libraries. A private package-extraction
+sysroot avoids replacing the host OpenCV development environment. The same
+Runtime and CLI sources produce the AArch64 artifacts.
+
+| Evidence | Result |
+|---|---|
+| Cross-build | Release `project_core`, full Runtime archive, and production CLI generated for AArch64 |
+| ELF and loader | CLI Machine is `AArch64`, interpreter is `/lib/ld-linux-aarch64.so.1`; target loader resolved 138 ARM64 libraries with zero `not found` and no x86_64 mix |
+| QEMU contracts/core | Startup/help, config + artifact, two negative contracts, and decode → NMS → coordinate restore passed |
+| Full inference | Fixed image ran through ARM64 OpenCV and ARM64 ORT CPU; existing postprocess wrote a validated JSON with three detections |
+| Native regression | WSL2/Linux x86_64 clean Release, nine `ldd` checks, and 119/119 CTest passed |
+
+Raw records are under [`results/s2_02/aarch64_qemu/`](results/s2_02/aarch64_qemu/).
+The reproducible dependency/toolchain commands and honest status table are in
+[`paths_commands.md`](../docs/paths_commands.md) and
+[`s2_02_gate_b_closure.md`](../docs/details/s2_02_gate_b_closure.md).
+QEMU is not a physical ARM device. Gate B deliberately records no emulated
+latency, throughput, power, or board-performance inference.
 
 ## Frozen YOLOv8 baseline semantics
 
@@ -758,7 +787,7 @@ Required core-behavior-plus-GTest exercise:
 3. **GREEN:** temporarily change the comparison in `postprocessor.cpp` from strict `>` to inclusive `>=`, update the other exact-threshold expectations, rebuild the same target, and require the focused test to pass. Explain how equality changes detections and why a real contract change would also require the Python reference, consistency evidence, and README updates.
 4. Because schema-v1 freezes strict `>`, return to the checkpoint without merging the practice branch, rebuild, rerun the original focused test and complete CTest, and verify no temporary exercise diff remains. Do not leave `>=` in the product merely to finish the exercise.
 
-The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01 implementation and evidence complete under the explicit advisory-quality exercise policy; S2-02 Gate A WSL2/Linux x86_64 implementation and evidence complete; user L1/direction pending; Gate B not started**.
+The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01 implementation and evidence complete under the explicit advisory-quality exercise policy; S2-02 Gate A native Linux and Gate B AArch64/QEMU implementation/evidence complete; user L1 pending; S2-03 not started**.
 
 ## Current limits
 
@@ -773,7 +802,7 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - S2-02 Gate A was verified only inside WSL2/Linux x86_64. WSL is a useful Linux development environment, but this result is not physical edge-board or embedded-device evidence.
 - Gate A's Linux warmup-1/repeat-2 samples varied materially and are functional performance smokes. They are neither the formal 10/100 protocol nor a Windows-versus-Linux speed comparison.
 - Linux `getrusage` peak RSS and Windows Peak Working Set are both process-lifetime high-water measurements, but their platform semantics differ and their numeric values must not be compared directly.
-- Gate B has not started. `project_core` is a standard-library-only seam prepared for a future AArch64/QEMU smoke; no AArch64 build, QEMU execution, ARM64 ORT inference, or emulated performance result is claimed.
+- Gate B was executed with Linux AArch64 binaries under QEMU user-mode, including one fixed-image ARM64 ORT CPU inference. This is functional emulation evidence only: no physical board, latency, throughput, power, thermal, driver, or deployment-stability claim follows from it.
 - The S2-01 advisory completion is not the original strict acceptance: the 30-image product aggregate remains false, and Round 2's mAP50 drop exceeds its original 0.010 limit by 0.000356. The machine record exposes both facts rather than rewriting them.
 - ORT profile summaries describe the optimized execution graph. A source Conv represented by QDQ in the ONNX file may appear as `QLinearConv`, `Conv`, and Q/DQ transition nodes after optimization; the trace does not prove exact hardware instructions.
 - The matching `best.pt` is absent from the workspace and Git history. Historical PT/ONNX evidence covers 50 sorted `crazing` images and only count/confidence summaries; S1-07 is a separate same-ONNX Python ORT/C++ ORT comparison and must not be described as a newly rerun PyTorch/Python-ORT/C++ three-way experiment.
@@ -783,7 +812,7 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - Class-agnostic NMS remains deliberate baseline behavior and can suppress a lower-scoring box from another class when boxes overlap.
 - The visualization is deterministic for the pinned OpenCV build; it is evidence output, not an annotation editor or GUI.
 
-Large Stage One is complete, S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the user-approved advisory exercise scope, and S2-02 Gate A's WSL2/Linux x86_64 Native implementation and evidence are complete. Work stops here for user L1/direction; Gate B has not begun, so S2-02 as a whole remains open. The remaining route starts with AArch64 cross-build/QEMU portability, then directory/manifest multi-image bounded concurrency, TensorRT on Linux x86_64 with the desktop RTX 4060, and final evidence/resume/interview closure followed by recruiting freeze. QEMU results will not be published as device-performance evidence, and the desktop RTX 4060 path will not be described as Jetson deployment.
+Large Stage One is complete, S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the user-approved advisory exercise scope, and S2-02 Gate A plus Gate B implementation/evidence are complete. Work stops here for user L1; S2-03 has not started. The remaining route is directory/manifest multi-image bounded concurrency, TensorRT on Linux x86_64 with the desktop RTX 4060, and final evidence/resume/interview closure followed by recruiting freeze. QEMU results are functional portability evidence, never device-performance evidence, and the desktop RTX 4060 path will not be described as Jetson deployment.
 
 ## License checkpoint
 
