@@ -1,7 +1,7 @@
 # 大阶段二执行方案
 
 > - 重写日期：2026-08-24
-> - 项目仓库：`D:\01_Base\CodingSpace\yolo_defect`
+> - 项目仓库：`<repo-root>`
 > - 当前开发分支：`deploy-cpp`
 > - 当前基线 HEAD：`46ca8448614981704bc223fa1c62d5d8a3a4fc1b`
 > - 前置状态：大阶段一自动工程门与用户 L2 均已完成；三份 README 仍需同步旧的 `L2 PENDING / Stage One incomplete` 状态。

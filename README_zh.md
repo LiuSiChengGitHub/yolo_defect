@@ -21,7 +21,9 @@ YOLOv8 和 NEU-DET 是首个 Runtime 实现所使用的稳定模型与数据集�
 > **S2-02 Gate A 与 Gate B 的实现和证据均已完成：** WSL2/Linux x86_64
 > 共享源码原生门通过；同一 Runtime/CLI 又交叉编译到 Linux AArch64，完成 ELF/目标
 > 动态依赖检查，并在 QEMU user-mode 下实际运行。固定图 ARM64 OpenCV/ORT CPU
-> 链路生成了通过校验的 3-detection JSON。当前停止等待用户 L1，S2-03 尚未开始。
+> 链路生成了通过校验的 3-detection JSON。最终又在同一提交上复跑并通过 Linux
+> build/test/Demo/consistency、AArch64 ELF/QEMU/完整推理与 Windows build/test/Demo。
+> 当前停止等待用户 L1，S2-03 尚未开始。
 > QEMU 不是 ARM 开发板，本项目不发布任何模拟器性能结论。
 
 ![固定推理 Demo](docs/assets/demo_inference_result.gif)
@@ -218,7 +220,7 @@ INT8 是图内部表示，不是应用侧整数 I/O 契约。
 |---|---:|---:|
 | 模型文件 | 12,336,935 bytes | 3,544,494 bytes；**缩小 71.269%** |
 | Python/C++ ORT 合法性 | 通过 | 通过；输出有限且 actual metadata 一致 |
-| 当前 Windows 回归 | 118/118 CTest 通过 | FP32/INT8 profile workflow smoke 通过 |
+| S2-01 收口 Windows 回归 | 118/118 CTest 通过 | S2-01 历史数量；S2-02 最终回归为 119/119 |
 | 361 图任务质量 | mAP50 `0.710815`；mAP50-95 `0.345786` | `0.700459` / `0.342379`；delta `-0.010356/-0.003407` |
 | 30 图产品差异 | 62 个检测 | 65 个检测、61 个匹配；原始 aggregate gate 为 `false` |
 | Session 初始化 | `61.986 ms` | `94.858 ms`；一次性 setup 更慢 |
@@ -266,17 +268,18 @@ Linux `getrusage` peak RSS。仅依赖标准库的 `project_core` smoke 覆盖 Y
 
 | Gate A 证据 | 实测结果 |
 |---|---|
-| Linux clean Release | WSL2/Linux x86_64、Ninja，119/119 CTest 通过 |
+| Linux clean Release | 最终收口复跑：WSL2/Linux x86_64、Ninja，119/119 CTest 通过 |
 | 固定产品链 | `crazing_241.jpg`，3 个检测，JSON 合法且 PNG 可读 |
 | Python/C++ 一致性 | 30/30 张图片、62/62 个匹配检测通过冻结门限 |
-| 短性能 smoke | 一次 warmup-1/repeat-2 样本：端到端 mean `135.896991 ms`、`7.358515 img/s`、peak RSS `196.570312 MiB`；持久化收口的 1/2 复跑为 `151.273896 ms`、`6.610526 img/s`、`196.757812 MiB`，显示波动很大 |
+| 短性能 smoke | Gate A 早期样本均为 warmup 1 / repeat 2：端到端 mean `135.896991 ms`、`7.358515 img/s`、peak RSS `196.570312 MiB`；同协议持久化复跑为 `151.273896 ms`、`6.610526 img/s`、`196.757812 MiB`，显示波动很大。最终功能收口没有重复 benchmark |
 | 动态加载 | 用 `ldd` 检查 9 个已构建 ELF 可执行文件；无依赖报告 `not found`，ORT 经配置的 Linux SDK/RPATH 解析 |
-| Windows 回归 | Release/NMake 119/119 CTest 通过 |
+| Windows 回归 | 最终收口复跑：Release/NMake 119/119 CTest 与固定 Demo 通过 |
 
 已提交的固定单图产物位于
 [`cpp_infer/results/s2_02/linux_x86_64/`](cpp_infer/results/s2_02/linux_x86_64/)。
 命令、机器快照与完整证据解释见[路径、工具链与环境诊断](docs/paths_commands.md)和
-[S2-02 Gate A 收口](docs/details/s2_02_gate_a_closure.md)。
+[S2-02 Gate A 收口](docs/details/s2_02_gate_a_closure.md)与
+[S2-02 完整收口](docs/details/s2_02_closure.md)。
 
 ### S2-02 Gate B AArch64/QEMU 记录
 
@@ -287,15 +290,16 @@ Gate B 的 host 是 WSL2/Linux x86_64，target 是 Linux AArch64。GNU toolchain
 
 | Gate B 证据 | 实测结果 |
 |---|---|
-| 交叉构建 | Ninja Release 生成 AArch64 `project_core`、完整 Runtime archive 与生产 CLI |
+| 交叉构建 | 最终收口复跑：Ninja Release 生成 AArch64 `project_core`、完整 Runtime archive 与生产 CLI |
 | ELF/依赖证明 | CLI 为 AArch64 ELF，解释器 `/lib/ld-linux-aarch64.so.1`；ARM64 loader 解析 138 个 target libraries，零 `not found`、无 x86_64 library |
 | QEMU 功能 smoke | startup/help、config + artifact、两条可行动错误、真实 decode/NMS/坐标恢复均通过 |
-| 完整模拟推理 | 固定图经过 ARM64 OpenCV + ORT CPU 和现有后处理；合法 JSON 含 3 个 detections |
+| 完整模拟推理 | 最终收口复跑：固定图经过 ARM64 OpenCV + ORT CPU 和现有后处理；合法 JSON 含 3 个 detections |
 | 原生回归 | WSL2/Linux x86_64 clean Release、9 个 `ldd` 检查、119/119 CTest 通过 |
 | 明确未做 | QEMU benchmark/功耗、真实板卡、Jetson、Docker multi-arch 与 S2-03 |
 
 原始输出位于 [`cpp_infer/results/s2_02/aarch64_qemu/`](cpp_infer/results/s2_02/aarch64_qemu/)，
-命令与解释见 [S2-02 Gate B 收口](docs/details/s2_02_gate_b_closure.md)。
+命令与解释见 [S2-02 Gate B 收口](docs/details/s2_02_gate_b_closure.md)与
+[S2-02 完整收口](docs/details/s2_02_closure.md)。
 
 ### 平台矩阵
 
@@ -354,6 +358,7 @@ D010 集成、Qt、本地 LLM、Agent 工作流和真实 ARM/Jetson 设备保持
 - [S2-01 INT8/PTQ 与 profiling 收口](docs/details/s2_01_closure.md)
 - [S2-02 Gate A Linux x86_64 收口](docs/details/s2_02_gate_a_closure.md)
 - [S2-02 Gate B AArch64/QEMU 收口](docs/details/s2_02_gate_b_closure.md)
+- [S2-02 完整教学收口](docs/details/s2_02_closure.md)
 - [路径、命令与环境](docs/paths_commands.md)
 - [C++ Runtime 技术参考](cpp_infer/README.md)
 

@@ -193,7 +193,8 @@ Ultralytics 当前 ONNX 导出实现同样只选择带权重的 Conv/Gemm/MatMul
 
 ```powershell
 # 生成并审计正式 U8S8 artifact
-& 'C:\Users\Everbreath\.conda\envs\yolo_defect\python.exe' `
+$PythonExe = Join-Path $env:USERPROFILE '.conda\envs\yolo_defect\python.exe'
+& $PythonExe `
   cpp_infer\tools\quantize_s2_01.py `
   --protocol cpp_infer\protocols\s2_01_ptq_protocol_r2_u8s8.json
 

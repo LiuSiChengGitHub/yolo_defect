@@ -1,6 +1,6 @@
 # 路径、工具链与环境诊断
 
-本文是本项目**当前工具链、机器路径、构建入口和环境踩坑的唯一操作事实源**。`AGENTS.md` 不复制这些细节；只有任务需要查找工具链路径、依赖版本或位置、环境入口命令或已知环境踩坑时，仓库 Skill `yolo-defect-dev` 才按需读取本文的相关部分。任务仅仅涉及构建、运行、测试、benchmark 或 profiling，不构成加载该 Skill 的理由。历史 closure 中的版本和路径是当时证据快照，不替代本文。
+本文是本项目**当前工具链版本、可配置依赖入口、构建命令和环境踩坑的唯一操作事实源**。它不记录用户名或个人绝对路径；机器位置通过 ignored local config、环境变量、`$HOME`/`%USERPROFILE%` 或占位符表达。`AGENTS.md` 不复制这些细节；只有任务需要查找工具链路径、依赖版本或位置、环境入口命令或已知环境踩坑时，仓库 Skill `yolo-defect-dev` 才按需读取本文的相关部分。任务仅仅涉及构建、运行、测试、benchmark 或 profiling，不构成加载该 Skill 的理由。历史 closure 中的版本和路径是当时证据快照，不替代本文。
 
 ## 1. 先看这里
 
@@ -52,12 +52,12 @@ cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_u8s8_config.tx
 
 | 依赖 | 当前版本或位置 |
 |---|---|
-| Visual Studio C++ | MSVC 19.50.35721.0；`vswhere.exe` 自动发现；当前 `VsDevCmd.bat`：`D:\01_Base\Tools\VisualStudio_Community\Common7\Tools\VsDevCmd.bat` |
+| Visual Studio C++ | MSVC 19.50.35721.0；`vswhere.exe` 自动发现 `VsDevCmd.bat`，也可用 `YOLO_DEFECT_VSDEVCMD` 覆盖 |
 | CMake / CTest | 4.1.1-msvc1，Visual Studio 附带并由 `VsDevCmd.bat` 加入 PATH |
-| ONNX Runtime C++ SDK | 1.19.2：`D:\01_Base\Tools\onnxruntime-win-x64-1.19.2` |
-| OpenCV C++ | 4.8.0：`D:\01_Base\Tools\opencv\build\x64\vc16\lib`，DLL 位于同级 `bin` |
-| Python Runtime reference | `C:\Users\Everbreath\.conda\envs\TestBase\python.exe`；Python 3.9.25、ORT 1.19.2、OpenCV 4.13.0、NumPy 2.0.2；供 `stage1.cmd` 的 consistency/profile 前置检查 |
-| Python PTQ tooling | `C:\Users\Everbreath\.conda\envs\yolo_defect\python.exe`；ONNX 1.19.1、ORT 1.19.2、OpenCV 4.13.0、NumPy 2.0.2；正式运行 `quantize_s2_01.py` 和 S2-01 Python 工具 |
+| ONNX Runtime C++ SDK | 1.19.2；实际目录由 ignored local config 的 `OrtRoot` 或 `ONNXRUNTIME_ROOT` 提供 |
+| OpenCV C++ | 4.8.0；CMake/DLL 目录由 `OpenCvDir`、`OpenCvBin` 或对应环境变量提供 |
+| Python Runtime reference | Python 3.9.25、ORT 1.19.2、OpenCV 4.13.0、NumPy 2.0.2；解释器由 local config 的 `PythonExe` 或 `YOLO_DEFECT_PYTHON` 提供 |
+| Python PTQ tooling | ONNX 1.19.1、ORT 1.19.2、OpenCV 4.13.0、NumPy 2.0.2；解释器使用独立环境并通过命令参数或环境变量选择 |
 | GoogleTest | v1.17.0；实际 source 目录由本机忽略配置提供，依赖版本由 CMake 固定 |
 
 运行 `doctor` 查看本次进程实际解析到的路径，不要仅依赖本表。
@@ -111,7 +111,8 @@ cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_u8s8_config.tx
 只有需要审计 wrapper 或 CMake build graph 时才手工展开。先在 CMD 中初始化 x64 环境：
 
 ```bat
-call "D:\01_Base\Tools\VisualStudio_Community\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
+set "YOLO_DEFECT_VSDEVCMD=<path-to-VsDevCmd.bat>"
+call "%YOLO_DEFECT_VSDEVCMD%" -arch=amd64 -host_arch=amd64
 if errorlevel 1 exit /b 1
 powershell.exe -NoProfile
 ```
@@ -119,7 +120,7 @@ powershell.exe -NoProfile
 随后在同一个 PowerShell 进程链中运行：
 
 ```powershell
-$RepoRoot = 'D:\01_Base\CodingSpace\yolo_defect'
+$RepoRoot = (Resolve-Path '.').Path
 $LocalSettings = Import-PowerShellDataFile `
   "$RepoRoot\cpp_infer\.stage1.local.psd1"
 $BuildDir = Join-Path ([IO.Path]::GetTempPath()) `
@@ -171,8 +172,8 @@ Gate A 当前只代表 **WSL2/Linux x86_64**，不是原生 Linux 实机、AArch
 | Ninja | `1.11.1` |
 | pkg-config | `1.8.1` |
 | OpenCV C++ | `4.6.0`；Ubuntu `/usr` 下的 distro headers/libraries，由 `pkg-config opencv4` 与 CMake package 解析 |
-| ONNX Runtime C++ SDK | `1.19.2`：`/home/everbreath/.local/opt/onnxruntime-linux-x64-1.19.2` |
-| Python reference | Python `3.12.3`：`/home/everbreath/.venvs/yolo-defect-gate-a/bin/python`；ORT `1.19.2`、OpenCV Python `4.10.0`、NumPy `2.0.2`，实际 provider 含 `CPUExecutionProvider` |
+| ONNX Runtime C++ SDK | `1.19.2`：默认 `$HOME/.local/opt/onnxruntime-linux-x64-1.19.2`，可由 `ONNXRUNTIME_ROOT` 覆盖 |
+| Python reference | Python `3.12.3`：默认 `$HOME/.venvs/yolo-defect-gate-a/bin/python`；ORT `1.19.2`、OpenCV Python `4.10.0`、NumPy `2.0.2`，实际 provider 含 `CPUExecutionProvider` |
 | GoogleTest | Ubuntu distro source `/usr/src/googletest`，版本 `1.14.0` |
 
 Linux C++ SDK 来自 Microsoft 官方发布包
@@ -192,17 +193,17 @@ sudo apt install -y \
 Python reference 环境的固定依赖为：
 
 ```bash
-python3 -m venv /home/everbreath/.venvs/yolo-defect-gate-a
-/home/everbreath/.venvs/yolo-defect-gate-a/bin/python -m pip install \
+python3 -m venv "$HOME/.venvs/yolo-defect-gate-a"
+"$HOME/.venvs/yolo-defect-gate-a/bin/python" -m pip install \
   onnxruntime==1.19.2 opencv-python-headless==4.10.0.84 numpy==2.0.2
 ```
 
 每次新 WSL shell 从仓库根目录进入时设置：
 
 ```bash
-cd /mnt/d/01_Base/CodingSpace/yolo_defect
-export ONNXRUNTIME_ROOT=/home/everbreath/.local/opt/onnxruntime-linux-x64-1.19.2
-export YOLO_DEFECT_PYTHON=/home/everbreath/.venvs/yolo-defect-gate-a/bin/python
+# 从仓库根目录执行
+export ONNXRUNTIME_ROOT="$HOME/.local/opt/onnxruntime-linux-x64-1.19.2"
+export YOLO_DEFECT_PYTHON="$HOME/.venvs/yolo-defect-gate-a/bin/python"
 export YOLO_DEFECT_GTEST_SOURCE=/usr/src/googletest
 bash cpp_infer/tools/stage1.sh doctor
 ```
@@ -276,7 +277,7 @@ ldd /tmp/yolo_defect_s2_02_core_only/bin/yolo_defect_project_core_smoke
 - 从 PowerShell 拼接 `wsl.exe ... bash -lc ...` 时，Bash 的 `$name`/`${name}` 可能先被宿主 shell 展开。复杂命令优先进入 WSL shell 后运行仓库脚本，或直接传固定 WSL 路径；不要依赖多层 shell 中未验证的变量引用。
 - 默认构建和 fresh result JSON 位于 `/tmp/yolo_defect_stage1_linux_release`。WSL 会话重启、系统清理或手工删除后它们可能消失；`/tmp` 不是长期结果库。收口运行应设置 `YOLO_DEFECT_RUN_DIR`，直接写入仓库内命名目录。
 - Linux benchmark 的 peak RSS 与 Windows Peak Working Set 是不同 OS 指标，不能直接当成同一测量口径比较。
-- Gate A 的实测环境是 WSL2；AArch64 cross compile 与 QEMU 属于 Gate B，不能由本节命令或结果推导为已完成。
+- Gate A 的实测环境是 WSL2；AArch64 cross compile 与 QEMU 属于 Gate B，不能由本节命令或结果推导。Gate B 当前完成状态与命令见下方第 9 节。
 
 ## 9. S2-02 Gate B：Linux x86_64 host → Linux AArch64 target
 
@@ -364,6 +365,7 @@ bash cpp_infer/tools/stage2_aarch64.sh all
 
 ### 9.4 本次实测结果与边界
 
+- S2-02 最终收口在提交 `436ab4b` 上重新运行三平台关键门：Linux x86_64 build/test/demo/consistency、AArch64 clean cross-build/inspect/QEMU/full inference、Windows clean build/test/demo 均通过；完整教学记录见 [`details/s2_02_closure.md`](details/s2_02_closure.md)。
 - core smoke、Runtime object、production CLI、ORT 均为 AArch64 ELF；CLI interpreter 为 `/lib/ld-linux-aarch64.so.1`。
 - ARM64 loader 实际解析 138 个 target `.so`，`not found = 0`，逐个 `file/readelf` 均为 AArch64。
 - QEMU 实际通过 startup、`--help`、config/artifact、两条 negative contract 和 decode/NMS/坐标恢复 synthetic smoke。

@@ -2,7 +2,7 @@
 
 This directory is the C++ Runtime workspace for the **Industrial Vision Edge AI Runtime and C++ Engineering System**.
 
-Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the recorded advisory exercise policy; S2-02 Gate A and Gate B implementation/evidence are complete.** Gate A preserves the same single-image Runtime across Windows and native Linux x86_64. Gate B cross-compiles that Runtime/CLI to Linux AArch64, proves the target ELF/dependency boundary, runs the project-core/contracts under QEMU user-mode, and completes the fixed-image ARM64 OpenCV/ORT CPU path with a validated three-detection JSON. Work stops for user L1; S2-03 has not started. QEMU is not a physical ARM board and no emulated performance result is claimed. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
+Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the recorded advisory exercise policy; S2-02 Gate A/Gate B implementation, same-commit three-platform final regression, consolidated documentation, and teaching closure are complete.** Gate A preserves the same single-image Runtime across Windows and native Linux x86_64. Gate B cross-compiles that Runtime/CLI to Linux AArch64, proves the target ELF/dependency boundary, runs the project-core/contracts under QEMU user-mode, and completes the fixed-image ARM64 OpenCV/ORT CPU path with a validated three-detection JSON. Work stops for user L1; S2-03 has not started. QEMU is not a physical ARM board and no emulated performance result is claimed. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
 
 | Gate | Status |
 |---|---|
@@ -13,7 +13,7 @@ Current status: **the Large-Stage-One automatic engineering gate and user-owned 
 | S2 preparatory documentation closure | Complete |
 | S2-01 implementation and evidence | Complete under advisory exercise policy |
 | S2-01 user L1 | Awaiting |
-| S2-02 Gate A + Gate B implementation/evidence | Complete |
+| S2-02 Gate A + Gate B implementation/evidence/final closure | Complete |
 | S2-02 user L1 | Awaiting |
 
 ## Current single-image chain
@@ -294,19 +294,20 @@ The recorded clean Release closure produced:
 
 | Evidence | Result |
 |---|---|
-| Linux build/test | WSL2/Linux x86_64, Ninja Release, 119/119 CTest passed |
+| Linux build/test | Final closure rerun: WSL2/Linux x86_64, Ninja Release, 119/119 CTest passed |
 | Fixed-image path | `crazing_241.jpg`, three detections, valid JSON and readable PNG |
 | Python ORT/C++ ORT | 30/30 images and 62/62 matched detections passed the frozen gates |
-| Short benchmark smoke | One warmup-1/repeat-2 sample: end-to-end mean `135.896991 ms`, `7.358515 img/s`, peak RSS `196.570312 MiB`; the durable closure 1/2 rerun measured `151.273896 ms`, `6.610526 img/s`, `196.757812 MiB`, confirming high variance |
+| Short benchmark smoke | Earlier Gate A samples used warmup 1 / repeat 2: end-to-end mean `135.896991 ms`, `7.358515 img/s`, peak RSS `196.570312 MiB`; the same-protocol durable rerun measured `151.273896 ms`, `6.610526 img/s`, `196.757812 MiB`, confirming high variance. Benchmark was not repeated in the final functional closure |
 | Linux dynamic loading | Nine built ELF executables inspected with `ldd`; no dependency was `not found`, and the CLI resolved `libonnxruntime.so` from the configured SDK/RPATH |
-| Windows regression | NMake Release, 119/119 CTest passed |
+| Windows regression | Final closure rerun: NMake Release, 119/119 CTest and fixed Demo passed |
 
 The fixed-image JSON/PNG are tracked under
 [`results/s2_02/linux_x86_64/`](results/s2_02/linux_x86_64/). Exact toolchain
 locations and workflow diagnosis remain in
 [`paths_commands.md`](../docs/paths_commands.md); the full machine snapshot,
 commands, evidence, and interpretation are in
-[`s2_02_gate_a_closure.md`](../docs/details/s2_02_gate_a_closure.md).
+[`s2_02_gate_a_closure.md`](../docs/details/s2_02_gate_a_closure.md) and
+[`s2_02_closure.md`](../docs/details/s2_02_closure.md).
 
 This evidence is WSL2/Linux x86_64 only. The warmup-1/repeat-2 samples vary
 materially and are functional performance smokes, not a formal benchmark or a
@@ -324,16 +325,17 @@ Runtime and CLI sources produce the AArch64 artifacts.
 
 | Evidence | Result |
 |---|---|
-| Cross-build | Release `project_core`, full Runtime archive, and production CLI generated for AArch64 |
+| Cross-build | Final closure rerun: Release `project_core`, full Runtime archive, and production CLI generated for AArch64 |
 | ELF and loader | CLI Machine is `AArch64`, interpreter is `/lib/ld-linux-aarch64.so.1`; target loader resolved 138 ARM64 libraries with zero `not found` and no x86_64 mix |
 | QEMU contracts/core | Startup/help, config + artifact, two negative contracts, and decode → NMS → coordinate restore passed |
-| Full inference | Fixed image ran through ARM64 OpenCV and ARM64 ORT CPU; existing postprocess wrote a validated JSON with three detections |
+| Full inference | Final closure rerun: fixed image ran through ARM64 OpenCV and ARM64 ORT CPU; existing postprocess wrote a validated JSON with three detections |
 | Native regression | WSL2/Linux x86_64 clean Release, nine `ldd` checks, and 119/119 CTest passed |
 
 Raw records are under [`results/s2_02/aarch64_qemu/`](results/s2_02/aarch64_qemu/).
 The reproducible dependency/toolchain commands and honest status table are in
 [`paths_commands.md`](../docs/paths_commands.md) and
-[`s2_02_gate_b_closure.md`](../docs/details/s2_02_gate_b_closure.md).
+[`s2_02_gate_b_closure.md`](../docs/details/s2_02_gate_b_closure.md) and
+[`s2_02_closure.md`](../docs/details/s2_02_closure.md).
 QEMU is not a physical ARM device. Gate B deliberately records no emulated
 latency, throughput, power, or board-performance inference.
 
@@ -443,9 +445,9 @@ bash cpp_infer/tools/stage1.sh all
 
 `doctor` is read-only. `all` performs a clean build, full CTest, Demo,
 consistency, and the workflow's normal benchmark, so it is a closure action
-rather than the default after every edit. Use the exact current environment
-paths from [`paths_commands.md`](../docs/paths_commands.md), not the placeholders
-above.
+rather than the default after every edit. Use the verified versions and
+configurable environment entries from [`paths_commands.md`](../docs/paths_commands.md),
+not the placeholders above.
 
 ## Verified S1-05 evidence
 

@@ -2,7 +2,7 @@
 
 > 本文记录 2026-08-28 Gate A 收口时的环境与实测快照。当前工具链路径、安装命令和环境入口统一以 [`../paths_commands.md`](../paths_commands.md) 为准。
 
-S2-02 Gate A 已在 WSL2 Ubuntu 24.04.4 LTS x86_64 上完成 clean Release build、完整测试、固定 Demo、Python/C++ consistency、短 benchmark、peak RSS、ELF/动态依赖检查和 Windows 回归。它证明同一业务源码可以在 Windows 与 WSL2/Linux x86_64 上运行；S2-02 整体尚未完成，因为 Gate B 的 AArch64 cross compile 与 QEMU 尚未开始。
+S2-02 Gate A 已在 WSL2 Ubuntu 24.04.4 LTS x86_64 上完成 clean Release build、完整测试、固定 Demo、Python/C++ consistency、短 benchmark、peak RSS、ELF/动态依赖检查和 Windows 回归。它证明同一业务源码可以在 Windows 与 WSL2/Linux x86_64 上运行。本文保留 Gate A 阶段快照；后续 Gate B 与 S2-02 总收口均已完成，整体结论见 [`s2_02_closure.md`](s2_02_closure.md)。
 
 ## 1. 环境快照
 
@@ -13,7 +13,7 @@ S2-02 Gate A 已在 WSL2 Ubuntu 24.04.4 LTS x86_64 上完成 clean Release build
 | 编译器 | GCC/G++ `13.3.0`，C++17 |
 | 构建工具 | CMake/CTest `3.28.3`，Ninja `1.11.1`，pkg-config `1.8.1` |
 | OpenCV C++ | Ubuntu `/usr` distro package，`4.6.0` |
-| ONNX Runtime C++ | 官方 Linux x64 SDK `1.19.2`，`/home/everbreath/.local/opt/onnxruntime-linux-x64-1.19.2` |
+| ONNX Runtime C++ | 官方 Linux x64 SDK `1.19.2`，默认 `$HOME/.local/opt/onnxruntime-linux-x64-1.19.2` |
 | Python reference | Python `3.12.3` venv；ORT `1.19.2`、OpenCV `4.10.0`、NumPy `2.0.2`；`CPUExecutionProvider` |
 | GoogleTest | Ubuntu distro source `/usr/src/googletest`，`1.14.0` |
 
@@ -97,9 +97,9 @@ final shared-core rerun: 31.36 s
 新 WSL shell 先进入仓库并设置依赖：
 
 ```bash
-cd /mnt/d/01_Base/CodingSpace/yolo_defect
-export ONNXRUNTIME_ROOT=/home/everbreath/.local/opt/onnxruntime-linux-x64-1.19.2
-export YOLO_DEFECT_PYTHON=/home/everbreath/.venvs/yolo-defect-gate-a/bin/python
+# 从仓库根目录执行
+export ONNXRUNTIME_ROOT="$HOME/.local/opt/onnxruntime-linux-x64-1.19.2"
+export YOLO_DEFECT_PYTHON="$HOME/.venvs/yolo-defect-gate-a/bin/python"
 export YOLO_DEFECT_GTEST_SOURCE=/usr/src/googletest
 export YOLO_DEFECT_RUN_DIR="$PWD/cpp_infer/results/s2_02/linux_x86_64/rerun_20260828"
 
@@ -126,4 +126,4 @@ ctest --test-dir /tmp/yolo_defect_s2_02_core_only --output-on-failure
 - 这是 WSL2/Linux x86_64 结果，不是 bare-metal Linux、ARM64 板卡或 Jetson 结果。
 - 非交互式 WSL 命令中的 `sudo` 可能无法取得密码提示；依赖安装应在交互式 shell 中完成或先执行 `sudo -v`。
 - `/tmp` 中的 build 与默认 fresh run 结果可能随 WSL 会话或系统清理消失；收口运行通过 `YOLO_DEFECT_RUN_DIR` 把原始 JSON 直接写入上述仓库目录。
-- Gate B 尚未开始；当前没有 AArch64 toolchain、AArch64 ELF 或 QEMU execution 结论，也没有任何 QEMU 性能数字。
+- Gate A 本身只产生 WSL2/Linux x86_64 证据；后续 Gate B 已完成 AArch64 cross-build、QEMU correctness smoke 和固定图完整推理，详见 [Gate B 阶段记录](s2_02_gate_b_closure.md)与[S2-02 总收口](s2_02_closure.md)。两者都没有发布 QEMU 性能数字。

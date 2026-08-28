@@ -4,7 +4,7 @@
 
 项目中文名为 **工业视觉边缘 AI Runtime 与 C++ 工程化系统**，英文名为 **Industrial Vision Edge AI Runtime and C++ Engineering System**。它服务于 2026 秋招简历和面试，重点是通过真实开发过程理解现代 C++、跨平台构建、推理工程、性能分析、并发和边缘部署，而不是按生产上线标准堆叠防御工程。
 
-当前状态：**大阶段一与用户 L2 已完成；S2-01 的 Windows CPU static INT8 PTQ、同协议比较、ORT Profiling 和文档已完成；S2-02 Gate A 与 Gate B 的实现、验证和证据已完成，当前停止并等待用户 L1，S2-03 尚未开始。** S2-01 最终练习产物是全 64 Conv 的 QDQ/U8S8 Round 2 模型；Round 1 QDQ/S8S8 保留为“量化后变慢”的诊断案例。Gate A 已证明同一业务源码可在 Windows/Linux x86_64 上完成 Release 主链；Gate B 已证明 Linux x86_64 host 可交叉编译同一 Runtime/CLI 到 AArch64，并在 QEMU user-mode 下运行 core contracts 与固定图片 ARM64 ORT CPU 完整推理。QEMU 不是开发板，未产生性能结论。
+当前状态：**大阶段一与用户 L2 已完成；S2-01 的 Windows CPU static INT8 PTQ、同协议比较、ORT Profiling 和文档已完成；S2-02 Gate A/Gate B 的实现、三平台最终关键回归、综合文档和教学收口均已完成，当前停止并等待用户 L1，S2-03 尚未开始。** S2-01 最终练习产物是全 64 Conv 的 QDQ/U8S8 Round 2 模型；Round 1 QDQ/S8S8 保留为“量化后变慢”的诊断案例。Gate A 已证明同一业务源码可在 Windows/Linux x86_64 上完成 Release 主链；Gate B 已证明 Linux x86_64 host 可交叉编译同一 Runtime/CLI 到 AArch64，并在 QEMU user-mode 下运行 core contracts 与固定图片 ARM64 ORT CPU 完整推理。QEMU 不是开发板，未产生性能结论。
 
 已验证主链：
 
@@ -29,7 +29,7 @@ RuntimeConfig + ModelArtifactSpec -> actual ModelMetadata
 ## 3. 大阶段二路线
 
 1. S2-01：INT8 PTQ 与 ORT Profiling——已实现，等待 L1。
-2. S2-02：Linux x86_64 与 AArch64/QEMU——Gate A/Gate B 实现与证据已完成，等待用户 L1。
+2. S2-02：Linux x86_64 与 AArch64/QEMU——Gate A/Gate B、最终三平台回归和教学收口已完成，等待用户 L1。
 3. S2-03：目录/Manifest 有界并发。
 4. S2-04：Linux x86_64 + RTX 4060 TensorRT。
 5. S2-05：证据、简历/面试材料与 Recruiting Freeze。
@@ -60,9 +60,9 @@ RuntimeConfig + ModelArtifactSpec -> actual ModelMetadata
 
 ## 6. 平台与事实边界
 
-- Windows x86_64 已验证 FP32/INT8 ORT CPU、Release/NMake、119/119 CTest、分段 benchmark、Peak Working Set 和逐节点 profiling。
-- S2-02 Gate A 已在 WSL2/Linux x86_64 上验证 Release/Ninja、119/119 CTest、固定单图 JSON/PNG、30/30 图 62/62 检测一致性、短 Benchmark、peak RSS 和 ELF/`ldd` 动态依赖；这些只能写作 WSL2/Linux 证据。
-- S2-02 Gate B 已在 WSL2 x86_64 host 上完成 AArch64 cross-build、QEMU contracts/core smoke 与固定图片 ARM64 ORT CPU 完整推理；它只证明构建和功能可移植性，不是 ARM 板卡证据，也不发布 QEMU 性能。
+- Windows x86_64 已验证 FP32/INT8 ORT CPU、Release/NMake、119/119 CTest、分段 benchmark、Peak Working Set 和逐节点 profiling；S2-02 最终复跑再次通过 clean Release、119/119 CTest 与固定图 3-detection JSON/PNG。
+- S2-02 Gate A 已在 WSL2/Linux x86_64 上验证 Release/Ninja、119/119 CTest、固定单图 JSON/PNG、30/30 图 62/62 检测一致性、短 Benchmark、peak RSS 和 ELF/`ldd` 动态依赖；最终复跑再次通过 build/test/demo/consistency。这些只能写作 WSL2/Linux 证据。
+- S2-02 Gate B 已在 WSL2 x86_64 host 上完成并最终复跑 AArch64 cross-build、`file/readelf`、138 个 target library loader checks、QEMU contracts/core smoke 与固定图片 ARM64 ORT CPU 3-detection 推理；它只证明构建和功能可移植性，不是 ARM 板卡证据，也不发布 QEMU 性能。
 - S2-04 的 RTX 4060 只代表本地 Linux x86_64 GPU/edge-node，不得写成 Jetson、ARM64 GPU 或嵌入式实机。
 - 性能结果必须说明机器、provider、线程、样本和限制；PWS、RSS、GPU memory 不直接等同。
 - matching `.pt` 不在工作区或 Git 历史中，不得声称重新完成 PyTorch/ONNX/C++ 三方 lineage。

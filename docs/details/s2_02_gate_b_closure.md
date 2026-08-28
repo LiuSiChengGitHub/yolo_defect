@@ -4,6 +4,8 @@
 
 Gate B 已在 WSL2 Ubuntu 24.04.4 LTS 的 Linux x86_64 host 上，以 Linux AArch64 为 target 完成交叉构建、ELF/动态依赖证明、QEMU user-mode 功能 smoke，并进一步跑通了固定图片的 ARM64 ONNX Runtime CPU 完整推理。QEMU 不是 ARM 开发板；本步没有采集、比较或发布任何模拟器性能数字。
 
+S2-02 最终收口在同一提交上再次运行 `stage2_aarch64.sh all`：clean cross-build、`file/readelf`、138 个 target library loader checks、contracts/core smoke 与固定图 3-detection ARM64 ORT 推理全部通过。本文继续保留 Gate B 细节；Gate A/B 的统一教学结论见 [`s2_02_closure.md`](s2_02_closure.md)。
+
 ## 1. Host、target 与依赖边界
 
 ```text

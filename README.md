@@ -27,7 +27,9 @@ concurrency, quantization, and TensorRT.
 > shared-source native gate, and the same Runtime/CLI was cross-compiled to
 > Linux AArch64, inspected as target ELF, and executed under QEMU user-mode.
 > The fixed-image ARM64 OpenCV/ORT CPU path produced a validated three-detection
-> JSON. Work stops for user L1; S2-03 has not started. QEMU is not an ARM board
+> JSON. A final same-commit closure rerun also passed native Linux build/test/
+> Demo/consistency, AArch64 ELF/QEMU/full inference, and Windows build/test/Demo.
+> Work stops for user L1; S2-03 has not started. QEMU is not an ARM board
 > and no emulated performance result is claimed.
 
 ![Fixed inference demo](docs/assets/demo_inference_result.gif)
@@ -241,7 +243,7 @@ representation, not an integer application I/O contract.
 |---|---:|---:|
 | Model file | 12,336,935 bytes | 3,544,494 bytes; **71.269% smaller** |
 | Python/C++ ORT legality | Passed | Passed; finite outputs and matching actual metadata |
-| Current Windows regression | 118/118 CTest passed | FP32/INT8 profile workflow smokes passed |
+| S2-01 closure Windows regression | 118/118 CTest passed | Historical S2-01 count; S2-02 final regression is 119/119 |
 | 361-image task quality | mAP50 `0.710815`; mAP50-95 `0.345786` | `0.700459` / `0.342379`; deltas `-0.010356/-0.003407` |
 | 30-image product comparison | 62 detections | 65 detections, 61 matches; original aggregate gate `false` |
 | Session initialization | `61.986 ms` | `94.858 ms`; slower one-time setup |
@@ -294,18 +296,19 @@ decode, class-agnostic NMS, and coordinate restore and is reused by Gate B.
 
 | Gate A evidence | Recorded result |
 |---|---|
-| Linux clean Release | WSL2/Linux x86_64, Ninja, 119/119 CTest passed |
+| Linux clean Release | Final closure rerun: WSL2/Linux x86_64, Ninja, 119/119 CTest passed |
 | Fixed product path | `crazing_241.jpg`, three detections, valid JSON and readable PNG |
 | Python/C++ consistency | 30/30 images and 62/62 matched detections passed the frozen gates |
-| Short performance smoke | One warmup-1/repeat-2 sample: end-to-end mean `135.896991 ms`, `7.358515 img/s`, peak RSS `196.570312 MiB`; the durable closure 1/2 rerun measured `151.273896 ms`, `6.610526 img/s`, `196.757812 MiB`, confirming high variance |
+| Short performance smoke | Earlier Gate A samples used warmup 1 / repeat 2: end-to-end mean `135.896991 ms`, `7.358515 img/s`, peak RSS `196.570312 MiB`; the durable closure rerun with the same warmup/repeat measured `151.273896 ms`, `6.610526 img/s`, `196.757812 MiB`, confirming high variance. Benchmark was not repeated in the final functional closure |
 | Dynamic loading | Nine built ELF executables checked with `ldd`; no dependency reported `not found`, and ORT resolved through the configured Linux SDK/RPATH |
-| Windows regression | Release/NMake 119/119 CTest passed |
+| Windows regression | Final closure rerun: Release/NMake 119/119 CTest and fixed Demo passed |
 
 The committed fixed-image outputs are under
 [`cpp_infer/results/s2_02/linux_x86_64/`](cpp_infer/results/s2_02/linux_x86_64/).
 Commands, the machine snapshot, and the full evidence interpretation are in
 [Paths, toolchains, and environment diagnosis](docs/paths_commands.md) and the
-[S2-02 Gate A closure](docs/details/s2_02_gate_a_closure.md).
+[S2-02 Gate A closure](docs/details/s2_02_gate_a_closure.md) and the
+[complete S2-02 closure](docs/details/s2_02_closure.md).
 
 ### S2-02 Gate B AArch64/QEMU Record
 
@@ -317,17 +320,18 @@ dependency staging, and the Bash workflow know about cross execution.
 
 | Gate B evidence | Recorded result |
 |---|---|
-| Cross-build | Ninja Release generated AArch64 `project_core`, full Runtime archive, and production CLI |
+| Cross-build | Final closure rerun: Ninja Release generated AArch64 `project_core`, full Runtime archive, and production CLI |
 | ELF/dependency proof | CLI is AArch64 ELF with `/lib/ld-linux-aarch64.so.1`; ARM64 loader resolved 138 target libraries, zero `not found`, and no x86_64 library |
 | QEMU functional smoke | Startup/help, config + artifact, two actionable failures, and real decode/NMS/coordinate restore passed |
-| Full emulated inference | Fixed image ran through ARM64 OpenCV + ORT CPU and existing postprocess; validated JSON contains three detections |
+| Full emulated inference | Final closure rerun: fixed image ran through ARM64 OpenCV + ORT CPU and existing postprocess; validated JSON contains three detections |
 | Native regression | WSL2/Linux x86_64 clean Release, nine `ldd` checks, and 119/119 CTest passed |
 | Deliberate exclusions | No QEMU benchmark/power result, physical board, Jetson, Docker multi-arch, or S2-03 work |
 
 Raw outputs are under
 [`cpp_infer/results/s2_02/aarch64_qemu/`](cpp_infer/results/s2_02/aarch64_qemu/).
 Commands and interpretation are in the
-[S2-02 Gate B closure](docs/details/s2_02_gate_b_closure.md).
+[S2-02 Gate B closure](docs/details/s2_02_gate_b_closure.md) and the
+[complete S2-02 closure](docs/details/s2_02_closure.md).
 
 ### Platform Matrix
 
@@ -394,6 +398,7 @@ Authoritative and operational references:
 - [S2-01 INT8/PTQ and profiling closure](docs/details/s2_01_closure.md)
 - [S2-02 Gate A Linux x86_64 closure](docs/details/s2_02_gate_a_closure.md)
 - [S2-02 Gate B AArch64/QEMU closure](docs/details/s2_02_gate_b_closure.md)
+- [S2-02 complete teaching closure](docs/details/s2_02_closure.md)
 - [Paths, commands, and environment](docs/paths_commands.md)
 - [C++ Runtime technical reference](cpp_infer/README.md)
 
