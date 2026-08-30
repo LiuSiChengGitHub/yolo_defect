@@ -8,7 +8,9 @@ REPO_ROOT="$(cd -- "${CPP_DIR}/.." && pwd -P)"
 TOOLCHAIN="${CPP_DIR}/cmake/toolchains/linux-aarch64-gnu.cmake"
 CONFIG="${CPP_DIR}/configs/default_config.txt"
 DEMO_IMAGE="${REPO_ROOT}/data/images/val/crazing_241.jpg"
+SECOND_BATCH_IMAGE="${REPO_ROOT}/data/images/val/crazing_242.jpg"
 DETECTION_VALIDATOR="${CPP_DIR}/tests/assert_detection_json.py"
+BATCH_SUMMARY_VALIDATOR="${CPP_DIR}/tools/validate_batch_summary.py"
 
 DEPS_ROOT="${YOLO_DEFECT_AARCH64_DEPS_ROOT:-${HOME}/.local/opt/yolo-defect-aarch64}"
 ORT_ROOT="${YOLO_DEFECT_AARCH64_ORT_ROOT:-${DEPS_ROOT}/onnxruntime-linux-aarch64-1.19.2}"
@@ -17,12 +19,14 @@ LOADER_PREFIX="${YOLO_DEFECT_AARCH64_LOADER_PREFIX:-/usr/aarch64-linux-gnu}"
 CORE_BUILD="${YOLO_DEFECT_AARCH64_CORE_BUILD_DIR:-/tmp/yolo_defect_stage2_aarch64_core}"
 FULL_BUILD="${YOLO_DEFECT_AARCH64_FULL_BUILD_DIR:-/tmp/yolo_defect_stage2_aarch64_full}"
 RESULT_DIR="${YOLO_DEFECT_AARCH64_RESULT_DIR:-${CPP_DIR}/results/s2_02/aarch64_qemu}"
+BATCH_RESULT_DIR="${YOLO_DEFECT_AARCH64_BATCH_RESULT_DIR:-${CPP_DIR}/results/s2_03/linux_aarch64_qemu}"
 
 CORE_SMOKE="${CORE_BUILD}/bin/yolo_defect_project_core_smoke"
 RUNTIME_OBJECT="${FULL_BUILD}/CMakeFiles/yolo_defect_runtime.dir/src/detector_pipeline.cpp.o"
 DEPLOY_DIR="${FULL_BUILD}/deploy"
 CLI="${DEPLOY_DIR}/bin/yolo_defect_cpp"
 TARGET_LIBRARY_PATH="${DEPLOY_DIR}/lib:${TARGET_SYSROOT}/usr/lib/aarch64-linux-gnu:${TARGET_SYSROOT}/lib/aarch64-linux-gnu:${TARGET_SYSROOT}/usr/lib/aarch64-linux-gnu/blas:${TARGET_SYSROOT}/usr/lib/aarch64-linux-gnu/lapack:${TARGET_SYSROOT}/usr/lib:${LOADER_PREFIX}/lib"
+HOST_KERNEL_ARCHITECTURE="$(uname -m)"
 
 fail() {
   printf '%s\n' \
@@ -55,6 +59,7 @@ Usage:
   stage2_aarch64.sh inspect
   stage2_aarch64.sh smoke
   stage2_aarch64.sh infer
+  stage2_aarch64.sh batch
   stage2_aarch64.sh all
 
 Actions:
@@ -64,9 +69,12 @@ Actions:
   inspect      Prove AArch64 ELF/interpreter/NEEDED and resolve target .so files.
   smoke        QEMU core logic, CLI startup/help, config/artifact, error paths.
   infer        Fixed image -> ARM64 ORT CPU -> Detection JSON under QEMU.
-  all          Doctor -> clean build -> inspect -> smoke -> infer.
+  batch        QEMU directory/manifest bounded-concurrency and partial-failure acceptance.
+  all          Doctor -> clean build -> inspect -> smoke -> infer -> batch.
 
-No action records QEMU latency, throughput, power, or board performance.
+The batch action records functional evidence under
+cpp_infer/results/s2_03/linux_aarch64_qemu by default. No action records or
+interprets QEMU latency, throughput, memory, power, or board performance.
 Run bootstrap_aarch64_deps.sh first; see docs/paths_commands.md.
 EOF
 }
@@ -110,7 +118,7 @@ doctor() {
     fail "host" "Linux x86_64" "$(uname -s)/$(uname -m)" \
       "run inside the documented WSL2 Ubuntu x86_64 host"
   for command_name in cmake ninja aarch64-linux-gnu-g++ \
-      aarch64-linux-gnu-readelf file qemu-aarch64 python3 readelf timeout; do
+      aarch64-linux-gnu-readelf cmp file qemu-aarch64 python3 readelf timeout; do
     need_command "${command_name}" "install the documented minimal host tools"
   done
   [[ "$(aarch64-linux-gnu-g++ -dumpmachine)" == aarch64-linux-gnu ]] ||
@@ -244,7 +252,16 @@ inspect_artifacts() {
 
 qemu_target() {
   qemu-aarch64 -L "${LOADER_PREFIX}" \
-    -E "LD_LIBRARY_PATH=${TARGET_LIBRARY_PATH}" "$@"
+    -E "LD_LIBRARY_PATH=${TARGET_LIBRARY_PATH}" \
+    -E "YOLO_DEFECT_RUNTIME_KERNEL_ARCHITECTURE=${HOST_KERNEL_ARCHITECTURE}" \
+    -E "YOLO_DEFECT_EXECUTION_CONTEXT=qemu_user_mode_on_x86_64_host" "$@"
+}
+
+qemu_target_timed() {
+  timeout 600 qemu-aarch64 -L "${LOADER_PREFIX}" \
+    -E "LD_LIBRARY_PATH=${TARGET_LIBRARY_PATH}" \
+    -E "YOLO_DEFECT_RUNTIME_KERNEL_ARCHITECTURE=${HOST_KERNEL_ARCHITECTURE}" \
+    -E "YOLO_DEFECT_EXECUTION_CONTEXT=qemu_user_mode_on_x86_64_host" "$@"
 }
 
 expect_contract_failure() {
@@ -315,9 +332,7 @@ run_full_inference() {
     "restore the repository validator"
   mkdir -p -- "${RESULT_DIR}/detect"
   local output_json="${RESULT_DIR}/detect/crazing_241.detections.json"
-  timeout 600 qemu-aarch64 -L "${LOADER_PREFIX}" \
-    -E "LD_LIBRARY_PATH=${TARGET_LIBRARY_PATH}" \
-    "${CLI}" --config "${CONFIG}" --image "${DEMO_IMAGE}" \
+  qemu_target_timed "${CLI}" --config "${CONFIG}" --image "${DEMO_IMAGE}" \
     --output-json "${output_json}" --overwrite
   python3 "${DETECTION_VALIDATOR}" "${output_json}" \
     --expected-image "${DEMO_IMAGE}"
@@ -331,6 +346,131 @@ run_full_inference() {
   printf '[pass] fixed-image detection_count=3\n'
   printf '[pass] full ARM64 inference executed under QEMU; JSON=%s\n' \
     "${output_json}"
+}
+
+validate_batch_summary() {
+  local summary_path="$1"
+  shift
+  python3 "${BATCH_SUMMARY_VALIDATOR}" "${summary_path}" \
+    --expected-target-architecture aarch64 \
+    --expected-runtime-kernel-architecture "${HOST_KERNEL_ARCHITECTURE}" \
+    --expected-execution-context qemu_user_mode_on_x86_64_host \
+    --expect-unpublishable-memory "$@"
+}
+
+run_batch_acceptance() {
+  need_build
+  stage "S2-03 bounded multi-image correctness under QEMU (not performance)"
+  need_file "${DEMO_IMAGE}" "first fixed batch image" \
+    "restore the repository sample"
+  need_file "${SECOND_BATCH_IMAGE}" "second fixed batch image" \
+    "restore the repository sample"
+  need_file "${BATCH_SUMMARY_VALIDATOR}" "BatchSummary validator" \
+    "restore cpp_infer/tools/validate_batch_summary.py"
+
+  local run_id="${YOLO_DEFECT_AARCH64_BATCH_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$$}"
+  [[ "${run_id}" != */* && "${run_id}" != *\\* && "${run_id}" != "." &&
+     "${run_id}" != ".." ]] ||
+    fail "AArch64 batch run id" "one safe path component" "${run_id}" \
+      "set YOLO_DEFECT_AARCH64_BATCH_RUN_ID without separators"
+  local run_root="${BATCH_RESULT_DIR}/${run_id}"
+  [[ ! -e "${run_root}" ]] ||
+    fail "AArch64 batch run directory" "a fresh non-existing path" \
+      "${run_root}" \
+      "choose a new YOLO_DEFECT_AARCH64_BATCH_RUN_ID so stale outputs cannot satisfy acceptance"
+
+  local input_root="${run_root}/inputs"
+  local good_directory="${input_root}/good_directory"
+  local good_manifest="${input_root}/good_manifest.txt"
+  local partial_manifest="${input_root}/partial_failure_manifest.txt"
+  local corrupt_image="${input_root}/corrupt.jpg"
+  local directory_output="${run_root}/directory_workers1"
+  local manifest_output="${run_root}/manifest_workers2"
+  local partial_output="${run_root}/partial_failure"
+  local directory_summary="${directory_output}/batch_summary.json"
+  local manifest_summary="${manifest_output}/batch_summary.json"
+  local partial_summary="${partial_output}/batch_summary.json"
+  local evidence="${run_root}/qemu_batch_acceptance.txt"
+
+  mkdir -p -- "${good_directory}" "${directory_output}" \
+    "${manifest_output}" "${partial_output}"
+  cp -f -- "${DEMO_IMAGE}" "${good_directory}/crazing_241.jpg"
+  cp -f -- "${SECOND_BATCH_IMAGE}" "${good_directory}/crazing_242.jpg"
+  printf '%s\n' \
+    'good_directory/crazing_241.jpg' \
+    'good_directory/crazing_242.jpg' > "${good_manifest}"
+  printf '%s\n' 'deliberately corrupt JPEG payload' > "${corrupt_image}"
+  printf '%s\n' \
+    'good_directory/crazing_241.jpg' \
+    'good_directory/crazing_242.jpg' \
+    'corrupt.jpg' > "${partial_manifest}"
+
+  {
+    printf '[directory: workers=1, queue=2]\n'
+    qemu_target_timed "${CLI}" --config "${CONFIG}" --batch \
+      --input-dir "${good_directory}" \
+      --output-dir "${directory_output}" \
+      --batch-summary "${directory_summary}" \
+      --workers 1 --queue-capacity 2
+    validate_batch_summary "${directory_summary}" \
+      --expected-status succeeded \
+      --expected-discovered 2 --expected-enqueued 2 --expected-started 2 \
+      --expected-succeeded 2 --expected-failed 0 --expected-cancelled 0 \
+      --expected-requested-workers 1 --expected-effective-workers 1 \
+      --expected-input-kind directory
+
+    printf '\n[manifest: workers=2, queue=1]\n'
+    qemu_target_timed "${CLI}" --config "${CONFIG}" --batch \
+      --manifest "${good_manifest}" \
+      --output-dir "${manifest_output}" \
+      --batch-summary "${manifest_summary}" \
+      --workers 2 --queue-capacity 1
+    validate_batch_summary "${manifest_summary}" \
+      --expected-status succeeded \
+      --expected-discovered 2 --expected-enqueued 2 --expected-started 2 \
+      --expected-succeeded 2 --expected-failed 0 --expected-cancelled 0 \
+      --expected-requested-workers 2 --expected-effective-workers 2 \
+      --expected-input-kind manifest
+
+    printf '\n[directory/manifest per-image parity]\n'
+    local sequence=""
+    for sequence in 000000 000001; do
+      local directory_json="${directory_output}/items/${sequence}.detections.json"
+      local manifest_json="${manifest_output}/items/${sequence}.detections.json"
+      cmp -s -- "${directory_json}" "${manifest_json}" ||
+        fail "batch detection JSON ${sequence}" \
+          "byte-identical directory/manifest output" "different bytes" \
+          "check deterministic task order and shared DetectorPipeline semantics"
+      python3 -c \
+        'import json,sys; assert json.load(open(sys.argv[1], encoding="utf-8")) == json.load(open(sys.argv[2], encoding="utf-8"))' \
+        "${directory_json}" "${manifest_json}"
+      printf '[pass] %s byte-identical and semantically identical\n' "${sequence}"
+    done
+
+    printf '\n[partial failure: exact 2 succeeded + 1 failed]\n'
+    local partial_exit=0
+    set +e
+    qemu_target_timed "${CLI}" --config "${CONFIG}" --batch \
+      --manifest "${partial_manifest}" \
+      --output-dir "${partial_output}" \
+      --batch-summary "${partial_summary}" \
+      --workers 2 --queue-capacity 1
+    partial_exit=$?
+    set -e
+    [[ "${partial_exit}" == 2 ]] ||
+      fail "partial-failure exit code" "2" "${partial_exit}" \
+        "preserve per-image failure isolation and the public batch exit mapping"
+    validate_batch_summary "${partial_summary}" \
+      --expected-status partial_failure \
+      --expected-discovered 3 --expected-enqueued 3 --expected-started 3 \
+      --expected-succeeded 2 --expected-failed 1 --expected-cancelled 0 \
+      --expected-requested-workers 2 --expected-effective-workers 2 \
+      --expected-input-kind manifest
+    printf '[pass] corrupt JPEG isolated; exit=2; succeeded=2; failed=1\n'
+    printf '[pass] AArch64 batch evidence is functional QEMU user-mode evidence only\n'
+    printf '[pass] no QEMU throughput, latency, RSS, or native-board conclusion published\n'
+    printf '[pass] fresh run root=%s\n' "${run_root}"
+  } 2>&1 | tee "${evidence}"
 }
 
 action="${1:-help}"
@@ -361,15 +501,21 @@ case "${action}" in
     doctor
     run_full_inference
     ;;
+  batch)
+    doctor
+    run_batch_acceptance
+    ;;
   all)
     doctor
     clean_build
     inspect_artifacts
     run_smokes
     run_full_inference
+    run_batch_acceptance
     ;;
   *)
-    fail "action" "help, doctor, build, clean-build, inspect, smoke, infer, or all" \
+    fail "action" \
+      "help, doctor, build, clean-build, inspect, smoke, infer, batch, or all" \
       "${action}" "run stage2_aarch64.sh help"
     ;;
 esac

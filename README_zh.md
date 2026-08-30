@@ -16,15 +16,15 @@ YOLOv8 和 NEU-DET 是首个 Runtime 实现所使用的稳定模型与数据集�
 本仓库的价值在于围绕该产物建立工程闭环：可执行契约、C++ 推理、确定性输出、
 正确性门禁、Benchmark 证据，以及受控推进 Linux、并发、量化和 TensorRT 的路径。
 
-> **状态 — 2026-08-28：** 大阶段一与用户负责的 L2 已完成；S2-01 的 Windows
-> CPU INT8/PTQ/profiling 实现与证据已按记录的 advisory 练习口径完成。
-> **S2-02 Gate A 与 Gate B 的实现和证据均已完成：** WSL2/Linux x86_64
-> 共享源码原生门通过；同一 Runtime/CLI 又交叉编译到 Linux AArch64，完成 ELF/目标
-> 动态依赖检查，并在 QEMU user-mode 下实际运行。固定图 ARM64 OpenCV/ORT CPU
-> 链路生成了通过校验的 3-detection JSON。最终又在同一提交上复跑并通过 Linux
-> build/test/Demo/consistency、AArch64 ELF/QEMU/完整推理与 Windows build/test/Demo。
-> 当前停止等待用户 L1，S2-03 尚未开始。
-> QEMU 不是 ARM 开发板，本项目不发布任何模拟器性能结论。
+> **状态 — 2026-08-30：** 大阶段一、用户负责的 L2，以及 S2-01 至 S2-03
+> 的实现与证据均已完成。S2-03 在共享单图 `DetectorPipeline` 之上增加确定性的
+> 目录/manifest 发现、有界队列、每 worker 独占 ORT session、背压、逐图输出、
+> 部分失败统计、协作式退出和机器可读 `BatchSummary`。Windows x86_64 与
+> WSL2/Linux x86_64 的 clean Release 均通过 156/156 测试，并分别完成正式
+> 361 图 workers=1/workers=4 正确性、吞吐和内存比较。AArch64 构建也在 QEMU
+> user-mode 下通过相同的目录/manifest/部分失败 batch 功能链。当前停止等待用户
+> L1，S2-04 尚未开始。QEMU 不是 ARM 开发板，因此不发布模拟器性能、内存或
+> 原生设备结论。
 
 ![固定推理 Demo](docs/assets/demo_inference_result.gif)
 
@@ -81,7 +81,7 @@ FP32 ONNX
   -> [Windows CPU 已交付] static INT8 PTQ + ORT operator/node profiling
   -> [Gate A 已交付] Windows and Linux x86_64 shared-source Runtime
   -> [Gate B 已交付] AArch64 cross-build + QEMU 功能可移植性
-  -> directory/manifest + bounded queue + workers
+  -> [S2-03 已交付] directory/manifest + bounded queue + workers
   -> Linux x86_64 + RTX 4060 TensorRT path
   -> full evidence, resume variants, interview closure, recruiting freeze
 ```
@@ -100,7 +100,7 @@ contract + metadata -> model-specific preprocess
 - Runtime 库负责可复用行为，CLI 保持轻量。
 - Windows、Linux 和 AArch64 共用同一份业务源码。
 - 平台差异仅保留在依赖发现、动态库、内存/信号适配器和工作流脚本中。
-- 后续多图 Worker 复用现有单图 `DetectorPipeline`，不复制预处理、推理或后处理。
+- 多图 Worker 复用现有单图 `DetectorPipeline`，不复制预处理、推理或后处理。
 - 发布 Benchmark 前，在相同 artifact/config 下完成代表性正确性 smoke；S2-01
   额外保留原始产品差异与任务质量结果作为非阻断诊断。
 - 后端抽象只保留真实后端所需的最小边界。
@@ -148,6 +148,8 @@ contract + metadata -> model-specific preprocess
 .\cpp_infer\tools\stage1.cmd help
 .\cpp_infer\tools\stage1.cmd doctor
 .\cpp_infer\tools\stage1.cmd build
+.\cpp_infer\tools\stage1.cmd batch data\images\val batch-output -Workers 4 -QueueCapacity 8
+.\cpp_infer\tools\stage1.cmd batch-compare
 ```
 
 在 WSL2/Linux x86_64 中选择固定版本的 Linux SDK，并使用 Bash 入口：
@@ -161,6 +163,8 @@ bash cpp_infer/tools/stage1.sh doctor
 bash cpp_infer/tools/stage1.sh clean-build
 bash cpp_infer/tools/stage1.sh test
 bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
+bash cpp_infer/tools/stage1.sh batch data/images/val batch-output --workers 4 --queue-capacity 8
+bash cpp_infer/tools/stage1.sh batch-compare
 bash cpp_infer/tools/stage1.sh consistency
 bash cpp_infer/tools/stage1.sh benchmark
 bash cpp_infer/tools/stage1.sh all
@@ -179,6 +183,8 @@ bash cpp_infer/tools/stage2_aarch64.sh all
 Gate A 的准确机器快照、证据与解释见
 [S2-02 Gate A 收口](docs/details/s2_02_gate_a_closure.md)；Gate B 的 host/target
 边界和 QEMU 证据见 [S2-02 Gate B 收口](docs/details/s2_02_gate_b_closure.md)。
+S2-03 的设计、三平台功能证据和同平台性能比较统一见
+[S2-03 收口](docs/details/s2_03_closure.md)。
 
 ## 5. 核心模块
 
@@ -191,6 +197,7 @@ Gate A 的准确机器快照、证据与解释见
 | `ProfileRunner` 与 profile 汇总器 | 创建隔离的 profiling session，保留 ORT raw trace，按 node/operator/provider 汇总耗时与调用次数，并把 trace 耗时排除在正式 Benchmark 外 |
 | 后处理/NMS | 验证 YOLO BCN 输出，选择类别分数，执行严格过滤与稳定的类别无关 NMS，再恢复并裁剪源图坐标 |
 | `DetectorPipeline` 与 writers | 编排单张图片并输出自持有结果、稳定 JSON 和确定性的无 GUI 可视化，同时强制安全输出路径 |
+| `BatchRunner`、`BoundedQueue` 与 batch writers | 确定性发现目录/UTF-8 manifest 任务，以有界背压驱动每 worker 一个 batch=1 `DetectorPipeline`/ORT session，按发现顺序汇总，并输出逐图结果与 `BatchSummary` |
 | 跨平台构建/平台层 | 保持 Runtime、预处理、后处理和 Pipeline 共用同一源码；CMake 选择 Windows `.lib`/`.dll`、原生 Linux `.so` 或显式 ARM64 target libraries/toolchain，薄 `platform_info` 适配器分别报告 Windows Peak Working Set 与 Linux `getrusage` peak RSS |
 | `project_core` 可移植性 smoke | 抽出仅依赖标准库的 YOLO decode/NMS/坐标恢复行为；Gate B 先在 QEMU 中运行它，再单独验证完整 ARM64 OpenCV/ORT 链路 |
 | 验证工具链 | 用聚焦 fixture 测试有意义的逻辑接缝，谨慎运行真实垂直链，在相关时比较 Python/C++ 检测并记录限定范围的 Benchmark/内存结果 |
@@ -204,8 +211,8 @@ Gate A 的准确机器快照、证据与解释见
 |---|---|---|---|
 | S2-01 | Static INT8 PTQ、FP32/INT8 正确性/任务质量/性能对比、ORT operator/node profiling | Windows CPU 个人练习收口；产品/质量结果为 advisory；不做 QAT，也不把 profiler 冒充 Benchmark | **实现/证据完成；等待 L1** |
 | S2-02 | Linux x86_64 原生链路、共享源码可移植性、AArch64 交叉构建与 QEMU smoke | WSL2/QEMU 不是开发板；QEMU 不产出性能结论 | **Gate A/Gate B 实现与证据已完成；等待用户 L1** |
-| S2-03 | 目录/manifest 发现、有界队列、workers、背压、失败计数、干净退出、吞吐对比 | 并发单图任务不等于真正的 ONNX batch | 计划中 |
-| S2-04 | 一条真实 Linux x86_64 + RTX 4060 TensorRT 执行路径、FP16 正确性与性能 | 仅为本地 GPU/边缘节点证据；不是 Jetson 或嵌入式部署 | 计划中 |
+| S2-03 | 目录/manifest 发现、有界队列、workers、背压、失败计数、干净退出、吞吐对比 | 并发单图任务不等于真正的 ONNX batch；QEMU 只提供功能证据 | **实现/证据完成；等待用户 L1** |
+| S2-04 | 一条真实 Linux x86_64 + RTX 4060 TensorRT 执行路径、FP16 正确性与性能 | 仅为本地 GPU/边缘节点证据；不是 Jetson 或嵌入式部署 | 尚未开始 |
 | S2-05 | 适用的完整门禁、结果矩阵、失败案例、三套简历叙事、面试材料、recruiting freeze | 不增加新技术栈 | 计划中 |
 
 ### S2-01 Windows CPU 记录
@@ -295,21 +302,46 @@ Gate B 的 host 是 WSL2/Linux x86_64，target 是 Linux AArch64。GNU toolchain
 | QEMU 功能 smoke | startup/help、config + artifact、两条可行动错误、真实 decode/NMS/坐标恢复均通过 |
 | 完整模拟推理 | 最终收口复跑：固定图经过 ARM64 OpenCV + ORT CPU 和现有后处理；合法 JSON 含 3 个 detections |
 | 原生回归 | WSL2/Linux x86_64 clean Release、9 个 `ldd` 检查、119/119 CTest 通过 |
-| 明确未做 | QEMU benchmark/功耗、真实板卡、Jetson、Docker multi-arch 与 S2-03 |
+| S2-02 收口时明确未做 | QEMU benchmark/功耗、真实板卡、Jetson、Docker multi-arch 与当时尚未开始的 S2-03；S2-03 现已在下文单独验证 |
 
 原始输出位于 [`cpp_infer/results/s2_02/aarch64_qemu/`](cpp_infer/results/s2_02/aarch64_qemu/)，
 命令与解释见 [S2-02 Gate B 收口](docs/details/s2_02_gate_b_closure.md)与
 [S2-02 完整收口](docs/details/s2_02_closure.md)。
 
+### S2-03 多图有界并发记录
+
+S2-03 保持每次推理 batch=1，并复用现有 preprocess → ORT → postprocess → writer
+主链。生产者确定性发现任务，只把任务索引送入有界 FIFO；每个 worker 独占一个
+`DetectorPipeline`/ORT session。普通图片失败只影响当前任务，SIGINT/SIGTERM
+触发协作式停止，按发现顺序生成的 `BatchSummary` 以机器可读方式记录计数、背压、
+时间、内存、输出、错误和显式 stop-request 标志。因此即使中断时所有任务都已开始、
+没有逐图 `cancelled` 项，整批仍稳定返回 `cancelled`/130。
+
+| S2-03 证据 | 实测结果 |
+|---|---|
+| Windows x86_64 正确性 | clean Release 156/156 CTest 通过；workers=1 与 workers=4 的 361 份逐图 detection JSON 完全一致 |
+| Windows x86_64 正式比较 | FP32 CPU、JSON-only、queue=8：workers=1 `6.285556 img/s`、PWS `151.804688 MiB`；workers=4 `17.853923 img/s`、PWS `505.085938 MiB`；吞吐比 `2.840468` |
+| WSL2/Linux x86_64 正确性 | clean Release 156/156 CTest 通过；workers=1 与 workers=4 的 361 份逐图 detection JSON 完全一致 |
+| WSL2/Linux x86_64 正式比较 | FP32 CPU、JSON-only、queue=8、WSL2 原生 ext4 工作区：workers=1 `8.113806 img/s`、peak RSS `205.765625 MiB`；workers=4 `20.159584 img/s`、peak RSS `588.226563 MiB`；吞吐比 `2.484603` |
+| Linux AArch64/QEMU 功能 | 交叉构建的 Runtime/CLI 通过目录 workers=1、manifest workers=2 + 有限队列、逐图一致性、精确 `2 succeeded + 1 failed` 部分失败，以及 `BatchSummary` schema/计数/目标架构检查 |
+| 诚实边界 | Windows PWS 与 Linux RSS 只在各自平台内部比较；QEMU 数字不是性能或内存证据，也不代表原生 ARM 硬件 |
+
+机器可读证据分别位于
+[`cpp_infer/results/s2_03/windows_x86_64/`](cpp_infer/results/s2_03/windows_x86_64/)、
+[`cpp_infer/results/s2_03/linux_x86_64/`](cpp_infer/results/s2_03/linux_x86_64/)和
+[`cpp_infer/results/s2_03/linux_aarch64_qemu/`](cpp_infer/results/s2_03/linux_aarch64_qemu/)。
+命令协议与解释见[路径、命令与环境](docs/paths_commands.md)和
+[S2-03 收口](docs/details/s2_03_closure.md)。
+
 ### 平台矩阵
 
 | 平台/后端 | 能证明什么 | 当前状态 |
 |---|---|---|
-| Windows x86_64 + ORT CPU FP32 | 当前产品链、正确性、测试、分段 Benchmark、Peak Working Set | 已验证 |
+| Windows x86_64 + ORT CPU FP32 | 当前产品链、单图与有界多图正确性、156/156 测试、正式同平台吞吐/PWS 比较 | **S2-03 已验证** |
 | Windows x86_64 + ORT CPU INT8 | Static PTQ 产物、Runtime 合法性、大小/质量/性能比较、逐节点 profiling | S2-01 已按 advisory 练习口径验证 |
 | WSL2/Linux x86_64 + ORT CPU INT8 | 潜在的共享源码 Linux INT8 路径 | Gate A 未单独实测；不作 Linux INT8 对比结论 |
-| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux 构建/加载/Runtime 可移植性、一致性、短 Benchmark、peak RSS | **S2-02 Gate A 已验证** |
-| Linux AArch64 under QEMU | 交叉构建、core/contracts 与固定图片 ARM64 ORT CPU 功能正确性 | **S2-02 Gate B 已在模拟环境验证**；不是板卡且无性能结论 |
+| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux 构建/加载/Runtime 可移植性、单图与有界多图正确性、156/156 测试、正式同平台吞吐/RSS 比较 | **S2-03 已在 WSL2 验证** |
+| Linux AArch64 under QEMU | 交叉构建、单图与有界多图 ARM64 ORT CPU 功能正确性 | **S2-03 已在模拟环境验证**；不是板卡且无性能/内存结论 |
 | Linux x86_64 + RTX 4060 + TensorRT | 真实本地 TensorRT 执行、FP16 正确性/性能、GPU 内存 | 计划在 S2-04 完成；不是 Jetson |
 
 当前简历无需等待大阶段二即可使用。已完成的 S2 单元可以滚动更新简历；
@@ -321,17 +353,21 @@ Gate B 的 host 是 WSL2/Linux x86_64，target 是 Linux AArch64。GNU toolchain
   也不是新的 PyTorch/ONNX/C++ 三方对比。
 - 匹配的 `.pt` checkpoint 当前不存在。现有 ONNX 的来源由项目所有者确认，
   但目前无法在本工作区重新导出。
-- 正式已跟踪 Benchmark 仅使用一张 `200x200` 图片、batch 1、暖文件缓存、
+- 大阶段一正式已跟踪 Benchmark 仅使用一张 `200x200` 图片、batch 1、暖文件缓存、
   一台 Windows CPU 主机、串行 ORT 执行，并且没有锁定 CPU affinity/priority。
   Gate A 的 Linux warmup-1/repeat-2 样本波动明显，只是功能性性能 smoke，
   不是正式结果，也不能用作跨操作系统速度比较。
+- S2-03 正式比较在每个 x86_64 平台内使用同一 361 图目录、FP32 CPU、
+  JSON-only 输出、queue=8 和独立的 workers=1/workers=4 Release 进程；先比较
+  每份 detection JSON，再计算 speedup。Windows 与 WSL2 数字不作跨平台比较。
 - Windows Peak Working Set 与 Linux `getrusage` peak RSS 都是进程生命周期高水位，
   但平台语义不同；二者都不是模型专属或单次推理内存，数值也不能直接比较。
 - S2-01 ORT trace 已证明优化后节点由 `CPUExecutionProvider` 执行，但 trace
   时长含 profiler 开销，也不能说明 kernel 内部最终选择了哪条 CPU 指令。
-- 当前 Runtime 仍为 CPU 单图；Windows INT8、S2-02 Gate A 原生 Linux 与 Gate B
-  AArch64/QEMU 功能路径已交付。QEMU 不证明板卡延迟、吞吐、功耗、散热或部署稳定性；
-  有界并发和 TensorRT 仍在计划中。
+- 当前 Runtime 仍只使用 CPU，且每次推理调用保持 batch=1，但 S2-03 已能通过
+  有界独立 workers 处理多图。这不是真正的 tensor batch、视频、服务、GPU 并发或
+  无锁队列。QEMU 不证明板卡延迟、吞吐、内存、功耗、散热或部署稳定性；TensorRT
+  仍在计划中。
 - 历史 Python ORT `24.4/72.1 FPS` 使用不同实现、provider、硬件、样本和计时边界；
   只能作为背景，不能与 C++ 结果排名比较。
 - 源码、模型与数据集许可证是彼此独立的检查点。MIT 源码许可证不会自动为已分发的
@@ -359,6 +395,7 @@ D010 集成、Qt、本地 LLM、Agent 工作流和真实 ARM/Jetson 设备保持
 - [S2-02 Gate A Linux x86_64 收口](docs/details/s2_02_gate_a_closure.md)
 - [S2-02 Gate B AArch64/QEMU 收口](docs/details/s2_02_gate_b_closure.md)
 - [S2-02 完整教学收口](docs/details/s2_02_closure.md)
+- [S2-03 多图有界并发收口](docs/details/s2_03_closure.md)
 - [路径、命令与环境](docs/paths_commands.md)
 - [C++ Runtime 技术参考](cpp_infer/README.md)
 

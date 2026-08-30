@@ -4,7 +4,7 @@
 
 项目中文名为 **工业视觉边缘 AI Runtime 与 C++ 工程化系统**，英文名为 **Industrial Vision Edge AI Runtime and C++ Engineering System**。它服务于 2026 秋招简历和面试，重点是通过真实开发过程理解现代 C++、跨平台构建、推理工程、性能分析、并发和边缘部署，而不是按生产上线标准堆叠防御工程。
 
-当前状态：**大阶段一与用户 L2 已完成；S2-01 的 Windows CPU static INT8 PTQ、同协议比较、ORT Profiling 和文档已完成；S2-02 Gate A/Gate B 的实现、三平台最终关键回归、综合文档和教学收口均已完成，当前停止并等待用户 L1，S2-03 尚未开始。** S2-01 最终练习产物是全 64 Conv 的 QDQ/U8S8 Round 2 模型；Round 1 QDQ/S8S8 保留为“量化后变慢”的诊断案例。Gate A 已证明同一业务源码可在 Windows/Linux x86_64 上完成 Release 主链；Gate B 已证明 Linux x86_64 host 可交叉编译同一 Runtime/CLI 到 AArch64，并在 QEMU user-mode 下运行 core contracts 与固定图片 ARM64 ORT CPU 完整推理。QEMU 不是开发板，未产生性能结论。
+当前状态：**大阶段一与用户 L2 已完成；S2-01、S2-02 和 S2-03 的实现、三平台关键回归、证据与教学收口均已完成，当前停止并等待用户 L1；S2-04 尚未开始。** S2-01 最终练习产物是全 64 Conv 的 QDQ/U8S8 Round 2 模型；Round 1 QDQ/S8S8 保留为“量化后变慢”的诊断案例。S2-02 已证明同一业务源码可在 Windows/Linux x86_64 运行并交叉编译到 Linux AArch64。S2-03 在不改变 `DetectorPipeline` 检测语义的前提下增加了目录/manifest 确定性发现、有界队列、每 worker 独占 ORT session、背压、逐图输出、部分失败统计、协作式退出和机器可读 `BatchSummary`；summary 会独立记录 cooperative stop 请求，因此即使中断时所有任务都已开始，仍稳定返回 `cancelled`/130。Windows x86_64 与 WSL2/Linux x86_64 已完成正式 361 图单线程/四 worker 正确性、吞吐与内存比较；AArch64/QEMU 已完成同一 batch 功能链验证。QEMU 不是开发板，不产生性能、内存或原生 ARM 设备结论。
 
 已验证主链：
 
@@ -12,7 +12,8 @@
 RuntimeConfig + ModelArtifactSpec -> actual ModelMetadata
 -> OpenCV preprocess -> ONNX Runtime C++ inference
 -> YOLO decode/NMS/coordinate restore -> JSON/visualization
--> consistency/benchmark/profiling
+-> single-image output 或 deterministic discovery -> bounded queue -> workers
+-> per-image output + ordered BatchSummary/consistency/benchmark/profiling
 -> Windows x86_64、WSL2/Linux x86_64 与 QEMU/Linux AArch64 共享业务主链
 ```
 
@@ -30,8 +31,8 @@ RuntimeConfig + ModelArtifactSpec -> actual ModelMetadata
 
 1. S2-01：INT8 PTQ 与 ORT Profiling——已实现，等待 L1。
 2. S2-02：Linux x86_64 与 AArch64/QEMU——Gate A/Gate B、最终三平台回归和教学收口已完成，等待用户 L1。
-3. S2-03：目录/Manifest 有界并发。
-4. S2-04：Linux x86_64 + RTX 4060 TensorRT。
+3. S2-03：目录/Manifest 有界并发——三平台功能回归与双 x86_64 平台正式比较均已完成，等待用户 L1。
+4. S2-04：Linux x86_64 + RTX 4060 TensorRT——尚未开始。
 5. S2-05：证据、简历/面试材料与 Recruiting Freeze。
 
 一次只推进一个完整单元，不并行实现后续单元。固定闭环仍是最小 SPEC、实现、相称验证、必要结果、入口文档同步，然后停止等待用户 L1；S2-05 做 L2。
@@ -52,7 +53,7 @@ RuntimeConfig + ModelArtifactSpec -> actual ModelMetadata
 
 - 保持 C++17、CMake、OpenCV、ONNX Runtime C++、GTest 主技术栈；依赖显式、可配置、可诊断。
 - Runtime library 负责配置、artifact、metadata、preprocess、backend、postprocess 和结果；CLI/workflow 只编排参数、文件与退出码。
-- Demo、benchmark、未来 batch 和 backend 复用 `DetectorPipeline` 或清晰抽象，不复制 preprocess、decode、NMS 和坐标恢复。
+- Demo、benchmark、batch 和 backend 复用 `DetectorPipeline` 或清晰抽象，不复制 preprocess、decode、NMS 和坐标恢复。
 - `RuntimeConfig` 管运行选择，`ModelArtifactSpec` 管模型语义，`ModelMetadata` 表示 ORT 实际观察；三层权威不混用。
 - backend 暴露模型无关的 owned I/O 和可行动错误；模型族逻辑留在 pre/postprocess。
 - Windows/Linux 共用业务源码，平台差异放在薄适配层、CMake 或 workflow；用 RAII 和明确 ownership 管理 session、buffer、文件、线程与 profile。
@@ -60,9 +61,9 @@ RuntimeConfig + ModelArtifactSpec -> actual ModelMetadata
 
 ## 6. 平台与事实边界
 
-- Windows x86_64 已验证 FP32/INT8 ORT CPU、Release/NMake、119/119 CTest、分段 benchmark、Peak Working Set 和逐节点 profiling；S2-02 最终复跑再次通过 clean Release、119/119 CTest 与固定图 3-detection JSON/PNG。
-- S2-02 Gate A 已在 WSL2/Linux x86_64 上验证 Release/Ninja、119/119 CTest、固定单图 JSON/PNG、30/30 图 62/62 检测一致性、短 Benchmark、peak RSS 和 ELF/`ldd` 动态依赖；最终复跑再次通过 build/test/demo/consistency。这些只能写作 WSL2/Linux 证据。
-- S2-02 Gate B 已在 WSL2 x86_64 host 上完成并最终复跑 AArch64 cross-build、`file/readelf`、138 个 target library loader checks、QEMU contracts/core smoke 与固定图片 ARM64 ORT CPU 3-detection 推理；它只证明构建和功能可移植性，不是 ARM 板卡证据，也不发布 QEMU 性能。
+- Windows x86_64 已验证 FP32/INT8 ORT CPU、Release/NMake、分段 benchmark、Peak Working Set 和逐节点 profiling；S2-03 最终 clean Release 通过 156/156 CTest 与固定图 3-detection JSON/PNG。正式 361 图 FP32 CPU、JSON-only、queue=8 比较中，worker=1 为 `6.285556 img/s`、PWS `151.804688 MiB`，worker=4 为 `17.853923 img/s`、PWS `505.085938 MiB`，吞吐比 `2.840468`，361 份逐图检测完全一致。
+- WSL2/Linux x86_64 已验证共享源码 Release/Ninja、ELF/`ldd`、固定单图与 30 图一致性；S2-03 最终 clean Release 通过 156/156 CTest。正式 361 图 FP32 CPU、JSON-only、queue=8 比较在 WSL2 原生 ext4 临时工作区运行，worker=1 为 `8.113806 img/s`、peak RSS `205.765625 MiB`，worker=4 为 `20.159584 img/s`、peak RSS `588.226563 MiB`，吞吐比 `2.484603`，361 份逐图检测完全一致。这些只能写作 WSL2/Linux 证据。
+- Linux AArch64 已在 WSL2 x86_64 host 上完成 cross-build、AArch64 ELF/target loader 检查，并在 QEMU user-mode 下通过固定单图以及 S2-03 目录 worker=1、manifest worker=2、有限队列、逐图一致性、`2 成功 + 1 失败`和 `BatchSummary` 回归。它只证明构建和功能可移植性，不是 ARM 板卡或原生 ARM 运行证据，也不发布 QEMU 吞吐、延迟或内存结论。
 - S2-04 的 RTX 4060 只代表本地 Linux x86_64 GPU/edge-node，不得写成 Jetson、ARM64 GPU 或嵌入式实机。
 - 性能结果必须说明机器、provider、线程、样本和限制；PWS、RSS、GPU memory 不直接等同。
 - matching `.pt` 不在工作区或 Git 历史中，不得声称重新完成 PyTorch/ONNX/C++ 三方 lineage。

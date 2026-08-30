@@ -95,7 +95,7 @@ std::vector<float> to_nchw_tensor(const cv::Mat& rgb_float) {
 
 }  // namespace
 
-PreprocessResult preprocess_image(const std::string& image_path,
+PreprocessResult preprocess_image(const std::filesystem::path& image_path,
                                    const ModelArtifactSpec& artifact) {
   const std::filesystem::path normalized_path =
       internal::normalize_image_file(image_path);

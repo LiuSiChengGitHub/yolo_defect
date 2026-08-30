@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(yolo_defect_cpp
-  VERSION 0.7.0
-  DESCRIPTION "C++ ONNX single-image runtime with reproducible CPU benchmark evidence"
+  VERSION 0.8.0
+  DESCRIPTION "C++ ONNX industrial-vision runtime with bounded multi-image concurrency"
   LANGUAGES CXX
 )
 
@@ -120,6 +120,8 @@ else()
   find_package(OpenCV 4 REQUIRED COMPONENTS core imgcodecs imgproc)
 endif()
 
+find_package(Threads REQUIRED)
+
 set(_onnxruntime_root_default "")
 if(DEFINED ENV{ONNXRUNTIME_ROOT})
   set(_onnxruntime_root_default "$ENV{ONNXRUNTIME_ROOT}")
@@ -235,6 +237,9 @@ endif()
 
 add_library(yolo_defect_runtime STATIC
   src/artifact_spec.cpp
+  src/batch_discovery.cpp
+  src/batch_runner.cpp
+  src/batch_writer.cpp
   src/benchmark_result.cpp
   src/benchmark_runner.cpp
   src/benchmark_writer.cpp
@@ -265,6 +270,7 @@ target_link_libraries(yolo_defect_runtime
   PRIVATE
     ${OpenCV_LIBS}
     onnxruntime::onnxruntime
+    Threads::Threads
 )
 if(WIN32)
   target_link_libraries(yolo_defect_runtime PRIVATE Psapi)
@@ -274,6 +280,7 @@ target_compile_definitions(yolo_defect_runtime PRIVATE
   "YOLO_DEFECT_COMPILER_ID=\"${CMAKE_CXX_COMPILER_ID}\""
   "YOLO_DEFECT_COMPILER_VERSION=\"${CMAKE_CXX_COMPILER_VERSION}\""
   "YOLO_DEFECT_OPENCV_VERSION=\"${OpenCV_VERSION}\""
+  "YOLO_DEFECT_TARGET_ARCHITECTURE=\"${CMAKE_SYSTEM_PROCESSOR}\""
 )
 set_target_properties(yolo_defect_runtime PROPERTIES
   CXX_EXTENSIONS OFF
@@ -397,6 +404,10 @@ if(BUILD_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_benchmark_json.py")
   set(TEST_PROFILE_SCRIPT
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_profile.cmake")
+  set(TEST_BATCH_CLI_SCRIPT
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/assert_batch_cli.py")
+  set(TEST_BATCH_SUMMARY_VALIDATOR
+    "${CMAKE_CURRENT_SOURCE_DIR}/tools/validate_batch_summary.py")
   set(CONSISTENCY_MANIFEST
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/consistency_manifest.json")
   set(CONSISTENCY_TOOL
@@ -413,6 +424,8 @@ if(BUILD_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_protocol.py")
   set(S2_01_EVIDENCE_UNIT_TEST
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_evidence.py")
+  set(S2_03_BATCH_TOOLS_UNIT_TEST
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_03_batch_tools.py")
   set(S2_01_MANIFEST_TOOL
     "${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_s2_01_manifests.py")
   set(FIXED_IMAGE
@@ -493,6 +506,33 @@ if(BUILD_TESTING)
     DISCOVERY_TIMEOUT 30
   )
 
+  # Compile the filesystem-path decoder directly so this regression test has
+  # no ONNX Runtime dependency or session initialization.
+  add_executable(yolo_defect_image_decoder_tests
+    src/image_decoder.cpp
+    tests/image_decoder_test.cpp
+  )
+  target_compile_features(yolo_defect_image_decoder_tests PRIVATE cxx_std_17)
+  target_include_directories(yolo_defect_image_decoder_tests
+    PRIVATE
+      "${CMAKE_CURRENT_SOURCE_DIR}/src"
+      ${OpenCV_INCLUDE_DIRS}
+  )
+  target_link_libraries(yolo_defect_image_decoder_tests
+    PRIVATE
+      GTest::gtest_main
+      ${OpenCV_LIBS}
+  )
+  set_target_properties(yolo_defect_image_decoder_tests PROPERTIES
+    CXX_EXTENSIONS OFF
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+  )
+  gtest_discover_tests(yolo_defect_image_decoder_tests
+    TEST_PREFIX "image_decoder."
+    PROPERTIES LABELS "image_decoder\;filesystem\;unit\;quality_gate"
+    DISCOVERY_TIMEOUT 30
+  )
+
   add_executable(yolo_defect_output_tests
     tests/result_writer_test.cpp
   )
@@ -531,6 +571,28 @@ if(BUILD_TESTING)
     DISCOVERY_TIMEOUT 30
   )
 
+  add_executable(yolo_defect_batch_tests
+    tests/batch_test.cpp
+  )
+  target_compile_features(yolo_defect_batch_tests PRIVATE cxx_std_17)
+  target_include_directories(yolo_defect_batch_tests
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  target_link_libraries(yolo_defect_batch_tests
+    PRIVATE
+      yolo_defect::runtime
+      GTest::gtest_main
+  )
+  set_target_properties(yolo_defect_batch_tests PROPERTIES
+    CXX_EXTENSIONS OFF
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+  )
+  configure_onnxruntime_runtime(yolo_defect_batch_tests)
+  gtest_discover_tests(yolo_defect_batch_tests
+    TEST_PREFIX "batch."
+    PROPERTIES LABELS "batch\;concurrency\;unit\;quality_gate"
+    DISCOVERY_TIMEOUT 30
+  )
+
   add_executable(yolo_defect_image_probe
     tests/image_file_probe.cpp
   )
@@ -549,7 +611,7 @@ if(BUILD_TESTING)
   )
   set_tests_properties(yolo_defect_cpp_help PROPERTIES
     LABELS "cli;smoke;quality_gate"
-    PASS_REGULAR_EXPRESSION "S1-08 reproducible CPU benchmark CLI"
+    PASS_REGULAR_EXPRESSION "S2-03 bounded multi-image Runtime CLI"
   )
 
   add_test(
@@ -625,6 +687,19 @@ if(BUILD_TESTING)
   )
 
   add_test(
+    NAME yolo_defect_cpp_batch_cli
+    COMMAND "${Python3_EXECUTABLE}" "${TEST_BATCH_CLI_SCRIPT}"
+      --cli $<TARGET_FILE:yolo_defect_cpp>
+      --config "${DEFAULT_CONFIG}"
+      --image "${FIXED_IMAGE}"
+      --work-root "${CMAKE_BINARY_DIR}/test_outputs/batch_cli"
+  )
+  set_tests_properties(yolo_defect_cpp_batch_cli PROPERTIES
+    LABELS "batch;concurrency;integration;quality_gate"
+    TIMEOUT 300
+  )
+
+  add_test(
     NAME yolo_defect_consistency_unit
     COMMAND "${Python3_EXECUTABLE}" "${CONSISTENCY_UNIT_TEST}" -v
   )
@@ -681,6 +756,15 @@ if(BUILD_TESTING)
   )
   set_tests_properties(yolo_defect_s2_01_manifest_check PROPERTIES
     LABELS "ptq;manifest;quality_gate"
+  )
+
+  add_test(
+    NAME yolo_defect_s2_03_batch_tools_unit
+    COMMAND "${Python3_EXECUTABLE}"
+      "${S2_03_BATCH_TOOLS_UNIT_TEST}" -v
+  )
+  set_tests_properties(yolo_defect_s2_03_batch_tools_unit PROPERTIES
+    LABELS "batch;comparison;unit;quality_gate"
   )
 
   add_test(
@@ -818,6 +902,60 @@ if(BUILD_TESTING)
     --config "${DEFAULT_CONFIG}"
     --image "${FIXED_IMAGE}"
     --output-json "${CLI_FAILURE_DIRECTORY_TARGET}")
+
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_batch_flag_requires_mode
+    "require --batch"
+    --workers 2)
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_batch_requires_config
+    "--batch requires --config"
+    --batch
+    --input-dir "${CMAKE_CURRENT_SOURCE_DIR}/../data/images/val"
+    --output-dir "${CLI_FAILURE_OUTPUT_ROOT}/batch_missing_config"
+    --batch-summary "${CLI_FAILURE_OUTPUT_ROOT}/batch_missing_config.json")
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_batch_requires_one_input
+    "requires exactly one of --input-dir or --manifest"
+    --config "${DEFAULT_CONFIG}"
+    --batch
+    --output-dir "${CLI_FAILURE_OUTPUT_ROOT}/batch_missing_input"
+    --batch-summary "${CLI_FAILURE_OUTPUT_ROOT}/batch_missing_input.json")
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_batch_rejects_two_inputs
+    "requires exactly one of --input-dir or --manifest"
+    --config "${DEFAULT_CONFIG}"
+    --batch
+    --input-dir "${CMAKE_CURRENT_SOURCE_DIR}/../data/images/val"
+    --manifest "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/s2_03_consistency_manifest.txt"
+    --output-dir "${CLI_FAILURE_OUTPUT_ROOT}/batch_two_inputs"
+    --batch-summary "${CLI_FAILURE_OUTPUT_ROOT}/batch_two_inputs.json")
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_batch_invalid_workers
+    "object=--workers"
+    --workers 65)
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_batch_invalid_queue_capacity
+    "object=--queue-capacity"
+    --queue-capacity 0)
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_batch_mode_conflict
+    "mutually exclusive"
+    --config "${DEFAULT_CONFIG}"
+    --batch
+    --input-dir "${CMAKE_CURRENT_SOURCE_DIR}/../data/images/val"
+    --output-dir "${CLI_FAILURE_OUTPUT_ROOT}/batch_conflict"
+    --batch-summary "${CLI_FAILURE_OUTPUT_ROOT}/batch_conflict.json"
+    --inspect-model)
+  set_tests_properties(
+    yolo_defect_cpp_batch_flag_requires_mode
+    yolo_defect_cpp_batch_requires_config
+    yolo_defect_cpp_batch_requires_one_input
+    yolo_defect_cpp_batch_rejects_two_inputs
+    yolo_defect_cpp_batch_invalid_workers
+    yolo_defect_cpp_batch_invalid_queue_capacity
+    yolo_defect_cpp_batch_mode_conflict
+    PROPERTIES LABELS "batch;concurrency;cli;negative;quality_gate")
 
   add_cli_argument_failure_test(
     yolo_defect_cpp_benchmark_json_requires_mode

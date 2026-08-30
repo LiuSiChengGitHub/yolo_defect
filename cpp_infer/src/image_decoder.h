@@ -10,8 +10,8 @@ namespace internal {
 
 struct DecodedBgrImage {
   cv::Mat image;
-  // Measures cv::imread only. Filesystem checks and decoded-image validation
-  // deliberately sit outside this interval.
+  // Measures encoded-file reading plus cv::imdecode. Path normalization and
+  // decoded-image validation deliberately sit outside this interval.
   double imread_ms = 0.0;
 };
 

@@ -98,7 +98,7 @@ class ProfileRunner::Impl {
     const std::filesystem::path profile_prefix =
         prepare_profile_prefix(request.profile_file_prefix);
     PreprocessResult preprocess = preprocess_image(
-        request.image_path.string(), contract_.artifact);
+        request.image_path, contract_.artifact);
 
     OnnxRunnerOptions runner_options;
     runner_options.profile_file_prefix = profile_prefix;

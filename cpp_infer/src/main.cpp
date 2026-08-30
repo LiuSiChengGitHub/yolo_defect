@@ -1,5 +1,7 @@
 #include "yolo_defect_cpp/benchmark_runner.h"
 #include "yolo_defect_cpp/benchmark_writer.h"
+#include "yolo_defect_cpp/batch_runner.h"
+#include "yolo_defect_cpp/batch_writer.h"
 #include "yolo_defect_cpp/config_loader.h"
 #include "yolo_defect_cpp/detector_pipeline.h"
 #include "yolo_defect_cpp/image_preprocessor.h"
@@ -7,8 +9,11 @@
 #include "yolo_defect_cpp/profile_runner.h"
 
 #include <algorithm>
+#include <atomic>
 #include <charconv>
+#include <chrono>
 #include <cmath>
+#include <csignal>
 #include <cstdint>
 #include <exception>
 #include <filesystem>
@@ -17,6 +22,7 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -27,25 +33,149 @@ struct CliOptions {
   bool raw_output_summary = false;
   bool benchmark = false;
   bool profile = false;
+  bool batch = false;
+  bool output_images = false;
   bool overwrite_existing = false;
   bool warmup_provided = false;
   bool repeat_provided = false;
   bool profile_runs_provided = false;
+  bool workers_provided = false;
+  bool queue_capacity_provided = false;
   std::size_t warmup = 10;
   std::size_t repeat = 100;
   std::size_t profile_runs = 10;
+  std::size_t workers = 1;
+  std::size_t queue_capacity = 2;
   std::string config_path;
   std::string image_path;
   std::string output_json_path;
   std::string output_image_path;
   std::string benchmark_json_path;
   std::string profile_prefix_path;
+  std::string input_directory_path;
+  std::string manifest_path;
+  std::string output_directory_path;
+  std::string batch_summary_path;
 };
 
 struct NumericSummary {
   std::size_t finite_values = 0;
   float minimum = std::numeric_limits<float>::infinity();
   float maximum = -std::numeric_limits<float>::infinity();
+};
+
+volatile std::sig_atomic_t g_batch_signal = 0;
+
+void handle_batch_signal(int signal_number) {
+  g_batch_signal = signal_number;
+}
+
+class ScopedBatchSignalHandlers {
+ public:
+  ScopedBatchSignalHandlers() {
+    g_batch_signal = 0;
+    previous_interrupt_ = std::signal(SIGINT, handle_batch_signal);
+    if (previous_interrupt_ == SIG_ERR) {
+      throw std::runtime_error(
+          "Batch signal setup failed: object=SIGINT; expected=an installed "
+          "cooperative handler; actual=std::signal returned SIG_ERR; "
+          "action=verify the process signal environment.");
+    }
+#ifdef SIGTERM
+    previous_terminate_ = std::signal(SIGTERM, handle_batch_signal);
+    if (previous_terminate_ == SIG_ERR) {
+      std::signal(SIGINT, previous_interrupt_);
+      throw std::runtime_error(
+          "Batch signal setup failed: object=SIGTERM; expected=an installed "
+          "cooperative handler; actual=std::signal returned SIG_ERR; "
+          "action=verify the process signal environment.");
+    }
+#endif
+#ifdef SIGBREAK
+    previous_break_ = std::signal(SIGBREAK, handle_batch_signal);
+    if (previous_break_ == SIG_ERR) {
+#ifdef SIGTERM
+      std::signal(SIGTERM, previous_terminate_);
+#endif
+      std::signal(SIGINT, previous_interrupt_);
+      throw std::runtime_error(
+          "Batch signal setup failed: object=SIGBREAK; expected=an installed "
+          "cooperative handler; actual=std::signal returned SIG_ERR; "
+          "action=verify the Windows console signal environment.");
+    }
+#endif
+  }
+
+  ~ScopedBatchSignalHandlers() {
+#ifdef SIGBREAK
+    std::signal(SIGBREAK, previous_break_);
+#endif
+#ifdef SIGTERM
+    std::signal(SIGTERM, previous_terminate_);
+#endif
+    std::signal(SIGINT, previous_interrupt_);
+  }
+
+  ScopedBatchSignalHandlers(const ScopedBatchSignalHandlers&) = delete;
+  ScopedBatchSignalHandlers& operator=(
+      const ScopedBatchSignalHandlers&) = delete;
+
+ private:
+  using SignalHandler = void (*)(int);
+  SignalHandler previous_interrupt_ = SIG_DFL;
+#ifdef SIGTERM
+  SignalHandler previous_terminate_ = SIG_DFL;
+#endif
+#ifdef SIGBREAK
+  SignalHandler previous_break_ = SIG_DFL;
+#endif
+};
+
+class BatchStopMonitor {
+ public:
+  explicit BatchStopMonitor(yolo_defect_cpp::BatchRunner& runner)
+      : runner_(runner), thread_([this]() { monitor(); }) {}
+
+  ~BatchStopMonitor() { (void)stop(); }
+
+  BatchStopMonitor(const BatchStopMonitor&) = delete;
+  BatchStopMonitor& operator=(const BatchStopMonitor&) = delete;
+
+  bool stop() noexcept {
+    observe_pending_signal();
+    done_.store(true, std::memory_order_release);
+    if (thread_.joinable()) {
+      thread_.join();
+    }
+    // Close the polling tail window: a signal may have set the async-safe
+    // flag while the monitor was sleeping immediately before run() returned.
+    observe_pending_signal();
+    return signal_observed_.load(std::memory_order_acquire);
+  }
+
+ private:
+  void observe_pending_signal() noexcept {
+    if (g_batch_signal != 0) {
+      signal_observed_.store(true, std::memory_order_release);
+      runner_.request_stop();
+    }
+  }
+
+  void monitor() noexcept {
+    while (!done_.load(std::memory_order_acquire)) {
+      if (g_batch_signal != 0) {
+        signal_observed_.store(true, std::memory_order_release);
+        runner_.request_stop();
+        return;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+  }
+
+  yolo_defect_cpp::BatchRunner& runner_;
+  std::atomic<bool> done_{false};
+  std::atomic<bool> signal_observed_{false};
+  std::thread thread_;
 };
 
 std::string format_shape(const std::vector<std::int64_t>& shape) {
@@ -74,7 +204,7 @@ std::string format_class_names(const std::vector<std::string>& class_names) {
 
 void print_help(const char* program_name) {
   std::cout
-      << "yolo_defect_cpp - S1-08 reproducible CPU benchmark CLI\n"
+      << "yolo_defect_cpp - S2-03 bounded multi-image Runtime CLI\n"
       << "\n"
       << "Usage:\n"
       << "  " << program_name << " [--help]\n"
@@ -96,6 +226,12 @@ void print_help(const char* program_name) {
       << "  " << program_name
       << " --config <config_path> --image <image_path> --profile"
          " --profile-prefix <path> [--profile-runs <count>]\n"
+      << "  " << program_name
+      << " --config <config_path> --batch"
+         " (--input-dir <directory> | --manifest <path-list>)"
+         " --output-dir <directory> --batch-summary <path>"
+         " [--workers <1..64>] [--queue-capacity <1..4096>]"
+         " [--output-images] [--overwrite]\n"
       << "\n"
       << "Scope:\n"
       << "  Loads and validates RuntimeConfig + ModelArtifactSpec.\n"
@@ -116,23 +252,29 @@ void print_help(const char* program_name) {
       << "  the fixed preprocessed image (default 10 times), calls EndProfiling,\n"
       << "  and reports the actual ORT-generated JSON trace path. Profile timing\n"
       << "  contains instrumentation overhead and is not benchmark evidence.\n"
+      << "  --batch discovers deterministic tasks and runs a bounded queue.\n"
+      << "  Each worker owns one existing batch=1 DetectorPipeline/ORT session;\n"
+      << "  JSON is written per success and --output-images also writes PNG.\n"
+      << "  Directories are recursive and sorted; UTF-8 manifest paths remain\n"
+      << "  in declaration order and resolve from the manifest directory.\n"
       << "  Output parents are created recursively. Existing regular files are\n"
       << "  rejected unless --overwrite is explicit; paths matching protected\n"
       << "  inputs are rejected before writing. Relative CLI image/output paths\n"
-      << "  use the current working directory. No GUI, batch processing,\n"
-      << "  concurrency, or service mode exists.\n";
+      << "  use the current working directory. No GUI, true ONNX batch, video,\n"
+      << "  service, GPU concurrency, or lock-free queue exists.\n";
 }
 
 void print_banner() {
   std::cout
-      << "yolo_defect_cpp - S1-08 reproducible CPU benchmark CLI\n"
+      << "yolo_defect_cpp - S2-03 bounded multi-image Runtime CLI\n"
       << "V2 Runtime: industrial vision AI deployment workspace\n"
       << "Current scope: validated single-image detection, S1-07 consistency "
          "evidence, S1-08 Release CPU benchmark evidence, and S2-01 ORT "
-         "profiling\n"
-      << "Run with --help for single-image, benchmark, and profile commands.\n"
-      << "Batch processing, concurrency, and service are not part of this "
-         "Runtime scope.\n";
+         "profiling, and bounded multi-image CPU execution\n"
+      << "Run with --help for single-image, batch, benchmark, and profile "
+         "commands.\n"
+      << "Batch remains concurrent batch=1 work; true batch, video, services, "
+         "and GPU concurrency are out of scope.\n";
 }
 
 void print_contract_summary(
@@ -434,28 +576,77 @@ void print_profile_summary(
          "formal benchmark evidence must come from --benchmark.\n";
 }
 
+void print_batch_summary(
+    const yolo_defect_cpp::BatchSummary& summary,
+    const std::filesystem::path& summary_path) {
+  std::cout
+      << "S2-03 bounded multi-image batch completed\n"
+      << "batch_summary: " << summary_path.string() << "\n"
+      << "status: " << yolo_defect_cpp::to_string(summary.status) << "\n"
+      << "input_kind: " << yolo_defect_cpp::to_string(summary.input.kind)
+      << "\n"
+      << "input_path: " << summary.input.source_path.string() << "\n"
+      << "requested_workers: " << summary.runtime.requested_workers << "\n"
+      << "effective_workers: " << summary.runtime.effective_workers << "\n"
+      << "queue_capacity: " << summary.queue.capacity << "\n"
+      << "queue_peak_depth: " << summary.queue.peak_depth << "\n"
+      << "producer_wait_count: " << summary.queue.producer_wait_count << "\n"
+      << "discovered: " << summary.counts.discovered << "\n"
+      << "succeeded: " << summary.counts.succeeded << "\n"
+      << "failed: " << summary.counts.failed << "\n"
+      << "cancelled: " << summary.counts.cancelled << "\n"
+      << std::fixed << std::setprecision(6)
+      << "processing_wall_ms: " << summary.timing.processing_wall_ms << "\n"
+      << "throughput_images_per_second: "
+      << summary.throughput_images_per_second << "\n"
+      << "memory_metric: " << summary.memory.metric << "\n"
+      << "memory_mebibytes: " << summary.memory.mebibytes << "\n"
+      << "memory_publishable: "
+      << (summary.memory.publishable ? "true" : "false") << "\n"
+      << "scope: independent batch=1 DetectorPipeline workers with bounded "
+         "queue; no true batch, video, service, GPU concurrency, or "
+         "lock-free queue.\n";
+}
+
+int batch_exit_code(yolo_defect_cpp::BatchStatus status) {
+  switch (status) {
+    case yolo_defect_cpp::BatchStatus::kSucceeded:
+      return 0;
+    case yolo_defect_cpp::BatchStatus::kPartialFailure:
+      return 2;
+    case yolo_defect_cpp::BatchStatus::kCancelled:
+      return 130;
+    case yolo_defect_cpp::BatchStatus::kFatal:
+      return 1;
+  }
+  return 1;
+}
+
 std::size_t parse_count_value(const std::string& value,
                               const std::string& option,
-                              std::size_t minimum) {
+                              std::size_t minimum,
+                              std::size_t maximum = 1000000) {
   std::size_t parsed = 0;
   const char* const begin = value.data();
   const char* const end = begin + value.size();
   const std::from_chars_result conversion =
       std::from_chars(begin, end, parsed, 10);
-  constexpr std::size_t kMaximumIterations = 1000000;
   if (value.empty() || conversion.ec != std::errc{} ||
       conversion.ptr != end || parsed < minimum ||
-      parsed > kMaximumIterations) {
-    const std::string action =
-        option == "--profile-runs"
-            ? "use the frozen --profile-runs 10 count for formal profiling "
-              "profiling"
-            : "use --warmup 10 and --repeat 100 for the formal S1-08 "
-              "baseline";
+      parsed > maximum) {
+    std::string action =
+        "use --warmup 10 and --repeat 100 for the formal S1-08 baseline";
+    if (option == "--profile-runs") {
+      action = "use the frozen --profile-runs 10 count for formal profiling";
+    } else if (option == "--workers") {
+      action = "choose a bounded number of independent worker sessions";
+    } else if (option == "--queue-capacity") {
+      action = "choose a bounded queue capacity";
+    }
     throw std::runtime_error(
         "CLI argument error: object=" + option +
         "; expected=an integer in [" + std::to_string(minimum) +
-        ",1000000]; actual='" + value +
+        "," + std::to_string(maximum) + "]; actual='" + value +
         "'; action=" + action + ".");
   }
   return parsed;
@@ -541,6 +732,39 @@ CliOptions parse_cli(int argc, char* argv[]) {
       continue;
     }
 
+    if (argument == "--input-dir") {
+      if (!options.input_directory_path.empty()) {
+        throw std::runtime_error("--input-dir was provided more than once.");
+      }
+      options.input_directory_path = read_path_value(index, argument);
+      continue;
+    }
+
+    if (argument == "--manifest") {
+      if (!options.manifest_path.empty()) {
+        throw std::runtime_error("--manifest was provided more than once.");
+      }
+      options.manifest_path = read_path_value(index, argument);
+      continue;
+    }
+
+    if (argument == "--output-dir") {
+      if (!options.output_directory_path.empty()) {
+        throw std::runtime_error("--output-dir was provided more than once.");
+      }
+      options.output_directory_path = read_path_value(index, argument);
+      continue;
+    }
+
+    if (argument == "--batch-summary") {
+      if (!options.batch_summary_path.empty()) {
+        throw std::runtime_error(
+            "--batch-summary was provided more than once.");
+      }
+      options.batch_summary_path = read_path_value(index, argument);
+      continue;
+    }
+
     if (argument == "--benchmark") {
       if (options.benchmark) {
         throw std::runtime_error("--benchmark was provided more than once.");
@@ -554,6 +778,23 @@ CliOptions parse_cli(int argc, char* argv[]) {
         throw std::runtime_error("--profile was provided more than once.");
       }
       options.profile = true;
+      continue;
+    }
+
+    if (argument == "--batch") {
+      if (options.batch) {
+        throw std::runtime_error("--batch was provided more than once.");
+      }
+      options.batch = true;
+      continue;
+    }
+
+    if (argument == "--output-images") {
+      if (options.output_images) {
+        throw std::runtime_error(
+            "--output-images was provided more than once.");
+      }
+      options.output_images = true;
       continue;
     }
 
@@ -588,6 +829,27 @@ CliOptions parse_cli(int argc, char* argv[]) {
       continue;
     }
 
+    if (argument == "--workers") {
+      if (options.workers_provided) {
+        throw std::runtime_error("--workers was provided more than once.");
+      }
+      const std::string value = read_path_value(index, argument);
+      options.workers = parse_count_value(value, argument, 1, 64);
+      options.workers_provided = true;
+      continue;
+    }
+
+    if (argument == "--queue-capacity") {
+      if (options.queue_capacity_provided) {
+        throw std::runtime_error(
+            "--queue-capacity was provided more than once.");
+      }
+      const std::string value = read_path_value(index, argument);
+      options.queue_capacity = parse_count_value(value, argument, 1, 4096);
+      options.queue_capacity_provided = true;
+      continue;
+    }
+
     if (argument == "--overwrite") {
       if (options.overwrite_existing) {
         throw std::runtime_error("--overwrite was provided more than once.");
@@ -617,6 +879,10 @@ CliOptions parse_cli(int argc, char* argv[]) {
     throw std::runtime_error("Unknown argument: " + argument);
   }
 
+  if (options.batch && !options.queue_capacity_provided) {
+    options.queue_capacity = options.workers * 2;
+  }
+
   if (!options.image_path.empty() && options.config_path.empty()) {
     throw std::runtime_error("--image requires --config.");
   }
@@ -631,6 +897,44 @@ CliOptions parse_cli(int argc, char* argv[]) {
   }
   const bool output_requested = !options.output_json_path.empty() ||
                                 !options.output_image_path.empty();
+  const bool batch_option_requested =
+      !options.input_directory_path.empty() || !options.manifest_path.empty() ||
+      !options.output_directory_path.empty() ||
+      !options.batch_summary_path.empty() || options.output_images ||
+      options.workers_provided || options.queue_capacity_provided;
+  if (!options.batch && batch_option_requested) {
+    throw std::runtime_error(
+        "--input-dir/--manifest/--output-dir/--batch-summary/--workers/"
+        "--queue-capacity/--output-images require --batch.");
+  }
+  if (options.batch && options.config_path.empty()) {
+    throw std::runtime_error("--batch requires --config.");
+  }
+  if (options.batch &&
+      (options.input_directory_path.empty() == options.manifest_path.empty())) {
+    throw std::runtime_error(
+        "--batch requires exactly one of --input-dir or --manifest.");
+  }
+  if (options.batch && options.output_directory_path.empty()) {
+    throw std::runtime_error("--batch requires --output-dir.");
+  }
+  if (options.batch && options.batch_summary_path.empty()) {
+    throw std::runtime_error("--batch requires --batch-summary.");
+  }
+  if (options.batch && !options.image_path.empty()) {
+    throw std::runtime_error("--batch and --image are mutually exclusive.");
+  }
+  if (options.batch && output_requested) {
+    throw std::runtime_error(
+        "--batch and --output-json/--output-image are mutually exclusive.");
+  }
+  if (options.batch &&
+      (options.benchmark || options.profile || options.inspect_model ||
+       options.raw_output_summary)) {
+    throw std::runtime_error(
+        "--batch is mutually exclusive with --benchmark, --profile, "
+        "--inspect-model, and --raw-output-summary.");
+  }
   if (!options.benchmark && !options.benchmark_json_path.empty()) {
     throw std::runtime_error("--benchmark-json requires --benchmark.");
   }
@@ -712,10 +1016,10 @@ CliOptions parse_cli(int argc, char* argv[]) {
         "--output-json/--output-image require --image.");
   }
   if (options.overwrite_existing && !output_requested &&
-      options.benchmark_json_path.empty()) {
+      options.benchmark_json_path.empty() && !options.batch) {
     throw std::runtime_error(
         "--overwrite requires --output-json or --output-image, or "
-        "--benchmark-json.");
+        "--benchmark-json, or --batch.");
   }
   if (options.inspect_model && options.raw_output_summary) {
     throw std::runtime_error(
@@ -741,7 +1045,42 @@ int main(int argc, char* argv[]) {
     if (!options.config_path.empty()) {
       const yolo_defect_cpp::RuntimeContract contract =
           yolo_defect_cpp::load_runtime_contract(options.config_path);
-      if (options.benchmark) {
+      if (options.batch) {
+        yolo_defect_cpp::BatchRequest request;
+        request.input_kind = options.input_directory_path.empty()
+                                 ? yolo_defect_cpp::BatchInputKind::kManifest
+                                 : yolo_defect_cpp::BatchInputKind::kDirectory;
+        request.input_path = options.input_directory_path.empty()
+                                 ? options.manifest_path
+                                 : options.input_directory_path;
+        request.output_directory = options.output_directory_path;
+        request.summary_path = options.batch_summary_path;
+        request.requested_workers = options.workers;
+        request.queue_capacity = options.queue_capacity;
+        request.output_images = options.output_images;
+        request.overwrite_existing = options.overwrite_existing;
+        request.command_arguments.reserve(static_cast<std::size_t>(argc));
+        for (int index = 0; index < argc; ++index) {
+          request.command_arguments.emplace_back(argv[index]);
+        }
+
+        yolo_defect_cpp::BatchRunner runner(contract);
+        ScopedBatchSignalHandlers signal_handlers;
+        BatchStopMonitor stop_monitor(runner);
+        yolo_defect_cpp::BatchSummary summary = runner.run(request);
+        const bool signal_observed = stop_monitor.stop();
+        if (signal_observed) {
+          summary.cooperative_stop_requested = true;
+          if (summary.fatal_error.empty()) {
+            summary.status = yolo_defect_cpp::BatchStatus::kCancelled;
+          }
+          yolo_defect_cpp::validate_batch_summary(summary);
+        }
+        yolo_defect_cpp::write_batch_summary_json(
+            summary, request.summary_path, request.overwrite_existing);
+        print_batch_summary(summary, request.summary_path);
+        return batch_exit_code(summary.status);
+      } else if (options.benchmark) {
         yolo_defect_cpp::BenchmarkRequest request;
         request.image_path = options.image_path;
         request.warmup = options.warmup;

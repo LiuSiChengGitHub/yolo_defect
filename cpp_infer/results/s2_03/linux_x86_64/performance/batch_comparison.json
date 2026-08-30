@@ -1,0 +1,3313 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_03_bounded_concurrency_comparison",
+  "timestamp_utc": "2026-08-30T15:18:17Z",
+  "passed": true,
+  "sources": {
+    "workers_1_summary": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/batch_summary.json",
+    "workers_4_summary": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/batch_summary.json"
+  },
+  "comparability": {
+    "same_environment": true,
+    "same_release_build": true,
+    "same_cpu_provider_and_ort_thread_policy": true,
+    "same_model": true,
+    "same_runtime_config": true,
+    "same_ordered_tasks": true,
+    "same_frozen_queue_capacity": true,
+    "queue_capacity": 8,
+    "json_only_output_policy": true,
+    "detection_json_byte_equal": true,
+    "detection_json_semantic_equal": true,
+    "compared_item_count": 361
+  },
+  "processing_wall_ms": {
+    "workers_1": 44492.069286,
+    "workers_4": 17907.11533,
+    "workers_4_div_workers_1": 0.40247881515447304,
+    "workers_4_minus_workers_1": -26584.953955999998,
+    "delta_fraction_of_workers_1": -0.597521184845527,
+    "direction": "workers_4_better"
+  },
+  "throughput_images_per_second": {
+    "workers_1": 8.113805579134825,
+    "workers_4": 20.15958424052882,
+    "workers_4_div_workers_1": 2.484602822178842,
+    "workers_4_minus_workers_1": 12.045778661393994,
+    "delta_fraction_of_workers_1": 1.4846028221788419,
+    "direction": "workers_4_better"
+  },
+  "peak_process_memory_bytes": {
+    "workers_1": 215760896.0,
+    "workers_4": 616800256.0,
+    "workers_4_div_workers_1": 2.8587212392740526,
+    "workers_4_minus_workers_1": 401039360.0,
+    "delta_fraction_of_workers_1": 1.8587212392740526,
+    "direction": "workers_4_worse",
+    "metric": "peak_rss",
+    "scope": "process lifetime including task discovery, worker session construction, bounded-queue execution, per-image output, retained results, joins, and the memory query; excludes BatchSummary JSON serialization/write",
+    "publishable": true
+  },
+  "items": [
+    {
+      "sequence_index": 0,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_240.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000000.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000000.detections.json",
+      "byte_count": 1002,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 1,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_241.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000001.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000001.detections.json",
+      "byte_count": 1167,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 2,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_242.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000002.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000002.detections.json",
+      "byte_count": 1179,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 3,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_243.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000003.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000003.detections.json",
+      "byte_count": 1172,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 4,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_244.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000004.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000004.detections.json",
+      "byte_count": 1158,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 5,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_245.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000005.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000005.detections.json",
+      "byte_count": 1002,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 6,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_246.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000006.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000006.detections.json",
+      "byte_count": 1168,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 7,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_247.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000007.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000007.detections.json",
+      "byte_count": 1161,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 8,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_248.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000008.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000008.detections.json",
+      "byte_count": 1151,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 9,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_249.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000009.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000009.detections.json",
+      "byte_count": 1318,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 10,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_250.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000010.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000010.detections.json",
+      "byte_count": 1334,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 11,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_251.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000011.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000011.detections.json",
+      "byte_count": 1010,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 12,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_252.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000012.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000012.detections.json",
+      "byte_count": 1170,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 13,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_253.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000013.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000013.detections.json",
+      "byte_count": 1011,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 14,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_254.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000014.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000014.detections.json",
+      "byte_count": 1171,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 15,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_255.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000015.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000015.detections.json",
+      "byte_count": 1011,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 16,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_256.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000016.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000016.detections.json",
+      "byte_count": 1337,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 17,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_257.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000017.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000017.detections.json",
+      "byte_count": 1672,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 18,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_258.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000018.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000018.detections.json",
+      "byte_count": 845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 19,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_259.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000019.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000019.detections.json",
+      "byte_count": 1003,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 20,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_260.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000020.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000020.detections.json",
+      "byte_count": 1168,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 21,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_261.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000021.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000021.detections.json",
+      "byte_count": 1002,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 22,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_262.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000022.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000022.detections.json",
+      "byte_count": 1008,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 23,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_263.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000023.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000023.detections.json",
+      "byte_count": 1170,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 24,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_264.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000024.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000024.detections.json",
+      "byte_count": 1172,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 25,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_265.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000025.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000025.detections.json",
+      "byte_count": 1642,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 26,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_266.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000026.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000026.detections.json",
+      "byte_count": 1157,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 27,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_267.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000027.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000027.detections.json",
+      "byte_count": 1160,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 28,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_268.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000028.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000028.detections.json",
+      "byte_count": 998,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 29,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_269.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000029.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000029.detections.json",
+      "byte_count": 1160,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 30,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_270.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000030.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000030.detections.json",
+      "byte_count": 1149,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 31,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_271.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000031.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000031.detections.json",
+      "byte_count": 1334,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 32,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_272.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000032.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000032.detections.json",
+      "byte_count": 1151,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 33,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_273.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000033.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000033.detections.json",
+      "byte_count": 1159,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 34,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_274.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000034.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000034.detections.json",
+      "byte_count": 1152,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 35,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_275.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000035.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000035.detections.json",
+      "byte_count": 1324,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 36,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_276.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000036.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000036.detections.json",
+      "byte_count": 1003,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 37,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_277.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000037.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000037.detections.json",
+      "byte_count": 1164,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 38,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_278.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000038.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000038.detections.json",
+      "byte_count": 1177,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 39,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_279.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000039.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000039.detections.json",
+      "byte_count": 1169,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 40,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_280.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000040.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000040.detections.json",
+      "byte_count": 845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 41,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_281.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000041.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000041.detections.json",
+      "byte_count": 1014,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 42,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_282.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000042.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000042.detections.json",
+      "byte_count": 1333,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 43,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_283.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000043.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000043.detections.json",
+      "byte_count": 1176,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 44,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_284.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000044.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000044.detections.json",
+      "byte_count": 1170,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 45,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_285.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000045.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000045.detections.json",
+      "byte_count": 1012,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 46,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_286.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000046.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000046.detections.json",
+      "byte_count": 1337,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 47,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_287.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000047.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000047.detections.json",
+      "byte_count": 1318,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 48,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_288.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000048.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000048.detections.json",
+      "byte_count": 1178,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 49,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_289.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000049.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000049.detections.json",
+      "byte_count": 844,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 50,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_290.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000050.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000050.detections.json",
+      "byte_count": 1159,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 51,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_291.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000051.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000051.detections.json",
+      "byte_count": 1316,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 52,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_292.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000052.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000052.detections.json",
+      "byte_count": 1163,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 53,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_293.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000053.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000053.detections.json",
+      "byte_count": 1176,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 54,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_294.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000054.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000054.detections.json",
+      "byte_count": 1002,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 55,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_295.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000055.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000055.detections.json",
+      "byte_count": 1494,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 56,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_296.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000056.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000056.detections.json",
+      "byte_count": 1156,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 57,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_297.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000057.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000057.detections.json",
+      "byte_count": 846,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 58,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_298.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000058.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000058.detections.json",
+      "byte_count": 1009,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 59,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_299.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000059.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000059.detections.json",
+      "byte_count": 1001,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 60,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/crazing_300.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000060.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000060.detections.json",
+      "byte_count": 1325,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 61,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_241.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000061.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000061.detections.json",
+      "byte_count": 1179,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 62,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_242.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000062.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000062.detections.json",
+      "byte_count": 1352,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 63,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_243.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000063.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000063.detections.json",
+      "byte_count": 1349,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 64,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_244.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000064.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000064.detections.json",
+      "byte_count": 1847,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 65,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_245.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000065.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000065.detections.json",
+      "byte_count": 1187,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 66,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_246.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000066.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000066.detections.json",
+      "byte_count": 1014,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 67,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_247.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000067.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000067.detections.json",
+      "byte_count": 840,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 68,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_248.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000068.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000068.detections.json",
+      "byte_count": 1018,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 69,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_249.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000069.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000069.detections.json",
+      "byte_count": 998,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 70,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_250.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000070.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000070.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 71,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_251.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000071.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000071.detections.json",
+      "byte_count": 1015,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 72,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_252.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000072.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000072.detections.json",
+      "byte_count": 848,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 73,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_253.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000073.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000073.detections.json",
+      "byte_count": 840,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 74,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_254.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000074.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000074.detections.json",
+      "byte_count": 848,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 75,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_255.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000075.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000075.detections.json",
+      "byte_count": 1005,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 76,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_256.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000076.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000076.detections.json",
+      "byte_count": 850,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 77,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_257.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000077.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000077.detections.json",
+      "byte_count": 1016,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 78,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_258.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000078.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000078.detections.json",
+      "byte_count": 1008,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 79,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_259.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000079.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000079.detections.json",
+      "byte_count": 841,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 80,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_260.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000080.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000080.detections.json",
+      "byte_count": 1179,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 81,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_261.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000081.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000081.detections.json",
+      "byte_count": 1176,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 82,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_262.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000082.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000082.detections.json",
+      "byte_count": 1011,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 83,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_263.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000083.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000083.detections.json",
+      "byte_count": 1017,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 84,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_264.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000084.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000084.detections.json",
+      "byte_count": 1016,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 85,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_265.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000085.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000085.detections.json",
+      "byte_count": 1186,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 86,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_266.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000086.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000086.detections.json",
+      "byte_count": 1017,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 87,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_267.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000087.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000087.detections.json",
+      "byte_count": 1017,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 88,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_268.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000088.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000088.detections.json",
+      "byte_count": 849,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 89,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_269.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000089.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000089.detections.json",
+      "byte_count": 1177,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 90,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_270.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000090.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000090.detections.json",
+      "byte_count": 850,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 91,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_271.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000091.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000091.detections.json",
+      "byte_count": 1339,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 92,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_272.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000092.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000092.detections.json",
+      "byte_count": 1319,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 93,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_273.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000093.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000093.detections.json",
+      "byte_count": 1007,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 94,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_274.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000094.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000094.detections.json",
+      "byte_count": 1184,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 95,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_275.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000095.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000095.detections.json",
+      "byte_count": 1845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 96,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_276.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000096.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000096.detections.json",
+      "byte_count": 1008,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 97,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_277.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000097.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000097.detections.json",
+      "byte_count": 839,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 98,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_278.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000098.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000098.detections.json",
+      "byte_count": 1007,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 99,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_279.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000099.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000099.detections.json",
+      "byte_count": 1016,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 100,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_280.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000100.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000100.detections.json",
+      "byte_count": 848,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 101,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_281.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000101.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000101.detections.json",
+      "byte_count": 1015,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 102,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_282.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000102.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000102.detections.json",
+      "byte_count": 1007,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 103,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_283.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000103.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000103.detections.json",
+      "byte_count": 849,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 104,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_284.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000104.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000104.detections.json",
+      "byte_count": 1177,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 105,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_285.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000105.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000105.detections.json",
+      "byte_count": 997,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 106,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_286.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000106.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000106.detections.json",
+      "byte_count": 842,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 107,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_287.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000107.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000107.detections.json",
+      "byte_count": 1851,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 108,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_288.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000108.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000108.detections.json",
+      "byte_count": 842,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 109,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_289.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000109.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000109.detections.json",
+      "byte_count": 1337,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 110,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_290.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000110.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000110.detections.json",
+      "byte_count": 837,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 111,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_291.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000111.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000111.detections.json",
+      "byte_count": 1167,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 112,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_292.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000112.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000112.detections.json",
+      "byte_count": 1987,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 113,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_293.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000113.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000113.detections.json",
+      "byte_count": 1336,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 114,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_294.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000114.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000114.detections.json",
+      "byte_count": 1175,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 115,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_295.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000115.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000115.detections.json",
+      "byte_count": 1175,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 116,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_296.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000116.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000116.detections.json",
+      "byte_count": 1010,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 117,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_297.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000117.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000117.detections.json",
+      "byte_count": 849,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 118,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_298.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000118.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000118.detections.json",
+      "byte_count": 1510,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 119,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_299.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000119.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000119.detections.json",
+      "byte_count": 1014,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 120,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/inclusion_300.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000120.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000120.detections.json",
+      "byte_count": 1185,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 121,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_241.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000121.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000121.detections.json",
+      "byte_count": 844,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 122,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_242.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000122.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000122.detections.json",
+      "byte_count": 1492,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 123,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_243.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000123.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000123.detections.json",
+      "byte_count": 1648,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 124,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_244.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000124.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000124.detections.json",
+      "byte_count": 1010,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 125,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_245.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000125.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000125.detections.json",
+      "byte_count": 1821,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 126,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_246.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000126.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000126.detections.json",
+      "byte_count": 1174,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 127,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_247.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000127.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000127.detections.json",
+      "byte_count": 1169,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 128,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_248.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000128.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000128.detections.json",
+      "byte_count": 1167,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 129,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_249.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000129.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000129.detections.json",
+      "byte_count": 845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 130,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_250.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000130.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000130.detections.json",
+      "byte_count": 1333,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 131,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_251.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000131.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000131.detections.json",
+      "byte_count": 848,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 132,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_252.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000132.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000132.detections.json",
+      "byte_count": 1170,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 133,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_253.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000133.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000133.detections.json",
+      "byte_count": 1316,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 134,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_254.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000134.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000134.detections.json",
+      "byte_count": 1010,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 135,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_255.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000135.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000135.detections.json",
+      "byte_count": 1171,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 136,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_256.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000136.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000136.detections.json",
+      "byte_count": 1165,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 137,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_257.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000137.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000137.detections.json",
+      "byte_count": 1661,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 138,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_258.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000138.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000138.detections.json",
+      "byte_count": 1177,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 139,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_259.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000139.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000139.detections.json",
+      "byte_count": 1177,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 140,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_260.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000140.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000140.detections.json",
+      "byte_count": 1161,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 141,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_261.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000141.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000141.detections.json",
+      "byte_count": 1340,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 142,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_262.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000142.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000142.detections.json",
+      "byte_count": 1168,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 143,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_263.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000143.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000143.detections.json",
+      "byte_count": 845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 144,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_264.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000144.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000144.detections.json",
+      "byte_count": 1004,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 145,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_265.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000145.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000145.detections.json",
+      "byte_count": 1506,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 146,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_266.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000146.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000146.detections.json",
+      "byte_count": 1147,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 147,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_267.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000147.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000147.detections.json",
+      "byte_count": 1495,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 148,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_268.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000148.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000148.detections.json",
+      "byte_count": 1004,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 149,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_269.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000149.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000149.detections.json",
+      "byte_count": 1168,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 150,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_270.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000150.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000150.detections.json",
+      "byte_count": 1013,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 151,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_271.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000151.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000151.detections.json",
+      "byte_count": 1011,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 152,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_272.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000152.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000152.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 153,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_273.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000153.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000153.detections.json",
+      "byte_count": 1179,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 154,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_274.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000154.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000154.detections.json",
+      "byte_count": 1005,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 155,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_275.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000155.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000155.detections.json",
+      "byte_count": 845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 156,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_276.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000156.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000156.detections.json",
+      "byte_count": 1167,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 157,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_277.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000157.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000157.detections.json",
+      "byte_count": 1653,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 158,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_278.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000158.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000158.detections.json",
+      "byte_count": 1011,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 159,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_279.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000159.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000159.detections.json",
+      "byte_count": 1169,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 160,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_280.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000160.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000160.detections.json",
+      "byte_count": 836,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 161,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_281.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000161.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000161.detections.json",
+      "byte_count": 1159,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 162,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_282.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000162.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000162.detections.json",
+      "byte_count": 1176,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 163,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_283.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000163.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000163.detections.json",
+      "byte_count": 1340,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 164,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_284.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000164.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000164.detections.json",
+      "byte_count": 845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 165,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_285.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000165.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000165.detections.json",
+      "byte_count": 996,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 166,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_286.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000166.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000166.detections.json",
+      "byte_count": 1171,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 167,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_287.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000167.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000167.detections.json",
+      "byte_count": 988,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 168,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_288.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000168.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000168.detections.json",
+      "byte_count": 845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 169,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_289.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000169.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000169.detections.json",
+      "byte_count": 1313,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 170,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_290.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000170.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000170.detections.json",
+      "byte_count": 1501,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 171,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_291.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000171.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000171.detections.json",
+      "byte_count": 1162,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 172,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_292.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000172.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000172.detections.json",
+      "byte_count": 1494,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 173,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_293.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000173.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000173.detections.json",
+      "byte_count": 845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 174,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_294.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000174.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000174.detections.json",
+      "byte_count": 1012,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 175,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_295.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000175.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000175.detections.json",
+      "byte_count": 1667,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 176,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_296.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000176.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000176.detections.json",
+      "byte_count": 1167,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 177,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_297.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000177.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000177.detections.json",
+      "byte_count": 1493,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 178,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_298.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000178.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000178.detections.json",
+      "byte_count": 1177,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 179,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_299.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000179.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000179.detections.json",
+      "byte_count": 1148,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 180,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/patches_300.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000180.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000180.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 181,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_241.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000181.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000181.detections.json",
+      "byte_count": 859,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 182,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_242.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000182.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000182.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 183,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_243.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000183.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000183.detections.json",
+      "byte_count": 845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 184,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_244.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000184.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000184.detections.json",
+      "byte_count": 852,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 185,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_245.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000185.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000185.detections.json",
+      "byte_count": 1010,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 186,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_246.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000186.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000186.detections.json",
+      "byte_count": 851,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 187,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_247.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000187.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000187.detections.json",
+      "byte_count": 1181,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 188,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_248.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000188.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000188.detections.json",
+      "byte_count": 851,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 189,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_249.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000189.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000189.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 190,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_250.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000190.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000190.detections.json",
+      "byte_count": 836,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 191,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_251.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000191.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000191.detections.json",
+      "byte_count": 844,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 192,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_252.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000192.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000192.detections.json",
+      "byte_count": 853,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 193,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_253.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000193.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000193.detections.json",
+      "byte_count": 1010,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 194,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_254.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000194.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000194.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 195,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_255.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000195.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000195.detections.json",
+      "byte_count": 853,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 196,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_256.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000196.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000196.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 197,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_257.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000197.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000197.detections.json",
+      "byte_count": 853,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 198,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_258.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000198.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000198.detections.json",
+      "byte_count": 844,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 199,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_259.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000199.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000199.detections.json",
+      "byte_count": 853,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 200,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_260.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000200.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000200.detections.json",
+      "byte_count": 851,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 201,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_261.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000201.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000201.detections.json",
+      "byte_count": 1333,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 202,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_262.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000202.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000202.detections.json",
+      "byte_count": 847,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 203,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_263.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000203.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000203.detections.json",
+      "byte_count": 840,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 204,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_264.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000204.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000204.detections.json",
+      "byte_count": 860,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 205,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_265.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000205.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000205.detections.json",
+      "byte_count": 851,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 206,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_266.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000206.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000206.detections.json",
+      "byte_count": 1191,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 207,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_267.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000207.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000207.detections.json",
+      "byte_count": 861,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 208,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_268.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000208.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000208.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 209,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_269.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000209.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000209.detections.json",
+      "byte_count": 841,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 210,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_270.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000210.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000210.detections.json",
+      "byte_count": 1027,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 211,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_271.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000211.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000211.detections.json",
+      "byte_count": 860,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 212,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_272.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000212.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000212.detections.json",
+      "byte_count": 1017,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 213,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_273.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000213.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000213.detections.json",
+      "byte_count": 845,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 214,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_274.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000214.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000214.detections.json",
+      "byte_count": 844,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 215,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_275.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000215.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000215.detections.json",
+      "byte_count": 841,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 216,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_276.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000216.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000216.detections.json",
+      "byte_count": 1189,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 217,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_277.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000217.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000217.detections.json",
+      "byte_count": 1025,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 218,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_278.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000218.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000218.detections.json",
+      "byte_count": 1016,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 219,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_279.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000219.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000219.detections.json",
+      "byte_count": 1196,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 220,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_280.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000220.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000220.detections.json",
+      "byte_count": 1027,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 221,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_281.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000221.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000221.detections.json",
+      "byte_count": 860,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 222,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_282.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000222.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000222.detections.json",
+      "byte_count": 859,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 223,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_283.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000223.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000223.detections.json",
+      "byte_count": 1024,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 224,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_284.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000224.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000224.detections.json",
+      "byte_count": 854,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 225,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_285.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000225.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000225.detections.json",
+      "byte_count": 858,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 226,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_286.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000226.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000226.detections.json",
+      "byte_count": 849,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 227,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_287.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000227.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000227.detections.json",
+      "byte_count": 852,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 228,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_288.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000228.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000228.detections.json",
+      "byte_count": 861,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 229,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_289.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000229.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000229.detections.json",
+      "byte_count": 860,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 230,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_290.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000230.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000230.detections.json",
+      "byte_count": 851,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 231,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_291.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000231.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000231.detections.json",
+      "byte_count": 1015,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 232,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_292.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000232.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000232.detections.json",
+      "byte_count": 1348,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 233,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_293.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000233.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000233.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 234,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_294.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000234.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000234.detections.json",
+      "byte_count": 1010,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 235,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_295.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000235.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000235.detections.json",
+      "byte_count": 1328,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 236,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_296.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000236.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000236.detections.json",
+      "byte_count": 1339,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 237,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_297.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000237.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000237.detections.json",
+      "byte_count": 851,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 238,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_298.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000238.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000238.detections.json",
+      "byte_count": 860,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 239,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_299.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000239.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000239.detections.json",
+      "byte_count": 1017,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 240,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/pitted_surface_300.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000240.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000240.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 241,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_241.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000241.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000241.detections.json",
+      "byte_count": 1025,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 242,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_242.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000242.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000242.detections.json",
+      "byte_count": 1028,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 243,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_243.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000243.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000243.detections.json",
+      "byte_count": 1035,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 244,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_244.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000244.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000244.detections.json",
+      "byte_count": 852,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 245,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_245.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000245.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000245.detections.json",
+      "byte_count": 1034,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 246,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_246.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000246.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000246.detections.json",
+      "byte_count": 861,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 247,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_247.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000247.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000247.detections.json",
+      "byte_count": 1027,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 248,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_248.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000248.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000248.detections.json",
+      "byte_count": 1033,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 249,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_249.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000249.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000249.detections.json",
+      "byte_count": 1027,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 250,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_250.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000250.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000250.detections.json",
+      "byte_count": 1028,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 251,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_251.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000251.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000251.detections.json",
+      "byte_count": 1196,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 252,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_252.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000252.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000252.detections.json",
+      "byte_count": 1034,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 253,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_253.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000253.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000253.detections.json",
+      "byte_count": 860,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 254,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_254.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000254.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000254.detections.json",
+      "byte_count": 1034,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 255,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_255.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000255.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000255.detections.json",
+      "byte_count": 1194,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 256,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_256.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000256.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000256.detections.json",
+      "byte_count": 1026,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 257,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_257.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000257.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000257.detections.json",
+      "byte_count": 1370,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 258,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_258.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000258.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000258.detections.json",
+      "byte_count": 1027,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 259,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_259.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000259.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000259.detections.json",
+      "byte_count": 1017,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 260,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_260.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000260.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000260.detections.json",
+      "byte_count": 1018,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 261,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_261.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000261.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000261.detections.json",
+      "byte_count": 1543,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 262,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_262.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000262.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000262.detections.json",
+      "byte_count": 1018,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 263,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_263.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000263.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000263.detections.json",
+      "byte_count": 1029,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 264,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_264.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000264.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000264.detections.json",
+      "byte_count": 1200,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 265,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_265.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000265.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000265.detections.json",
+      "byte_count": 1184,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 266,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_266.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000266.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000266.detections.json",
+      "byte_count": 854,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 267,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_267.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000267.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000267.detections.json",
+      "byte_count": 1030,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 268,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_268.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000268.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000268.detections.json",
+      "byte_count": 1208,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 269,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_269.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000269.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000269.detections.json",
+      "byte_count": 861,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 270,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_270.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000270.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000270.detections.json",
+      "byte_count": 1028,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 271,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_271.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000271.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000271.detections.json",
+      "byte_count": 1033,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 272,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_272.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000272.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000272.detections.json",
+      "byte_count": 1033,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 273,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_273.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000273.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000273.detections.json",
+      "byte_count": 1010,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 274,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_274.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000274.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000274.detections.json",
+      "byte_count": 1376,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 275,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_275.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000275.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000275.detections.json",
+      "byte_count": 1533,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 276,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_276.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000276.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000276.detections.json",
+      "byte_count": 1201,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 277,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_277.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000277.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000277.detections.json",
+      "byte_count": 1204,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 278,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_278.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000278.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000278.detections.json",
+      "byte_count": 1026,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 279,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_279.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000279.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000279.detections.json",
+      "byte_count": 1035,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 280,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_280.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000280.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000280.detections.json",
+      "byte_count": 1034,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 281,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_281.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000281.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000281.detections.json",
+      "byte_count": 1019,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 282,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_282.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000282.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000282.detections.json",
+      "byte_count": 1034,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 283,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_283.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000283.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000283.detections.json",
+      "byte_count": 1191,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 284,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_284.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000284.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000284.detections.json",
+      "byte_count": 1025,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 285,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_285.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000285.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000285.detections.json",
+      "byte_count": 860,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 286,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_286.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000286.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000286.detections.json",
+      "byte_count": 1023,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 287,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_287.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000287.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000287.detections.json",
+      "byte_count": 861,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 288,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_288.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000288.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000288.detections.json",
+      "byte_count": 854,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 289,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_289.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000289.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000289.detections.json",
+      "byte_count": 1035,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 290,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_290.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000290.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000290.detections.json",
+      "byte_count": 1031,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 291,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_291.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000291.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000291.detections.json",
+      "byte_count": 854,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 292,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_292.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000292.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000292.detections.json",
+      "byte_count": 1027,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 293,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_293.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000293.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000293.detections.json",
+      "byte_count": 1028,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 294,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_294.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000294.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000294.detections.json",
+      "byte_count": 1024,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 295,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_295.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000295.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000295.detections.json",
+      "byte_count": 1030,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 296,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_296.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000296.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000296.detections.json",
+      "byte_count": 1025,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 297,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_297.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000297.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000297.detections.json",
+      "byte_count": 861,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 298,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_298.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000298.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000298.detections.json",
+      "byte_count": 1200,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 299,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_299.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000299.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000299.detections.json",
+      "byte_count": 1018,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 300,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/rolled-in_scale_300.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000300.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000300.detections.json",
+      "byte_count": 851,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 301,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_241.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000301.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000301.detections.json",
+      "byte_count": 1332,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 302,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_242.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000302.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000302.detections.json",
+      "byte_count": 1520,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 303,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_243.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000303.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000303.detections.json",
+      "byte_count": 1491,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 304,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_244.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000304.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000304.detections.json",
+      "byte_count": 1326,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 305,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_245.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000305.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000305.detections.json",
+      "byte_count": 1018,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 306,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_246.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000306.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000306.detections.json",
+      "byte_count": 999,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 307,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_247.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000307.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000307.detections.json",
+      "byte_count": 1017,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 308,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_248.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000308.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000308.detections.json",
+      "byte_count": 1014,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 309,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_249.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000309.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000309.detections.json",
+      "byte_count": 1177,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 310,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_250.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000310.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000310.detections.json",
+      "byte_count": 1008,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 311,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_251.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000311.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000311.detections.json",
+      "byte_count": 1006,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 312,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_252.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000312.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000312.detections.json",
+      "byte_count": 1001,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 313,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_253.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000313.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000313.detections.json",
+      "byte_count": 849,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 314,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_254.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000314.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000314.detections.json",
+      "byte_count": 849,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 315,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_255.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000315.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000315.detections.json",
+      "byte_count": 849,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 316,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_256.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000316.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000316.detections.json",
+      "byte_count": 847,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 317,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_257.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000317.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000317.detections.json",
+      "byte_count": 1007,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 318,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_258.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000318.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000318.detections.json",
+      "byte_count": 840,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 319,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_259.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000319.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000319.detections.json",
+      "byte_count": 840,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 320,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_260.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000320.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000320.detections.json",
+      "byte_count": 998,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 321,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_261.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000321.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000321.detections.json",
+      "byte_count": 1176,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 322,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_262.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000322.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000322.detections.json",
+      "byte_count": 1165,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 323,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_263.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000323.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000323.detections.json",
+      "byte_count": 1151,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 324,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_264.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000324.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000324.detections.json",
+      "byte_count": 1185,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 325,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_265.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000325.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000325.detections.json",
+      "byte_count": 998,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 326,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_266.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000326.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000326.detections.json",
+      "byte_count": 998,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 327,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_267.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000327.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000327.detections.json",
+      "byte_count": 1001,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 328,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_268.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000328.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000328.detections.json",
+      "byte_count": 1177,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 329,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_269.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000329.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000329.detections.json",
+      "byte_count": 1167,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 330,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_270.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000330.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000330.detections.json",
+      "byte_count": 1159,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 331,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_271.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000331.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000331.detections.json",
+      "byte_count": 1509,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 332,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_272.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000332.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000332.detections.json",
+      "byte_count": 1330,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 333,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_273.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000333.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000333.detections.json",
+      "byte_count": 1166,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 334,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_274.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000334.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000334.detections.json",
+      "byte_count": 1323,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 335,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_275.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000335.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000335.detections.json",
+      "byte_count": 1175,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 336,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_276.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000336.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000336.detections.json",
+      "byte_count": 1170,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 337,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_277.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000337.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000337.detections.json",
+      "byte_count": 1008,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 338,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_278.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000338.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000338.detections.json",
+      "byte_count": 1326,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 339,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_279.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000339.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000339.detections.json",
+      "byte_count": 1508,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 340,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_280.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000340.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000340.detections.json",
+      "byte_count": 1491,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 341,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_281.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000341.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000341.detections.json",
+      "byte_count": 1680,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 342,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_282.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000342.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000342.detections.json",
+      "byte_count": 1167,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 343,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_283.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000343.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000343.detections.json",
+      "byte_count": 1007,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 344,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_284.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000344.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000344.detections.json",
+      "byte_count": 990,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 345,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_285.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000345.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000345.detections.json",
+      "byte_count": 837,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 346,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_286.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000346.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000346.detections.json",
+      "byte_count": 840,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 347,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_287.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000347.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000347.detections.json",
+      "byte_count": 840,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 348,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_288.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000348.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000348.detections.json",
+      "byte_count": 843,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 349,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_289.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000349.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000349.detections.json",
+      "byte_count": 1015,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 350,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_290.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000350.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000350.detections.json",
+      "byte_count": 1006,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 351,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_291.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000351.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000351.detections.json",
+      "byte_count": 1175,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 352,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_292.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000352.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000352.detections.json",
+      "byte_count": 1008,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 353,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_293.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000353.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000353.detections.json",
+      "byte_count": 1683,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 354,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_294.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000354.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000354.detections.json",
+      "byte_count": 1334,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 355,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_295.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000355.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000355.detections.json",
+      "byte_count": 1175,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 356,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_296.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000356.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000356.detections.json",
+      "byte_count": 1480,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 357,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_297.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000357.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000357.detections.json",
+      "byte_count": 1518,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 358,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_298.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000358.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000358.detections.json",
+      "byte_count": 1013,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 359,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_299.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000359.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000359.detections.json",
+      "byte_count": 849,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    {
+      "sequence_index": 360,
+      "source_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/data/images/val/scratches_300.jpg",
+      "workers_1_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_1/items/000360.detections.json",
+      "workers_4_json_path": "/tmp/yolo_defect_s2_03_linux_perf_current_r4/workers_4/items/000360.detections.json",
+      "byte_count": 1334,
+      "byte_equal": true,
+      "semantic_equal": true
+    }
+  ],
+  "interpretation": {
+    "speedup_is_not_a_pass_condition": true,
+    "throughput_outcome": "workers_4_better",
+    "memory_outcome": "workers_4_worse"
+  },
+  "limitations": [
+    "Throughput and peak process memory are comparable only within this recorded machine and platform.",
+    "Peak process memory is a process-lifetime high-water mark, not incremental queue or model memory.",
+    "A slower workers=4 result remains valid evidence and does not fail this comparison.",
+    "This comparison proves deterministic concurrent batch=1 semantics, not true tensor batching."
+  ]
+}

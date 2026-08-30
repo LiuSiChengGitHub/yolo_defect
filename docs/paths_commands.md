@@ -26,6 +26,9 @@ cpp_infer\tools\stage1.cmd doctor
 cpp_infer\tools\stage1.cmd build
 cpp_infer\tools\stage1.cmd test
 cpp_infer\tools\stage1.cmd detect "data\images\val\crazing_241.jpg"
+cpp_infer\tools\stage1.cmd batch "data\images\val" -Workers 4 -QueueCapacity 8
+cpp_infer\tools\stage1.cmd batch cpp_infer\tests\fixtures\s2_03_consistency_manifest.txt -Workers 2
+cpp_infer\tools\stage1.cmd batch-compare
 cpp_infer\tools\stage1.cmd profile
 cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_u8s8_config.txt -ProfileRuns 10
 ```
@@ -38,13 +41,15 @@ cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_u8s8_config.tx
 | `clean-build` | 只在受保护 TEMP 边界内清理并重新构建 |
 | `test` | 构建当前源码并运行完整 CTest；日常局部改动优先运行相关 target/test |
 | `detect <image> [output-directory]` | 复用 `DetectorPipeline` 运行单图，可选 `-Config` 与 `-Overwrite` |
+| `batch <input> [output-directory]` | 输入是目录时递归确定性发现，输入是文件时按 UTF-8 path-list manifest 解析；默认 workers=1、queue=`2*workers`，可选 `-Config`、`-Workers`、`-QueueCapacity`、`-OutputImages` 与 `-Overwrite` |
+| `batch-compare` | 固定 FP32 CPU、361 图、JSON-only、queue=8，以两个独立 Release 进程比较 workers=1/4；先要求逐图 detection JSON 字节与语义一致，再报告 throughput/PWS 差异，不设 speedup 门槛 |
 | `demo` | 固定样本的 JSON/PNG smoke |
 | `consistency` | 固定 manifest 的 Python ORT/C++ ORT 比较 |
 | `benchmark` | 先运行 workflow 定义的 correctness 前置，再采集分段 latency/throughput/memory |
 | `profile [image]` | 独立 profiling session；可选 config、prefix 和 run count，不进入正式 benchmark |
-| `all` | clean build、完整 CTest、Demo、consistency 和正式 benchmark；用于单元收口而非每次编辑 |
+| `all` | clean build、完整 CTest、Demo、consistency、正式 benchmark 和冻结 30 图 batch 验收；用于单元收口而非每次编辑 |
 
-`profile` trace 含插桩开销，只用于 operator/node 诊断。`all` 是完整收口入口，不是普通改动的默认命令。
+`batch` 的 manifest 与目录由输入路径实际类型区分；wrapper 最终调用 production CLI 的显式 `--input-dir` 或 `--manifest`。`batch-compare` 的 fresh evidence 位于当前 TEMP build 的 `stage1_evidence/<run-id>/`。`profile` trace 含插桩开销，只用于 operator/node 诊断。`all` 是完整收口入口，不是普通改动的默认命令。
 
 ## 3. 当前已验证 Windows 环境
 
@@ -149,13 +154,13 @@ if ($LASTEXITCODE -ne 0) { throw 'CTest failed.' }
 ## 7. TEMP、输出与故障分层
 
 - 默认构建目录是 `%TEMP%\yolo_defect_stage1_manual_release`；自定义 `-BuildDir` 必须满足 `stage1.ps1` 的受保护 TEMP 边界检查。
-- `demo`、`consistency`、`benchmark`、`profile` 和 `all` 默认写入构建目录下的新 evidence 子目录；`detect` 默认写入 Git 忽略的 manual result 目录。
+- `demo`、`consistency`、`benchmark`、`batch-compare`、`profile` 和 `all` 默认写入构建目录下的新 evidence 子目录；没有显式输出目录的 `detect`/`batch` 默认写入 Git 忽略的 manual result 目录。
 - 不使用 `cpp_infer/build` 中的旧二进制判断当前源码；需要复现时使用当前 TEMP build。
 - 环境失败：命令、SDK、package、DLL、架构或 provider 不可用；先运行 `doctor`。
 - configure/build 失败：CMake discovery、编译或链接错误；查看第一条决定性错误。
 - test 失败：编译已成功，但某个行为或集成预期不满足；运行相关 case，不先扩大到完整 gate。
 - product runtime 失败：沿 config/artifact/metadata、preprocess、`Session::Run`、postprocess、output 边界定位。
-- benchmark/profile 结果只适用于记录的机器与协议；PWS 是进程高水位，不是模型独占内存。
+- benchmark/profile/batch-compare 结果只适用于记录的机器与协议；PWS/RSS 是进程高水位，不是模型独占内存。Windows PWS 与 Linux RSS 只能各自在同平台内比较。
 - 工作树可能已有未提交修改；构建或清理前先检查 `git status`，不要覆盖或删除无关文件。
 
 ## 8. S2-02 Gate A：WSL2/Linux x86_64 环境与入口
@@ -231,10 +236,12 @@ bash cpp_infer/tools/stage1.sh doctor
 | `clean-build` | 只清理受保护的 `/tmp/.../yolo_defect_stage1_*` 构建目录，再完整构建 |
 | `test` | 构建当前源码并运行完整 CTest |
 | `detect <image> [output-dir]` | 复用 `DetectorPipeline` 运行任意单图；可选 `--config` 与 `--overwrite` |
+| `batch <input> [output-dir]` | 输入是目录或 UTF-8 path-list manifest；默认 workers=1、queue=`2*workers`，可选 `--config`、`--workers`、`--queue-capacity`、`--output-images` 与 `--overwrite` |
+| `batch-compare` | 固定 FP32 CPU、361 图、JSON-only、queue=8，以两个独立 Release 进程比较 workers=1/4；逐图结果完全一致后报告 throughput/peak-RSS 差异，不设 speedup 门槛 |
 | `demo` | 验证固定 `crazing_241` 的 JSON/PNG 与 3 个 detections |
 | `consistency` | 固定 30 图 Python ORT/C++ ORT 比较 |
 | `benchmark` | 先跑 consistency，再运行分段 benchmark；默认 warmup `10`、repeat `100`，可覆盖 |
-| `all` | clean build、完整 CTest、Demo、consistency 与默认 benchmark；只用于完整 gate |
+| `all` | clean build、完整 CTest、Demo、consistency、默认 benchmark 与冻结 30 图 batch 验收；只用于完整 gate |
 
 常见动作：
 
@@ -242,16 +249,25 @@ bash cpp_infer/tools/stage1.sh doctor
 bash cpp_infer/tools/stage1.sh clean-build
 bash cpp_infer/tools/stage1.sh test
 bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
+bash cpp_infer/tools/stage1.sh batch data/images/val --workers 4 --queue-capacity 8
+bash cpp_infer/tools/stage1.sh batch cpp_infer/tests/fixtures/s2_03_consistency_manifest.txt --workers 2
+bash cpp_infer/tools/stage1.sh batch-compare
 bash cpp_infer/tools/stage1.sh demo
 bash cpp_infer/tools/stage1.sh consistency
 bash cpp_infer/tools/stage1.sh benchmark --warmup 1 --repeat 2
 ```
 
-默认 run JSON 写到受保护 build tree 下的临时目录。需要把某次 Gate 结果直接留在仓库时，显式选择一个尚无 `demo`、`consistency`、`benchmark` 子目录的专用目录；脚本会拒绝覆盖旧 run，仍只调用现有 Demo、consistency 和 benchmark 逻辑，不组装新的 evidence schema。下面是本次首次收口时使用的目录，复跑请换一个新目录名：
+默认 run JSON 写到受保护 build tree 下的临时目录。需要把某次 Gate 结果直接留在仓库时，显式选择一个尚无 `demo`、`consistency`、`benchmark`、`batch`、`batch_workers_1`、`batch_workers_4` 或 `batch_comparison.json` 的专用目录；脚本会拒绝覆盖旧 run。下面先保留 S2-02 的历史示例，再给出 S2-03 正式 comparison 的当前入口；复跑必须换新目录名：
 
 ```bash
 export YOLO_DEFECT_RUN_DIR="$PWD/cpp_infer/results/s2_02/linux_x86_64"
 bash cpp_infer/tools/stage1.sh benchmark --warmup 1 --repeat 2
+unset YOLO_DEFECT_RUN_DIR
+```
+
+```bash
+export YOLO_DEFECT_RUN_DIR="$PWD/cpp_infer/results/s2_03/linux_x86_64/performance_rerun_20260830_01"
+bash cpp_infer/tools/stage1.sh batch-compare
 unset YOLO_DEFECT_RUN_DIR
 ```
 
@@ -347,6 +363,7 @@ bash cpp_infer/tools/stage2_aarch64.sh clean-build
 bash cpp_infer/tools/stage2_aarch64.sh inspect
 bash cpp_infer/tools/stage2_aarch64.sh smoke
 bash cpp_infer/tools/stage2_aarch64.sh infer
+bash cpp_infer/tools/stage2_aarch64.sh batch
 bash cpp_infer/tools/stage2_aarch64.sh all
 ```
 
@@ -357,9 +374,10 @@ bash cpp_infer/tools/stage2_aarch64.sh all
 | `inspect` | `file/readelf` 检查 core smoke、Runtime object、CLI、ORT；用 ARM64 loader 列出动态依赖并逐个拒绝 x86_64 library |
 | `smoke` | QEMU 实际运行 project-core decode/NMS/坐标恢复、CLI startup/help、config/artifact 和两条错误路径 |
 | `infer` | QEMU 下运行固定图片 → ARM64 OpenCV/ORT CPU → Detection JSON，并调用既有 validator |
-| `all` | doctor → clean-build → inspect → smoke → infer；不包含 benchmark |
+| `batch` | QEMU 下正式验收 2 图目录 workers=1、同集合 manifest workers=2/queue=1、两入口逐图 JSON 一致，以及损坏 JPEG 精确 `2 succeeded + 1 failed`/退出码 2；严格校验三份 `BatchSummary` |
+| `all` | doctor → clean-build → inspect → smoke → infer → batch；不包含 benchmark |
 
-可覆盖的 machine-local 路径都使用环境变量，不写死到源码：`YOLO_DEFECT_AARCH64_DEPS_ROOT`、`YOLO_DEFECT_AARCH64_ORT_ROOT`、`YOLO_DEFECT_AARCH64_SYSROOT`、`YOLO_DEFECT_AARCH64_DEB_CACHE_ROOT`、`YOLO_DEFECT_AARCH64_LOADER_PREFIX`、两个 build dir 与 result dir。
+可覆盖的 machine-local 路径都使用环境变量，不写死到源码：`YOLO_DEFECT_AARCH64_DEPS_ROOT`、`YOLO_DEFECT_AARCH64_ORT_ROOT`、`YOLO_DEFECT_AARCH64_SYSROOT`、`YOLO_DEFECT_AARCH64_DEB_CACHE_ROOT`、`YOLO_DEFECT_AARCH64_LOADER_PREFIX`、`YOLO_DEFECT_AARCH64_CORE_BUILD_DIR`、`YOLO_DEFECT_AARCH64_FULL_BUILD_DIR`、`YOLO_DEFECT_AARCH64_RESULT_DIR`、`YOLO_DEFECT_AARCH64_BATCH_RESULT_DIR` 与 `YOLO_DEFECT_AARCH64_BATCH_RUN_ID`。batch run id 必须是一个安全 path component，且目标 run root 必须不存在；脚本用 fresh-root 规则防止旧输出误满足验收。
 
 两个默认 build tree 位于 `/tmp`。如果从 PowerShell 分多次启动 `wsl.exe`，WSL 发行版可能在两次命令之间停止并清空 `/tmp`；需要拆开运行 action 时，应留在同一个交互式 WSL shell 中。完整复现优先单次运行 `stage2_aarch64.sh all`。
 
@@ -374,3 +392,140 @@ bash cpp_infer/tools/stage2_aarch64.sh all
 - 没有执行 QEMU benchmark、功耗测试、AArch64 全量 GTest/CTest、Docker multi-arch 或真实板卡；QEMU 不能写成 ARM 板卡性能证据。
 
 完整解释与状态表见 [`details/s2_02_gate_b_closure.md`](details/s2_02_gate_b_closure.md)。
+
+## 10. S2-03：目录/Manifest 有界并发与正式证据
+
+### 10.1 Production CLI 契约
+
+Windows 与 Linux 的同一个 `yolo_defect_cpp` CLI 使用：
+
+```text
+--config <config> --batch
+  (--input-dir <directory> | --manifest <path-list>)
+  --output-dir <directory> --batch-summary <file>
+  [--workers <1..64>] [--queue-capacity <1..4096>]
+  [--output-images] [--overwrite]
+```
+
+默认 `workers=1`、`queue_capacity=2*workers`；任务少于 requested workers
+时 effective workers 是 `min(requested, discovered)`，两者都会写入
+summary。目录递归发现普通 `.bmp/.jpeg/.jpg/.png/.tif/.tiff/.webp`，不
+跟随 symlink，并按 UTF-8 generic relative path 排序。UTF-8 manifest
+允许 BOM、LF/CRLF、空行和首个非空字符为 `#` 的注释；有效行相对
+manifest 所在目录解析并保留声明顺序。manifest 的绝对路径、缺失或
+不支持图片、重复 canonical 输入，以及空目录/遍历错误都在 session
+和逐图处理开始前失败。
+
+每个成功任务必写 `items/<六位序号>.detections.json`，其内容继续使用
+现有单图 detection schema；`--output-images` 再写对应 PNG。summary
+路径必须显式给出。summary 已存在且未传 `--overwrite` 时整次调用在
+启动前失败；逐图目标已存在时按 writer 语义只让该任务失败，其他
+任务继续。输出计划不能覆盖 source image、config、artifact、model
+或 manifest；目录输入还禁止 output root 位于 input root 内部。
+
+公开状态和进程退出码是：
+
+| `BatchSummary.status` | 退出码 | 含义 |
+|---|---:|---|
+| `succeeded` | 0 | 全部任务成功 |
+| `partial_failure` | 2 | 有逐图失败、无 cancelled |
+| `cancelled` | 130 | cooperative signal/stop 已被观测；可以有 0 个或多个未开始任务 |
+| `fatal` | 1 | session/线程等基础设施失败 |
+
+计数始终满足 `discovered = succeeded + failed + cancelled` 与
+`started = succeeded + failed`。SIGINT/SIGTERM（Windows 还覆盖 console
+break）只在 handler 中设置安全标志；普通线程发起 stop，拒绝新任务、
+取消排队/未开始任务，允许正在执行的同步 ORT 调用结束并 join 全部
+worker。`BatchSummary.cooperative_stop_requested` 独立于逐图计数，
+避免“所有任务已经开始”时把中断误报为成功。队列只持有 task index；图片、tensor 与 ORT output 只存在于
+当前 worker，且每个 worker 独占一个 `DetectorPipeline/Ort::Session`。
+
+### 10.2 Windows x86_64 与 WSL2/Linux x86_64 正式比较
+
+两平台都以 FP32 `CPUExecutionProvider`、Release、ORT sequential、
+intra/inter-op `1/1`、361 张 `data/images/val`、JSON-only、queue=8 分别
+启动 workers=1 与 workers=4 独立进程。比较工具先确认 361/361 个任务
+顺序一致、逐图 detection JSON 字节与语义完全一致，再报告性能；没有
+“并发必须更快”的门槛。
+
+| 平台 / 指标 | workers=1 | workers=4 | 变化 |
+|---|---:|---:|---:|
+| Windows processing wall | 57,433.263 ms | 20,219.646 ms | -64.79% |
+| Windows throughput | 6.285556 img/s | 17.853923 img/s | 2.840468x |
+| Windows Peak Working Set | 151.805 MiB | 505.086 MiB | +353.281 MiB |
+| WSL2/Linux processing wall | 44,492.069 ms | 17,907.115 ms | -59.75% |
+| WSL2/Linux throughput | 8.113806 img/s | 20.159584 img/s | 2.484603x |
+| WSL2/Linux peak RSS | 205.766 MiB | 588.227 MiB | +382.461 MiB |
+
+四次运行的 queue peak depth 都是 8，从未超过 capacity；workers=1/4 的
+producer wait count 分别是 Windows `353/352`、WSL2/Linux `353/349`，因此
+backpressure 是实际触发并被记录的行为，不只是配置声明。
+
+WSL2 正式两次运行把同一份 361 图、config、artifact 和 model 复制到同一个
+WSL 原生 ext4 临时工作区，并保持 JSON-only 输出策略一致；完成后只把 summary、
+逐图 JSON 与 comparison 复制回仓库。它仍然只是 WSL2/Linux 同平台证据，不能与
+Windows 数字横向比较。
+
+Windows 记录位于
+[`../cpp_infer/results/s2_03/windows_x86_64/`](../cpp_infer/results/s2_03/windows_x86_64/)，
+其中 `comparison.json` 绑定 workers=1/4 summary 与 361 项一致性。WSL2
+记录位于
+[`../cpp_infer/results/s2_03/linux_x86_64/performance/`](../cpp_infer/results/s2_03/linux_x86_64/performance/)，
+对应文件是 `batch_workers_1/batch_summary.json`、
+`batch_workers_4/batch_summary.json` 与 `batch_comparison.json`。
+
+当前 clean Release 收口在 Windows x86_64 与 WSL2/Linux x86_64 均为
+`156/156` CTest 通过；Windows 中两个需要本地创建 symlink/reparse 的
+GTest case 因账号权限显示 skip，对应 path-safety case 已在 Linux
+执行。Linux 同轮还检查 11 个 ELF 的 `ldd` 无 `not found`。这些是当前
+S2-03 收口事实；上文 S2-02 的 `119/119` 是历史里程碑，不回写。
+
+复现入口：
+
+```powershell
+cpp_infer\tools\stage1.cmd all
+cpp_infer\tools\stage1.cmd batch-compare
+```
+
+```bash
+export YOLO_DEFECT_RUN_DIR="$PWD/cpp_infer/results/s2_03/linux_x86_64/performance_rerun_20260830_01"
+bash cpp_infer/tools/stage1.sh all
+unset YOLO_DEFECT_RUN_DIR
+
+export YOLO_DEFECT_RUN_DIR="$PWD/cpp_infer/results/s2_03/linux_x86_64/comparison_rerun_20260830_01"
+bash cpp_infer/tools/stage1.sh batch-compare
+unset YOLO_DEFECT_RUN_DIR
+```
+
+`all` 做完整回归和冻结 30 图 batch 验收，但不会自动运行 361 图
+workers=1/4 正式比较；后者必须单独调用 `batch-compare`。Windows PWS 与
+Linux RSS 的平台语义不同，只能各自在本平台比较，不能横向比较两行。
+复跑示例中的 `20260830_01` 是 run-id 占位，目标存在时必须换新值。
+
+### 10.3 Linux AArch64/QEMU 功能证据
+
+```bash
+export YOLO_DEFECT_AARCH64_RESULT_DIR="$PWD/cpp_infer/results/s2_03/linux_aarch64_qemu/regression_rerun_20260830_01"
+export YOLO_DEFECT_AARCH64_BATCH_RESULT_DIR="$PWD/cpp_infer/results/s2_03/linux_aarch64_qemu/batch"
+export YOLO_DEFECT_AARCH64_BATCH_RUN_ID="rerun_20260830_01"
+bash cpp_infer/tools/stage2_aarch64.sh all
+unset YOLO_DEFECT_AARCH64_RESULT_DIR
+unset YOLO_DEFECT_AARCH64_BATCH_RESULT_DIR
+unset YOLO_DEFECT_AARCH64_BATCH_RUN_ID
+```
+
+复跑同样要把 `20260830_01` 换成未使用的 run id；batch action 会拒绝
+已存在的 run root。
+
+当前结果证明完整 Runtime/CLI 交叉构建、AArch64 ELF/loader 边界、既有
+固定单图 3 detections，以及目录/manifest/部分失败 batch 行为。正式
+batch 记录见
+[`../cpp_infer/results/s2_03/linux_aarch64_qemu/final_20260830_r2/`](../cpp_infer/results/s2_03/linux_aarch64_qemu/final_20260830_r2/)；
+目录 2/2 成功、manifest 2/2 成功且两入口逐图 JSON 完全一致，损坏
+JPEG 精确 2 成功 + 1 失败、exit 2。三份 summary 同时记录编译 target
+`aarch64`、运行 kernel `x86_64`、execution context
+`qemu_user_mode_on_x86_64_host` 与 `memory.publishable=false`。
+
+QEMU user-mode 不是开发板、原生 ARM 或部署性能环境。本项目不发布、
+比较或解释该运行中的 latency、throughput、RSS、worker speedup、功耗、
+温度或稳定性数字；AArch64 S2-03 结论仅限构建与功能可移植性。

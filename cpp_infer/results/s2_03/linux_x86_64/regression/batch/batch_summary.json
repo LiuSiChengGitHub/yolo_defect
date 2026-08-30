@@ -1,0 +1,410 @@
+{
+  "schema_version": 1,
+  "evidence_type": "cpp_ort_multi_image_batch_summary",
+  "timestamp_utc": "2026-08-30T15:19:49Z",
+  "status": "succeeded",
+  "cooperative_stop_requested": false,
+  "command_arguments": [
+    "/tmp/yolo_defect_stage1_linux_release/bin/yolo_defect_cpp",
+    "--config",
+    "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/configs/default_config.txt",
+    "--batch",
+    "--manifest",
+    "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/tests/fixtures/s2_03_consistency_manifest.txt",
+    "--output-dir",
+    "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch",
+    "--batch-summary",
+    "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/batch_summary.json",
+    "--workers",
+    "2",
+    "--queue-capacity",
+    "4",
+    "--overwrite"
+  ],
+  "environment": {
+    "hostname": "DESKTOP-6OGK71C",
+    "processor": "x86_64",
+    "logical_cpu_count": 16,
+    "os_name": "Linux",
+    "os_version": "6.18.33.2-microsoft-standard-WSL2",
+    "target_architecture": "x86_64",
+    "runtime_kernel_architecture": "x86_64",
+    "execution_context": "native_or_unknown",
+    "compiler_id": "GNU",
+    "compiler_version": "13.3.0",
+    "build_type": "Release",
+    "cxx_standard": 17,
+    "opencv_version": "4.6.0",
+    "onnxruntime_version": "1.19.2"
+  },
+  "runtime": {
+    "config_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/configs/default_config.txt",
+    "requested_provider": "cpu",
+    "actual_provider": "CPUExecutionProvider",
+    "provider_evidence": "explicit_cpu_ep_registration_and_session_creation",
+    "execution_mode": "sequential",
+    "intra_op_num_threads": 1,
+    "inter_op_num_threads": 1,
+    "graph_optimization_level": "all",
+    "score_threshold": 0.25,
+    "nms_threshold": 0.45000000000000001,
+    "nms_mode": "class_agnostic",
+    "requested_workers": 2,
+    "effective_workers": 2,
+    "session_count": 2,
+    "session_initialization_ms": [103.58449400000001, 90.235550000000003]
+  },
+  "model": {
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "model_family": "yolov8",
+    "model_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/models/best.onnx",
+    "declared_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "opset": 17,
+    "input_name": "images",
+    "input_shape": [1, 3, 800, 800],
+    "input_dtype": "float32",
+    "input_layout": "nchw"
+  },
+  "input": {
+    "kind": "manifest",
+    "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/tests/fixtures/s2_03_consistency_manifest.txt",
+    "ordering": "UTF-8 path-list declaration order"
+  },
+  "output": {
+    "directory": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch",
+    "batch_summary_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/batch_summary.json",
+    "item_directory": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items",
+    "json_outputs": true,
+    "image_outputs": false,
+    "overwrite_existing": true
+  },
+  "counts": {"discovered": 30, "enqueued": 30, "started": 30, "succeeded": 30, "failed": 0, "cancelled": 0},
+  "queue": {"capacity": 4, "peak_depth": 4, "producer_wait_count": 25, "producer_wait_ms": 2858.346485},
+  "timing": {
+    "processing_wall_ms": 3495.7926069999999,
+    "includes": [
+      "bounded-queue producer waits and task hand-off",
+      "image decode, preprocess, one batch=1 Ort::Session::Run, postprocess, and per-image output writes",
+      "worker drain/cancellation and thread joins"
+    ],
+    "excludes": [
+      "directory/manifest discovery and validation",
+      "RuntimeConfig/ModelArtifactSpec loading",
+      "worker DetectorPipeline and Ort::Session construction",
+      "BatchSummary validation, serialization, and filesystem write"
+    ]
+  },
+  "latency_ms": {"sample_count": 30, "mean_ms": 232.93853323333335, "p50_ms": 232.70750100000001, "p95_ms": 264.59944200000001},
+  "throughput_images_per_second": 8.5817447922762309,
+  "memory": {"supported": true, "status": "supported", "metric": "peak_rss", "bytes": 353300480, "mebibytes": 336.93359375, "scope": "process lifetime including task discovery, worker session construction, bounded-queue execution, per-image output, retained results, joins, and the memory query; excludes BatchSummary JSON serialization/write", "reason": null, "publishable": true},
+  "items": [
+    {
+      "sequence_index": 0,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/crazing_241.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000000.detections.json",
+      "image_output_path": null,
+      "detection_count": 3,
+      "latency_ms": 233.51754199999999,
+      "error": null
+    },
+    {
+      "sequence_index": 1,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/crazing_255.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000001.detections.json",
+      "image_output_path": null,
+      "detection_count": 2,
+      "latency_ms": 232.309641,
+      "error": null
+    },
+    {
+      "sequence_index": 2,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/crazing_270.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000002.detections.json",
+      "image_output_path": null,
+      "detection_count": 3,
+      "latency_ms": 220.31204600000001,
+      "error": null
+    },
+    {
+      "sequence_index": 3,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/crazing_285.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000003.detections.json",
+      "image_output_path": null,
+      "detection_count": 2,
+      "latency_ms": 217.80304100000001,
+      "error": null
+    },
+    {
+      "sequence_index": 4,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/crazing_300.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000004.detections.json",
+      "image_output_path": null,
+      "detection_count": 4,
+      "latency_ms": 231.751542,
+      "error": null
+    },
+    {
+      "sequence_index": 5,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/inclusion_241.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000005.detections.json",
+      "image_output_path": null,
+      "detection_count": 3,
+      "latency_ms": 231.95515700000001,
+      "error": null
+    },
+    {
+      "sequence_index": 6,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/inclusion_255.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000006.detections.json",
+      "image_output_path": null,
+      "detection_count": 2,
+      "latency_ms": 264.59944200000001,
+      "error": null
+    },
+    {
+      "sequence_index": 7,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/inclusion_270.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000007.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 301.31058999999999,
+      "error": null
+    },
+    {
+      "sequence_index": 8,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/inclusion_285.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000008.detections.json",
+      "image_output_path": null,
+      "detection_count": 2,
+      "latency_ms": 243.04352600000001,
+      "error": null
+    },
+    {
+      "sequence_index": 9,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/inclusion_300.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000009.detections.json",
+      "image_output_path": null,
+      "detection_count": 3,
+      "latency_ms": 237.613437,
+      "error": null
+    },
+    {
+      "sequence_index": 10,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/patches_241.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000010.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 250.05128300000001,
+      "error": null
+    },
+    {
+      "sequence_index": 11,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/patches_255.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000011.detections.json",
+      "image_output_path": null,
+      "detection_count": 3,
+      "latency_ms": 234.330748,
+      "error": null
+    },
+    {
+      "sequence_index": 12,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/patches_270.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000012.detections.json",
+      "image_output_path": null,
+      "detection_count": 2,
+      "latency_ms": 255.66352000000001,
+      "error": null
+    },
+    {
+      "sequence_index": 13,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/patches_285.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000013.detections.json",
+      "image_output_path": null,
+      "detection_count": 2,
+      "latency_ms": 252.133411,
+      "error": null
+    },
+    {
+      "sequence_index": 14,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/patches_300.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000014.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 262.89549899999997,
+      "error": null
+    },
+    {
+      "sequence_index": 15,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/pitted_surface_241.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000015.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 255.17594500000001,
+      "error": null
+    },
+    {
+      "sequence_index": 16,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/pitted_surface_255.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000016.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 219.651127,
+      "error": null
+    },
+    {
+      "sequence_index": 17,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/pitted_surface_270.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000017.detections.json",
+      "image_output_path": null,
+      "detection_count": 2,
+      "latency_ms": 214.724557,
+      "error": null
+    },
+    {
+      "sequence_index": 18,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/pitted_surface_285.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000018.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 232.70750100000001,
+      "error": null
+    },
+    {
+      "sequence_index": 19,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/pitted_surface_300.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000019.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 232.49604299999999,
+      "error": null
+    },
+    {
+      "sequence_index": 20,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/rolled-in_scale_241.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000020.detections.json",
+      "image_output_path": null,
+      "detection_count": 2,
+      "latency_ms": 241.918665,
+      "error": null
+    },
+    {
+      "sequence_index": 21,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/rolled-in_scale_255.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000021.detections.json",
+      "image_output_path": null,
+      "detection_count": 3,
+      "latency_ms": 243.64661599999999,
+      "error": null
+    },
+    {
+      "sequence_index": 22,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/rolled-in_scale_270.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000022.detections.json",
+      "image_output_path": null,
+      "detection_count": 2,
+      "latency_ms": 204.35434799999999,
+      "error": null
+    },
+    {
+      "sequence_index": 23,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/rolled-in_scale_285.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000023.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 200.97127399999999,
+      "error": null
+    },
+    {
+      "sequence_index": 24,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/rolled-in_scale_300.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000024.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 199.66753499999999,
+      "error": null
+    },
+    {
+      "sequence_index": 25,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/scratches_241.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000025.detections.json",
+      "image_output_path": null,
+      "detection_count": 4,
+      "latency_ms": 200.41762800000001,
+      "error": null
+    },
+    {
+      "sequence_index": 26,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/scratches_255.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000026.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 204.611751,
+      "error": null
+    },
+    {
+      "sequence_index": 27,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/scratches_270.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000027.detections.json",
+      "image_output_path": null,
+      "detection_count": 3,
+      "latency_ms": 201.77117000000001,
+      "error": null
+    },
+    {
+      "sequence_index": 28,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/scratches_285.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000028.detections.json",
+      "image_output_path": null,
+      "detection_count": 1,
+      "latency_ms": 232.847722,
+      "error": null
+    },
+    {
+      "sequence_index": 29,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/data/images/val/scratches_300.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/linux_x86_64/regression/batch/items/000029.detections.json",
+      "image_output_path": null,
+      "detection_count": 4,
+      "latency_ms": 233.90369000000001,
+      "error": null
+    }
+  ],
+  "limitations": [
+    "Concurrency is image-level batch=1 work; this is not true tensor batching.",
+    "Each worker owns one DetectorPipeline and CPU Ort::Session with sequential execution and intra/inter-op thread counts fixed at 1/1.",
+    "No video, service, GPU concurrency, or lock-free queue is included.",
+    "Process peak memory is a lifetime high-water mark, not incremental per-worker or per-stage memory.",
+    "QEMU user-mode execution, when declared or inferred, proves only AArch64 functional portability and is not performance evidence."
+  ],
+  "fatal_error": null
+}

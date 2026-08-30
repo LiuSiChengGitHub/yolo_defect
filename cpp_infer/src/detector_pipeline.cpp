@@ -147,7 +147,7 @@ class DetectorPipeline::Impl {
         normalize_source_image_path(image_path);
 
     PreprocessResult preprocess = preprocess_image(
-        source_image_path.string(), contract_.artifact);
+        source_image_path, contract_.artifact);
     InferenceOutput raw_output = runner_.run(
         contract_.artifact.input.shape, preprocess.tensor_nchw);
     std::vector<Detection> detections = postprocess_yolov8_raw(
@@ -161,6 +161,14 @@ class DetectorPipeline::Impl {
         result.detection_result, output_request,
         protected_pipeline_paths(contract_, source_image_path));
     return result;
+  }
+
+  const ModelMetadata& metadata() const noexcept {
+    return runner_.metadata();
+  }
+
+  double session_initialization_ms() const noexcept {
+    return runner_.session_initialization_ms();
   }
 
  private:
@@ -188,6 +196,28 @@ SingleImagePipelineResult DetectorPipeline::run(
         "invoke run only on the pipeline that owns the Runtime session");
   }
   return impl_->run(image_path, output_request);
+}
+
+const ModelMetadata& DetectorPipeline::metadata() const {
+  if (!impl_) {
+    throw_pipeline_error(
+        "DetectorPipeline", "a live pipeline instance",
+        "a moved-from pipeline",
+        "inspect metadata only on the pipeline that owns the Runtime "
+        "session");
+  }
+  return impl_->metadata();
+}
+
+double DetectorPipeline::session_initialization_ms() const {
+  if (!impl_) {
+    throw_pipeline_error(
+        "DetectorPipeline", "a live pipeline instance",
+        "a moved-from pipeline",
+        "inspect initialization timing only on the pipeline that owns the "
+        "Runtime session");
+  }
+  return impl_->session_initialization_ms();
 }
 
 }  // namespace yolo_defect_cpp

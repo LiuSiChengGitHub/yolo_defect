@@ -4,7 +4,7 @@
 #include "yolo_defect_cpp/artifact_spec.h"
 #include "yolo_defect_cpp/project_core.h"
 
-#include <string>
+#include <filesystem>
 
 namespace cv {
 class Mat;
@@ -12,7 +12,7 @@ class Mat;
 
 namespace yolo_defect_cpp {
 
-PreprocessResult preprocess_image(const std::string& image_path,
+PreprocessResult preprocess_image(const std::filesystem::path& image_path,
                                    const ModelArtifactSpec& artifact);
 
 PreprocessResult preprocess_image(const cv::Mat& bgr_image,

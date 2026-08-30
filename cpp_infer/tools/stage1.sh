@@ -13,6 +13,10 @@ MANIFEST="${CPP_DIR}/tests/fixtures/consistency_manifest.json"
 CONSISTENCY_TOOL="${CPP_DIR}/tools/compare_consistency.py"
 DETECTION_VALIDATOR="${CPP_DIR}/tests/assert_detection_json.py"
 BENCHMARK_VALIDATOR="${CPP_DIR}/tests/assert_benchmark_json.py"
+BATCH_VALIDATOR="${CPP_DIR}/tools/validate_batch_summary.py"
+BATCH_COMPARISON_TOOL="${CPP_DIR}/tools/compare_batch_runs.py"
+BATCH_MANIFEST="${CPP_DIR}/tests/fixtures/s2_03_consistency_manifest.txt"
+BATCH_PERFORMANCE_INPUT="${REPO_ROOT}/data/images/val"
 DETECT_ROOT="${CPP_DIR}/results/manual"
 
 BUILD_REQUEST="${YOLO_DEFECT_BUILD_DIR:-/tmp/yolo_defect_stage1_linux_release}"
@@ -62,6 +66,10 @@ Usage:
   stage1.sh clean-build
   stage1.sh test
   stage1.sh detect <image> [output-dir] [--config <path>] [--overwrite]
+  stage1.sh batch <input-dir-or-manifest> [output-dir] [--config <path>]
+                  [--workers <1..64>] [--queue-capacity <1..4096>]
+                  [--output-images] [--overwrite]
+  stage1.sh batch-compare
   stage1.sh demo
   stage1.sh consistency
   stage1.sh benchmark [--warmup <n>] [--repeat <n>]
@@ -73,6 +81,10 @@ Actions:
   clean-build  Recreate the guarded /tmp Ninja Release build.
   test         Build and run the complete CTest gate.
   detect       Write JSON and PNG for one arbitrary image.
+  batch        Run one directory/path-list manifest with bounded workers.
+  batch-compare Run workers=1 and workers=4, queue=8, JSON-only on all
+               data/images/val images; require identical detections and
+               describe throughput/peak-RSS deltas without a speedup gate.
   demo         Validate the fixed crazing_241 JSON/PNG result.
   consistency  Run the frozen Python ORT/C++ ORT comparison.
   benchmark    Run consistency, then benchmark (default 10/100).
@@ -222,6 +234,12 @@ preflight() {
   need_file "${CONFIG}" "default RuntimeConfig" "restore the tracked file"
   need_file "${DEMO_IMAGE}" "fixed demo image" "restore the tracked file"
   need_file "${MANIFEST}" "consistency manifest" "restore the tracked file"
+  need_file "${BATCH_MANIFEST}" "S2-03 path-list manifest" \
+    "restore the tracked file"
+  need_file "${BATCH_VALIDATOR}" "BatchSummary validator" \
+    "restore cpp_infer/tools/validate_batch_summary.py"
+  need_file "${BATCH_COMPARISON_TOOL}" "batch comparison tool" \
+    "restore cpp_infer/tools/compare_batch_runs.py"
   resolve_opencv
   resolve_ort
   resolve_python
@@ -348,7 +366,8 @@ new_run_dir() {
       fail "result root" "a directory path" "${RUN_DIR}" \
         "choose a fresh Gate-specific output directory"
     local section=""
-    for section in demo consistency benchmark; do
+    for section in demo consistency benchmark batch batch_workers_1 \
+        batch_workers_4 batch_comparison.json; do
       [[ ! -e "${RUN_DIR}/${section}" ]] ||
         fail "result root" "no existing ${section} result" \
           "${RUN_DIR}/${section}" \
@@ -463,10 +482,76 @@ run_detect() {
   printf '[pass] Detect: JSON=%s; PNG=%s\n' "${json}" "${png}"
 }
 
+run_batch() {
+  local input="$1" out="$2" config="$3" workers="$4" capacity="$5"
+  local output_images="$6" overwrite="$7"
+  local input_option="" input_kind=""
+  [[ "${input}" == /* ]] || input="${CALLER_DIR}/${input}"
+  if [[ -d "${input}" ]]; then
+    input="$(realpath -e -- "${input}")"
+    input_option=--input-dir
+    input_kind=directory
+  elif [[ -f "${input}" ]]; then
+    input="$(realpath -e -- "${input}")"
+    input_option=--manifest
+    input_kind=manifest
+  else
+    fail "batch input" "an existing directory or manifest file" "${input}" \
+      "pass a directory or UTF-8 path-list manifest"
+  fi
+  [[ -z "${config}" ]] || config="$(absolute_file "${config}" \
+    "batch config" "pass an existing RuntimeConfig")"
+  [[ -n "${config}" ]] || config="${CONFIG}"
+  if [[ -n "${out}" ]]; then
+    out="$(absolute_output "${out}")"
+    [[ ! -f "${out}" ]] || fail "batch output" "a directory path" \
+      "regular file ${out}" "choose another path"
+  else
+    mkdir -p -- "${DETECT_ROOT}"
+    out="$(mktemp -d "${DETECT_ROOT}/$(date -u +%Y%m%d_%H%M%S)_batch_XXXXXXXX")"
+  fi
+  local summary="${out}/batch_summary.json"
+  local -a args=(--config "${config}" --batch "${input_option}" "${input}"
+    --output-dir "${out}" --batch-summary "${summary}"
+    --workers "${workers}" --queue-capacity "${capacity}")
+  (( output_images == 0 )) || args+=(--output-images)
+  (( overwrite == 0 )) || args+=(--overwrite)
+  stage "bounded multi-image batch (workers=${workers}, queue=${capacity})"
+  run "batch CLI" "${CLI}" "${args[@]}"
+  check_json "${summary}" "BatchSummary"
+  run "BatchSummary validator" "${PYTHON_EXE}" "${BATCH_VALIDATOR}" \
+    "${summary}" --expected-status succeeded \
+    --expected-input-kind "${input_kind}" \
+    --expected-requested-workers "${workers}"
+  printf '[pass] Batch: summary=%s; output=%s\n' "${summary}" "${out}"
+}
+
+run_batch_comparison() {
+  stage "formal S2-03 workers=1 versus workers=4 comparison"
+  [[ -d "${BATCH_PERFORMANCE_INPUT}" ]] ||
+    fail "batch performance input" "data/images/val directory" \
+      "${BATCH_PERFORMANCE_INPUT}" "restore the validation images"
+  local workers_1_out="${RUN_DIR}/batch_workers_1"
+  local workers_4_out="${RUN_DIR}/batch_workers_4"
+  run_batch "${BATCH_PERFORMANCE_INPUT}" "${workers_1_out}" "${CONFIG}" \
+    1 8 0 0
+  run_batch "${BATCH_PERFORMANCE_INPUT}" "${workers_4_out}" "${CONFIG}" \
+    4 8 0 0
+  local comparison="${RUN_DIR}/batch_comparison.json"
+  run "batch comparison" "${PYTHON_EXE}" "${BATCH_COMPARISON_TOOL}" \
+    --workers-1-summary "${workers_1_out}/batch_summary.json" \
+    --workers-4-summary "${workers_4_out}/batch_summary.json" \
+    --output "${comparison}"
+  check_json "${comparison}" "batch comparison JSON"
+  printf '[pass] Batch comparison: %s\n' "${comparison}"
+}
+
 main() {
   local action="${1:-help}"
   (( $# == 0 )) || shift
   local detect_image="" detect_out="" detect_config="" detect_overwrite=0
+  local batch_input="" batch_out="" batch_config="" batch_workers=1
+  local batch_capacity="" batch_output_images=0 batch_overwrite=0
   local warmup=10 repeat=100
 
   case "${action}" in
@@ -491,6 +576,42 @@ main() {
         esac
       done
       ;;
+    batch)
+      (( $# > 0 )) || fail "batch input" "one directory or manifest path" \
+        "missing" "run stage1.sh batch <input-dir-or-manifest> [output-dir]"
+      batch_input="$1"
+      shift
+      if (( $# > 0 )) && [[ "$1" != --* ]]; then batch_out="$1"; shift; fi
+      while (( $# > 0 )); do
+        case "$1" in
+          --config) (( $# > 1 )) || fail "--config" "a value" "missing" \
+            "pass a RuntimeConfig"; batch_config="$2"; shift 2 ;;
+          --workers) (( $# > 1 )) || fail "--workers" "a value" "missing" \
+            "pass an integer"; batch_workers="$2"; shift 2 ;;
+          --queue-capacity) (( $# > 1 )) || fail "--queue-capacity" \
+            "a value" "missing" "pass an integer"; batch_capacity="$2"; shift 2 ;;
+          --output-images) batch_output_images=1; shift ;;
+          --overwrite) batch_overwrite=1; shift ;;
+          *) fail "batch argument" "--config/--workers/--queue-capacity/--output-images/--overwrite" \
+            "$1" "run stage1.sh help" ;;
+        esac
+      done
+      [[ "${batch_workers}" =~ ^[0-9]+$ ]] &&
+        (( batch_workers >= 1 && batch_workers <= 64 )) ||
+        fail "batch workers" "an integer in [1,64]" "${batch_workers}" \
+          "correct --workers"
+      if [[ -z "${batch_capacity}" ]]; then
+        batch_capacity=$((2 * batch_workers))
+      fi
+      [[ "${batch_capacity}" =~ ^[0-9]+$ ]] &&
+        (( batch_capacity >= 1 && batch_capacity <= 4096 )) ||
+        fail "batch queue capacity" "an integer in [1,4096]" \
+          "${batch_capacity}" "correct --queue-capacity"
+      ;;
+    batch-compare)
+      (( $# == 0 )) || fail "batch-compare arguments" "none" "$*" \
+        "the formal protocol fixes input/workers/queue/output policy"
+      ;;
     benchmark)
       while (( $# > 0 )); do
         case "$1" in
@@ -513,7 +634,7 @@ main() {
       (( $# == 0 )) || fail "${action} arguments" "none" "$*" "remove them"
       ;;
     *) fail "workflow action" \
-      "help/doctor/build/clean-build/test/detect/demo/consistency/benchmark/all" \
+      "help/doctor/build/clean-build/test/detect/batch/batch-compare/demo/consistency/benchmark/all" \
       "${action}" "run stage1.sh help" ;;
   esac
 
@@ -527,12 +648,17 @@ main() {
     test) ensure_build; run_tests ;;
     detect) ensure_build; run_detect "${detect_image}" "${detect_out}" \
       "${detect_config}" "${detect_overwrite}" ;;
+    batch) ensure_build; run_batch "${batch_input}" "${batch_out}" \
+      "${batch_config}" "${batch_workers}" "${batch_capacity}" \
+      "${batch_output_images}" "${batch_overwrite}" ;;
+    batch-compare) ensure_build; new_run_dir; run_batch_comparison ;;
     demo) ensure_build; new_run_dir; run_demo ;;
     consistency) ensure_build; new_run_dir; run_consistency ;;
     benchmark) ensure_build; new_run_dir; run_consistency; \
       run_benchmark "${warmup}" "${repeat}" ;;
     all) clean_build; run_tests; new_run_dir; run_demo; run_consistency; \
-      run_benchmark 10 100 ;;
+      run_benchmark 10 100; run_batch "${BATCH_MANIFEST}" \
+      "${RUN_DIR}/batch" "${CONFIG}" 2 4 0 0 ;;
   esac
   stage "${action} PASS"
   printf 'Build directory: %s\n' "${BUILD_DIR}"

@@ -2,7 +2,7 @@
 
 This directory is the C++ Runtime workspace for the **Industrial Vision Edge AI Runtime and C++ Engineering System**.
 
-Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the recorded advisory exercise policy; S2-02 Gate A/Gate B implementation, same-commit three-platform final regression, consolidated documentation, and teaching closure are complete.** Gate A preserves the same single-image Runtime across Windows and native Linux x86_64. Gate B cross-compiles that Runtime/CLI to Linux AArch64, proves the target ELF/dependency boundary, runs the project-core/contracts under QEMU user-mode, and completes the fixed-image ARM64 OpenCV/ORT CPU path with a validated three-detection JSON. Work stops for user L1; S2-03 has not started. QEMU is not a physical ARM board and no emulated performance result is claimed. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
+Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the recorded advisory exercise policy; S2-02 cross-platform Runtime closure is complete; and S2-03 directory/manifest bounded multi-image concurrency is implemented and verified on all three target platforms.** Windows x86_64 and WSL2/Linux x86_64 have full correctness plus same-platform workers=1/workers=4 throughput and process-memory comparisons. Linux AArch64 has a clean cross-build and formal directory, manifest, partial-failure, and `BatchSummary` functional acceptance under QEMU user-mode. Work stops for user L1; S2-04 has not started. QEMU is not a physical ARM board and no emulated performance or memory result is published. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
 
 | Gate | Status |
 |---|---|
@@ -15,6 +15,8 @@ Current status: **the Large-Stage-One automatic engineering gate and user-owned 
 | S2-01 user L1 | Awaiting |
 | S2-02 Gate A + Gate B implementation/evidence/final closure | Complete |
 | S2-02 user L1 | Awaiting |
+| S2-03 bounded multi-image implementation/evidence/final closure | Complete |
+| S2-03 user L1 | Awaiting |
 
 ## Current single-image chain
 
@@ -80,6 +82,20 @@ shared Runtime + preprocess + postprocess + DetectorPipeline
 -> shared tests + fixed image + consistency + scoped benchmark
 ```
 
+S2-03 composes the unchanged single-image pipeline at image granularity:
+
+```text
+directory or UTF-8 path-list manifest
+-> deterministic discovery and preflight output-path protection
+-> bounded FIFO queue containing task indices only
+-> N workers, each owning one DetectorPipeline / CPU Ort::Session
+-> existing batch=1 preprocess -> ORT -> postprocess -> detection writer
+-> ordered per-image results + BatchSummary schema v1
+```
+
+This is image-level concurrency, not tensor true batch. ORT remains sequential
+with intra/inter-op threads `1/1` inside every worker session.
+
 ## Layout and responsibilities
 
 ```text
@@ -95,6 +111,9 @@ cpp_infer/
 │   └── int8_u8s8_config.txt
 ├── include/yolo_defect_cpp/
 │   ├── artifact_spec.h
+│   ├── batch_result.h
+│   ├── batch_runner.h
+│   ├── batch_writer.h
 │   ├── benchmark_result.h
 │   ├── benchmark_runner.h
 │   ├── benchmark_writer.h
@@ -110,6 +129,12 @@ cpp_infer/
 │   └── result_writer.h
 ├── src/
 │   ├── artifact_spec.cpp
+│   ├── batch_discovery.cpp
+│   ├── batch_executor.h
+│   ├── batch_path_safety.h
+│   ├── batch_runner.cpp
+│   ├── batch_writer.cpp
+│   ├── bounded_queue.h
 │   ├── benchmark_result.cpp
 │   ├── benchmark_runner.cpp
 │   ├── benchmark_writer.cpp
@@ -151,6 +176,10 @@ cpp_infer/
 │   ├── elf_inspection.txt
 │   ├── loader_resolution.txt
 │   └── qemu_smoke.txt
+├── results/s2_03/
+│   ├── windows_x86_64/
+│   ├── linux_x86_64/
+│   └── linux_aarch64_qemu/
 ├── cmake/toolchains/
 │   └── linux-aarch64-gnu.cmake
 ├── protocols/
@@ -163,6 +192,8 @@ cpp_infer/
 │   ├── summarize_ort_profile.py
 │   ├── assemble_s2_01_evidence.py
 │   ├── compare_consistency.py
+│   ├── compare_batch_runs.py
+│   ├── validate_batch_summary.py
 │   ├── bootstrap_aarch64_deps.sh
 │   ├── stage2_aarch64.sh
 │   ├── stage1.cmd
@@ -180,6 +211,10 @@ cpp_infer/
     ├── project_core_smoke.cpp
     ├── test_consistency.py
     ├── benchmark_test.cpp
+    ├── batch_test.cpp
+    ├── image_decoder_test.cpp
+    ├── assert_batch_cli.py
+    ├── test_s2_03_batch_tools.py
     ├── assert_benchmark.cmake
     ├── assert_benchmark_json.py
     ├── assert_detection_json.py
@@ -187,7 +222,8 @@ cpp_infer/
     ├── assert_cli_arguments_failure.cmake
     ├── assert_*.cmake
     └── fixtures/
-        └── consistency_manifest.json
+        ├── consistency_manifest.json
+        └── s2_03_consistency_manifest.txt
 ```
 
 - `RuntimeConfig` owns runtime policy: score/NMS thresholds, configured provider, and the artifact declaration path.
@@ -200,8 +236,11 @@ cpp_infer/
 - `Postprocessor` performs validated BCN decode, class argmax, strict score filtering, `xywh -> xyxy`, IoU, stable class-agnostic NMS, inverse letterbox, and clipping.
 - `SingleImageDetectionResult` is a self-contained result object holding model, image, Runtime, provider, and detection evidence needed by output writers.
 - `DetectorPipeline` connects the established modules for exactly one image and protects config, artifact, model, and source-image paths from output overwrite.
+- `BatchRunner` discovers a directory or UTF-8 path-list manifest before worker startup, pre-creates one `DetectorPipeline`/ORT session per effective worker, and composes the unchanged single-image `run()` call through a bounded FIFO queue of task indices.
+- The internal `BoundedQueue` provides mutex/condition-variable backpressure, peak-depth and producer-wait evidence, normal close-and-drain, and cooperative stop. `BatchRunner::request_stop()` rejects new work, cancels queued/unstarted tasks, lets an active synchronous ORT call finish, joins every worker before returning, and records the request independently of the number of unstarted items.
+- `BatchSummary` and `BatchWriter` define and serialize machine-readable schema v1, including ordered per-image status, an explicit `cooperative_stop_requested` flag, counts, worker/session policy, queue/backpressure, timing, throughput, environment architecture, and platform memory disclosure. Exit codes map `succeeded/partial_failure/cancelled/fatal` to `0/2/130/1`.
 - `ResultWriter` validates the result, escapes JSON strings, uses locale-independent stable numeric formatting, creates parent directories, enforces overwrite policy, and renders deterministic labels/colors without a GUI.
-- The internal `image_decoder` seam measures only `cv::imread` while preserving the same normalized `CV_8UC3` image contract used by normal preprocessing.
+- The internal `image_decoder` seam opens the native `std::filesystem::path` as bytes and calls `cv::imdecode(IMREAD_COLOR)`, preserving Unicode Windows paths and the same normalized `CV_8UC3` contract used by normal preprocessing; its measured decode interval includes the encoded-file read.
 - `BenchmarkResult` defines the Release benchmark protocol, six latency segments, environment/runtime/model/sample metadata, throughput, memory evidence, timing exclusions, and limitations. Its pure statistics helper uses empirical nearest-rank ceiling for P50/P95 and derives batch-1 throughput from mean latency.
 - `BenchmarkRunner` creates and validates the CPU session before repeated timing, performs untimed warmup, rejects result drift between iterations, measures decode/preprocess/`Session::Run`/postprocess/pipeline/end-to-end with `std::chrono::steady_clock`, and queries the thin platform adapter after the timed iterations.
 - `platform_info` owns the narrow operating-system boundary for timestamps, host/compiler metadata, and process peak memory: `GetProcessMemoryInfo` Peak Working Set on Windows and `getrusage(RUSAGE_SELF).ru_maxrss` peak RSS on Linux.
@@ -217,8 +256,8 @@ cpp_infer/
 - `evaluate_s2_01_correctness.py` runs the same FP32/INT8 product semantics over the frozen product and labeled quality manifests and invokes the Release C++ CLI for legality/consistency evidence. Its original failed product gate remains machine-readable.
 - `summarize_ort_profile.py` counts `Session/model_run` and per-node calls, validates CPU placement and an optimized-graph FP32/INT8 signature, and aggregates top nodes/operators with percentages and cumulative percentages. Raw trace time remains diagnostic.
 - `assemble_s2_01_evidence.py` defaults to strict correctness. Its explicit `--correctness-policy advisory` mode still requires model/protocol/manifest/runtime/benchmark/trace bindings, preserves every failed quality boolean, and emits `strict_acceptance_passed=false` rather than laundering the result.
-- `stage1.sh` is the thin WSL2/Linux x86_64 workflow. It checks the pinned Linux SDK/toolchain, uses a guarded `/tmp` Ninja Release tree, verifies built ELF dependencies with `ldd`, and orchestrates the same product/test/consistency/benchmark behavior as the Windows entry where applicable.
-- `bootstrap_aarch64_deps.sh` downloads the official ARM64 ORT SDK and extracts Ubuntu ARM64 OpenCV packages into a private target tree without installing them over the host development packages. `stage2_aarch64.sh` cross-builds, inspects, and functionally executes the AArch64 artifacts under QEMU; it contains no benchmark action.
+- `stage1.sh` is the thin WSL2/Linux x86_64 workflow. It checks the pinned Linux SDK/toolchain, uses a guarded `/tmp` Ninja Release tree, verifies built ELF dependencies with `ldd`, and orchestrates the same product/test/consistency/benchmark/batch behavior as the Windows entry where applicable.
+- `bootstrap_aarch64_deps.sh` downloads the official ARM64 ORT SDK and extracts Ubuntu ARM64 OpenCV packages into a private target tree without installing them over the host development packages. `stage2_aarch64.sh` cross-builds, inspects, and functionally executes the AArch64 artifacts under QEMU; its `batch` action is functional acceptance and never a benchmark.
 - GTest targets link `yolo_defect::runtime`; they never compile or reuse `main.cpp`.
 
 ## S2-01 static PTQ, comparison, and ORT Profiling
@@ -339,6 +378,120 @@ The reproducible dependency/toolchain commands and honest status table are in
 QEMU is not a physical ARM device. Gate B deliberately records no emulated
 latency, throughput, power, or board-performance inference.
 
+## S2-03 bounded multi-image concurrency
+
+S2-03 adds a batch orchestration layer without changing detection semantics.
+Every worker owns one `DetectorPipeline` and one CPU ORT session; each task is
+still one image and one batch=1 `DetectorPipeline::run()` call. ORT remains in
+sequential execution mode with intra/inter-op thread counts `1/1` per session.
+There is no true tensor batch, video, service, GPU concurrency, or lock-free
+queue.
+
+The direct CLI contract is:
+
+```text
+--config <config> --batch
+  (--input-dir <directory> | --manifest <path-list>)
+  --output-dir <directory> --batch-summary <file>
+  [--workers <1..64>] [--queue-capacity <1..4096>]
+  [--output-images] [--overwrite]
+```
+
+The default is `workers=1` and `queue_capacity=2*workers`; effective workers
+are `min(requested_workers, discovered_tasks)`. Directory discovery is
+recursive, accepts regular `.bmp/.jpeg/.jpg/.png/.tif/.tiff/.webp` files,
+does not follow symlinks, and sorts by the UTF-8 generic relative path. A
+manifest is a UTF-8 path list that allows a BOM, LF/CRLF, blank lines, and
+comments whose first non-blank character is `#`; entries resolve relative to
+the manifest parent and retain declaration order. Absolute, missing,
+unsupported, or duplicate-canonical manifest entries fail before work starts.
+
+Every successful image always writes
+`items/<six-digit-sequence>.detections.json` with the existing single-image
+schema; `--output-images` additionally writes the matching PNG. Per-image
+decode/inference/write failures remain isolated and appear in the ordered
+summary while other images continue. Existing outputs are refused unless
+`--overwrite` is explicit. Preflight also prevents the summary or item outputs
+from replacing source images, config, artifact, model, or manifest inputs; a
+directory output root may not be inside its input directory.
+
+`BatchSummary` schema v1 records status, original command, build/runtime/model
+identity, target and running-kernel architectures, deterministic input policy,
+output policy, requested/effective workers, session count and ORT `1/1`
+threading, queue capacity/peak/backpressure, balanced counts, wall time,
+successful-image throughput, process memory disclosure, an explicit
+`cooperative_stop_requested` flag, limitations, and one
+ordered item record per discovered task. The public status/exit mapping is:
+
+| Status | Meaning | Exit code |
+|---|---|---:|
+| `succeeded` | every discovered item succeeded | 0 |
+| `partial_failure` | at least one item failed and none was cancelled | 2 |
+| `cancelled` | cooperative signal/stop was observed; zero or more items may remain unstarted | 130 |
+| `fatal` | infrastructure/session failure | 1 |
+
+The formal throughput numerator is successful images and the denominator is
+processing wall time. That interval includes queue waits, image processing,
+per-image writes, drain/cancellation, and joins; it excludes discovery,
+Runtime/artifact loading, worker session construction, and summary
+serialization. The clean current regression contains `156/156` passing CTest
+entries on Windows x86_64 and WSL2/Linux x86_64. Two Windows tests that require
+creating symlinks/reparse points reported GTest skips because the local account
+lacked that privilege; the corresponding path-safety tests ran on Linux.
+
+Formal same-platform FP32 CPU, JSON-only, 361-image comparisons used separate
+Release processes and a fixed queue capacity of eight. `compare_batch_runs.py`
+proved byte and semantic equality for all 361 per-image detection JSON files
+before reporting performance:
+
+| Platform / metric | workers=1 | workers=4 | workers=4 change |
+|---|---:|---:|---:|
+| Windows processing wall | 57.433 s | 20.220 s | -64.79% |
+| Windows throughput | 6.286 img/s | 17.854 img/s | 2.840x |
+| Windows Peak Working Set | 151.805 MiB | 505.086 MiB | +353.281 MiB |
+| WSL2/Linux processing wall | 44.492 s | 17.907 s | -59.75% |
+| WSL2/Linux throughput | 8.114 img/s | 20.160 img/s | 2.485x |
+| WSL2/Linux peak RSS | 205.766 MiB | 588.227 MiB | +382.461 MiB |
+
+All four runs reached, but never exceeded, queue depth eight. Producer wait
+counts were Windows `353/352` and WSL2/Linux `353/349` for workers `1/4`, so
+the summaries contain observed backpressure rather than only a configured
+capacity.
+
+These are two independent within-platform comparisons, not a Windows-versus-
+Linux benchmark. The WSL2 pair used the same copied 361-image/config/model set
+and JSON-only outputs in one WSL-native ext4 work area, avoiding `/mnt/d` I/O
+from the measured pair. The increased process high-water memory is expected because
+workers own independent sessions; no minimum speedup was an acceptance gate.
+Machine-readable records are the Windows
+[`comparison.json`](results/s2_03/windows_x86_64/comparison.json) plus its
+[`workers=1`](results/s2_03/windows_x86_64/workers_1/batch_summary.json) and
+[`workers=4`](results/s2_03/windows_x86_64/workers_4/batch_summary.json)
+summaries, and the WSL2/Linux
+[`batch_comparison.json`](results/s2_03/linux_x86_64/performance/batch_comparison.json)
+plus the corresponding
+[`workers=1`](results/s2_03/linux_x86_64/performance/batch_workers_1/batch_summary.json)
+and
+[`workers=4`](results/s2_03/linux_x86_64/performance/batch_workers_4/batch_summary.json)
+summaries.
+
+The same production Runtime/CLI was cross-compiled to Linux AArch64 and run
+under QEMU user-mode. Acceptance covered a two-image directory at workers=1,
+the same ordered images through a manifest at workers=2 and queue=1,
+byte/semantic equality between both per-image outputs, and a corrupt-JPEG
+manifest with exactly two successes, one failure, status `partial_failure`,
+and exit code 2. Each summary records target `aarch64`, running kernel
+`x86_64`, execution context `qemu_user_mode_on_x86_64_host`, and
+`memory.publishable=false`. The durable acceptance log is
+[`qemu_batch_acceptance.txt`](results/s2_03/linux_aarch64_qemu/final_20260830_r2/qemu_batch_acceptance.txt),
+with machine summaries for
+[`directory workers=1`](results/s2_03/linux_aarch64_qemu/final_20260830_r2/directory_workers1/batch_summary.json),
+[`manifest workers=2`](results/s2_03/linux_aarch64_qemu/final_20260830_r2/manifest_workers2/batch_summary.json),
+and
+[`partial failure`](results/s2_03/linux_aarch64_qemu/final_20260830_r2/partial_failure/batch_summary.json).
+No QEMU latency, throughput, RSS, speedup, physical-board, native ARM, power,
+thermal, or deployment-performance conclusion is published.
+
 ## Frozen YOLOv8 baseline semantics
 
 ```text
@@ -417,6 +570,8 @@ Run the wrapper from an ordinary PowerShell or CMD at the repository root:
 .\cpp_infer\tools\stage1.cmd help
 .\cpp_infer\tools\stage1.cmd doctor
 .\cpp_infer\tools\stage1.cmd build
+.\cpp_infer\tools\stage1.cmd batch data\images\val -Workers 4 -QueueCapacity 8
+.\cpp_infer\tools\stage1.cmd batch-compare
 ```
 
 The wrapper initializes the x64 Visual Studio environment before invoking the
@@ -438,13 +593,17 @@ bash cpp_infer/tools/stage1.sh doctor
 bash cpp_infer/tools/stage1.sh clean-build
 bash cpp_infer/tools/stage1.sh test
 bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
+bash cpp_infer/tools/stage1.sh batch data/images/val --workers 4 --queue-capacity 8
+bash cpp_infer/tools/stage1.sh batch-compare
 bash cpp_infer/tools/stage1.sh consistency
 bash cpp_infer/tools/stage1.sh benchmark
 bash cpp_infer/tools/stage1.sh all
 ```
 
-`doctor` is read-only. `all` performs a clean build, full CTest, Demo,
-consistency, and the workflow's normal benchmark, so it is a closure action
+`doctor` is read-only. `batch-compare` fixes 361 images, workers `1/4`,
+queue `8`, FP32 CPU, and JSON-only output in independent processes. `all`
+performs a clean build, full CTest, Demo, consistency, the workflow's normal
+benchmark, and frozen 30-image batch acceptance, so it is a closure action
 rather than the default after every edit. Use the verified versions and
 configurable environment entries from [`paths_commands.md`](../docs/paths_commands.md),
 not the placeholders above.
@@ -789,7 +948,7 @@ Required core-behavior-plus-GTest exercise:
 3. **GREEN:** temporarily change the comparison in `postprocessor.cpp` from strict `>` to inclusive `>=`, update the other exact-threshold expectations, rebuild the same target, and require the focused test to pass. Explain how equality changes detections and why a real contract change would also require the Python reference, consistency evidence, and README updates.
 4. Because schema-v1 freezes strict `>`, return to the checkpoint without merging the practice branch, rebuild, rerun the original focused test and complete CTest, and verify no temporary exercise diff remains. Do not leave `>=` in the product merely to finish the exercise.
 
-The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01 implementation and evidence complete under the explicit advisory-quality exercise policy; S2-02 Gate A native Linux and Gate B AArch64/QEMU implementation/evidence complete; user L1 pending; S2-03 not started**.
+The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01 implementation and evidence complete under the explicit advisory-quality exercise policy; S2-02 Gate A native Linux and Gate B AArch64/QEMU complete; S2-03 bounded multi-image implementation and three-platform evidence complete; user L1 pending; S2-04 not started**.
 
 ## Current limits
 
@@ -797,14 +956,16 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - `model.declared_sha256` is copied from the validated artifact declaration. The ordinary S1-05 detection CLI does not recompute the model hash on every invocation; the S1-07 comparison and strict S1-08 evidence validator independently bind their runs to the actual frozen model SHA-256.
 - JSON and visualization are validated before writing, but they are two files rather than one filesystem transaction. A disk-level failure while writing the second file can leave the first file present.
 - The C++17 path check and later file open are not a cross-process atomic transaction. This S1-05 CLI is verified for one local invocation, not for competing writers racing on the same destination; an explicit overwrite can also leave a partial output after a disk-level write failure.
-- The product, benchmark, and profile CLI support exactly one image. Manifest tools invoke the product interface repeatedly for controlled experiments; none is a directory-batch API, worker/concurrency system, service, or `inference_event`. Both FP32 and INT8 reuse this same single-image product chain.
+- The benchmark and profile modes remain single-image. Batch mode is an image-level worker system that repeatedly reuses the exact batch=1 `DetectorPipeline`; it is not tensor true batch, video, a service, GPU concurrency, a lock-free queue, or `inference_event`.
+- Queue capacity bounds only pending task indices. Images, tensors, and ORT outputs live inside the worker currently processing an item, while each worker still owns an independent ORT session; increasing workers therefore trades substantially higher process high-water memory for potential throughput.
+- Cooperative signal shutdown does not forcibly interrupt an active synchronous ORT call. It stops new enqueue/dequeue work, cancels queued and otherwise unstarted items, lets active calls finish, writes a balanced summary when possible, and joins all worker threads.
 - S1-07 proves Python ORT/C++ ORT implementation consistency for one fixed 30-image set under the frozen contract. It is not an accuracy evaluation or proof for every possible image/platform/library version; it is the required correctness gate that precedes performance publication.
 - S1-08 is a warm-cache, single-image, batch-1 result from one Windows CPU machine with no affinity/priority/idle-system controls. It does not establish full-dataset latency, cold-disk behavior, cross-platform performance, or a statistically controlled hardware comparison.
 - Peak Working Set is a process-lifetime high-water mark that includes session initialization and benchmark harness state. It is not a per-stage allocation profile, current RSS, or incremental model memory.
 - S2-02 Gate A was verified only inside WSL2/Linux x86_64. WSL is a useful Linux development environment, but this result is not physical edge-board or embedded-device evidence.
 - Gate A's Linux warmup-1/repeat-2 samples varied materially and are functional performance smokes. They are neither the formal 10/100 protocol nor a Windows-versus-Linux speed comparison.
 - Linux `getrusage` peak RSS and Windows Peak Working Set are both process-lifetime high-water measurements, but their platform semantics differ and their numeric values must not be compared directly.
-- Gate B was executed with Linux AArch64 binaries under QEMU user-mode, including one fixed-image ARM64 ORT CPU inference. This is functional emulation evidence only: no physical board, latency, throughput, power, thermal, driver, or deployment-stability claim follows from it.
+- Gate B/S2-03 were executed with Linux AArch64 binaries under QEMU user-mode, including fixed-image ARM64 ORT CPU inference and directory/manifest bounded-concurrency acceptance. This is functional emulation evidence only: QEMU summary time/RSS is explicitly non-publishable, and no physical-board, native-ARM performance, latency, throughput, power, thermal, driver, or deployment-stability claim follows from it.
 - The S2-01 advisory completion is not the original strict acceptance: the 30-image product aggregate remains false, and Round 2's mAP50 drop exceeds its original 0.010 limit by 0.000356. The machine record exposes both facts rather than rewriting them.
 - ORT profile summaries describe the optimized execution graph. A source Conv represented by QDQ in the ONNX file may appear as `QLinearConv`, `Conv`, and Q/DQ transition nodes after optimization; the trace does not prove exact hardware instructions.
 - The matching `best.pt` is absent from the workspace and Git history. Historical PT/ONNX evidence covers 50 sorted `crazing` images and only count/confidence summaries; S1-07 is a separate same-ONNX Python ORT/C++ ORT comparison and must not be described as a newly rerun PyTorch/Python-ORT/C++ three-way experiment.
@@ -814,7 +975,7 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - Class-agnostic NMS remains deliberate baseline behavior and can suppress a lower-scoring box from another class when boxes overlap.
 - The visualization is deterministic for the pinned OpenCV build; it is evidence output, not an annotation editor or GUI.
 
-Large Stage One is complete, S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the user-approved advisory exercise scope, and S2-02 Gate A plus Gate B implementation/evidence are complete. Work stops here for user L1; S2-03 has not started. The remaining route is directory/manifest multi-image bounded concurrency, TensorRT on Linux x86_64 with the desktop RTX 4060, and final evidence/resume/interview closure followed by recruiting freeze. QEMU results are functional portability evidence, never device-performance evidence, and the desktop RTX 4060 path will not be described as Jetson deployment.
+Large Stage One is complete; S2-01's Windows CPU INT8/PTQ/profiling evidence is complete under the user-approved advisory exercise scope; S2-02 Gate A/Gate B is complete; and S2-03 directory/manifest bounded multi-image concurrency plus three-platform evidence is complete. Work stops here for user L1. The remaining route starts with S2-04 TensorRT on Linux x86_64 using the desktop RTX 4060, then final evidence/resume/interview closure and recruiting freeze. QEMU results remain functional portability evidence, never device-performance evidence, and the desktop RTX 4060 path will not be described as Jetson deployment.
 
 ## License checkpoint
 

@@ -27,7 +27,12 @@ param(
 
   [int]$ProfileRuns = -1,
 
+  [int]$Workers = -1,
+
+  [int]$QueueCapacity = -1,
+
   [switch]$Overwrite,
+  [switch]$OutputImages,
   [switch]$AllowGTestDownload
 )
 
@@ -62,6 +67,10 @@ Usage:
   stage1.cmd clean-build
   stage1.cmd test
   stage1.cmd detect <image> [output-directory] [-Config <path>] [-Overwrite]
+  stage1.cmd batch <input-dir-or-manifest> [output-directory]
+                   [-Config <path>] [-Workers <1..64>]
+                   [-QueueCapacity <1..4096>] [-OutputImages] [-Overwrite]
+  stage1.cmd batch-compare
   stage1.cmd demo
   stage1.cmd consistency
   stage1.cmd benchmark [-Warmup <n>] [-Repeat <n>]
@@ -78,13 +87,19 @@ Actions:
   test         Build current sources and run the complete CTest gate.
   detect       Run one arbitrary image through preprocess -> ORT ->
                postprocess -> JSON/PNG. The output directory is optional.
+  batch        Run a directory or UTF-8 path-list manifest with bounded
+               workers; JSON is always written per successful image.
+  batch-compare Run workers=1 and workers=4 as separate Release processes,
+               queue=8, FP32 CPU and JSON-only over data\images\val. Require
+               identical detections and describe throughput/PWS deltas.
   demo         Build and validate the fixed three-detection Demo.
   consistency  Build and run the frozen 30-image Python/C++ comparison.
   benchmark    Build, rerun consistency, then run the configured benchmark.
   profile      Build, then run a separate profiling-enabled ORT session.
                Defaults: FP32 Runtime config, fixed crazing_241 sample,
                10 runs, and a fresh config-named trace prefix below TEMP.
-  all          Clean build -> CTest -> Demo -> consistency -> benchmark.
+  all          Clean build -> CTest -> Demo -> consistency -> benchmark ->
+               frozen 30-image batch acceptance.
 
 Configuration:
   tools\stage1.defaults.psd1    tracked machine-independent workflow defaults
@@ -96,6 +111,11 @@ Detect examples:
   stage1.cmd detect "D:\images\sample.jpg"
   stage1.cmd detect "D:\images\sample.jpg" "D:\outputs"
   stage1.cmd detect "D:\images\sample.jpg" "D:\outputs" -Overwrite
+
+Batch examples:
+  stage1.cmd batch "D:\images" "D:\batch-output" -Workers 4 -QueueCapacity 8
+  stage1.cmd batch cpp_infer\tests\fixtures\s2_03_consistency_manifest.txt -Workers 2
+  stage1.cmd batch-compare
 
 Profile examples:
   stage1.cmd profile
@@ -705,6 +725,98 @@ function Invoke-Detect {
   }
 }
 
+function Invoke-BatchRun {
+  param(
+    [string]$InputPath,
+    [ValidateSet('directory', 'manifest')]
+    [string]$InputKind,
+    [string]$OutputPath,
+    [string]$ConfigPath,
+    [int]$WorkerCount,
+    [int]$Capacity,
+    [bool]$WriteImages,
+    [bool]$AllowOverwrite
+  )
+
+  Write-Stage ("bounded multi-image batch (workers={0}, queue={1})" -f
+      $WorkerCount, $Capacity)
+  $summaryPath = Join-Path $OutputPath 'batch_summary.json'
+  $inputOption = if ($InputKind -eq 'directory') {
+    '--input-dir'
+  } else {
+    '--manifest'
+  }
+  $arguments = @('--config', $ConfigPath,
+                 '--batch', $inputOption, $InputPath,
+                 '--output-dir', $OutputPath,
+                 '--batch-summary', $summaryPath,
+                 '--workers', ([string]$WorkerCount),
+                 '--queue-capacity', ([string]$Capacity))
+  if ($WriteImages) {
+    $arguments += '--output-images'
+  }
+  if ($AllowOverwrite) {
+    $arguments += '--overwrite'
+  }
+
+  Invoke-NativeStep -Name 'bounded batch CLI' -FilePath $script:CliPath `
+    -Arguments $arguments | Out-Host
+  Assert-RequiredFile -Path $summaryPath -Object 'BatchSummary JSON' `
+    -ActionText 'inspect deterministic discovery, worker processing, and summary serialization'
+  Invoke-NativeStep -Name 'BatchSummary JSON parse' `
+    -FilePath $script:ResolvedPythonExe `
+    -Arguments @('-m', 'json.tool', $summaryPath) -Quiet
+  Invoke-NativeStep -Name 'BatchSummary strict validation' `
+    -FilePath $script:ResolvedPythonExe `
+    -Arguments @($script:BatchSummaryValidator, $summaryPath,
+                 '--expected-status', 'succeeded',
+                 '--expected-input-kind', $InputKind,
+                 '--expected-requested-workers', ([string]$WorkerCount)) |
+      Out-Host
+  Write-Host "[pass] Batch: summary=$summaryPath; output=$OutputPath"
+  return $summaryPath
+}
+
+function Invoke-Batch {
+  [void](Invoke-BatchRun -InputPath $script:BatchInputPath `
+    -InputKind $script:BatchInputKind `
+    -OutputPath $script:BatchOutputDir `
+    -ConfigPath $script:BatchConfigPath `
+    -WorkerCount $script:ResolvedWorkers `
+    -Capacity $script:ResolvedQueueCapacity `
+    -WriteImages ([bool]$OutputImages) `
+    -AllowOverwrite ([bool]$Overwrite))
+}
+
+function Invoke-BatchComparison {
+  Write-Stage 'formal S2-03 workers=1 versus workers=4 comparison'
+  $workers1Output = Join-Path $script:RunDir 'batch_workers_1'
+  $workers4Output = Join-Path $script:RunDir 'batch_workers_4'
+  $workers1Summary = Invoke-BatchRun `
+    -InputPath $script:BatchPerformanceInput `
+    -InputKind 'directory' -OutputPath $workers1Output `
+    -ConfigPath $script:ConfigPath -WorkerCount 1 -Capacity 8 `
+    -WriteImages $false -AllowOverwrite $false
+  $workers4Summary = Invoke-BatchRun `
+    -InputPath $script:BatchPerformanceInput `
+    -InputKind 'directory' -OutputPath $workers4Output `
+    -ConfigPath $script:ConfigPath -WorkerCount 4 -Capacity 8 `
+    -WriteImages $false -AllowOverwrite $false
+  $comparisonPath = Join-Path $script:RunDir 'batch_comparison.json'
+  Invoke-NativeStep -Name 'batch correctness/throughput/memory comparison' `
+    -FilePath $script:ResolvedPythonExe `
+    -Arguments @($script:BatchComparisonTool,
+                 '--workers-1-summary', $workers1Summary,
+                 '--workers-4-summary', $workers4Summary,
+                 '--output', $comparisonPath)
+  Assert-RequiredFile -Path $comparisonPath -Object 'batch comparison JSON' `
+    -ActionText 'inspect the first comparability or per-image equality failure'
+  Invoke-NativeStep -Name 'batch comparison JSON parse' `
+    -FilePath $script:ResolvedPythonExe `
+    -Arguments @('-m', 'json.tool', $comparisonPath) -Quiet
+  Write-Host "[pass] Batch comparison: $comparisonPath"
+}
+
 function Invoke-Consistency {
   Write-Stage '30-image Python ORT versus C++ ORT consistency'
   $consistencyDir = Join-Path $script:RunDir 'consistency'
@@ -888,8 +1000,8 @@ function Invoke-Profile {
 
 $script:InvocationDirectory = [IO.Path]::GetFullPath((Get-Location).Path)
 $supportedActions = @('help', 'doctor', 'build', 'clean-build', 'test',
-                      'detect', 'demo', 'consistency', 'benchmark', 'profile',
-                      'all')
+                      'detect', 'batch', 'batch-compare', 'demo',
+                      'consistency', 'benchmark', 'profile', 'all')
 if ($Action -notin $supportedActions) {
   Throw-ActionableError -Object 'workflow action' `
     -Expected ("one of [{0}]" -f ($supportedActions -join ', ')) `
@@ -906,6 +1018,12 @@ if ($Action -eq 'detect') {
       -Expected 'one source image path' -Actual 'missing' `
       -ActionText 'run stage1.cmd detect <image> [output-directory]'
   }
+} elseif ($Action -eq 'batch') {
+  if ([string]::IsNullOrWhiteSpace($Image)) {
+    Throw-ActionableError -Object 'batch input' `
+      -Expected 'one directory or UTF-8 manifest path' -Actual 'missing' `
+      -ActionText 'run stage1.cmd batch <input-dir-or-manifest> [output-directory]'
+  }
 } elseif ($Action -eq 'profile') {
   if (-not [string]::IsNullOrWhiteSpace($OutputDir) -or $Overwrite) {
     Throw-ActionableError -Object 'profile arguments' `
@@ -917,9 +1035,9 @@ if ($Action -eq 'detect') {
           -not [string]::IsNullOrWhiteSpace($OutputDir) -or
           -not [string]::IsNullOrWhiteSpace($Config) -or $Overwrite) {
   Throw-ActionableError -Object "$Action arguments" `
-    -Expected 'image/config only with detect or profile; output/overwrite only with detect' `
+    -Expected 'input/config only with detect, batch, or profile; output/overwrite only with detect or batch' `
     -Actual 'an action-specific argument was supplied' `
-    -ActionText 'remove the argument or use the detect/profile action'
+    -ActionText 'remove the argument or use the detect/batch/profile action'
 }
 if (($PSBoundParameters.ContainsKey('Warmup') -or
      $PSBoundParameters.ContainsKey('Repeat')) -and
@@ -936,6 +1054,14 @@ if (($PSBoundParameters.ContainsKey('ProfilePrefix') -or
     -Expected '-ProfilePrefix and -ProfileRuns only with profile' `
     -Actual 'a profile-only argument was supplied' `
     -ActionText 'remove the argument or use the profile action'
+}
+if (($PSBoundParameters.ContainsKey('Workers') -or
+     $PSBoundParameters.ContainsKey('QueueCapacity') -or $OutputImages) -and
+    $Action -ne 'batch') {
+  Throw-ActionableError -Object "$Action batch arguments" `
+    -Expected '-Workers, -QueueCapacity, and -OutputImages only with batch' `
+    -Actual 'a batch-only argument was supplied' `
+    -ActionText 'remove the argument or use the batch action; batch-compare uses the frozen 1/4 workers and queue=8 protocol'
 }
 
 $script:RepoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
@@ -1129,6 +1255,17 @@ $script:ConsistencyTool = (Resolve-Path -LiteralPath `
   (Join-Path $script:CppInferDir 'tools\compare_consistency.py')).Path
 $script:BenchmarkValidator = (Resolve-Path -LiteralPath `
   (Join-Path $script:CppInferDir 'tests\assert_benchmark_json.py')).Path
+$script:BatchSummaryValidator = (Resolve-Path -LiteralPath `
+  (Join-Path $script:CppInferDir 'tools\validate_batch_summary.py')).Path
+$script:BatchComparisonTool = (Resolve-Path -LiteralPath `
+  (Join-Path $script:CppInferDir 'tools\compare_batch_runs.py')).Path
+$script:BatchManifestPath = (Resolve-Path -LiteralPath `
+  (Join-Path $script:CppInferDir `
+    'tests\fixtures\s2_03_consistency_manifest.txt')).Path
+$script:BatchPerformanceInput = Resolve-RequiredDirectory `
+  -Value (Join-Path $script:RepoRoot 'data\images\val') `
+  -Object 'S2-03 performance image directory' `
+  -ActionText 'restore data\images\val before running batch comparison'
 
 $runtimeConfigExplicit = $Config
 if ($Action -eq 'profile' -and
@@ -1146,6 +1283,8 @@ $script:DetectConfigPath = Get-DetectPathDefault `
 $runtimeConfigObject = 'detect Runtime config'
 if ($Action -eq 'profile') {
   $runtimeConfigObject = 'profile Runtime config'
+} elseif ($Action -eq 'batch') {
+  $runtimeConfigObject = 'batch Runtime config'
 }
 $script:DetectConfigPath = Resolve-RequiredFile `
   -Value $script:DetectConfigPath -Object $runtimeConfigObject `
@@ -1274,8 +1413,73 @@ if ($Action -eq 'detect') {
   }
 }
 
+$script:BatchInputPath = ''
+$script:BatchInputKind = ''
+$script:BatchOutputDir = ''
+$script:BatchConfigPath = $script:DetectConfigPath
+$script:ResolvedWorkers = 1
+$script:ResolvedQueueCapacity = 2
+if ($Action -eq 'batch') {
+  $batchInputCandidate = ConvertTo-AbsolutePath $Image `
+    $script:InvocationDirectory
+  if (Test-Path -LiteralPath $batchInputCandidate -PathType Container) {
+    $script:BatchInputPath = (Resolve-Path -LiteralPath `
+        $batchInputCandidate).Path
+    $script:BatchInputKind = 'directory'
+  } elseif (Test-Path -LiteralPath $batchInputCandidate -PathType Leaf) {
+    $script:BatchInputPath = (Resolve-Path -LiteralPath `
+        $batchInputCandidate).Path
+    $script:BatchInputKind = 'manifest'
+  } else {
+    Throw-ActionableError -Object 'batch input' `
+      -Expected 'an existing directory or UTF-8 path-list manifest' `
+      -Actual $batchInputCandidate `
+      -ActionText 'correct the path and pass a directory or manifest file'
+  }
+
+  if ($PSBoundParameters.ContainsKey('Workers')) {
+    $script:ResolvedWorkers = $Workers
+  }
+  if ($script:ResolvedWorkers -lt 1 -or
+      $script:ResolvedWorkers -gt 64) {
+    Throw-ActionableError -Object 'batch workers' `
+      -Expected 'an integer in [1,64]' `
+      -Actual ([string]$script:ResolvedWorkers) `
+      -ActionText 'correct -Workers'
+  }
+  $script:ResolvedQueueCapacity = 2 * $script:ResolvedWorkers
+  if ($PSBoundParameters.ContainsKey('QueueCapacity')) {
+    $script:ResolvedQueueCapacity = $QueueCapacity
+  }
+  if ($script:ResolvedQueueCapacity -lt 1 -or
+      $script:ResolvedQueueCapacity -gt 4096) {
+    Throw-ActionableError -Object 'batch queue capacity' `
+      -Expected 'an integer in [1,4096]' `
+      -Actual ([string]$script:ResolvedQueueCapacity) `
+      -ActionText 'correct -QueueCapacity'
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($OutputDir)) {
+    $script:BatchOutputDir = ConvertTo-AbsolutePath $OutputDir `
+      $script:InvocationDirectory
+  } else {
+    $batchRunId = (Get-Date -Format 'yyyyMMdd_HHmmss') + '_' +
+        [guid]::NewGuid().ToString('N').Substring(0, 8)
+    $script:BatchOutputDir = Join-Path $script:DetectOutputRoot `
+      ($batchRunId + '_batch')
+  }
+  $script:BatchOutputDir = [IO.Path]::GetFullPath(
+      $script:BatchOutputDir)
+  if (Test-Path -LiteralPath $script:BatchOutputDir -PathType Leaf) {
+    Throw-ActionableError -Object 'batch output directory' `
+      -Expected 'a directory path or a path that does not yet exist' `
+      -Actual "regular file '$script:BatchOutputDir'" `
+      -ActionText 'choose a directory rather than a file'
+  }
+}
+
 $needsEvidence = $Action -in @(
-    'demo', 'consistency', 'benchmark', 'profile', 'all')
+    'batch-compare', 'demo', 'consistency', 'benchmark', 'profile', 'all')
 $script:RunDir = ''
 if ($needsEvidence) {
   $runId = (Get-Date -Format 'yyyyMMdd_HHmmss') + '_' +
@@ -1362,6 +1566,14 @@ try {
       Invoke-EnsureBuild
       Invoke-Detect
     }
+    'batch' {
+      Invoke-EnsureBuild
+      Invoke-Batch
+    }
+    'batch-compare' {
+      Invoke-EnsureBuild
+      Invoke-BatchComparison
+    }
     'demo' {
       Invoke-EnsureBuild
       Invoke-Demo
@@ -1385,6 +1597,11 @@ try {
       Invoke-Demo
       Invoke-Consistency
       Invoke-Benchmark
+      [void](Invoke-BatchRun -InputPath $script:BatchManifestPath `
+        -InputKind 'manifest' `
+        -OutputPath (Join-Path $script:RunDir 'batch') `
+        -ConfigPath $script:ConfigPath -WorkerCount 2 -Capacity 4 `
+        -WriteImages $false -AllowOverwrite $false)
     }
   }
 
