@@ -59,8 +59,10 @@ struct BenchmarkRuntimeMetadata {
   int intra_op_num_threads = 0;
   int inter_op_num_threads = 0;
   std::string graph_optimization_level;
-  // One observation covering only Ort::Session construction. Env/options and
-  // metadata inspection/validation remain outside this interval.
+  // One backend initialization observation: Ort::Session construction for
+  // ORT paths, or frozen ONNX read/SHA plus engine read/SHA/deserialization/
+  // context/stream/buffers for native TensorRT. General contract inspection
+  // remains outside it.
   double session_initialization_ms = 0.0;
   bool profiling_enabled = false;
 };

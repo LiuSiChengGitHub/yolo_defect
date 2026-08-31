@@ -1,0 +1,12 @@
+S2-01 ORT profiling completed
+profile_trace_path: /home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/profile/ort_tensorrt_fp16_2026-08-31_01-58-05.json
+profile_runs: 10
+model_id: yolov8n_neu_det_final_train_2
+declared_model_sha256: 7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68
+actual_provider: TensorrtExecutionProvider
+session_initialization_ms_with_profiling: 5105.203802
+output_shape: [1,10,13125]
+output_elements: 131250
+detection_count: 3
+profiling_overhead: enabled; trace timing is diagnostic only
+scope: one preprocessed image and one profiling-enabled ORT session; formal benchmark evidence must come from --benchmark.

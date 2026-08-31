@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_04_trtexec_fp16_build_reload",
+  "timestamp_utc": "2026-08-30T17:51:57Z",
+  "passed": true,
+  "model": {
+    "path_used_for_run": "/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best.onnx",
+    "sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "size_bytes": 12336935,
+    "input": "images:1x3x800x800:fp32",
+    "output": "output0:1x10x13125:fp32",
+    "opset": 17
+  },
+  "environment": {
+    "os": "Ubuntu 24.04.4 LTS under WSL2",
+    "architecture": "x86_64",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+    "compute_capability": "8.9",
+    "gpu_memory_mib": 8187,
+    "windows_driver": "581.42",
+    "cuda_driver_api_version": 13000,
+    "cuda_runtime_version": 12060,
+    "tensorrt": "10.4.0",
+    "trtexec_banner": "TensorRT v100400 b26"
+  },
+  "build": {
+    "command_scope": "--onnx current model --fp16 --memPoolSize=workspace:2048M --warmUp=1000 --iterations=100 --duration=0 with data transfers enabled",
+    "precision_mode": "FP32+FP16 mixed precision",
+    "engine_build_seconds": 153.763,
+    "engine": {
+      "size_bytes": 9894324,
+      "sha256": "F4485C0A81678B52B08DD66C857E6914DD154AB21C24A46D9D30FFDDCDED1EBA"
+    },
+    "timing_cache": {
+      "size_bytes": 662857,
+      "sha256": "11E39ADCFCDB49F438D41D98324FF2CEF788B29E239F4BA851DCDEA8A9029FCE"
+    },
+    "layer_information": {
+      "layer_count": 157,
+      "layers_touching_fp16": 147,
+      "layers_touching_fp32": 19,
+      "layers_touching_int8": 0,
+      "external_io_remains_fp32": true
+    },
+    "timed_queries": 100,
+    "throughput_queries_per_second": 377.518,
+    "host_latency_ms": {
+      "mean": 2.5589514,
+      "p50": 2.54077,
+      "p95": 2.91589
+    },
+    "gpu_compute_ms": {
+      "mean": 1.5884989,
+      "p50": 1.58508,
+      "p95": 1.8739
+    }
+  },
+  "reload": {
+    "engine_deserialization_seconds": 0.104849,
+    "real_inference_executed": true,
+    "timed_queries": 100,
+    "throughput_queries_per_second": 455.62,
+    "host_latency_ms": {
+      "mean": 2.1224768,
+      "p50": 2.12854,
+      "p95": 2.30969
+    },
+    "gpu_compute_ms": {
+      "mean": 1.4747583,
+      "p50": 1.47754,
+      "p95": 1.65784
+    }
+  },
+  "tracked_raw_evidence": {
+    "build_console": "build_console.txt",
+    "reload_console": "reload_console.txt",
+    "build_times": "build_times.json",
+    "reload_times": "reload_times.json",
+    "layer_information": "build_layers.json",
+    "layer_profile": "build_profile.json"
+  },
+  "limitations": [
+    "trtexec uses random input and proves parser/build/runtime viability, not YOLO detection correctness.",
+    "--fp16 enables mixed FP32+FP16 precision; the tracked layer information proves FP16 use but does not claim every layer is FP16.",
+    "The serialized engine and timing cache are machine-local and intentionally not tracked in Git."
+  ]
+}

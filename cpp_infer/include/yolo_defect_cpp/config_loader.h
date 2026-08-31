@@ -3,13 +3,31 @@
 
 #include "yolo_defect_cpp/artifact_spec.h"
 
+#include <cstdint>
 #include <filesystem>
+#include <optional>
 #include <string>
 
 namespace yolo_defect_cpp {
 
 enum class ExecutionProvider {
   kCpu,
+  kTensorRt,
+  kTensorRtNative,
+};
+
+enum class InferencePrecision {
+  kFloat32,
+  kFloat16,
+};
+
+struct TensorRtProviderConfig {
+  int device_id = 0;
+  InferencePrecision precision = InferencePrecision::kFloat16;
+  std::uint64_t max_workspace_size_bytes = 0;
+  std::filesystem::path engine_cache_path;
+  std::optional<std::filesystem::path> native_engine_path;
+  std::optional<std::string> native_engine_sha256;
 };
 
 struct RuntimeConfig {
@@ -19,6 +37,7 @@ struct RuntimeConfig {
   double score_threshold = 0.0;
   double nms_threshold = 0.0;
   ExecutionProvider provider = ExecutionProvider::kCpu;
+  std::optional<TensorRtProviderConfig> tensorrt;
 };
 
 struct RuntimeContract {
@@ -33,6 +52,7 @@ RuntimeContract load_runtime_contract(
     const std::filesystem::path& config_path);
 
 std::string to_string(ExecutionProvider value);
+std::string to_string(InferencePrecision value);
 
 }  // namespace yolo_defect_cpp
 

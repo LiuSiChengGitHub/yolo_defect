@@ -755,6 +755,26 @@ TEST(BatchRunnerPathSafetyTest,
   EXPECT_EQ(state->created_executors, 0U);
 }
 
+TEST(BatchRunnerProviderContractTest,
+     RejectsNativeTensorRtBeforeConstructingAnyExecutor) {
+  TemporaryDirectory temporary("native_provider_rejected");
+  RuntimeContract contract = make_fake_runtime_contract(temporary.path());
+  contract.runtime.schema_version = 2;
+  contract.runtime.provider = ExecutionProvider::kTensorRtNative;
+  auto state = std::make_shared<FakeExecutorState>(1);
+  auto factory = std::make_shared<FakeBatchExecutorFactory>(state);
+
+  const std::string message = capture_runtime_error(
+      [&] { BatchRunner runner(contract, factory); });
+
+  EXPECT_NE(message.find("runtime.provider"), std::string::npos) << message;
+  EXPECT_NE(message.find("expected cpu"), std::string::npos) << message;
+  EXPECT_NE(message.find("actual tensorrt_native"), std::string::npos)
+      << message;
+  std::lock_guard<std::mutex> lock(state->mutex);
+  EXPECT_EQ(state->created_executors, 0U);
+}
+
 TEST(BatchRunnerPathSafetyTest,
      ContainmentUsesPathComponentsRatherThanStringPrefixes) {
   const std::filesystem::path root =

@@ -2,7 +2,7 @@
 
 This directory is the C++ Runtime workspace for the **Industrial Vision Edge AI Runtime and C++ Engineering System**.
 
-Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01's Windows CPU INT8/PTQ/profiling implementation and evidence are complete under the recorded advisory exercise policy; S2-02 cross-platform Runtime closure is complete; and S2-03 directory/manifest bounded multi-image concurrency is implemented and verified on all three target platforms.** Windows x86_64 and WSL2/Linux x86_64 have full correctness plus same-platform workers=1/workers=4 throughput and process-memory comparisons. Linux AArch64 has a clean cross-build and formal directory, manifest, partial-failure, and `BatchSummary` functional acceptance under QEMU user-mode. Work stops for user L1; S2-04 has not started. QEMU is not a physical ARM board and no emulated performance or memory result is published. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
+Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete, and S2-01 through S2-04 have complete implementations, evidence, and teaching closure.** S2-04 proves real TensorRT on WSL2/Linux x86_64 + RTX 4060 Laptop. The ORT TensorRT EP path remains a real-execution but failed-correctness diagnostic; the accepted product path is a SHA-bound load-only native TensorRT plan with one FP16 DFL Softmax compute layer and FP32/noTF32 elsewhere. Its untouched v4 holdout passed twice, same-SDK CPU/native performance and resource evidence is retained, and the final Windows/WSL2 CPU gates pass 179/179 CTest. Work stops for user L1; S2-05 has not started. QEMU is not a physical ARM board, and S2-04 is local WSL2 GPU/edge-node evidence rather than native Linux, Jetson, ARM64 GPU, or embedded evidence. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
 
 | Gate | Status |
 |---|---|
@@ -17,6 +17,8 @@ Current status: **the Large-Stage-One automatic engineering gate and user-owned 
 | S2-02 user L1 | Awaiting |
 | S2-03 bounded multi-image implementation/evidence/final closure | Complete |
 | S2-03 user L1 | Awaiting |
+| S2-04 TensorRT implementation/evidence/final closure | Complete |
+| S2-04 user L1 | Awaiting |
 
 ## Current single-image chain
 
@@ -25,7 +27,7 @@ RuntimeConfig + ModelArtifactSpec
 -> DetectorPipeline
 -> canonical single-image path
 -> OpenCV decode + letterbox + BGR/RGB + normalize + NCHW
--> OnnxRunner CPU Session::Run
+-> OnnxRunner: ORT CPU / ORT TensorRT EP / native TensorRT enqueueV3
 -> owned InferenceOutput [1,10,13125]
 -> validate + BCN decode + strict score filter
 -> stable class-agnostic model-space NMS
@@ -34,7 +36,7 @@ RuntimeConfig + ModelArtifactSpec
 -> stable JSON v1 + deterministic OpenCV visualization
 ```
 
-`main.cpp` owns only CLI parsing and orchestration. Contract loading, preprocessing, ORT lifetime, postprocess, result validation, JSON serialization, output-path policy, and visualization remain in `yolo_defect_runtime`.
+`main.cpp` owns only CLI parsing and orchestration. Contract loading, preprocessing, ORT/TensorRT lifetime, postprocess, result validation, JSON serialization, output-path policy, and visualization remain in `yolo_defect_runtime`.
 
 The S1-07 evidence path is separate from the product chain:
 
@@ -94,7 +96,22 @@ directory or UTF-8 path-list manifest
 ```
 
 This is image-level concurrency, not tensor true batch. ORT remains sequential
-with intra/inter-op threads `1/1` inside every worker session.
+with intra/inter-op threads `1/1` inside every worker session. BatchRunner keeps
+an explicit CPU-only provider guard; S2-04 does not claim GPU worker concurrency.
+
+S2-04 keeps that single-image product boundary while selecting the backend:
+
+```text
+RuntimeConfig v2 + one ModelArtifactSpec
+-> cpu: explicit ORT CPU Session::Run
+ | tensorrt: ORT TensorRT EP -> CUDA EP -> CPU EP (diagnostic only)
+ | tensorrt_native: SHA-bound plan -> H2D -> enqueueV3 -> D2H -> sync
+-> identical owned FP32 [1,10,13125] output
+-> unchanged YOLO decode / NMS / restore / JSON
+```
+
+The native path has no fallback and verifies the TensorRT/CUDA/SM, engine SHA,
+execution policy, tensor names/shapes/dtypes, and cache namespace before use.
 
 ## Layout and responsibilities
 
@@ -108,7 +125,10 @@ cpp_infer/
 ├── configs/
 │   ├── default_config.txt
 │   ├── int8_config.txt
-│   └── int8_u8s8_config.txt
+│   ├── int8_u8s8_config.txt
+│   ├── tensorrt_fp16_config.txt
+│   ├── tensorrt_native_fp16_config.txt
+│   └── tensorrt_native_fp16_config_v4.txt
 ├── include/yolo_defect_cpp/
 │   ├── artifact_spec.h
 │   ├── batch_result.h
@@ -146,6 +166,8 @@ cpp_infer/
 │   ├── key_value_parser.cpp
 │   ├── key_value_parser.h
 │   ├── model_metadata.cpp
+│   ├── native_tensorrt_runner.cpp
+│   ├── native_tensorrt_runner.h
 │   ├── onnx_runner.cpp
 │   ├── platform_info.cpp
 │   ├── platform_info.h
@@ -180,11 +202,21 @@ cpp_infer/
 │   ├── windows_x86_64/
 │   ├── linux_x86_64/
 │   └── linux_aarch64_qemu/
+├── results/s2_04/linux_x86_64_rtx4060/
+│   ├── trtexec/
+│   ├── profile/
+│   ├── native_engine/
+│   ├── correctness/
+│   └── benchmark/
 ├── cmake/toolchains/
 │   └── linux-aarch64-gnu.cmake
 ├── protocols/
 │   ├── s2_01_ptq_protocol.json
-│   └── s2_01_ptq_protocol_r2_u8s8.json
+│   ├── s2_01_ptq_protocol_r2_u8s8.json
+│   ├── s2_04_tensorrt_fp16_protocol.json
+│   ├── s2_04_tensorrt_fp16_protocol_v2.json
+│   ├── s2_04_tensorrt_native_fp16_protocol_v3.json
+│   └── s2_04_tensorrt_native_fp16_protocol_v4.json
 ├── tools/
 │   ├── quantize_s2_01.py
 │   ├── evaluate_s2_01_correctness.py
@@ -194,6 +226,10 @@ cpp_infer/
 │   ├── compare_consistency.py
 │   ├── compare_batch_runs.py
 │   ├── validate_batch_summary.py
+│   ├── summarize_s2_04_ort_profile.py
+│   ├── run_s2_04_product_set.py
+│   ├── compare_s2_04_correctness.py
+│   ├── run_s2_04_gpu_benchmark.py
 │   ├── bootstrap_aarch64_deps.sh
 │   ├── stage2_aarch64.sh
 │   ├── stage1.cmd
@@ -215,6 +251,8 @@ cpp_infer/
     ├── image_decoder_test.cpp
     ├── assert_batch_cli.py
     ├── test_s2_03_batch_tools.py
+    ├── test_s2_04_evidence_tools.py
+    ├── test_run_s2_04_product_set.py
     ├── assert_benchmark.cmake
     ├── assert_benchmark_json.py
     ├── assert_detection_json.py
@@ -230,7 +268,7 @@ cpp_infer/
 - `ModelArtifactSpec` owns model identity, declared SHA-256, provenance/license, tensor I/O, classes, and preprocess/postprocess/NMS semantics.
 - `project_core` contains standard-library-only YOLO raw-output validation, decode, class-agnostic NMS, and coordinate restore. The normal Runtime links it; Gate B cross-compiles and runs its smoke under QEMU before separately exercising the full ARM64 OpenCV/ORT Runtime.
 - `ImagePreprocessor` exposes file-path and `const cv::Mat&` entries. Both use the same letterbox/RGB/normalize/NCHW implementation.
-- `OnnxRunner` owns ORT resources through RAII/PImpl. `run()` borrows the preprocess vector only for synchronous `Session::Run`, then copies output into ORT-independent storage.
+- `OnnxRunner` owns an ORT session or delegates to `NativeTensorRtRunner` through RAII/PImpl. `run()` borrows the preprocess vector only for the synchronous backend call, then returns copied host storage independent of ORT/TensorRT lifetimes.
 - `OnnxRunnerOptions::profile_file_prefix` enables ORT profiling before session construction; the runner finalizes it exactly once through `EndProfilingAllocated` and validates the returned trace path.
 - `ProfileRunner` prepares one image once, creates a dedicated profiling session, executes the declared number of `Session::Run` calls, finalizes the raw trace before postprocess, and returns owned run/model/provider/output metadata. It cannot be mixed with benchmark mode.
 - `Postprocessor` performs validated BCN decode, class argmax, strict score filtering, `xywh -> xyxy`, IoU, stable class-agnostic NMS, inverse letterbox, and clipping.
@@ -491,6 +529,85 @@ and
 [`partial failure`](results/s2_03/linux_aarch64_qemu/final_20260830_r2/partial_failure/batch_summary.json).
 No QEMU latency, throughput, RSS, speedup, physical-board, native ARM, power,
 thermal, or deployment-performance conclusion is published.
+
+## S2-04 WSL2/Linux x86_64 + RTX 4060 TensorRT
+
+The GPU build is deliberately isolated from the verified ORT 1.19.2 CPU builds:
+
+```text
+YOLO_DEFECT_REQUIRE_TENSORRT_EP=ON
+YOLO_DEFECT_ENABLE_NATIVE_TENSORRT_BACKEND=ON
+ORT GPU 1.20.1 + TensorRT 10.4.0.26 + CUDA runtime 12.6
+Linux x86_64 only; exact SDK roots are CMake cache inputs
+```
+
+The first product route uses ORT TensorRT EP with a fixed
+`TensorrtExecutionProvider -> CUDAExecutionProvider -> CPUExecutionProvider`
+chain, FP16, a 2 GiB builder workspace, engine cache, and timing cache. The
+current ONNX SHA is
+`7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68`.
+Standalone `trtexec --fp16` built and reloaded it successfully; an ORT profile
+contains ten TensorRT-attributed kernel events and no CUDA/CPU fallback event.
+That proves real execution, not correctness. Frozen v1 failed one image and the
+disjoint semantic v2 failed two; both TensorRT repetitions were internally
+identical. Consequently, the retained ORT warm benchmark JSONs are diagnostic,
+non-publishable performance observations.
+
+The accepted route is `provider=tensorrt_native`. `NativeTensorRtRunner` is a
+load-only TensorRT 10 name-based-I/O backend: it hashes the plan, verifies the
+declared SHA/runtime/CUDA/SM 8.9/I/O/execution policy, deserializes one engine,
+creates one context and non-default CUDA stream, allocates persistent buffers,
+then performs synchronous H2D → `setTensorAddress` → `enqueueV3` → D2H → stream
+synchronization. It has no fallback. The public `OnnxRunner` API and all
+pre/postprocessing stay unchanged.
+
+The consumed native v3 plan used FP16 only for the final class Sigmoid and
+failed one of its frozen 30 images at the one-pixel coordinate gate. The final
+E0 plan was selected only against the already consumed v1+v2+v3 90 images, then
+tested on a new disjoint v4 set frozen before its first inference. E0 details:
+
+- engine SHA-256:
+  `E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746`;
+  size 21,144,012 bytes;
+- build policy: `--fp16 --noTF32 --precisionConstraints=obey` with
+  `*:fp32,/model.22/dfl/Softmax:fp16`;
+- exactly one Half compute layer, `/model.22/dfl/Softmax`; two reformats touch
+  Half; all other compute and external I/O are Float;
+- v4 CPU-vs-native A/B each passed 30/30; 64 matched detections, max confidence
+  error `1.0044e-5`, max coordinate error `0.032166 px`, min IoU `0.998619`;
+  native A/B result trees are byte-identical.
+
+The accepted batch=1, warmup=10, repeat=100 product measurements use the same
+GPU-enabled binary and `crazing_241.jpg`:
+
+| Metric | Same-SDK ORT CPU FP32 | Native warm A | Native warm B |
+|---|---:|---:|---:|
+| Initialization | `36.784 ms` | `684.570 ms` | `619.423 ms` |
+| Backend/session P50 / P95 | `110.314 / 124.604 ms` | `3.877 / 5.329 ms` | `3.633 / 7.468 ms` |
+| Pipeline P50 / P95 | `118.436 / 133.059 ms` | `6.974 / 8.779 ms` | `6.519 / 10.490 ms` |
+| Pipeline throughput | `8.3247 img/s` | `137.6517 img/s` | `140.5550 img/s` |
+| Process peak RSS | `200.121 MiB` | `384.668 MiB` | `384.371 MiB` |
+
+Native throughput is `16.5353x/16.8841x` the same-SDK CPU reference. This is an
+overall native TensorRT/GPU comparison; the experiment cannot isolate a speedup
+caused by the sole FP16 Softmax. Detection repeatability is exact and throughput
+differs by about 2.1%, but the P95 values are not stable. A/B GPU memory is a
+device-wide `nvidia-smi memory.used` baseline-to-peak delta of `155 MiB`; the
+target PID exposed no numeric memory row, so it is not process-exclusive VRAM.
+
+The plan is an ignored machine-local derivative, not a portable model artifact.
+`tensorrt_max_workspace_size_bytes` is build provenance/config compatibility for
+the native path; the load-only runtime does not allocate builder workspace.
+BatchRunner remains CPU-only. TensorRT INT8 is not implemented because the FP32
+artifact has no frozen calibration/QDQ contract and INT8 was non-blocking.
+
+The final source passes 179/179 CTest on Windows x86_64 and WSL2/Linux x86_64;
+the rebuilt GPU product passed model inspection, raw `enqueueV3`, and one-image
+three-detection output. Reproduction commands and exact local dependency entry
+points are in [`paths_commands.md`](../docs/paths_commands.md). Durable machine
+records are under [`results/s2_04/linux_x86_64_rtx4060/`](results/s2_04/linux_x86_64_rtx4060/),
+and the decision history, evidence limits, and nine-part teaching record are in
+[`s2_04_closure.md`](../docs/details/s2_04_closure.md).
 
 ## Frozen YOLOv8 baseline semantics
 
@@ -948,7 +1065,7 @@ Required core-behavior-plus-GTest exercise:
 3. **GREEN:** temporarily change the comparison in `postprocessor.cpp` from strict `>` to inclusive `>=`, update the other exact-threshold expectations, rebuild the same target, and require the focused test to pass. Explain how equality changes detections and why a real contract change would also require the Python reference, consistency evidence, and README updates.
 4. Because schema-v1 freezes strict `>`, return to the checkpoint without merging the practice branch, rebuild, rerun the original focused test and complete CTest, and verify no temporary exercise diff remains. Do not leave `>=` in the product merely to finish the exercise.
 
-The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01 implementation and evidence complete under the explicit advisory-quality exercise policy; S2-02 Gate A native Linux and Gate B AArch64/QEMU complete; S2-03 bounded multi-image implementation and three-platform evidence complete; user L1 pending; S2-04 not started**.
+The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01 implementation and evidence complete under the explicit advisory-quality exercise policy; S2-02 Gate A native Linux and Gate B AArch64/QEMU complete; S2-03 bounded multi-image implementation and three-platform evidence complete; S2-04 real TensorRT implementation/evidence/teaching closure complete; user L1 pending; S2-05 not started**.
 
 ## Current limits
 
@@ -966,6 +1083,21 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - Gate A's Linux warmup-1/repeat-2 samples varied materially and are functional performance smokes. They are neither the formal 10/100 protocol nor a Windows-versus-Linux speed comparison.
 - Linux `getrusage` peak RSS and Windows Peak Working Set are both process-lifetime high-water measurements, but their platform semantics differ and their numeric values must not be compared directly.
 - Gate B/S2-03 were executed with Linux AArch64 binaries under QEMU user-mode, including fixed-image ARM64 ORT CPU inference and directory/manifest bounded-concurrency acceptance. This is functional emulation evidence only: QEMU summary time/RSS is explicitly non-publishable, and no physical-board, native-ARM performance, latency, throughput, power, thermal, driver, or deployment-stability claim follows from it.
+- S2-04 ran under WSL2/Linux x86_64 on an RTX 4060 Laptop GPU. It is not
+  bare-metal native Linux, Jetson, ARM64 GPU, embedded-device, power, thermal,
+  or long-duration stability evidence.
+- ORT TensorRT EP genuinely executed TensorRT but failed the frozen v1/v2
+  correctness gates. Its benchmark JSON `passed` fields mean the benchmark
+  harness completed, not that correctness allowed publication; accepted
+  product performance is limited to the E0 native path after v4 passed.
+- E0 has one FP16 compute layer and FP32 external I/O/remaining compute. The
+  native-vs-CPU speedup is an overall backend/GPU observation, not an isolated
+  FP16 gain. Native P95 varied materially, and the reported 155 MiB GPU delta
+  is device-wide rather than PID-specific.
+- Native plans are bound to the recorded TensorRT/CUDA/SM and policy. The cache
+  directory is machine-local and the engine bytes are SHA-checked; it must be
+  rebuilt and revalidated for a changed runtime/GPU. S2-04 batch/worker GPU
+  concurrency and TensorRT INT8 are not implemented.
 - The S2-01 advisory completion is not the original strict acceptance: the 30-image product aggregate remains false, and Round 2's mAP50 drop exceeds its original 0.010 limit by 0.000356. The machine record exposes both facts rather than rewriting them.
 - ORT profile summaries describe the optimized execution graph. A source Conv represented by QDQ in the ONNX file may appear as `QLinearConv`, `Conv`, and Q/DQ transition nodes after optimization; the trace does not prove exact hardware instructions.
 - The matching `best.pt` is absent from the workspace and Git history. Historical PT/ONNX evidence covers 50 sorted `crazing` images and only count/confidence summaries; S1-07 is a separate same-ONNX Python ORT/C++ ORT comparison and must not be described as a newly rerun PyTorch/Python-ORT/C++ three-way experiment.
@@ -975,7 +1107,11 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - Class-agnostic NMS remains deliberate baseline behavior and can suppress a lower-scoring box from another class when boxes overlap.
 - The visualization is deterministic for the pinned OpenCV build; it is evidence output, not an annotation editor or GUI.
 
-Large Stage One is complete; S2-01's Windows CPU INT8/PTQ/profiling evidence is complete under the user-approved advisory exercise scope; S2-02 Gate A/Gate B is complete; and S2-03 directory/manifest bounded multi-image concurrency plus three-platform evidence is complete. Work stops here for user L1. The remaining route starts with S2-04 TensorRT on Linux x86_64 using the desktop RTX 4060, then final evidence/resume/interview closure and recruiting freeze. QEMU results remain functional portability evidence, never device-performance evidence, and the desktop RTX 4060 path will not be described as Jetson deployment.
+Large Stage One and S2-01 through S2-04 are complete. Work stops here for user
+L1; S2-05 evidence/resume/interview closure and recruiting freeze has not
+started. QEMU remains functional portability evidence only, and the RTX 4060
+Laptop result remains local WSL2 GPU/edge-node evidence rather than Jetson or
+embedded deployment.
 
 ## License checkpoint
 

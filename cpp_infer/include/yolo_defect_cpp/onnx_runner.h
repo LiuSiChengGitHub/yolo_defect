@@ -15,8 +15,9 @@ namespace yolo_defect_cpp {
 
 struct TimedInferenceOutput {
   InferenceOutput output;
-  // Measures only Ort::Session::Run. Input validation/tensor construction and
-  // output validation/copy are deliberately outside this interval.
+  // Measures one backend invocation. For ORT this is Session::Run; for the
+  // load-only native TensorRT path it includes H2D, enqueueV3, D2H, and stream
+  // synchronization. Input/output validation remains outside the interval.
   double session_run_ms = 0.0;
 };
 

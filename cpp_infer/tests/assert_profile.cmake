@@ -70,7 +70,7 @@ if(profile_size EQUAL 0)
 endif()
 
 foreach(required_text
-    "S2-01 ORT profiling completed"
+    "ORT profiling completed"
     "profile_runs: 1"
     "model_id: yolov8n_neu_det_final_train_2"
     "declared_model_sha256: 7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68"

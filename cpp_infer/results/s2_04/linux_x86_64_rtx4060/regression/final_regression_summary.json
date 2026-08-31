@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_04_final_regression_summary",
+  "assembled_utc": "2026-08-30T20:57:19Z",
+  "source_scope": "final current-source S2-04 closure gates",
+  "windows_x86_64": {
+    "build_type": "Release",
+    "generator": "NMake Makefiles",
+    "onnxruntime_version": "1.19.2",
+    "clean_build_before_gate": true,
+    "ctest_total": 179,
+    "ctest_passed": 179,
+    "ctest_failed": 0,
+    "embedded_gtest_skipped": 2,
+    "skip_scope": "two symlink/reparse privilege cases; their Linux counterparts executed",
+    "passed": true
+  },
+  "wsl2_linux_x86_64": {
+    "build_type": "Release",
+    "generator": "Ninja",
+    "onnxruntime_version": "1.19.2",
+    "clean_build_before_gate": true,
+    "ctest_total": 179,
+    "ctest_passed": 179,
+    "ctest_failed": 0,
+    "total_test_time_seconds": 441.25,
+    "passed": true
+  },
+  "s2_04_python_tools": {
+    "framework": "unittest",
+    "modules": [
+      "cpp_infer.tests.test_s2_04_evidence_tools",
+      "cpp_infer.tests.test_run_s2_04_product_set"
+    ],
+    "tests_run": 35,
+    "passed": 35,
+    "failed": 0,
+    "passed_gate": true
+  },
+  "gpu_product_rebuild_and_smoke": {
+    "environment": "WSL2/Linux x86_64 + NVIDIA GeForce RTX 4060 Laptop GPU",
+    "build_type": "Release",
+    "engine_sha256": "E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746",
+    "inspect_model_passed": true,
+    "raw_output_summary_passed": true,
+    "raw_execution_api": "TensorRT enqueueV3",
+    "single_image_json_passed": true,
+    "single_image_detection_count": 3,
+    "single_image_output_sha256": "24B56460D235319401EAC8008823E4E87883871B00D172239223C1F696661F6E",
+    "actual_provider": "TensorRTNative",
+    "fallback": "none",
+    "passed": true
+  },
+  "notes": [
+    "A prior Windows incremental run reused stale public-header ABI objects and was rejected; the accepted gate is the subsequent protected clean build.",
+    "The CPU regression gates preserve the existing ORT CPU chain; the GPU smoke independently proves the final native TensorRT product path.",
+    "Ordinary JSON and trace files are not SHA-bound by policy; hashes here identify the material frozen engine and representative product output."
+  ],
+  "passed": true
+}

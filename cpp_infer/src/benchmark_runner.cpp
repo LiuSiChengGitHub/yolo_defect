@@ -37,7 +37,6 @@ namespace {
 
 using SteadyClock = std::chrono::steady_clock;
 constexpr std::size_t kMaximumIterations = 1000000;
-constexpr const char* kCpuProvider = "CPUExecutionProvider";
 constexpr const char* kBaselineImageFilename = "crazing_241.jpg";
 constexpr std::uint64_t kBaselineImageSizeBytes = 23845;
 
@@ -285,13 +284,25 @@ class BenchmarkRunner::Impl {
           "use a clean out-of-tree configure with "
           "-DCMAKE_BUILD_TYPE=Release");
     }
-    if (contract_.runtime.provider != ExecutionProvider::kCpu ||
-        runner_.metadata().session_provider != kCpuProvider) {
+    std::string expected_provider;
+    switch (contract_.runtime.provider) {
+      case ExecutionProvider::kCpu:
+        expected_provider = "CPUExecutionProvider";
+        break;
+      case ExecutionProvider::kTensorRt:
+        expected_provider = "TensorrtExecutionProvider";
+        break;
+      case ExecutionProvider::kTensorRtNative:
+        expected_provider = "TensorRTNative";
+        break;
+    }
+    if (runner_.metadata().session_provider != expected_provider) {
       throw_runner_error(
-          "provider", "requested cpu and actual CPUExecutionProvider",
+          "provider", "the provider selected by RuntimeConfig and session",
           "requested=" + to_string(contract_.runtime.provider) +
               ", actual=" + runner_.metadata().session_provider,
-          "restore the fixed CPU RuntimeConfig/session before benchmarking");
+          "use the matching CPU or isolated Linux TensorRT build before "
+          "benchmarking");
     }
     if (runner_.profiling_enabled()) {
       throw_runner_error(
@@ -409,7 +420,12 @@ class BenchmarkRunner::Impl {
 
     BenchmarkResult result;
     result.schema_version = 1;
-    result.evidence_type = "cpp_ort_single_image_release_benchmark";
+    const bool native_tensorrt =
+        contract_.runtime.provider == ExecutionProvider::kTensorRtNative;
+    result.evidence_type =
+        native_tensorrt
+            ? "cpp_native_tensorrt_single_image_release_benchmark"
+            : "cpp_ort_single_image_release_benchmark";
     result.timestamp_utc = started_at;
     result.command_arguments = request.command_arguments;
     result.batch_size = 1;
@@ -474,40 +490,64 @@ class BenchmarkRunner::Impl {
 
     result.timing_exclusions = {
         "RuntimeConfig/ModelArtifactSpec loading and validation",
-        "Ort::Env and SessionOptions construction plus model metadata "
-        "inspection/validation; Ort::Session construction is recorded "
-        "separately as one initialization observation",
+        native_tensorrt
+            ? "general contract inspection/validation; frozen ONNX read/"
+              "SHA-256 plus engine read/SHA-256, deserialization, execution-"
+              "context/stream creation, and device-buffer allocation are "
+              "recorded together as one initialization observation"
+            : "Ort::Env and SessionOptions construction plus model metadata "
+              "inspection/validation; Ort::Session construction is recorded "
+              "separately as one initialization observation",
         "initial image path validation and file-size queries",
         "statistics calculation and process peak-memory query",
         "benchmark JSON serialization and filesystem write",
         "visualization/GUI rendering (not executed)"};
     result.limitations = {
         "One 200x200 validation image, batch=1, one " +
-            result.environment.os_name +
-            " CPU machine; results do not represent the full dataset or "
-            "other hardware.",
+            result.environment.os_name + " " +
+            result.runtime.actual_provider +
+            " session; results do not represent the full dataset or other "
+            "hardware.",
         "Repeated imread uses a warmed operating-system file cache and is "
         "not cold-disk latency.",
         "No CPU affinity, elevated process priority, or idle-system lock was "
         "applied; concurrent system load can change latency.",
-        "session_run measures only Ort::Session::Run; pipeline additionally "
-        "includes input validation/tensor construction and output "
-        "validation/copy.",
-        "session initialization is one Ort::Session construction observation; "
-        "it does not provide initialization percentiles and can be affected "
-        "by operating-system file cache state.",
+        native_tensorrt
+            ? "session_run is a compatibility field measuring native H2D, "
+              "enqueueV3, D2H, and stream synchronization; it is not pure "
+              "TensorRT kernel time. Pipeline additionally includes input "
+              "validation and output validation/copy."
+            : "session_run measures only Ort::Session::Run; pipeline "
+              "additionally includes input validation/tensor construction "
+              "and output validation/copy. With CPU tensors on the "
+              "accelerator path, Session::Run also includes ORT-managed "
+              "H2D, synchronization, and D2H rather than pure TensorRT "
+              "kernel time.",
+        native_tensorrt
+            ? "session initialization is one frozen-ONNX read/SHA plus "
+              "engine read/SHA/deserialize/context/stream/buffer "
+              "observation; it has no percentiles and can be affected by "
+              "file-cache state."
+            : "session initialization is one Ort::Session construction "
+              "observation; it does not provide initialization percentiles "
+              "and can be affected by operating-system file cache state.",
         "The process-lifetime peak memory uses the platform metric '" +
             result.memory.metric +
             "' and includes session initialization, warmup, measured "
             "iterations, retained samples, statistics, and harness state; "
             "it is not per-stage or incremental inference memory.",
-        "Actual provider is session-level evidence, not per-node placement "
-        "profiling.",
+        native_tensorrt
+            ? "TensorRTNative is direct enqueueV3 execution of the SHA-bound "
+              "engine with no fallback; the separate constrained trtexec "
+              "layer export proves the mixed precision policy."
+            : "Actual provider is session-level evidence, not per-node "
+              "placement profiling.",
         "Historical Python ORT 24.4/72.1 FPS used a different protocol and "
         "must not be compared unconditionally with this C++ result.",
-        "The benchmark records the declared model SHA and fixed file sizes; "
-        "the required immediately preceding S1-07 gate and JSON validator "
-        "recompute the actual model/sample SHA-256 values."};
+        "The product benchmark records the declared model SHA and fixed "
+        "sample name/size. The S2-04 evidence wrapper recomputes the actual "
+        "model and sample SHA-256; raw benchmark JSON alone does not prove "
+        "both byte identities."};
 
     validate_benchmark_result(result);
     return result;
@@ -530,7 +570,7 @@ BenchmarkResult BenchmarkRunner::run(const BenchmarkRequest& request) {
   if (!impl_) {
     throw_runner_error(
         "BenchmarkRunner", "a live runner instance", "moved-from instance",
-        "invoke run only on the object that owns the ORT session");
+        "invoke run only on the object that owns the inference backend");
   }
   return impl_->run(request);
 }

@@ -836,6 +836,14 @@ class BatchRunner::Impl {
        std::shared_ptr<internal::BatchExecutorFactory> executor_factory)
       : contract_(std::move(contract)),
         executor_factory_(std::move(executor_factory)) {
+    if (contract_.runtime.provider != ExecutionProvider::kCpu) {
+      throw_batch_error(
+          "runtime.provider", "cpu for the public BatchRunner workflow",
+          to_string(contract_.runtime.provider),
+          "use the single-image or benchmark workflow for GPU providers; "
+          "BatchRunner deliberately avoids constructing concurrent GPU "
+          "sessions that share one engine cache");
+    }
     if (!executor_factory_) {
       throw_batch_error(
           "executor_factory", "a non-null executor factory", "null",

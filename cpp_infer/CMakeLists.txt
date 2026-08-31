@@ -9,6 +9,12 @@ project(yolo_defect_cpp
 option(YOLO_DEFECT_CORE_ONLY
   "Build only the dependency-free project-core portability smoke"
   OFF)
+option(YOLO_DEFECT_REQUIRE_TENSORRT_EP
+  "Require the isolated Linux x86_64 ORT TensorRT/CUDA execution providers"
+  OFF)
+option(YOLO_DEFECT_ENABLE_NATIVE_TENSORRT_BACKEND
+  "Enable the load-only native TensorRT correctness fallback"
+  OFF)
 
 include(CTest)
 
@@ -57,6 +63,33 @@ if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     "The supported ONNX Runtime SDK packages require a 64-bit toolchain. "
     "Select an x64 Windows toolchain or a 64-bit Linux target and point "
     "ONNXRUNTIME_ROOT at the matching official SDK.")
+endif()
+
+if(YOLO_DEFECT_REQUIRE_TENSORRT_EP)
+  if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_CROSSCOMPILING OR
+     NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64)$")
+    message(FATAL_ERROR
+      "YOLO_DEFECT_REQUIRE_TENSORRT_EP=ON supports native Linux x86_64 only. "
+      "Actual target is '${CMAKE_SYSTEM_NAME}/${CMAKE_SYSTEM_PROCESSOR}', "
+      "crosscompiling=${CMAKE_CROSSCOMPILING}. Keep this option OFF for the "
+      "Windows, CPU Linux, and AArch64/QEMU gates.")
+  endif()
+  if(BUILD_TESTING)
+    message(FATAL_ERROR
+      "YOLO_DEFECT_REQUIRE_TENSORRT_EP=ON uses ORT GPU 1.20.1, while the "
+      "complete CTest/Python consistency gate is intentionally pinned to "
+      "ORT CPU 1.19.2. Configure this dedicated GPU product build with "
+      "-DBUILD_TESTING=OFF and run the full suite in a separate unchanged "
+      "CPU build tree.")
+  endif()
+endif()
+
+if(YOLO_DEFECT_ENABLE_NATIVE_TENSORRT_BACKEND AND
+   NOT YOLO_DEFECT_REQUIRE_TENSORRT_EP)
+  message(FATAL_ERROR
+    "YOLO_DEFECT_ENABLE_NATIVE_TENSORRT_BACKEND=ON requires the dedicated "
+    "Linux x86_64 GPU build mode YOLO_DEFECT_REQUIRE_TENSORRT_EP=ON. Keep "
+    "both options OFF for Windows, Linux CPU, and AArch64/QEMU gates.")
 endif()
 
 if(CMAKE_CROSSCOMPILING)
@@ -189,10 +222,122 @@ unset(_onnxruntime_platform_expectation)
 
 file(READ "${ONNXRUNTIME_VERSION_FILE}" ONNXRUNTIME_VERSION)
 string(STRIP "${ONNXRUNTIME_VERSION}" ONNXRUNTIME_VERSION)
-if(NOT ONNXRUNTIME_VERSION STREQUAL "1.19.2")
+if(YOLO_DEFECT_REQUIRE_TENSORRT_EP)
+  set(_onnxruntime_expected_version "1.20.1")
+else()
+  set(_onnxruntime_expected_version "1.19.2")
+endif()
+
+if(YOLO_DEFECT_ENABLE_NATIVE_TENSORRT_BACKEND)
+  set(TENSORRT_ROOT "" CACHE PATH
+    "Root of the isolated TensorRT 10.4.0.26 runtime and headers")
+  if(TENSORRT_ROOT STREQUAL "")
+    message(FATAL_ERROR
+      "TENSORRT_ROOT is required for the native TensorRT backend. Point it "
+      "at the isolated TensorRT 10.4.0.26 tree containing headers and "
+      "libnvinfer.so.10; a Python wheel is not a C++ SDK.")
+  endif()
+  get_filename_component(TENSORRT_ROOT "${TENSORRT_ROOT}" ABSOLUTE)
+  set(TENSORRT_INCLUDE_DIR
+    "${TENSORRT_ROOT}/usr/include/x86_64-linux-gnu")
+  set(TENSORRT_VERSION_HEADER
+    "${TENSORRT_INCLUDE_DIR}/NvInferVersion.h")
+  set(TENSORRT_NVINFER_LIBRARY
+    "${TENSORRT_ROOT}/usr/lib/x86_64-linux-gnu/libnvinfer.so.10")
+  foreach(_native_tensorrt_file IN ITEMS
+      TENSORRT_VERSION_HEADER TENSORRT_NVINFER_LIBRARY)
+    if(NOT EXISTS "${${_native_tensorrt_file}}" OR
+       IS_DIRECTORY "${${_native_tensorrt_file}}")
+      message(FATAL_ERROR
+        "Incomplete TensorRT C++ SDK: ${_native_tensorrt_file} is missing "
+        "at '${${_native_tensorrt_file}}'. Extract matching "
+        "libnvinfer-headers-dev and libnvinfer10 10.4.0.26 packages into "
+        "TENSORRT_ROOT.")
+    endif()
+  endforeach()
+  unset(_native_tensorrt_file)
+  file(READ "${TENSORRT_VERSION_HEADER}" _tensorrt_version_text)
+  foreach(_version_pair IN ITEMS "MAJOR;10" "MINOR;4" "PATCH;0" "BUILD;26")
+    list(GET _version_pair 0 _version_name)
+    list(GET _version_pair 1 _version_value)
+    if(NOT _tensorrt_version_text MATCHES
+       "#define[ \t]+NV_TENSORRT_${_version_name}[ \t]+${_version_value}")
+      message(FATAL_ERROR
+        "TensorRT header version mismatch at '${TENSORRT_VERSION_HEADER}'. "
+        "Expected 10.4.0.26; inspect NV_TENSORRT_${_version_name} and use "
+        "the exact runtime/header pair that built the frozen engine.")
+    endif()
+  endforeach()
+  unset(_version_value)
+  unset(_version_name)
+  unset(_version_pair)
+  unset(_tensorrt_version_text)
+
+  if(NOT DEFINED CUDAToolkit_ROOT OR CUDAToolkit_ROOT STREQUAL "")
+    message(FATAL_ERROR
+      "CUDAToolkit_ROOT is required for the native TensorRT backend. Point "
+      "it at the isolated CUDA 12.6 toolkit used by the frozen engine.")
+  endif()
+  get_filename_component(CUDAToolkit_ROOT "${CUDAToolkit_ROOT}" ABSOLUTE)
+  set(CUDA_INCLUDE_DIR
+    "${CUDAToolkit_ROOT}/targets/x86_64-linux/include")
+  set(CUDA_RUNTIME_HEADER "${CUDA_INCLUDE_DIR}/cuda_runtime_api.h")
+  set(CUDA_CUDART_LIBRARY
+    "${CUDAToolkit_ROOT}/targets/x86_64-linux/lib/libcudart.so.12")
+  foreach(_native_cuda_file IN ITEMS
+      CUDA_RUNTIME_HEADER CUDA_CUDART_LIBRARY)
+    if(NOT EXISTS "${${_native_cuda_file}}" OR
+       IS_DIRECTORY "${${_native_cuda_file}}")
+      message(FATAL_ERROR
+        "Incomplete isolated CUDA runtime SDK: ${_native_cuda_file} is "
+        "missing at '${${_native_cuda_file}}'. Point CUDAToolkit_ROOT at "
+        "the CUDA 12.6 tree with headers and libcudart.so.12; ambient CUDA "
+        "installations are intentionally not searched.")
+    endif()
+  endforeach()
+  unset(_native_cuda_file)
+  file(READ "${CUDA_RUNTIME_HEADER}" _cuda_runtime_header_text)
+  if(NOT _cuda_runtime_header_text MATCHES
+     "#define[ \t]+CUDART_VERSION[ \t]+12060")
+    message(FATAL_ERROR
+      "CUDA runtime header version mismatch at '${CUDA_RUNTIME_HEADER}'. "
+      "Expected CUDART_VERSION 12060 (CUDA 12.6); use the exact isolated "
+      "headers/runtime pair that built the frozen engine.")
+  endif()
+  unset(_cuda_runtime_header_text)
+
+  add_library(TensorRT::nvinfer SHARED IMPORTED GLOBAL)
+  set_target_properties(TensorRT::nvinfer PROPERTIES
+    IMPORTED_LOCATION "${TENSORRT_NVINFER_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${TENSORRT_INCLUDE_DIR}")
+  add_library(CUDA::cudart SHARED IMPORTED GLOBAL)
+  set_target_properties(CUDA::cudart PROPERTIES
+    IMPORTED_LOCATION "${CUDA_CUDART_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${CUDA_INCLUDE_DIR}")
+endif()
+if(NOT ONNXRUNTIME_VERSION STREQUAL "${_onnxruntime_expected_version}")
   message(FATAL_ERROR
-    "Unsupported ONNX Runtime SDK version. Expected '1.19.2', actual "
-    "'${ONNXRUNTIME_VERSION}'. Point ONNXRUNTIME_ROOT at the pinned SDK.")
+    "Unsupported ONNX Runtime SDK version for this build mode. Expected "
+    "'${_onnxruntime_expected_version}', actual '${ONNXRUNTIME_VERSION}'. "
+    "Use the CPU 1.19.2 SDK for existing gates or the isolated GPU 1.20.1 "
+    "SDK with YOLO_DEFECT_REQUIRE_TENSORRT_EP=ON.")
+endif()
+unset(_onnxruntime_expected_version)
+
+if(YOLO_DEFECT_REQUIRE_TENSORRT_EP)
+  foreach(_provider_library IN ITEMS
+      libonnxruntime_providers_shared.so
+      libonnxruntime_providers_cuda.so
+      libonnxruntime_providers_tensorrt.so)
+    if(NOT EXISTS "${ONNXRUNTIME_ROOT}/lib/${_provider_library}" OR
+       IS_DIRECTORY "${ONNXRUNTIME_ROOT}/lib/${_provider_library}")
+      message(FATAL_ERROR
+        "Incomplete ORT GPU SDK: missing lib/${_provider_library} under "
+        "'${ONNXRUNTIME_ROOT}'. Use the official Linux x86_64 GPU C++ SDK; "
+        "a CPU SDK or Python wheel cannot satisfy the TensorRT build.")
+    endif()
+  endforeach()
+  unset(_provider_library)
 endif()
 
 add_library(onnxruntime::onnxruntime SHARED IMPORTED GLOBAL)
@@ -282,6 +427,20 @@ target_compile_definitions(yolo_defect_runtime PRIVATE
   "YOLO_DEFECT_OPENCV_VERSION=\"${OpenCV_VERSION}\""
   "YOLO_DEFECT_TARGET_ARCHITECTURE=\"${CMAKE_SYSTEM_PROCESSOR}\""
 )
+if(YOLO_DEFECT_ENABLE_NATIVE_TENSORRT_BACKEND)
+  target_sources(yolo_defect_runtime PRIVATE
+    src/native_tensorrt_runner.cpp)
+endif()
+if(YOLO_DEFECT_REQUIRE_TENSORRT_EP)
+  target_compile_definitions(yolo_defect_runtime PRIVATE
+    YOLO_DEFECT_TENSORRT_EP_BUILD=1)
+endif()
+if(YOLO_DEFECT_ENABLE_NATIVE_TENSORRT_BACKEND)
+  target_compile_definitions(yolo_defect_runtime PRIVATE
+    YOLO_DEFECT_NATIVE_TENSORRT_BUILD=1)
+  target_link_libraries(yolo_defect_runtime PRIVATE
+    TensorRT::nvinfer CUDA::cudart)
+endif()
 set_target_properties(yolo_defect_runtime PROPERTIES
   CXX_EXTENSIONS OFF
 )
@@ -327,6 +486,11 @@ function(configure_onnxruntime_runtime target_name)
 endfunction()
 
 configure_onnxruntime_runtime(yolo_defect_cpp)
+if(YOLO_DEFECT_ENABLE_NATIVE_TENSORRT_BACKEND)
+  set_property(TARGET yolo_defect_cpp APPEND PROPERTY BUILD_RPATH
+    "${TENSORRT_ROOT}/usr/lib/x86_64-linux-gnu"
+    "${CUDAToolkit_ROOT}/targets/x86_64-linux/lib")
+endif()
 
 if(BUILD_TESTING)
   include(FetchContent)
@@ -384,6 +548,10 @@ if(BUILD_TESTING)
 
   set(DEFAULT_CONFIG
     "${CMAKE_CURRENT_SOURCE_DIR}/configs/default_config.txt")
+  set(DEFAULT_TENSORRT_CONFIG
+    "${CMAKE_CURRENT_SOURCE_DIR}/configs/tensorrt_fp16_config.txt")
+  set(DEFAULT_NATIVE_TENSORRT_CONFIG
+    "${CMAKE_CURRENT_SOURCE_DIR}/configs/tensorrt_native_fp16_config_v4.txt")
   set(TEST_RUNTIME_FIXTURES
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/runtime")
   set(TEST_FAILURE_SCRIPT
@@ -426,6 +594,10 @@ if(BUILD_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_evidence.py")
   set(S2_03_BATCH_TOOLS_UNIT_TEST
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_03_batch_tools.py")
+  set(S2_04_EVIDENCE_TOOLS_UNIT_TEST
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_04_evidence_tools.py")
+  set(S2_04_PRODUCT_SET_UNIT_TEST
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_run_s2_04_product_set.py")
   set(S2_01_MANIFEST_TOOL
     "${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_s2_01_manifests.py")
   set(FIXED_IMAGE
@@ -611,7 +783,7 @@ if(BUILD_TESTING)
   )
   set_tests_properties(yolo_defect_cpp_help PROPERTIES
     LABELS "cli;smoke;quality_gate"
-    PASS_REGULAR_EXPRESSION "S2-03 bounded multi-image Runtime CLI"
+    PASS_REGULAR_EXPRESSION "S2-04 accelerator-capable Runtime CLI"
   )
 
   add_test(
@@ -621,6 +793,17 @@ if(BUILD_TESTING)
   set_tests_properties(yolo_defect_cpp_config PROPERTIES
     LABELS "contract;smoke;quality_gate"
     PASS_REGULAR_EXPRESSION "S1-01 Runtime/artifact contract summary"
+  )
+
+  add_test(
+    NAME yolo_defect_cpp_tensorrt_config_contract
+    COMMAND $<TARGET_FILE:yolo_defect_cpp>
+      --config
+      "${DEFAULT_TENSORRT_CONFIG}"
+  )
+  set_tests_properties(yolo_defect_cpp_tensorrt_config_contract PROPERTIES
+    LABELS "contract;tensorrt;unit;quality_gate"
+    PASS_REGULAR_EXPRESSION "configured_provider: tensorrt"
   )
 
   add_test(
@@ -765,6 +948,24 @@ if(BUILD_TESTING)
   )
   set_tests_properties(yolo_defect_s2_03_batch_tools_unit PROPERTIES
     LABELS "batch;comparison;unit;quality_gate"
+  )
+
+  add_test(
+    NAME yolo_defect_s2_04_evidence_tools_unit
+    COMMAND "${Python3_EXECUTABLE}"
+      "${S2_04_EVIDENCE_TOOLS_UNIT_TEST}" -v
+  )
+  set_tests_properties(yolo_defect_s2_04_evidence_tools_unit PROPERTIES
+    LABELS "tensorrt;comparison;profiling;benchmark;unit;quality_gate"
+  )
+
+  add_test(
+    NAME yolo_defect_s2_04_product_set_unit
+    COMMAND "${Python3_EXECUTABLE}"
+      "${S2_04_PRODUCT_SET_UNIT_TEST}" -v
+  )
+  set_tests_properties(yolo_defect_s2_04_product_set_unit PROPERTIES
+    LABELS "tensorrt;correctness;unit;quality_gate"
   )
 
   add_test(
@@ -947,6 +1148,14 @@ if(BUILD_TESTING)
     --output-dir "${CLI_FAILURE_OUTPUT_ROOT}/batch_conflict"
     --batch-summary "${CLI_FAILURE_OUTPUT_ROOT}/batch_conflict.json"
     --inspect-model)
+  add_cli_argument_failure_test(
+    yolo_defect_cpp_batch_rejects_tensorrt
+    "--batch currently supports provider=cpu only"
+    --config "${DEFAULT_TENSORRT_CONFIG}"
+    --batch
+    --input-dir "${CMAKE_CURRENT_SOURCE_DIR}/../data/images/val"
+    --output-dir "${CLI_FAILURE_OUTPUT_ROOT}/batch_tensorrt"
+    --batch-summary "${CLI_FAILURE_OUTPUT_ROOT}/batch_tensorrt.json")
   set_tests_properties(
     yolo_defect_cpp_batch_flag_requires_mode
     yolo_defect_cpp_batch_requires_config
@@ -955,6 +1164,7 @@ if(BUILD_TESTING)
     yolo_defect_cpp_batch_invalid_workers
     yolo_defect_cpp_batch_invalid_queue_capacity
     yolo_defect_cpp_batch_mode_conflict
+    yolo_defect_cpp_batch_rejects_tensorrt
     PROPERTIES LABELS "batch;concurrency;cli;negative;quality_gate")
 
   add_cli_argument_failure_test(
@@ -1121,6 +1331,22 @@ if(BUILD_TESTING)
     invalid_provider.txt
     "unsupported enum value")
   add_contract_failure_test(
+    yolo_defect_cpp_missing_tensorrt_cache
+    missing_tensorrt_cache.txt
+    "missing required field")
+  add_contract_failure_test(
+    yolo_defect_cpp_invalid_tensorrt_device
+    invalid_tensorrt_device.txt
+    "device id is negative")
+  add_contract_failure_test(
+    yolo_defect_cpp_invalid_tensorrt_workspace
+    invalid_tensorrt_workspace.txt
+    "invalid unsigned integer")
+  add_contract_failure_test(
+    yolo_defect_cpp_cpu_with_tensorrt_field
+    cpu_with_tensorrt_field.txt
+    "TensorRT-only field is present for the CPU provider")
+  add_contract_failure_test(
     yolo_defect_cpp_empty_class
     empty_class_artifact.txt
     "empty list item")
@@ -1196,4 +1422,41 @@ if(BUILD_TESTING)
   add_metadata_validator_test(class_count_mismatch)
   add_metadata_validator_test(provider_unavailable)
   add_metadata_validator_test(session_provider_mismatch)
+
+  add_test(
+    NAME yolo_defect_metadata_tensorrt_valid
+    COMMAND $<TARGET_FILE:yolo_defect_metadata_tests>
+      "${DEFAULT_TENSORRT_CONFIG}" valid
+  )
+  set_tests_properties(yolo_defect_metadata_tensorrt_valid PROPERTIES
+    LABELS "metadata;tensorrt;unit;quality_gate")
+
+  foreach(case_name IN ITEMS
+      tensorrt_missing_cuda
+      tensorrt_wrong_chain
+      tensorrt_precision_mismatch)
+    add_test(
+      NAME "yolo_defect_metadata_${case_name}"
+      COMMAND $<TARGET_FILE:yolo_defect_metadata_tests>
+        "${DEFAULT_TENSORRT_CONFIG}" "${case_name}"
+    )
+    set_tests_properties("yolo_defect_metadata_${case_name}" PROPERTIES
+      LABELS "metadata;tensorrt;negative;unit;quality_gate")
+  endforeach()
+
+  foreach(case_name IN ITEMS
+      native_valid
+      native_wrong_chain
+      native_wrong_cache
+      native_wrong_engine
+      native_precision_mismatch
+      native_execution_policy_mismatch)
+    add_test(
+      NAME "yolo_defect_metadata_${case_name}"
+      COMMAND $<TARGET_FILE:yolo_defect_metadata_tests>
+        "${DEFAULT_NATIVE_TENSORRT_CONFIG}" "${case_name}"
+    )
+    set_tests_properties("yolo_defect_metadata_${case_name}" PROPERTIES
+      LABELS "metadata;tensorrt_native;unit;quality_gate")
+  endforeach()
 endif()

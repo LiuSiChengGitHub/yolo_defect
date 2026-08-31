@@ -1,0 +1,18 @@
+# RuntimeConfig schema v2: consumed failed v3 provenance only.
+# The engine is built offline from the declared ONNX with:
+#   --fp16 --noTF32 --precisionConstraints=obey
+#   --layerPrecisions=*:fp32,/model.22/Sigmoid:fp16
+# The final product binary selects the v4 DFL-Softmax policy through
+# tensorrt_native_fp16_config_v4.txt; do not use this v3 config as the current
+# runtime entry point. The local plan remains untracked and version-specific.
+schema_version = 2
+artifact_spec_path = ../artifacts/yolov8_neu_det.artifact.txt
+score_threshold = 0.25
+nms_threshold = 0.45
+provider = tensorrt_native
+device_id = 0
+precision = fp16
+tensorrt_max_workspace_size_bytes = 2147483648
+tensorrt_engine_cache_path = ../.cache/tensorrt_native/7b8a37610018a6ae_trt10_4_cuda12_6_sm89_fp16_class_sigmoid_fp32_else_no_tf32
+tensorrt_engine_path = ../.cache/tensorrt_native/7b8a37610018a6ae_trt10_4_cuda12_6_sm89_fp16_class_sigmoid_fp32_else_no_tf32/best_fp16_class_sigmoid_fp32_else.engine
+tensorrt_engine_sha256 = CE2D25F9ABD4370A7E5325777CEB1982E42E82C7A3238C24A48E7FDD264467D2

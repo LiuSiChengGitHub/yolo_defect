@@ -1,0 +1,16 @@
+# RuntimeConfig schema v2: accepted current S2-04 v4 native TensorRT engine.
+# The engine is built offline from the declared ONNX with:
+#   --fp16 --noTF32 --precisionConstraints=obey
+#   --layerPrecisions=*:fp32,/model.22/dfl/Softmax:fp16
+# It is GPU/TensorRT-version specific and remains untracked.
+schema_version = 2
+artifact_spec_path = ../artifacts/yolov8_neu_det.artifact.txt
+score_threshold = 0.25
+nms_threshold = 0.45
+provider = tensorrt_native
+device_id = 0
+precision = fp16
+tensorrt_max_workspace_size_bytes = 2147483648
+tensorrt_engine_cache_path = ../.cache/tensorrt_native/7b8a37610018a6ae_trt10_4_cuda12_6_sm89_fp16_dfl_softmax_fp32_else_no_tf32
+tensorrt_engine_path = ../.cache/tensorrt_native/7b8a37610018a6ae_trt10_4_cuda12_6_sm89_fp16_dfl_softmax_fp32_else_no_tf32/best_fp16_dfl_softmax_fp32_else.engine
+tensorrt_engine_sha256 = E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746

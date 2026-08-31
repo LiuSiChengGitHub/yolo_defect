@@ -12,14 +12,60 @@ namespace {
 yolo_defect_cpp::ModelMetadata make_valid_metadata(
     const yolo_defect_cpp::RuntimeContract& contract) {
   yolo_defect_cpp::ModelMetadata metadata;
-  metadata.ort_version = "synthetic-1.19.2";
-  metadata.available_providers = {"CPUExecutionProvider"};
-  metadata.session_provider = "CPUExecutionProvider";
+  if (contract.runtime.provider ==
+      yolo_defect_cpp::ExecutionProvider::kTensorRt) {
+    metadata.ort_version = "synthetic-1.20.1";
+    metadata.available_providers = {
+        "TensorrtExecutionProvider", "CUDAExecutionProvider",
+        "CPUExecutionProvider"};
+    metadata.session_provider = "TensorrtExecutionProvider";
+    metadata.registered_provider_chain = {
+        "TensorrtExecutionProvider", "CUDAExecutionProvider",
+        "CPUExecutionProvider"};
+    metadata.inference_precision =
+        yolo_defect_cpp::to_string(contract.runtime.tensorrt->precision);
+    metadata.device_id = contract.runtime.tensorrt->device_id;
+    metadata.engine_cache_enabled = true;
+    metadata.engine_cache_path =
+        contract.runtime.tensorrt->engine_cache_path.string();
+    metadata.engine_cache_prefix = "synthetic_contract_test";
+    metadata.engine_cache_state = "synthetic";
+  } else if (contract.runtime.provider ==
+             yolo_defect_cpp::ExecutionProvider::kTensorRtNative) {
+    metadata.ort_version = "synthetic-1.20.1-inventory-only";
+    metadata.available_providers = {"TensorRTNative"};
+    metadata.session_provider = "TensorRTNative";
+    metadata.registered_provider_chain = {"TensorRTNative"};
+    metadata.inference_precision =
+        yolo_defect_cpp::to_string(contract.runtime.tensorrt->precision);
+    metadata.device_id = contract.runtime.tensorrt->device_id;
+    metadata.engine_cache_enabled = true;
+    metadata.engine_cache_path =
+        contract.runtime.tensorrt->engine_cache_path.string();
+    metadata.engine_cache_prefix = contract.runtime.tensorrt
+                                       ->native_engine_path->filename()
+                                       .string();
+    metadata.engine_cache_state = "frozen_native_engine_loaded";
+  } else {
+    metadata.ort_version = "synthetic-1.19.2";
+    metadata.available_providers = {"CPUExecutionProvider"};
+    metadata.session_provider = "CPUExecutionProvider";
+    metadata.registered_provider_chain = {"CPUExecutionProvider"};
+    metadata.inference_precision = "fp32";
+  }
   metadata.provider_evidence = "synthetic_contract_test";
-  metadata.intra_op_num_threads = 1;
-  metadata.inter_op_num_threads = 1;
-  metadata.execution_mode = "sequential";
-  metadata.graph_optimization_level = "all";
+  if (contract.runtime.provider ==
+      yolo_defect_cpp::ExecutionProvider::kTensorRtNative) {
+    metadata.intra_op_num_threads = 0;
+    metadata.inter_op_num_threads = 0;
+    metadata.execution_mode = "synchronous_non_default_cuda_stream";
+    metadata.graph_optimization_level = "frozen_engine_build_time";
+  } else {
+    metadata.intra_op_num_threads = 1;
+    metadata.inter_op_num_threads = 1;
+    metadata.execution_mode = "sequential";
+    metadata.graph_optimization_level = "all";
+  }
 
   yolo_defect_cpp::TensorMetadata input;
   input.name = contract.artifact.input.name;
@@ -40,7 +86,7 @@ yolo_defect_cpp::ModelMetadata make_valid_metadata(
 std::string mutate_for_case(
     const std::string& case_name,
     yolo_defect_cpp::ModelMetadata& metadata) {
-  if (case_name == "valid") {
+  if (case_name == "valid" || case_name == "native_valid") {
     return "";
   }
   if (case_name == "input_count_mismatch") {
@@ -89,6 +135,42 @@ std::string mutate_for_case(
     metadata.session_provider = "CUDAExecutionProvider";
     return "session.provider";
   }
+  if (case_name == "tensorrt_missing_cuda") {
+    metadata.available_providers = {
+        "TensorrtExecutionProvider", "CPUExecutionProvider"};
+    return "runtime.available_providers";
+  }
+  if (case_name == "tensorrt_wrong_chain") {
+    metadata.registered_provider_chain = {
+        "CUDAExecutionProvider", "TensorrtExecutionProvider",
+        "CPUExecutionProvider"};
+    return "session.registered_provider_chain";
+  }
+  if (case_name == "tensorrt_precision_mismatch") {
+    metadata.inference_precision = "fp32";
+    return "session.inference_precision";
+  }
+  if (case_name == "native_wrong_chain") {
+    metadata.registered_provider_chain = {"TensorRTNative",
+                                          "CPUExecutionProvider"};
+    return "session.registered_provider_chain";
+  }
+  if (case_name == "native_wrong_cache") {
+    metadata.engine_cache_path += "_wrong";
+    return "session.native_engine";
+  }
+  if (case_name == "native_wrong_engine") {
+    metadata.engine_cache_prefix = "wrong.engine";
+    return "session.native_engine";
+  }
+  if (case_name == "native_precision_mismatch") {
+    metadata.inference_precision = "fp32";
+    return "session.inference_precision";
+  }
+  if (case_name == "native_execution_policy_mismatch") {
+    metadata.execution_mode = "sequential";
+    return "session.native_execution_policy";
+  }
   throw std::runtime_error("Unknown synthetic metadata test case: " +
                            case_name);
 }
@@ -103,15 +185,15 @@ int main(int argc, char* argv[]) {
   }
 
   try {
-    const yolo_defect_cpp::RuntimeContract contract =
+    yolo_defect_cpp::RuntimeContract contract =
         yolo_defect_cpp::load_runtime_contract(argv[1]);
+    const std::string case_name = argv[2];
     yolo_defect_cpp::ModelMetadata metadata =
         make_valid_metadata(contract);
-    const std::string case_name = argv[2];
     const std::string expected_error =
         mutate_for_case(case_name, metadata);
 
-    if (case_name == "valid") {
+    if (case_name == "valid" || case_name == "native_valid") {
       yolo_defect_cpp::validate_model_metadata(metadata, contract);
       std::cout << "Synthetic metadata contract validation passed.\n";
       return 0;

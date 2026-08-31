@@ -64,6 +64,7 @@ docs/me/
 
 # ---------- Machine-local C++ acceptance environment ----------
 cpp_infer/.stage1.local.psd1
+cpp_infer/.cache/
 cpp_infer/results/manual/
 cpp_infer/results/s2_03/**/items/
 cpp_infer/results/s2_03/**/inputs/

@@ -21,7 +21,7 @@ if(NOT "${child_result}" MATCHES "^-?[0-9]+$" OR
 endif()
 
 set(required_texts
-  "S1-02 ONNX model inspection"
+  "C++ runtime model inspection"
   "ort_version: 1.19.2"
   "configured_provider: cpu"
   "CPUExecutionProvider"
@@ -35,7 +35,7 @@ set(required_texts
   "output[0].shape: [1,10,13125]"
   "output[0].dtype: float32"
   "metadata_contract_validation: passed"
-  "no input tensor, Session::Run, inference, or postprocess"
+  "no input tensor, backend run, inference result, or postprocess"
 )
 
 foreach(required_text IN LISTS required_texts)

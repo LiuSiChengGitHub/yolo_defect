@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_04_native_tensorrt_v4_raw_result_provenance",
+  "assembled_utc": "2026-08-30T20:32:36.277035Z",
+  "passed": true,
+  "protocol": {
+    "path": "../../../../protocols/s2_04_tensorrt_native_fp16_protocol_v4.json",
+    "sha256": "623AFC7CD961910277644F46E7F8292F8FC26D91AF9CC91ED9C3DC17BCD86745"
+  },
+  "manifest": {
+    "path": "../../../../tests/fixtures/s2_04_correctness_manifest_v4.json",
+    "sha256": "8D3737B33D480389C91D8B991380917489622CFE746CD532428EA6231F9A1F7A"
+  },
+  "runtime_config_current_snapshot": {
+    "path": "../../../../configs/tensorrt_native_fp16_config_v4.txt",
+    "sha256": "7689E0475485463B2D09F81EED6E0784AB8C9FE0E0BE44DF87ABCFEE36C63097",
+    "filesystem_mtime_utc": "2026-08-30T20:22:04.922154Z",
+    "mtime_is_after_formal_run": true,
+    "formal_summary_revalidated_semantic_fields": true,
+    "exact_config_bytes_at_inference_cryptographically_proven": false,
+    "note": "The current snapshot preserves the accepted v4 semantic fields and includes later explanatory comments. The formal summary binds those parsed semantic values, but it did not hash the exact config bytes used during inference."
+  },
+  "artifact": {
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "model_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68"
+  },
+  "native_engine": {
+    "engine_sha256": "E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746",
+    "precision_policy": "fp16_dfl_softmax_fp32_else_no_tf32",
+    "provider_evidence": "native_tensorrt_enqueue_v3;precision_policy=fp16_dfl_softmax_fp32_else_no_tf32;declared_engine_sha256=E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746;actual_engine_sha256=E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746;tensorrt_runtime=10.4.0;compiled_headers=10.4.0.26;cuda_runtime=12.6;compute_capability=8.9;fallback=none"
+  },
+  "tree_hash_contract": {
+    "algorithm": "SHA-256",
+    "ordered_files": "lexicographic detection-result filename order",
+    "record_encoding": "UTF-8 relative filename, NUL byte, raw 32-byte SHA-256 of file bytes, newline",
+    "raw_directories_tracked_in_git": false
+  },
+  "result_trees": [
+    {
+      "run": "cpu_reference",
+      "directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_native_v4/cpu_reference",
+      "file_count": 30,
+      "total_bytes": 30813,
+      "tree_sha256": "2A3A68BD9FEE48C1B2FE49A42EBF04EE5132C089B4259A9C6705787B6A5EC37E",
+      "earliest_mtime_utc": "2026-08-30T20:00:56.888147Z",
+      "latest_mtime_utc": "2026-08-30T20:01:08.839281Z",
+      "actual_provider_values": ["CPUExecutionProvider"],
+      "provider_evidence_values": ["explicit_cpu_ep_registration_and_session_creation"],
+      "model_sha256_values": ["7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68"]
+    },
+    {
+      "run": "tensorrt_run_a",
+      "directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_native_v4/tensorrt_run_a",
+      "file_count": 30,
+      "total_bytes": 39886,
+      "tree_sha256": "06A74F2C0879F595470C7522529ED12D6F61B9398400772C9946901415317C79",
+      "earliest_mtime_utc": "2026-08-30T20:01:31.240581Z",
+      "latest_mtime_utc": "2026-08-30T20:01:55.673586Z",
+      "actual_provider_values": ["TensorRTNative"],
+      "provider_evidence_value_count": 1,
+      "model_sha256_values": ["7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68"],
+      "engine_sha256_values": ["E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746"]
+    },
+    {
+      "run": "tensorrt_run_b",
+      "directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_native_v4/tensorrt_run_b",
+      "file_count": 30,
+      "total_bytes": 39886,
+      "tree_sha256": "06A74F2C0879F595470C7522529ED12D6F61B9398400772C9946901415317C79",
+      "earliest_mtime_utc": "2026-08-30T20:02:20.241441Z",
+      "latest_mtime_utc": "2026-08-30T20:02:45.748861Z",
+      "actual_provider_values": ["TensorRTNative"],
+      "provider_evidence_value_count": 1,
+      "model_sha256_values": ["7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68"],
+      "engine_sha256_values": ["E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746"]
+    }
+  ],
+  "repeat_identity": {
+    "tensorrt_run_a_tree_sha256": "06A74F2C0879F595470C7522529ED12D6F61B9398400772C9946901415317C79",
+    "tensorrt_run_b_tree_sha256": "06A74F2C0879F595470C7522529ED12D6F61B9398400772C9946901415317C79",
+    "byte_identical_by_filename": true
+  },
+  "tracked_comparison_outputs": {
+    "summary": {
+      "path": "native_fp16_v4_summary.json",
+      "sha256": "AA26A192B3CF7DD30BF4B824F93861B5DBF81D85D03B6BA0C70567764E216D38"
+    },
+    "per_image": {
+      "path": "native_fp16_v4_per_image.json",
+      "sha256": "25905F4067279497B8BDC7A24FE399ADFCD455C09F3F0051F4720BE68F7DC6BF"
+    }
+  },
+  "limitations": [
+    "Raw product JSON directories are machine-local rather than tracked. This manifest binds their filename/file-byte hashes and provider/model/engine claims; the tracked per-image comparison retains every match and error but is not a byte-for-byte replacement for the raw documents.",
+    "Pre-freeze ordering is a recorded filesystem-mtime observation whose hashes were assembled later, not a contemporaneous signature or commit. Exact runtime-config bytes at inference are therefore not claimed as cryptographically proven."
+  ]
+}

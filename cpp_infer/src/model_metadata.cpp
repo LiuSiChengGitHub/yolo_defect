@@ -21,10 +21,18 @@ namespace {
 
 void validate_provider(const ModelMetadata& actual,
                        const RuntimeContract& expected) {
-  const std::string expected_provider =
-      expected.runtime.provider == ExecutionProvider::kCpu
-          ? "CPUExecutionProvider"
-          : "<unsupported-provider>";
+  std::string expected_provider;
+  switch (expected.runtime.provider) {
+    case ExecutionProvider::kCpu:
+      expected_provider = "CPUExecutionProvider";
+      break;
+    case ExecutionProvider::kTensorRt:
+      expected_provider = "TensorrtExecutionProvider";
+      break;
+    case ExecutionProvider::kTensorRtNative:
+      expected_provider = "TensorRTNative";
+      break;
+  }
   const bool provider_is_available =
       std::find(actual.available_providers.begin(),
                 actual.available_providers.end(),
@@ -34,9 +42,11 @@ void validate_provider(const ModelMetadata& actual,
         expected, "runtime.available_providers",
         "a list containing " + expected_provider,
         format_string_list(actual.available_providers),
-        "verify that the loaded ONNX Runtime shared library matches the "
-        "configured SDK "
-        "and includes the requested execution provider");
+        expected.runtime.provider == ExecutionProvider::kTensorRtNative
+            ? "load the native TensorRT backend and its frozen engine"
+            : "verify that the loaded ONNX Runtime shared library matches "
+              "the configured SDK and includes the requested execution "
+              "provider");
   }
   if (actual.session_provider != expected_provider) {
     throw_contract_error(
@@ -44,6 +54,147 @@ void validate_provider(const ModelMetadata& actual,
         actual.session_provider,
         "check provider selection in OnnxRunner and the RuntimeConfig "
         "provider value");
+  }
+  if (expected.runtime.provider == ExecutionProvider::kTensorRt) {
+    if (!expected.runtime.tensorrt.has_value()) {
+      throw_contract_error(
+          expected, "runtime.tensorrt", "parsed TensorRT provider options",
+          "missing", "reload the RuntimeConfig schema v2 declaration");
+    }
+    for (const std::string& fallback_provider : {
+             std::string("CUDAExecutionProvider"),
+             std::string("CPUExecutionProvider")}) {
+      const bool fallback_is_available =
+          std::find(actual.available_providers.begin(),
+                    actual.available_providers.end(), fallback_provider) !=
+          actual.available_providers.end();
+      if (!fallback_is_available) {
+        throw_contract_error(
+            expected, "runtime.available_providers",
+            "a TensorRT build also containing fallback " + fallback_provider,
+            format_string_list(actual.available_providers),
+            "load the isolated ORT GPU SDK and its CUDA/TensorRT runtime "
+            "dependencies before creating the session");
+      }
+    }
+    const std::vector<std::string> expected_chain = {
+        "TensorrtExecutionProvider", "CUDAExecutionProvider",
+        "CPUExecutionProvider"};
+    if (actual.registered_provider_chain != expected_chain) {
+      throw_contract_error(
+          expected, "session.registered_provider_chain",
+          format_string_list(expected_chain),
+          format_string_list(actual.registered_provider_chain),
+          "register TensorRT first, CUDA second, and CPU last");
+    }
+    const TensorRtProviderConfig& config = *expected.runtime.tensorrt;
+    const std::string expected_precision = to_string(config.precision);
+    if (actual.inference_precision != expected_precision) {
+      throw_contract_error(
+          expected, "session.inference_precision", expected_precision,
+          actual.inference_precision,
+          "forward the RuntimeConfig precision to the TensorRT EP options");
+    }
+    if (actual.device_id != config.device_id) {
+      throw_contract_error(
+          expected, "session.device_id", std::to_string(config.device_id),
+          std::to_string(actual.device_id),
+          "forward the same device id to TensorRT and CUDA providers");
+    }
+    if (!actual.engine_cache_enabled || actual.engine_cache_path.empty() ||
+        actual.engine_cache_prefix.empty() ||
+        actual.engine_cache_state.empty()) {
+      throw_contract_error(
+          expected, "session.engine_cache",
+          "enabled cache with non-empty path, identity prefix, and state",
+          "enabled=" +
+              std::string(actual.engine_cache_enabled ? "true" : "false") +
+              ", path='" + actual.engine_cache_path + "', prefix='" +
+              actual.engine_cache_prefix + "', state='" +
+              actual.engine_cache_state + "'",
+          "prepare the dedicated cache directory and record its state before "
+          "publishing TensorRT evidence");
+    }
+  } else if (expected.runtime.provider ==
+             ExecutionProvider::kTensorRtNative) {
+    if (!expected.runtime.tensorrt.has_value() ||
+        !expected.runtime.tensorrt->native_engine_path.has_value() ||
+        !expected.runtime.tensorrt->native_engine_sha256.has_value()) {
+      throw_contract_error(
+          expected, "runtime.tensorrt_native",
+          "parsed native engine path and SHA-256 options", "missing",
+          "reload the RuntimeConfig schema v2 native declaration");
+    }
+    const std::vector<std::string> expected_chain = {"TensorRTNative"};
+    if (actual.registered_provider_chain != expected_chain) {
+      throw_contract_error(
+          expected, "session.registered_provider_chain",
+          format_string_list(expected_chain),
+          format_string_list(actual.registered_provider_chain),
+          "execute the frozen engine directly without an unreported fallback");
+    }
+    const TensorRtProviderConfig& config = *expected.runtime.tensorrt;
+    if (actual.inference_precision != to_string(config.precision)) {
+      throw_contract_error(
+          expected, "session.inference_precision",
+          to_string(config.precision), actual.inference_precision,
+          "preserve the frozen DFL-Softmax-only FP16/noTF32 engine policy");
+    }
+    if (actual.device_id != config.device_id) {
+      throw_contract_error(
+          expected, "session.device_id", std::to_string(config.device_id),
+          std::to_string(actual.device_id),
+          "load the engine on the GPU selected by RuntimeConfig");
+    }
+    const std::string expected_cache_path =
+        config.engine_cache_path.string();
+    const std::string expected_engine_filename =
+        config.native_engine_path->filename().string();
+    if (!actual.engine_cache_enabled ||
+        actual.engine_cache_path != expected_cache_path ||
+        actual.engine_cache_prefix != expected_engine_filename ||
+        actual.engine_cache_state != "frozen_native_engine_loaded") {
+      throw_contract_error(
+          expected, "session.native_engine",
+          "cache path '" + expected_cache_path + "', engine file '" +
+              expected_engine_filename +
+              "', and state frozen_native_engine_loaded",
+          "enabled=" +
+              std::string(actual.engine_cache_enabled ? "true" : "false") +
+              ", path='" + actual.engine_cache_path + "', file='" +
+              actual.engine_cache_prefix + "', state='" +
+              actual.engine_cache_state + "'",
+          "restore the SHA-bound engine in its dedicated cache namespace");
+    }
+    if (actual.intra_op_num_threads != 0 ||
+        actual.inter_op_num_threads != 0 ||
+        actual.execution_mode != "synchronous_non_default_cuda_stream" ||
+        actual.graph_optimization_level != "frozen_engine_build_time") {
+      throw_contract_error(
+          expected, "session.native_execution_policy",
+          "no ORT threads, one synchronous CUDA stream, and build-time graph "
+          "optimization",
+          "intra=" + std::to_string(actual.intra_op_num_threads) +
+              ", inter=" + std::to_string(actual.inter_op_num_threads) +
+              ", mode='" + actual.execution_mode + "', graph='" +
+              actual.graph_optimization_level + "'",
+          "restore the minimal load-only native TensorRT runner");
+    }
+  } else {
+    const std::vector<std::string> expected_chain = {
+        "CPUExecutionProvider"};
+    if (actual.registered_provider_chain != expected_chain ||
+        actual.inference_precision != "fp32" ||
+        actual.engine_cache_enabled) {
+      throw_contract_error(
+          expected, "session.cpu_policy",
+          "CPU-only chain, fp32 precision, and disabled engine cache",
+          "chain=" + format_string_list(actual.registered_provider_chain) +
+              ", precision=" + actual.inference_precision +
+              ", cache_enabled=" +
+              std::string(actual.engine_cache_enabled ? "true" : "false"),
+          "restore the CPU gate session policy");
+    }
   }
 }
 

@@ -20,18 +20,17 @@ that artifact: executable contracts, C++ inference, deterministic outputs,
 correctness gates, benchmark evidence, and a controlled path toward Linux,
 concurrency, quantization, and TensorRT.
 
-> **Status — 2026-08-30:** Large Stage One, user-owned L2, and the S2-01 through
-> S2-03 implementations and evidence are complete. S2-03 extends the shared
-> single-image `DetectorPipeline` with deterministic directory/manifest
-> discovery, a bounded queue, per-worker ORT sessions, backpressure, per-image
-> outputs, partial-failure accounting, cooperative shutdown, and a
-> machine-readable `BatchSummary`. Clean Release gates passed 156/156 tests on both
-> Windows x86_64 and WSL2/Linux x86_64; both platforms also completed formal
-> 361-image workers=1/workers=4 correctness, throughput, and memory comparisons.
-> The AArch64 build passed the same directory/manifest/partial-failure batch
-> functionality under QEMU user-mode. Work stops for user L1; S2-04 has not
-> started. QEMU is not an ARM board, so no emulated performance, memory, or
-> native-device claim is published.
+> **Status — 2026-08-31:** Large Stage One, user-owned L2, and S2-01 through
+> S2-04 are complete. S2-04 adds real TensorRT execution on WSL2/Linux x86_64
+> with an RTX 4060 Laptop GPU. ORT TensorRT EP execution was proved but failed
+> two frozen correctness protocols; the accepted product path is therefore a
+> SHA-bound, load-only native TensorRT engine with one real FP16 DFL Softmax
+> compute layer and FP32/noTF32 elsewhere. Its untouched v4 30-image holdout
+> passed twice, and same-SDK CPU/native latency, throughput, host RSS, and
+> device-wide GPU-memory evidence is retained. Final Windows and WSL2/Linux CPU
+> gates pass 179/179 tests. Work stops for user L1; S2-05 has not started. This
+> is local WSL2 GPU/edge-node evidence, not Jetson, ARM64 GPU, embedded hardware,
+> or bare-metal native Linux evidence.
 
 ![Fixed inference demo](docs/assets/demo_inference_result.gif)
 
@@ -93,7 +92,7 @@ FP32 ONNX
   -> [Gate A delivered] Windows and Linux x86_64 shared-source Runtime
   -> [Gate B delivered] AArch64 cross-build + QEMU functional portability
   -> [S2-03 delivered] directory/manifest + bounded queue + workers
-  -> Linux x86_64 + RTX 4060 TensorRT path
+  -> [S2-04 delivered] WSL2/Linux x86_64 + RTX 4060 TensorRT path
   -> full evidence, resume variants, interview closure, recruiting freeze
 ```
 
@@ -205,7 +204,9 @@ The exact Gate A machine snapshot, evidence, and interpretation are in the
 boundary and QEMU evidence are in the
 [S2-02 Gate B closure](docs/details/s2_02_gate_b_closure.md). S2-03's design,
 three-platform functional evidence, and same-platform performance comparisons
-are consolidated in the [S2-03 closure](docs/details/s2_03_closure.md).
+are consolidated in the [S2-03 closure](docs/details/s2_03_closure.md). S2-04's
+provider decision, native TensorRT implementation, frozen gates, measurements,
+and commands are in the [S2-04 closure](docs/details/s2_04_closure.md).
 
 ## 5. Core Modules
 
@@ -213,7 +214,7 @@ are consolidated in the [S2-03 closure](docs/details/s2_03_closure.md).
 |---|---|
 | Runtime/artifact/metadata contracts | Separate adjustable runtime policy, declared artifact semantics, and actual ORT-observed tensor/provider facts; reject mismatches before inference |
 | `ImagePreprocessor` | Decode or accept a `CV_8UC3` image; letterbox, BGR-to-RGB, normalize, produce contiguous NCHW data, and retain inverse-transform metadata |
-| `OnnxRunner` / `InferenceOutput` | Own ORT resources with RAII/PImpl, validate input/output, run synchronously, and copy output into an ORT-independent lifetime |
+| `OnnxRunner` / `NativeTensorRtRunner` / `InferenceOutput` | Select an ORT session or the SHA-bound native TensorRT plan behind one owned-I/O boundary; validate provider/engine/input/output, run synchronously, and return an implementation-independent host lifetime |
 | Static PTQ toolchain | Freeze calibration inputs and quantization configuration, run Conv-only QDQ PTQ with declared activation/weight types, inspect selected/quantized/failed nodes, validate actual metadata, and emit a derived artifact card |
 | `ProfileRunner` and profile summarizer | Create an isolated profiling-enabled session, retain the ORT raw trace, aggregate node/operator/provider time and call counts, and keep trace timing outside formal benchmarks |
 | Postprocessor/NMS | Validate YOLO BCN output, select class scores, apply strict filtering and stable class-agnostic NMS, then restore and clip source coordinates |
@@ -235,7 +236,7 @@ and then stops for L1 acceptance.
 | S2-01 | Static INT8 PTQ, FP32/INT8 correctness/task-quality/performance comparison, ORT operator/node profiling | Windows CPU exercise closure; product/quality results are advisory; no QAT or profiler-as-benchmark claim | **Implementation/evidence complete; awaiting L1** |
 | S2-02 | Linux x86_64 native chain, shared-source portability, AArch64 cross-build and QEMU smoke | WSL2/QEMU is not a board; QEMU produces no performance claim | **Gate A/Gate B implementation and evidence complete; awaiting user L1** |
 | S2-03 | Directory/manifest discovery, bounded queue, workers, backpressure, failure accounting, clean shutdown, throughput comparison | Concurrent single-image work is not true ONNX batch; QEMU is functional evidence only | **Implementation/evidence complete; awaiting user L1** |
-| S2-04 | One real Linux x86_64 + RTX 4060 TensorRT execution path, FP16 correctness and performance | Local GPU/edge-node evidence only; not Jetson or embedded deployment | Not started |
+| S2-04 | One real Linux x86_64 + RTX 4060 TensorRT execution path, FP16 correctness and performance | WSL2 local GPU/edge-node evidence only; constrained mixed FP16/FP32, not Jetson or embedded deployment | **Implementation/evidence/teaching closure complete; awaiting user L1** |
 | S2-05 | Applicable full gates, result matrix, failure cases, three resume narratives, interview material, recruiting freeze | Adds no new technology stack | Planned |
 
 ### S2-01 Windows CPU Record
@@ -370,16 +371,54 @@ The command protocol and interpretation are in
 [Paths, commands, and environment](docs/paths_commands.md) and the
 [S2-03 closure](docs/details/s2_03_closure.md).
 
+### S2-04 RTX 4060 TensorRT Record
+
+S2-04 keeps `DetectorPipeline`, preprocessing, decode, NMS, coordinate restore,
+and output schemas unchanged. The first implementation registered ORT TensorRT
+EP → CUDA EP → CPU EP with FP16 and engine/timing caches. `trtexec --fp16`
+successfully built and reloaded the current ONNX, and an ORT trace attributed 10
+kernel events to `TensorrtExecutionProvider` with zero CUDA/CPU fallback events.
+However, the frozen ORT v1 and disjoint v2 detection gates both failed, so the
+ORT benchmark files remain diagnostic and are not accepted performance claims.
+
+The accepted C++ path is a minimal load-only native TensorRT backend behind the
+existing `OnnxRunner` interface. It verifies the plan SHA, TensorRT/CUDA/SM 8.9
+identity and tensor contract, then runs H2D → `enqueueV3` → D2H on an owned
+non-default CUDA stream with persistent device buffers and no fallback. The
+final E0 plan is 21,144,012 bytes, SHA-256
+`E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746`.
+Only `/model.22/dfl/Softmax` is FP16 compute; two adjacent reformats touch Half,
+while all other compute and external I/O are FP32 with TF32 disabled. It is real
+but deliberately constrained mixed precision, not a full-FP16 network.
+
+| Accepted evidence | Recorded result |
+|---|---|
+| Frozen correctness | Untouched v4 holdout: 30/30 CPU-vs-native A and 30/30 CPU-vs-native B passed; 64 matched detections, max confidence error `1.0044e-5`, max coordinate error `0.032166 px`, min IoU `0.998619`; native A/B output trees are byte-identical |
+| Engine reload | 100 timed `trtexec` queries passed: `301.55 q/s`; host P50/P95 `3.07379/3.53577 ms`; GPU-compute P50/P95 `2.41962/2.88257 ms` |
+| Same-SDK CPU reference | ORT 1.20.1 CPU, batch=1, warmup=10/repeat=100: pipeline P50/P95 `118.436/133.059 ms`, `8.3247 img/s`, peak RSS `200.121 MiB` |
+| Native warm A | Initialization `684.570 ms`; session P50/P95 `3.877/5.329 ms`; pipeline P50/P95 `6.974/8.779 ms`; `137.652 img/s`; peak RSS `384.668 MiB` |
+| Native warm B | Initialization `619.423 ms`; session P50/P95 `3.633/7.468 ms`; pipeline P50/P95 `6.519/10.490 ms`; `140.555 img/s`; peak RSS `384.371 MiB` |
+| Overall comparison | Native pipeline throughput is `16.5353x/16.8841x` the same-SDK ORT CPU reference. This is overall native TensorRT/GPU acceleration, not an isolated FP16 contribution |
+| GPU memory | A/B device-wide `nvidia-smi memory.used` baseline-to-peak is `155 MiB`; PID-specific memory was unavailable, so this is not process- or model-exclusive VRAM |
+| Repeatability boundary | Detection outputs are exact and average throughput differs by about 2.1%, but P95 differs materially; unlocked Laptop GPU tail latency is not claimed stable |
+
+The current source also passes 179/179 CTest on Windows x86_64 and
+WSL2/Linux x86_64. TensorRT INT8 was not added because the FP32 artifact lacks a
+frozen representative calibration/QDQ contract and INT8 was explicitly
+non-blocking. Evidence and the nine-part explanation are in the
+[S2-04 closure](docs/details/s2_04_closure.md) and
+[`cpp_infer/results/s2_04/linux_x86_64_rtx4060/`](cpp_infer/results/s2_04/linux_x86_64_rtx4060/).
+
 ### Platform Matrix
 
 | Platform/backend | What it proves | Current status |
 |---|---|---|
-| Windows x86_64 + ORT CPU FP32 | Current product chain, single-image and bounded multi-image correctness, 156/156 tests, formal same-platform throughput/PWS comparison | **S2-03 verified** |
+| Windows x86_64 + ORT CPU FP32 | Current product chain, single-image and bounded multi-image correctness, final 179/179 tests, formal same-platform throughput/PWS comparison | **S2-04 regression verified** |
 | Windows x86_64 + ORT CPU INT8 | Static PTQ artifact, Runtime legality, size/quality/performance comparison, per-node profiling | Verified in S2-01 under advisory exercise policy |
 | WSL2/Linux x86_64 + ORT CPU INT8 | Potential shared-source Linux INT8 path | Not separately exercised in Gate A; no Linux INT8 comparison claim |
-| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux build/load/runtime portability, single-image and bounded multi-image correctness, 156/156 tests, formal same-platform throughput/RSS comparison | **S2-03 verified in WSL2** |
+| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux build/load/runtime portability, single-image and bounded multi-image correctness, final 179/179 tests, formal same-platform throughput/RSS comparison | **S2-04 regression verified in WSL2** |
 | Linux AArch64 under QEMU | Cross-build plus single-image and bounded multi-image ARM64 ORT CPU functional correctness | **S2-03 verified under emulation**; not a board and no performance/memory claims |
-| Linux x86_64 + RTX 4060 + TensorRT | Real local TensorRT execution, FP16 correctness/performance, GPU memory | Planned in S2-04; not Jetson |
+| WSL2/Linux x86_64 + RTX 4060 Laptop + TensorRT | Real local `trtexec`, ORT EP diagnostic placement, accepted native `enqueueV3`, constrained FP16 correctness/performance, host RSS and device-wide GPU memory | **S2-04 verified**; not native Linux, Jetson, ARM64 GPU, or embedded hardware |
 
 The current resume can be used without waiting for Stage Two. Completed S2
 units may produce rolling resume updates; unfinished targets must never be
@@ -405,11 +444,18 @@ written as delivered results.
 - S2-01 ORT traces prove optimized-node placement on `CPUExecutionProvider`,
   but trace durations include profiler overhead and do not identify exact CPU
   instructions selected inside a kernel.
-- The current Runtime is CPU-only and each inference call remains batch=1, but
-  S2-03 can process multiple images through bounded independent workers. This is
-  not tensor-level true batch, video, a service, GPU concurrency, or a lock-free
-  queue. QEMU does not establish board latency, throughput, memory, power,
-  thermals, or deployment stability; TensorRT remains planned.
+- The Runtime now has CPU, diagnostic ORT TensorRT EP, and accepted load-only
+  native TensorRT paths. Each call remains batch=1; S2-03's bounded workers are
+  still CPU-only and must not be reinterpreted as validated GPU concurrency.
+  There is no tensor-level true batch, video, service, multi-stream GPU
+  scheduler, or lock-free queue.
+- The accepted E0 plan has only one FP16 compute layer. The native/CPU speedup
+  is an overall backend/GPU result, not an isolated FP16 gain. Native A/B P95
+  differs materially, host RSS is a process high-water mark, and the reported
+  155 MiB GPU delta is device-wide rather than PID-specific.
+- QEMU does not establish board latency, throughput, memory, power, thermals,
+  or deployment stability. S2-04 similarly establishes only local WSL2 x86_64
+  GPU/edge-node behavior—not native Linux, Jetson, ARM64 GPU, or embedded use.
 - Historical Python ORT `24.4/72.1 FPS` used different implementations,
   providers, hardware, samples, and timing boundaries; it is context only and
   must not be ranked against the C++ result.
@@ -442,6 +488,7 @@ Authoritative and operational references:
 - [S2-02 Gate B AArch64/QEMU closure](docs/details/s2_02_gate_b_closure.md)
 - [S2-02 complete teaching closure](docs/details/s2_02_closure.md)
 - [S2-03 bounded multi-image closure](docs/details/s2_03_closure.md)
+- [S2-04 RTX 4060 TensorRT closure](docs/details/s2_04_closure.md)
 - [Paths, commands, and environment](docs/paths_commands.md)
 - [C++ Runtime technical reference](cpp_infer/README.md)
 

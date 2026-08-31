@@ -1,0 +1,13 @@
+# S2-04 RuntimeConfig schema v2 for Linux x86_64 + RTX 4060.
+# The cache namespace is intentionally bound to the frozen model, ORT 1.20,
+# TensorRT 10.4, CUDA 12.6, SM 8.9, and FP16. Re-key it when any identity
+# component changes; TensorRT engines are not portable across those changes.
+schema_version = 2
+artifact_spec_path = ../artifacts/yolov8_neu_det.artifact.txt
+score_threshold = 0.25
+nms_threshold = 0.45
+provider = tensorrt
+device_id = 0
+precision = fp16
+tensorrt_max_workspace_size_bytes = 2147483648
+tensorrt_engine_cache_path = ../.cache/tensorrt/7b8a37610018a6ae_ort1_20_trt10_4_cuda12_6_sm89_fp16

@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_04_ort_tensorrt_profile_summary",
+  "passed": true,
+  "trace": {
+    "path": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/profile/ort_tensorrt_fp16_2026-08-31_01-58-05.json",
+    "event_count": 52,
+    "session_model_run_event_count": 10,
+    "expected_profile_runs": 10,
+    "provider_attributed_node_event_count": 10,
+    "ignored_non_kernel_node_event_count": 20,
+    "aggregate_node_duration_ms": 187.257,
+    "duration_unit_in_source": "microseconds"
+  },
+  "model": {
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "declared_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "precision": "fp16"
+  },
+  "execution_proof": {
+    "tensorrt_provider": "TensorrtExecutionProvider",
+    "tensorrt_node_event_count": 10,
+    "tensorrt_node_duration_ms": 187.257,
+    "real_tensorrt_node_execution_observed": true,
+    "cuda_fallback_node_event_count": 0,
+    "cpu_fallback_node_event_count": 0,
+    "fallback_is_allowed_but_reported": true
+  },
+  "providers": [
+    {
+      "provider": "TensorrtExecutionProvider",
+      "calls": 10,
+      "unique_node_count": 1,
+      "total_duration_ms": 187.257,
+      "mean_duration_ms": 18.7257,
+      "percentage_of_node_duration": 100.0,
+      "operators": [
+        {
+          "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+          "calls": 10,
+          "total_duration_ms": 187.257
+        }
+      ]
+    },
+    {
+      "provider": "CUDAExecutionProvider",
+      "calls": 0,
+      "unique_node_count": 0,
+      "total_duration_ms": 0.0,
+      "mean_duration_ms": 0.0,
+      "percentage_of_node_duration": 0.0,
+      "operators": []
+    },
+    {
+      "provider": "CPUExecutionProvider",
+      "calls": 0,
+      "unique_node_count": 0,
+      "total_duration_ms": 0.0,
+      "mean_duration_ms": 0.0,
+      "percentage_of_node_duration": 0.0,
+      "operators": []
+    }
+  ],
+  "top_nodes": [
+    {
+      "name": "TensorrtExecutionProvider_TRTKernel_graph_torch_jit_7335408568907143482_0_0_kernel_time",
+      "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+      "provider": "TensorrtExecutionProvider",
+      "duration_ms": 168.66
+    },
+    {
+      "name": "TensorrtExecutionProvider_TRTKernel_graph_torch_jit_7335408568907143482_0_0_kernel_time",
+      "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+      "provider": "TensorrtExecutionProvider",
+      "duration_ms": 2.686
+    },
+    {
+      "name": "TensorrtExecutionProvider_TRTKernel_graph_torch_jit_7335408568907143482_0_0_kernel_time",
+      "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+      "provider": "TensorrtExecutionProvider",
+      "duration_ms": 2.532
+    },
+    {
+      "name": "TensorrtExecutionProvider_TRTKernel_graph_torch_jit_7335408568907143482_0_0_kernel_time",
+      "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+      "provider": "TensorrtExecutionProvider",
+      "duration_ms": 2.142
+    },
+    {
+      "name": "TensorrtExecutionProvider_TRTKernel_graph_torch_jit_7335408568907143482_0_0_kernel_time",
+      "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+      "provider": "TensorrtExecutionProvider",
+      "duration_ms": 1.947
+    },
+    {
+      "name": "TensorrtExecutionProvider_TRTKernel_graph_torch_jit_7335408568907143482_0_0_kernel_time",
+      "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+      "provider": "TensorrtExecutionProvider",
+      "duration_ms": 1.932
+    },
+    {
+      "name": "TensorrtExecutionProvider_TRTKernel_graph_torch_jit_7335408568907143482_0_0_kernel_time",
+      "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+      "provider": "TensorrtExecutionProvider",
+      "duration_ms": 1.902
+    },
+    {
+      "name": "TensorrtExecutionProvider_TRTKernel_graph_torch_jit_7335408568907143482_0_0_kernel_time",
+      "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+      "provider": "TensorrtExecutionProvider",
+      "duration_ms": 1.887
+    },
+    {
+      "name": "TensorrtExecutionProvider_TRTKernel_graph_torch_jit_7335408568907143482_0_0_kernel_time",
+      "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+      "provider": "TensorrtExecutionProvider",
+      "duration_ms": 1.832
+    },
+    {
+      "name": "TensorrtExecutionProvider_TRTKernel_graph_torch_jit_7335408568907143482_0_0_kernel_time",
+      "op_type": "TRTKernel_graph_torch_jit_7335408568907143482_0",
+      "provider": "TensorrtExecutionProvider",
+      "duration_ms": 1.737
+    }
+  ],
+  "limitations": [
+    "ORT node durations are profiling measurements and are not formal benchmark latency.",
+    "Provider-attributed Node events prove ORT TensorRT EP execution; they do not imply that every graph node ran in TensorRT."
+  ],
+  "timestamp_utc": "2026-08-30T17:58:27Z",
+  "artifact": {
+    "artifact_spec_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/artifacts/yolov8_neu_det.artifact.txt",
+    "model_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/models/best.onnx",
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "model_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68"
+  }
+}

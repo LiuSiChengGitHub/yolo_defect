@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_04_native_tensorrt_e0_pre_v4_tuning_screen",
+  "assembled_utc": "2026-08-30T20:32:36.277035Z",
+  "passed": true,
+  "scope": "Recomputed CPU FP32 versus E0 native TensorRT results for all 90 previously consumed v1, v2, and v3 samples before the disjoint v4 holdout was opened",
+  "chronology": {
+    "last_e0_screen_result_mtime_utc": "2026-08-30T19:57:29.522094Z",
+    "v4_protocol_frozen_mtime_utc": "2026-08-30T19:59:56.737567Z",
+    "first_v4_product_result_mtime_utc": "2026-08-30T20:00:56.888147Z",
+    "screen_completed_before_v4_protocol_freeze": true,
+    "v4_protocol_frozen_before_first_v4_inference": true,
+    "note": "Times are UTC filesystem mtimes. Aggregates were independently recomputed later from the hashed result trees; no v4 sample participates in this screen."
+  },
+  "artifact": {
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "model_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68"
+  },
+  "engine": {
+    "engine_sha256": "E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746",
+    "actual_provider": "TensorRTNative",
+    "precision_policy": "fp16_dfl_softmax_fp32_else_no_tf32",
+    "builder_contract": "trtexec --fp16 --noTF32 --precisionConstraints=obey --layerPrecisions=*:fp32,/model.22/dfl/Softmax:fp16"
+  },
+  "tree_hash_contract": {
+    "algorithm": "SHA-256",
+    "ordered_files": "lexicographic detection-result filename order",
+    "record_encoding": "UTF-8 relative filename, NUL byte, raw 32-byte SHA-256 of file bytes, newline",
+    "raw_directories_tracked_in_git": false
+  },
+  "sets": [
+    {
+      "set": "v1",
+      "manifest_id": "neu_det_val_6x5_v1",
+      "protocol": {
+        "path": "../../../../protocols/s2_04_tensorrt_fp16_protocol.json",
+        "sha256": "67E0A0D29A219D6060BF3BFCE1CA8B9CA84B508B4DC83A44822A271C185456EB"
+      },
+      "manifest": {
+        "path": "../../../../tests/fixtures/consistency_manifest.json",
+        "sha256": "B3456FAAABD41F0961AE2CA368036A54FF43EEBFB28A88CC02F999FA342C1621"
+      },
+      "gate": {
+        "detection_count": "exact",
+        "class_id": "exact",
+        "class_name": "exact",
+        "confidence_abs_error_max": 0.005,
+        "bbox_coordinate_abs_error_max_pixels": 0.5,
+        "matching_iou_min": 0.995
+      },
+      "cpu_results": {
+        "directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_final/cpu_reference",
+        "file_count": 30,
+        "total_bytes": 31256,
+        "tree_sha256": "E1B80824B8DAF2ED636EFF8B41B01C43222A95FB1E3FFF2B109FDB45C614BCCE",
+        "actual_provider_values": ["CPUExecutionProvider"]
+      },
+      "e0_results": {
+        "directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/native_candidate_dfl_tuning/v1",
+        "file_count": 30,
+        "total_bytes": 39570,
+        "tree_sha256": "AAFDC345AC49C408623FEF6B5B59373413BF39117682880A6EB24BF52834B144",
+        "earliest_mtime_utc": "2026-08-30T19:54:59.372385Z",
+        "latest_mtime_utc": "2026-08-30T19:55:23.379813Z",
+        "actual_provider_values": ["TensorRTNative"],
+        "engine_sha256_values": ["E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746"]
+      },
+      "comparison": {
+        "sample_count": 30,
+        "failed_sample_count": 0,
+        "failed_sample_ids": [],
+        "matched_detection_count": 62,
+        "confidence_abs_error_max": 0.00001102699999999679,
+        "bbox_coordinate_abs_error_max_pixels": 0.03810100000001171,
+        "matching_iou_min": 0.9990452455215064,
+        "passed": true
+      }
+    },
+    {
+      "set": "v2",
+      "manifest_id": "neu_det_val_s2_04_holdout_6x5_v2",
+      "protocol": {
+        "path": "../../../../protocols/s2_04_tensorrt_fp16_protocol_v2.json",
+        "sha256": "0AB6B0E7625A1F6F6E145F54741793356E570DBE0C44CF184D9078D82A0FC1E3"
+      },
+      "manifest": {
+        "path": "../../../../tests/fixtures/s2_04_correctness_manifest_v2.json",
+        "sha256": "3B69C1172D0D7FBB40DF2DB2AA9C3ACC852EFBC057DBD3126E21FCF04C94E98C"
+      },
+      "gate": {
+        "detection_count": "exact",
+        "class_id": "exact",
+        "class_name": "exact",
+        "confidence_abs_error_max": 0.005,
+        "bbox_coordinate_abs_error_max_pixels": 1.0,
+        "matching_iou_min": 0.9
+      },
+      "cpu_results": {
+        "directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_v2/cpu_reference",
+        "file_count": 30,
+        "total_bytes": 33277,
+        "tree_sha256": "744739EB390FDF02309132C474E7993BCD6DE35DADB878CFE3B1C1E9A5F462E5",
+        "actual_provider_values": ["CPUExecutionProvider"]
+      },
+      "e0_results": {
+        "directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/native_candidate_dfl_tuning/v2",
+        "file_count": 30,
+        "total_bytes": 41584,
+        "tree_sha256": "00FA86DFC248576B2F7CB89B4A0A9BCF8B2D59D96AC70EB2589F01B0362DACE3",
+        "earliest_mtime_utc": "2026-08-30T19:56:16.551656Z",
+        "latest_mtime_utc": "2026-08-30T19:56:42.411772Z",
+        "actual_provider_values": ["TensorRTNative"],
+        "engine_sha256_values": ["E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746"]
+      },
+      "comparison": {
+        "sample_count": 30,
+        "failed_sample_count": 0,
+        "failed_sample_ids": [],
+        "matched_detection_count": 74,
+        "confidence_abs_error_max": 0.00001043099999997743,
+        "bbox_coordinate_abs_error_max_pixels": 0.031646729999999845,
+        "matching_iou_min": 0.998950353373874,
+        "passed": true
+      }
+    },
+    {
+      "set": "v3",
+      "manifest_id": "neu_det_val_s2_04_native_holdout_6x5_v3",
+      "protocol": {
+        "path": "../../../../protocols/s2_04_tensorrt_native_fp16_protocol_v3.json",
+        "sha256": "4CE96E278CE773E22DB5B192E4CC24634B9D10AE300EF9AC98EE752AE12720DD"
+      },
+      "manifest": {
+        "path": "../../../../tests/fixtures/s2_04_correctness_manifest_v3.json",
+        "sha256": "84EEB0D5015042BEE3B12B26CCE578C2E39461A0F7A36E91EBF51E075A0001C6"
+      },
+      "gate": {
+        "detection_count": "exact",
+        "class_id": "exact",
+        "class_name": "exact",
+        "confidence_abs_error_max": 0.005,
+        "bbox_coordinate_abs_error_max_pixels": 1.0,
+        "matching_iou_min": 0.9
+      },
+      "cpu_results": {
+        "directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_native_v3/cpu_reference",
+        "file_count": 30,
+        "total_bytes": 35111,
+        "tree_sha256": "484EE1BB4528775822A191F6F309269A56B791DB27236B1794085663B4146030",
+        "actual_provider_values": ["CPUExecutionProvider"]
+      },
+      "e0_results": {
+        "directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/native_candidate_dfl_tuning/v3",
+        "file_count": 30,
+        "total_bytes": 44226,
+        "tree_sha256": "51BEDBD9714DB6777192A16B7EBE8FBB14AAAECE2054FEB98A986A2800791A19",
+        "earliest_mtime_utc": "2026-08-30T19:57:05.910319Z",
+        "latest_mtime_utc": "2026-08-30T19:57:29.522094Z",
+        "actual_provider_values": ["TensorRTNative"],
+        "engine_sha256_values": ["E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746"]
+      },
+      "comparison": {
+        "sample_count": 30,
+        "failed_sample_count": 0,
+        "failed_sample_ids": [],
+        "matched_detection_count": 90,
+        "confidence_abs_error_max": 0.000008226000000000067,
+        "bbox_coordinate_abs_error_max_pixels": 0.03556822999999998,
+        "matching_iou_min": 0.9992869477550826,
+        "passed": true
+      }
+    }
+  ],
+  "aggregate": {
+    "sample_count": 90,
+    "failed_sample_count": 0,
+    "matched_detection_count": 226,
+    "confidence_abs_error_max": 0.00001102699999999679,
+    "bbox_coordinate_abs_error_max_pixels": 0.03810100000001171,
+    "matching_iou_min": 0.998950353373874,
+    "passed": true
+  },
+  "limitations": [
+    "The three raw result directories are machine-local and not tracked; their deterministic tree hashes and aggregate comparison are retained here.",
+    "This screen selected a precision policy on already consumed samples. Correctness publication depends on the later untouched, disjoint v4 holdout, not on this screen alone."
+  ]
+}

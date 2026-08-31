@@ -479,6 +479,26 @@ bool paths_refer_to_same_location(
   return !equivalent_error && equivalent;
 }
 
+bool path_is_inside_protected_directory(
+    const std::filesystem::path& output,
+    const std::filesystem::path& protected_path) {
+  std::error_code error;
+  if (!std::filesystem::is_directory(protected_path, error) || error) {
+    return false;
+  }
+  const std::filesystem::path relative =
+      output.lexically_relative(protected_path);
+  if (relative.empty() || relative.is_absolute()) {
+    return false;
+  }
+  for (const std::filesystem::path& component : relative) {
+    if (component == "..") {
+      return false;
+    }
+  }
+  return true;
+}
+
 void validate_target_state(const std::filesystem::path& path,
                            const std::string& object,
                            bool overwrite_existing) {
@@ -897,12 +917,15 @@ WrittenDetectionOutputs write_detection_outputs(
                                     const std::string& object) {
         for (const std::filesystem::path& protected_path :
              normalized_protected_paths) {
-          if (paths_refer_to_same_location(output_path, protected_path)) {
+          if (paths_refer_to_same_location(output_path, protected_path) ||
+              path_is_inside_protected_directory(output_path,
+                                                 protected_path)) {
             throw_output_error(
                 object, "a path different from every protected input",
                 display_path(output_path),
                 "choose an output path that cannot overwrite config, "
-                "artifact, model, or source image inputs");
+                "artifact, model, source image, native engine, or any "
+                "TensorRT cache content");
           }
         }
       };

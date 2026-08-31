@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "protocol_id": "s2_04_tensorrt_fp16_correctness_v2",
+  "frozen_before_formal_run": true,
+  "scope": "Disjoint 30-image holdout for Linux x86_64 + RTX 4060 Laptop ORT TensorRT EP FP16 versus ORT CPU FP32",
+  "revision_rationale": {
+    "v1_status": "retained unchanged as a failed over-strict numerical-equivalence diagnostic",
+    "holdout_rule": "v2 uses image indices never inferred by the v1 formal comparison and was frozen before any v2 inference",
+    "tolerance_basis": "round source-image units: one source pixel bounds visualization-level coordinate drift; IoU 0.90 guards overlap while avoiding disproportionate small-box penalties; confidence remains 0.005",
+    "anti_tuning_rule": "v2 limits must not be changed after the first v2 run"
+  },
+  "sources": {
+    "consistency_manifest_path": "../tests/fixtures/s2_04_correctness_manifest_v2.json",
+    "cpu_runtime_config_path": "../configs/default_config.txt",
+    "tensorrt_runtime_config_path": "../configs/tensorrt_fp16_config.txt",
+    "artifact_spec_path": "../artifacts/yolov8_neu_det.artifact.txt"
+  },
+  "sample_contract": {
+    "manifest_id": "neu_det_val_s2_04_holdout_6x5_v2",
+    "sample_count": 30,
+    "samples_per_class": 5,
+    "selection_indices": [242, 256, 271, 286, 299]
+  },
+  "artifact_semantics": {
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "model_family": "yolov8",
+    "model_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "opset": 17,
+    "input_name": "images",
+    "input_shape": [1, 3, 800, 800],
+    "input_dtype": "float32",
+    "input_layout": "nchw",
+    "output_name": "output0",
+    "output_shape": [1, 10, 13125],
+    "output_dtype": "float32",
+    "output_layout": "bcn",
+    "class_names": ["crazing", "inclusion", "patches", "pitted_surface", "rolled-in_scale", "scratches"],
+    "preprocess_type": "letterbox_rgb_0_1_nchw",
+    "postprocess_type": "yolov8_raw",
+    "score_threshold": 0.25,
+    "nms_threshold": 0.45,
+    "nms_mode": "class_agnostic"
+  },
+  "execution_contract": {
+    "cpu_precision": "fp32",
+    "tensorrt_precision": "fp16",
+    "tensorrt_run_count": 2,
+    "same_artifact_for_all_runs": true,
+    "same_preprocess_and_postprocess_for_all_runs": true,
+    "provider_expectations_are_explicit_cli_arguments": true
+  },
+  "provider_contract": {
+    "cpu_actual_provider": "CPUExecutionProvider",
+    "tensorrt_actual_provider": "TensorrtExecutionProvider",
+    "cuda_fallback_provider": "CUDAExecutionProvider",
+    "provider_names_are_not_user_redefinable": true
+  },
+  "correctness_gate": {
+    "comparisons": ["cpu_vs_tensorrt_run_a", "cpu_vs_tensorrt_run_b", "tensorrt_run_a_vs_tensorrt_run_b"],
+    "detection_count": "exact",
+    "class_id": "exact",
+    "class_name": "exact",
+    "confidence_abs_error_max": 0.005,
+    "bbox_coordinate_abs_error_max_pixels": 1.0,
+    "matching_iou_min": 0.9,
+    "matching_strategy": "class_id_then_greedy_max_iou_with_canonical_value_tie_break",
+    "same_gate_applies_to_repeated_tensorrt_runs": true
+  },
+  "publication_limits": [
+    "Publish performance only if this disjoint v2 holdout passes; retain the failed v1 result beside it.",
+    "This proves local WSL2/Linux x86_64 GPU/edge-node execution, not Jetson, native ARM64 GPU, or embedded hardware.",
+    "This is implementation correctness on a bounded set, not full-dataset mAP or PyTorch lineage evidence."
+  ]
+}

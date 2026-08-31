@@ -117,12 +117,20 @@ SingleImageDetectionResult make_detection_result(
 std::vector<std::filesystem::path> protected_pipeline_paths(
     const RuntimeContract& contract,
     const std::filesystem::path& source_image_path) {
-  return {
+  std::vector<std::filesystem::path> paths = {
       source_image_path,
       contract.runtime.declaration_path,
       contract.artifact.declaration_path,
       contract.artifact.model_path,
   };
+  if (contract.runtime.tensorrt.has_value()) {
+    const TensorRtProviderConfig& tensorrt = *contract.runtime.tensorrt;
+    paths.push_back(tensorrt.engine_cache_path);
+    if (tensorrt.native_engine_path.has_value()) {
+      paths.push_back(*tensorrt.native_engine_path);
+    }
+  }
+  return paths;
 }
 
 }  // namespace

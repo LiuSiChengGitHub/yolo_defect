@@ -1,0 +1,741 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_04_tensorrt_fp16_gpu_benchmark",
+  "timestamp_utc": "2026-08-30T17:59:46Z",
+  "passed": true,
+  "command": [
+    "/home/everbreath/.local/state/yolo-defect-s2-04/build_gpu_release/bin/yolo_defect_cpp",
+    "--config",
+    "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/cpp_infer/configs/tensorrt_fp16_config.txt",
+    "--image",
+    "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/data/images/val/crazing_241.jpg",
+    "--benchmark",
+    "--warmup",
+    "10",
+    "--repeat",
+    "100",
+    "--benchmark-json",
+    "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/benchmark_warm/source_benchmark.json"
+  ],
+  "command_exit_code": 0,
+  "source_benchmark": {
+    "path": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/benchmark_warm/source_benchmark.json",
+    "document": {
+      "schema_version": 1,
+      "evidence_type": "cpp_ort_single_image_release_benchmark",
+      "timestamp_utc": "2026-08-30T17:59:44Z",
+      "command": [
+        "/home/everbreath/.local/state/yolo-defect-s2-04/build_gpu_release/bin/yolo_defect_cpp",
+        "--config",
+        "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/cpp_infer/configs/tensorrt_fp16_config.txt",
+        "--image",
+        "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/data/images/val/crazing_241.jpg",
+        "--benchmark",
+        "--warmup",
+        "10",
+        "--repeat",
+        "100",
+        "--benchmark-json",
+        "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/benchmark_warm/source_benchmark.json"
+      ],
+      "protocol": {
+        "batch_size": 1,
+        "sample_count": 1,
+        "warmup": 10,
+        "repeat": 100,
+        "clock": "std::chrono::steady_clock",
+        "timing_unit": "milliseconds",
+        "percentile_method": "empirical_nearest_rank_ceiling"
+      },
+      "environment": {
+        "machine": {
+          "hostname": "DESKTOP-6OGK71C",
+          "processor": "x86_64",
+          "architecture": "x86_64",
+          "logical_cpu_count": 16
+        },
+        "os": {
+          "name": "Linux",
+          "version": "6.18.33.2-microsoft-standard-WSL2"
+        },
+        "compiler": {
+          "id": "GNU",
+          "version": "13.3.0"
+        },
+        "build": {
+          "type": "Release",
+          "cxx_standard": 17
+        },
+        "opencv_version": "4.6.0",
+        "onnxruntime_version": "1.20.1"
+      },
+      "runtime": {
+        "requested_provider": "tensorrt",
+        "actual_provider": "TensorrtExecutionProvider",
+        "provider_evidence": "explicit_tensorrt_ep_then_cuda_fallback_then_cpu_registration;precision=fp16;cache_state=warm_cache_present_before_session_creation;per_node_execution_requires_ort_profile",
+        "session": {
+          "execution_mode": "sequential",
+          "intra_op_num_threads": 1,
+          "inter_op_num_threads": 1,
+          "graph_optimization_level": "all",
+          "initialization_ms": 4608.953892,
+          "profiling_enabled": false
+        }
+      },
+      "model": {
+        "model_id": "yolov8n_neu_det_final_train_2",
+        "model_family": "yolov8",
+        "path": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/models/best.onnx",
+        "declared_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+        "file_size_bytes": 12336935,
+        "opset": 17,
+        "input": {
+          "name": "images",
+          "shape": [
+            1,
+            3,
+            800,
+            800
+          ],
+          "dtype": "float32",
+          "layout": "nchw"
+        }
+      },
+      "sample": {
+        "image_path": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/data/images/val/crazing_241.jpg",
+        "file_size_bytes": 23845,
+        "original_shape": [
+          200,
+          200,
+          3
+        ],
+        "sample_count": 1
+      },
+      "postprocess": {
+        "score_threshold": 0.25,
+        "nms_threshold": 0.45,
+        "nms_mode": "class_agnostic",
+        "detection_count": 3
+      },
+      "latency_ms": {
+        "image_decode": {
+          "sample_count": 100,
+          "mean": 0.45986262,
+          "p50": 0.445138,
+          "p95": 0.553699
+        },
+        "preprocess": {
+          "sample_count": 100,
+          "mean": 2.2363479,
+          "p50": 2.160145,
+          "p95": 2.743364
+        },
+        "session_run": {
+          "sample_count": 100,
+          "mean": 3.7231229,
+          "p50": 3.023604,
+          "p95": 5.87688
+        },
+        "postprocess": {
+          "sample_count": 100,
+          "mean": 0.09117513000000001,
+          "p50": 0.081451,
+          "p95": 0.129471
+        },
+        "pipeline": {
+          "sample_count": 100,
+          "mean": 6.71307391,
+          "p50": 6.170568,
+          "p95": 9.118095
+        },
+        "end_to_end": {
+          "sample_count": 100,
+          "mean": 7.17371124,
+          "p50": 6.662972,
+          "p95": 9.595602
+        }
+      },
+      "throughput_images_per_second": {
+        "pipeline": 148.963055286844,
+        "end_to_end": 139.3978606811054
+      },
+      "memory": {
+        "status": "supported",
+        "metric": "peak_rss",
+        "bytes": 4194156544,
+        "mebibytes": 3999.859375,
+        "scope": "process lifetime including config/session initialization, warmup, timed iterations, retained sample vectors, statistics, and benchmark harness; queried before JSON serialization/write",
+        "reason": null
+      },
+      "timing_exclusions": [
+        "RuntimeConfig/ModelArtifactSpec loading and validation",
+        "Ort::Env and SessionOptions construction plus model metadata inspection/validation; Ort::Session construction is recorded separately as one initialization observation",
+        "initial image path validation and file-size queries",
+        "statistics calculation and process peak-memory query",
+        "benchmark JSON serialization and filesystem write",
+        "visualization/GUI rendering (not executed)"
+      ],
+      "limitations": [
+        "One 200x200 validation image, batch=1, one Linux TensorrtExecutionProvider session; results do not represent the full dataset or other hardware.",
+        "Repeated imread uses a warmed operating-system file cache and is not cold-disk latency.",
+        "No CPU affinity, elevated process priority, or idle-system lock was applied; concurrent system load can change latency.",
+        "session_run measures only Ort::Session::Run; pipeline additionally includes input validation/tensor construction and output validation/copy. With CPU tensors on the accelerator path, Session::Run also includes ORT-managed H2D, synchronization, and D2H rather than pure TensorRT kernel time.",
+        "session initialization is one Ort::Session construction observation; it does not provide initialization percentiles and can be affected by operating-system file cache state.",
+        "The process-lifetime peak memory uses the platform metric 'peak_rss' and includes session initialization, warmup, measured iterations, retained samples, statistics, and harness state; it is not per-stage or incremental inference memory.",
+        "Actual provider is session-level evidence, not per-node placement profiling.",
+        "Historical Python ORT 24.4/72.1 FPS used a different protocol and must not be compared unconditionally with this C++ result.",
+        "The benchmark records the declared model SHA and fixed file sizes; the required immediately preceding S1-07 gate and JSON validator recompute the actual model/sample SHA-256 values."
+      ]
+    }
+  },
+  "runtime_config": {
+    "path": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/cpp_infer/configs/tensorrt_fp16_config.txt",
+    "schema_version": 2,
+    "provider": "tensorrt",
+    "precision": "fp16",
+    "device_id": 0,
+    "artifact_spec_path": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/cpp_infer/artifacts/yolov8_neu_det.artifact.txt",
+    "tensorrt_engine_cache_path": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/cpp_infer/.cache/tensorrt/7b8a37610018a6ae_ort1_20_trt10_4_cuda12_6_sm89_fp16"
+  },
+  "artifact": {
+    "artifact_spec_path": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/cpp_infer/artifacts/yolov8_neu_det.artifact.txt",
+    "model_path": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/models/best.onnx",
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "declared_and_actual_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68"
+  },
+  "metrics": {
+    "requested_provider": "tensorrt",
+    "actual_provider": "TensorrtExecutionProvider",
+    "provider_evidence": "explicit_tensorrt_ep_then_cuda_fallback_then_cpu_registration;precision=fp16;cache_state=warm_cache_present_before_session_creation;per_node_execution_requires_ort_profile",
+    "precision": "fp16",
+    "environment": {
+      "os_name": "Linux",
+      "architecture": "x86_64",
+      "build_type": "Release",
+      "onnxruntime_version": "1.20.1"
+    },
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "model_declared_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "warmup": 10,
+    "repeat": 100,
+    "session_initialization_ms": 4608.953892,
+    "latency_ms": {
+      "image_decode": {
+        "sample_count": 100,
+        "mean_ms": 0.45986262,
+        "p50_ms": 0.445138,
+        "p95_ms": 0.553699
+      },
+      "preprocess": {
+        "sample_count": 100,
+        "mean_ms": 2.2363479,
+        "p50_ms": 2.160145,
+        "p95_ms": 2.743364
+      },
+      "session_run": {
+        "sample_count": 100,
+        "mean_ms": 3.7231229,
+        "p50_ms": 3.023604,
+        "p95_ms": 5.87688
+      },
+      "postprocess": {
+        "sample_count": 100,
+        "mean_ms": 0.09117513000000001,
+        "p50_ms": 0.081451,
+        "p95_ms": 0.129471
+      },
+      "pipeline": {
+        "sample_count": 100,
+        "mean_ms": 6.71307391,
+        "p50_ms": 6.170568,
+        "p95_ms": 9.118095
+      },
+      "end_to_end": {
+        "sample_count": 100,
+        "mean_ms": 7.17371124,
+        "p50_ms": 6.662972,
+        "p95_ms": 9.595602
+      }
+    },
+    "throughput_images_per_second": {
+      "pipeline": 148.963055286844,
+      "end_to_end": 139.3978606811054
+    },
+    "host_peak_rss": {
+      "bytes": 4194156544,
+      "mebibytes": 3999.859375,
+      "scope": "process lifetime including config/session initialization, warmup, timed iterations, retained sample vectors, statistics, and benchmark harness; queried before JSON serialization/write"
+    }
+  },
+  "gpu_memory": {
+    "supported": true,
+    "metric": "nvidia_smi_device_memory.used",
+    "scope": "device-wide GPU index=0 uuid=GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e; may include unrelated processes",
+    "selected_device": {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+      "memory_used_mib": 0.0
+    },
+    "pid_specific_metric_used": false,
+    "device_wide_fallback_used": true,
+    "fallback_reason": "nvidia-smi compute-apps did not expose a numeric memory row for the target PID",
+    "sample_interval_ms": 100,
+    "sample_count": 35,
+    "peak_memory_used_mib": 603.0,
+    "peak_sample_elapsed_ms": 5685.095995999973,
+    "baseline_device_memory_used_mib": 0.0,
+    "peak_minus_baseline_mib": 603.0,
+    "samples": [
+      {
+        "elapsed_ms": 0.2715650000482128,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 0.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 241.38165699991987,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 0.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 579.7139500000412,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 0.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 907.9291809998722,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 9.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 1096.8807100000504,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 93.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 1278.202090999912,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 93.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 1467.342920999954,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 111.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 1655.5681309998818,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 133.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 1850.8685489998697,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 155.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 2052.5859279998713,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 175.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 2241.434831999868,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 195.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 2432.80416399989,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 217.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 2623.832653999898,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 239.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 2822.1239199999673,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 259.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 3015.5133709999973,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 279.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 3218.6286579999432,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 301.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 3428.270547000011,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 327.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 3634.3550349999987,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 351.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 3848.225412999909,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 367.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 4056.5440039999885,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 385.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 4260.955693999904,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 405.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 4466.501871999981,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 425.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 4678.953042999865,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 447.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 4886.978648999957,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 471.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 5092.688861999932,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 489.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 5291.792677999865,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 507.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 5490.1225659998545,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 521.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 5685.095995999973,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 603.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 5899.842472000046,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 603.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 6148.3545859998685,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 603.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 6377.092950999895,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 603.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 6604.4721729999765,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 379.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 6809.7109840000485,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 181.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 7004.705202999958,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 109.0
+          }
+        ]
+      },
+      {
+        "elapsed_ms": 7198.31318599995,
+        "devices": [
+          {
+            "index": 0,
+            "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+            "uuid": "GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e",
+            "memory_used_mib": 109.0
+          }
+        ]
+      }
+    ],
+    "sampling_errors": []
+  },
+  "engine_cache": {
+    "directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/cpp_infer/.cache/tensorrt/7b8a37610018a6ae_ort1_20_trt10_4_cuda12_6_sm89_fp16",
+    "before": {
+      "file_count": 2,
+      "files": [
+        {
+          "relative_path": "TensorrtExecutionProvider_cache_sm89.timing",
+          "size_bytes": 657761,
+          "modified_time_ns": 1788112636270387329,
+          "sha256": "3BD2C7B4CF8A16AC7173736AA8B21422874991EE0FBEE95C10A8A197ECE1C71E"
+        },
+        {
+          "relative_path": "yolov8n_neu_det_final_train_2_7b8a37610018a6ae6cacdfc869590a95bbe31afb7579c39be0ffec537196af68_ort1_20_1_fp16_device0_7335408568907143482_0_fp16_sm89.engine",
+          "size_bytes": 9881460,
+          "modified_time_ns": 1788112636233094046,
+          "sha256": "0AD99BA40547F489DAEB3921BC9A8117FBA1E9FF03732AFACB676FCA40F2BE91"
+        }
+      ]
+    },
+    "after": {
+      "file_count": 2,
+      "files": [
+        {
+          "relative_path": "TensorrtExecutionProvider_cache_sm89.timing",
+          "size_bytes": 657761,
+          "modified_time_ns": 1788112636270387329,
+          "sha256": "3BD2C7B4CF8A16AC7173736AA8B21422874991EE0FBEE95C10A8A197ECE1C71E"
+        },
+        {
+          "relative_path": "yolov8n_neu_det_final_train_2_7b8a37610018a6ae6cacdfc869590a95bbe31afb7579c39be0ffec537196af68_ort1_20_1_fp16_device0_7335408568907143482_0_fp16_sm89.engine",
+          "size_bytes": 9881460,
+          "modified_time_ns": 1788112636233094046,
+          "sha256": "0AD99BA40547F489DAEB3921BC9A8117FBA1E9FF03732AFACB676FCA40F2BE91"
+        }
+      ]
+    },
+    "changes": {
+      "state": "reused_without_file_change",
+      "created": [],
+      "modified": [],
+      "removed": [],
+      "unchanged": [
+        "TensorrtExecutionProvider_cache_sm89.timing",
+        "yolov8n_neu_det_final_train_2_7b8a37610018a6ae6cacdfc869590a95bbe31afb7579c39be0ffec537196af68_ort1_20_1_fp16_device0_7335408568907143482_0_fp16_sm89.engine"
+      ]
+    },
+    "non_empty_after_run": true,
+    "valid_non_empty_engine_artifact_after_run": true
+  },
+  "gates": {
+    "product_benchmark_succeeded": true,
+    "expected_provider_verified": true,
+    "profiling_disabled": true,
+    "linux_host_peak_rss_recorded": true,
+    "gpu_peak_memory_recorded": true,
+    "engine_cache_non_empty": true
+  },
+  "limitations": [
+    "session_run is the existing ORT Session::Run boundary; it can include TensorRT, registered fallback providers, and transfer/synchronization overhead.",
+    "Real TensorRT node execution must additionally be proved by summarize_s2_04_ort_profile.py; benchmark provider metadata alone is insufficient.",
+    "Device-wide nvidia-smi fallback includes unrelated GPU consumers; its baseline and scope are reported explicitly.",
+    "This is Linux x86_64 local GPU / edge-node evidence, not Jetson or native ARM64 GPU evidence."
+  ]
+}

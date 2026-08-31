@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_04_tensorrt_fp16_correctness",
+  "protocol_id": "s2_04_tensorrt_fp16_correctness_v2",
+  "timestamp_utc": "2026-08-30T18:41:50Z",
+  "passed": false,
+  "sources": {
+    "protocol": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/protocols/s2_04_tensorrt_fp16_protocol_v2.json",
+    "manifest": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/tests/fixtures/s2_04_correctness_manifest_v2.json",
+    "artifact_spec": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/artifacts/yolov8_neu_det.artifact.txt",
+    "model": "/mnt/d/01_Base/CodingSpace/yolo_defect/models/best.onnx",
+    "cpu_directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_v2/cpu_reference",
+    "tensorrt_run_a_directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_v2/tensorrt_run_a",
+    "tensorrt_run_b_directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_v2/tensorrt_run_b"
+  },
+  "provider_expectations": {
+    "cpu": "CPUExecutionProvider",
+    "tensorrt": "TensorrtExecutionProvider"
+  },
+  "artifact": {
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "declared_and_actual_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "semantics_verified_against_protocol": true
+  },
+  "runtime_configs": {
+    "cpu": {
+      "path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/configs/default_config.txt",
+      "provider": "cpu",
+      "precision": "fp32",
+      "artifact_spec_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/artifacts/yolov8_neu_det.artifact.txt"
+    },
+    "tensorrt": {
+      "path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/configs/tensorrt_fp16_config.txt",
+      "provider": "tensorrt",
+      "precision": "fp16",
+      "artifact_spec_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/artifacts/yolov8_neu_det.artifact.txt"
+    }
+  },
+  "gate": {
+    "comparisons": [
+      "cpu_vs_tensorrt_run_a",
+      "cpu_vs_tensorrt_run_b",
+      "tensorrt_run_a_vs_tensorrt_run_b"
+    ],
+    "detection_count": "exact",
+    "class_id": "exact",
+    "class_name": "exact",
+    "confidence_abs_error_max": 0.005,
+    "bbox_coordinate_abs_error_max_pixels": 1.0,
+    "matching_iou_min": 0.9,
+    "matching_strategy": "class_id_then_greedy_max_iou_with_canonical_value_tie_break",
+    "same_gate_applies_to_repeated_tensorrt_runs": true
+  },
+  "comparisons": [
+    {
+      "comparison": "cpu_vs_tensorrt_run_a",
+      "sample_count": 30,
+      "failed_sample_count": 2,
+      "failed_sample_ids": [
+        "patches_271",
+        "scratches_271"
+      ],
+      "matched_detection_count": 74,
+      "confidence_abs_error_max": 0.006544171999999959,
+      "bbox_coordinate_abs_error_max_pixels": 1.124947000000006,
+      "matching_iou_min": 0.9619895297322458,
+      "passed": false
+    },
+    {
+      "comparison": "cpu_vs_tensorrt_run_b",
+      "sample_count": 30,
+      "failed_sample_count": 2,
+      "failed_sample_ids": [
+        "patches_271",
+        "scratches_271"
+      ],
+      "matched_detection_count": 74,
+      "confidence_abs_error_max": 0.006544171999999959,
+      "bbox_coordinate_abs_error_max_pixels": 1.124947000000006,
+      "matching_iou_min": 0.9619895297322458,
+      "passed": false
+    },
+    {
+      "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+      "sample_count": 30,
+      "failed_sample_count": 0,
+      "failed_sample_ids": [],
+      "matched_detection_count": 74,
+      "confidence_abs_error_max": 0.0,
+      "bbox_coordinate_abs_error_max_pixels": 0.0,
+      "matching_iou_min": 1.0,
+      "passed": true
+    }
+  ],
+  "performance_publication_allowed": false
+}

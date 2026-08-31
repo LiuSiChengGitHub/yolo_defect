@@ -136,12 +136,6 @@ void validate_benchmark_result(const BenchmarkResult& result) {
         "schema_version", "1", std::to_string(result.schema_version),
         "use the supported benchmark evidence schema");
   }
-  if (result.evidence_type != "cpp_ort_single_image_release_benchmark") {
-    throw_benchmark_error(
-        "evidence_type", "cpp_ort_single_image_release_benchmark",
-        result.evidence_type,
-        "do not mix historical Python and current C++ benchmark schemas");
-  }
   validate_non_empty(result.timestamp_utc, "timestamp_utc");
   if (result.command_arguments.empty()) {
     throw_benchmark_error(
@@ -208,52 +202,89 @@ void validate_benchmark_result(const BenchmarkResult& result) {
       environment.opencv_version.size() > 2 &&
       environment.opencv_version[0] == '4' &&
       environment.opencv_version[1] == '.';
-  if (!has_opencv_4 || environment.onnxruntime_version != "1.19.2") {
+  const bool has_supported_ort =
+      environment.onnxruntime_version == "1.19.2" ||
+      environment.onnxruntime_version == "1.20.1";
+  if (!has_opencv_4 || !has_supported_ort) {
     throw_benchmark_error(
-        "environment.runtime_versions", "OpenCV 4.x and ORT 1.19.2",
+        "environment.runtime_versions",
+        "OpenCV 4.x and supported ORT 1.19.2 CPU or 1.20.1 GPU",
         "OpenCV=" + environment.opencv_version +
             ", ORT=" + environment.onnxruntime_version,
-        "use a supported Linux/Windows OpenCV 4.x package and the pinned "
-        "ONNX Runtime SDK");
+        "use the pinned CPU SDK or isolated Linux TensorRT GPU SDK");
   }
 
   const BenchmarkRuntimeMetadata& runtime = result.runtime;
-  if (runtime.requested_provider != "cpu" ||
-      runtime.actual_provider != "CPUExecutionProvider") {
+  const bool cpu_pair =
+      runtime.requested_provider == "cpu" &&
+      runtime.actual_provider == "CPUExecutionProvider" &&
+      has_supported_ort;
+  const bool tensorrt_pair =
+      runtime.requested_provider == "tensorrt" &&
+      runtime.actual_provider == "TensorrtExecutionProvider" &&
+      environment.onnxruntime_version == "1.20.1";
+  const bool native_tensorrt_pair =
+      runtime.requested_provider == "tensorrt_native" &&
+      runtime.actual_provider == "TensorRTNative" &&
+      environment.onnxruntime_version == "1.20.1";
+  if (!cpu_pair && !tensorrt_pair && !native_tensorrt_pair) {
     throw_benchmark_error(
-        "runtime.provider", "requested cpu and actual CPUExecutionProvider",
+        "runtime.provider",
+        "cpu/CPUExecutionProvider/supported ORT or "
+        "tensorrt/TensorrtExecutionProvider/ORT1.20.1, or "
+        "tensorrt_native/TensorRTNative/linked ORT1.20.1 inventory",
         "requested=" + runtime.requested_provider +
-            ", actual=" + runtime.actual_provider,
-        "use the fixed CPU RuntimeConfig and verify the created ORT session");
+            ", actual=" + runtime.actual_provider +
+            ", ORT=" + environment.onnxruntime_version,
+        "use the matching RuntimeConfig, C++ SDK, and dedicated build tree");
+  }
+  const std::string expected_evidence_type =
+      native_tensorrt_pair
+          ? "cpp_native_tensorrt_single_image_release_benchmark"
+          : "cpp_ort_single_image_release_benchmark";
+  if (result.evidence_type != expected_evidence_type) {
+    throw_benchmark_error(
+        "evidence_type", expected_evidence_type, result.evidence_type,
+        "keep the benchmark evidence identity coupled to the selected "
+        "runtime provider");
   }
   validate_non_empty(runtime.provider_evidence,
                      "runtime.provider_evidence");
-  if (runtime.execution_mode != "sequential" ||
-      runtime.intra_op_num_threads != 1 ||
-      runtime.inter_op_num_threads != 1 ||
-      runtime.graph_optimization_level != "all") {
+  const bool ort_policy =
+      !native_tensorrt_pair && runtime.execution_mode == "sequential" &&
+      runtime.intra_op_num_threads == 1 &&
+      runtime.inter_op_num_threads == 1 &&
+      runtime.graph_optimization_level == "all";
+  const bool native_policy =
+      native_tensorrt_pair &&
+      runtime.execution_mode == "synchronous_non_default_cuda_stream" &&
+      runtime.intra_op_num_threads == 0 &&
+      runtime.inter_op_num_threads == 0 &&
+      runtime.graph_optimization_level == "frozen_engine_build_time";
+  if (!ort_policy && !native_policy) {
     throw_benchmark_error(
         "runtime.thread_policy",
-        "sequential, intra_op=1, inter_op=1, graph_optimization=all",
+        "ORT sequential/intra=1/inter=1/graph=all or native synchronous "
+        "CUDA stream/intra=0/inter=0/graph=frozen_engine_build_time",
         runtime.execution_mode + ", intra_op=" +
             std::to_string(runtime.intra_op_num_threads) +
             ", inter_op=" + std::to_string(runtime.inter_op_num_threads) +
             ", graph_optimization=" + runtime.graph_optimization_level,
-        "restore the fixed OnnxRunner CPU session policy");
+        "restore the fixed policy for the selected ORT or native backend");
   }
   if (!std::isfinite(runtime.session_initialization_ms) ||
       runtime.session_initialization_ms < 0.0) {
     throw_benchmark_error(
         "runtime.session.initialization_ms",
-        "one finite non-negative Ort::Session construction duration",
+        "one finite non-negative backend initialization duration",
         std::to_string(runtime.session_initialization_ms),
-        "measure around the unprofiled Ort::Session constructor");
+        "measure the configured backend initialization boundary");
   }
   if (runtime.profiling_enabled) {
     throw_benchmark_error(
         "runtime.session.profiling_enabled", "false", "true",
-        "run ORT profiling in the separate profile workflow and recreate an "
-        "unprofiled session for the formal benchmark");
+        "use the separate ORT profile workflow when applicable and recreate "
+        "an unprofiled backend for the formal benchmark");
   }
 
   const BenchmarkModelMetadata& model = result.model;

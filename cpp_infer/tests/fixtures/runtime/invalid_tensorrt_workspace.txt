@@ -1,0 +1,9 @@
+schema_version = 2
+artifact_spec_path = ../../../artifacts/yolov8_neu_det.artifact.txt
+score_threshold = 0.25
+nms_threshold = 0.45
+provider = tensorrt
+device_id = 0
+precision = fp16
+tensorrt_max_workspace_size_bytes = -1
+tensorrt_engine_cache_path = cache

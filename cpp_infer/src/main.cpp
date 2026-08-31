@@ -204,7 +204,7 @@ std::string format_class_names(const std::vector<std::string>& class_names) {
 
 void print_help(const char* program_name) {
   std::cout
-      << "yolo_defect_cpp - S2-03 bounded multi-image Runtime CLI\n"
+      << "yolo_defect_cpp - S2-04 accelerator-capable Runtime CLI\n"
       << "\n"
       << "Usage:\n"
       << "  " << program_name << " [--help]\n"
@@ -236,17 +236,18 @@ void print_help(const char* program_name) {
       << "Scope:\n"
       << "  Loads and validates RuntimeConfig + ModelArtifactSpec.\n"
       << "  Optional --image keeps the existing OpenCV preprocess smoke.\n"
-      << "  --inspect-model creates an ORT CPU session, reads actual model\n"
+      << "  --inspect-model creates the configured backend, reads model\n"
       << "  metadata, and validates it against the artifact contract.\n"
       << "  --raw-output-summary preprocesses one image, runs one synchronous\n"
       << "  raw inference, and prints only bounded tensor summaries.\n"
       << "  --output-json and --output-image run the S1-05 single-image\n"
-      << "  pipeline: preprocess, ORT inference, tested postprocess, and files.\n"
-      << "  --benchmark runs the Release-only S1-08 batch-1 CPU protocol.\n"
+      << "  pipeline: preprocess, configured inference, tested postprocess,\n"
+      << "  and files.\n"
+      << "  --benchmark runs the Release-only batch-1 provider protocol.\n"
       << "  Defaults are --warmup 10 and --repeat 100. It reports mean/P50/P95\n"
-      << "  for image decode, preprocess, Session::Run, postprocess, pipeline,\n"
+      << "  for image decode, preprocess, backend run, postprocess, pipeline,\n"
       << "  and end-to-end, then writes machine-readable --benchmark-json.\n"
-      << "  Session/model initialization, statistics, JSON writing, and drawing\n"
+      << "  Backend/model initialization, statistics, JSON writing, and drawing\n"
       << "  are outside repeated timing; drawing is not executed.\n"
       << "  --profile creates a separate profiling-enabled ORT session, runs\n"
       << "  the fixed preprocessed image (default 10 times), calls EndProfiling,\n"
@@ -261,16 +262,17 @@ void print_help(const char* program_name) {
       << "  rejected unless --overwrite is explicit; paths matching protected\n"
       << "  inputs are rejected before writing. Relative CLI image/output paths\n"
       << "  use the current working directory. No GUI, true ONNX batch, video,\n"
-      << "  service, GPU concurrency, or lock-free queue exists.\n";
+      << "  service, GPU stream concurrency, or lock-free queue exists.\n";
 }
 
 void print_banner() {
   std::cout
-      << "yolo_defect_cpp - S2-03 bounded multi-image Runtime CLI\n"
+      << "yolo_defect_cpp - S2-04 accelerator-capable Runtime CLI\n"
       << "V2 Runtime: industrial vision AI deployment workspace\n"
       << "Current scope: validated single-image detection, S1-07 consistency "
          "evidence, S1-08 Release CPU benchmark evidence, and S2-01 ORT "
-         "profiling, and bounded multi-image CPU execution\n"
+         "profiling, bounded multi-image CPU execution, and an opt-in Linux "
+         "TensorRT path\n"
       << "Run with --help for single-image, batch, benchmark, and profile "
          "commands.\n"
       << "Batch remains concurrent batch=1 work; true batch, video, services, "
@@ -321,8 +323,20 @@ void print_contract_summary(
       << "postprocess_type: "
       << yolo_defect_cpp::to_string(artifact.postprocess_type) << "\n"
       << "nms_mode: " << yolo_defect_cpp::to_string(artifact.nms_mode) << "\n"
-      << "scope: declaration contract only; this command did not create an "
-         "ONNX Runtime session or run inference.\n";
+      << "scope: declaration contract only; this command did not create a "
+         "backend/session or run inference.\n";
+  if (runtime.tensorrt.has_value()) {
+    const yolo_defect_cpp::TensorRtProviderConfig& tensorrt =
+        *runtime.tensorrt;
+    std::cout
+        << "tensorrt_device_id: " << tensorrt.device_id << "\n"
+        << "tensorrt_precision: "
+        << yolo_defect_cpp::to_string(tensorrt.precision) << "\n"
+        << "tensorrt_max_workspace_size_bytes: "
+        << tensorrt.max_workspace_size_bytes << "\n"
+        << "tensorrt_engine_cache_path: "
+        << tensorrt.engine_cache_path.string() << "\n";
+  }
 }
 
 void print_preprocess_summary(
@@ -356,15 +370,15 @@ void print_preprocess_summary(
       << "tensor_shape: 1x3x" << result.input_height << "x"
       << result.input_width << "\n"
       << "tensor_elements: " << result.tensor_nchw.size() << "\n"
-      << "scope: contract + preprocess only; this command did not create an "
-         "ONNX Runtime session or run inference.\n";
+      << "scope: contract + preprocess only; this command did not create a "
+         "backend/session or run inference.\n";
 }
 
 void print_model_metadata_summary(
     const yolo_defect_cpp::RuntimeContract& contract,
     const yolo_defect_cpp::ModelMetadata& metadata) {
   std::cout
-      << "S1-02 ONNX model inspection\n"
+      << "C++ runtime model inspection\n"
       << "model_path: " << contract.artifact.model_path.string() << "\n"
       << "ort_version: " << metadata.ort_version << "\n"
       << "configured_provider: "
@@ -375,10 +389,27 @@ void print_model_metadata_summary(
       << "\n"
       << "session_provider: " << metadata.session_provider << "\n"
       << "provider_evidence: " << metadata.provider_evidence << "\n"
+      << "registered_provider_chain: "
+      << yolo_defect_cpp::format_string_list(
+             metadata.registered_provider_chain) << "\n"
+      << "inference_precision: " << metadata.inference_precision << "\n"
+      << "device_id: " << metadata.device_id << "\n"
+      << "engine_cache_enabled: "
+      << (metadata.engine_cache_enabled ? "true" : "false") << "\n"
+      << "engine_cache_path: " << metadata.engine_cache_path << "\n"
+      << "engine_cache_prefix: " << metadata.engine_cache_prefix << "\n"
+      << "engine_cache_state: " << metadata.engine_cache_state << "\n"
+      << "engine_cache_files_before: "
+      << metadata.engine_cache_files_before << "\n"
+      << "engine_cache_files_after: "
+      << metadata.engine_cache_files_after << "\n"
       << "execution_mode: " << metadata.execution_mode << "\n"
       << "intra_op_num_threads: " << metadata.intra_op_num_threads << "\n"
       << "inter_op_num_threads: " << metadata.inter_op_num_threads
-      << " (not used by sequential execution mode)\n"
+      << (metadata.execution_mode == "sequential"
+              ? " (not used by sequential execution mode)"
+              : "")
+      << "\n"
       << "graph_optimization_level: "
       << metadata.graph_optimization_level << "\n"
       << "input_count: " << metadata.inputs.size() << "\n";
@@ -412,8 +443,8 @@ void print_model_metadata_summary(
 
   std::cout
       << "metadata_contract_validation: passed\n"
-      << "scope: session creation + metadata validation only; no input "
-         "tensor, Session::Run, inference, or postprocess.\n";
+      << "scope: backend creation + metadata validation only; no input "
+         "tensor, backend run, inference result, or postprocess.\n";
 }
 
 NumericSummary summarize_values(const std::vector<float>& values) {
@@ -508,7 +539,7 @@ void print_benchmark_summary(
     const yolo_defect_cpp::BenchmarkResult& result,
     const std::filesystem::path& output_path) {
   std::cout
-      << "S1-08 reproducible Release benchmark completed\n"
+      << "Reproducible Release benchmark completed\n"
       << "benchmark_json: " << output_path.string() << "\n"
       << "build_type: " << result.environment.build_type << "\n"
       << "requested_provider: " << result.runtime.requested_provider << "\n"
@@ -550,16 +581,17 @@ void print_benchmark_summary(
   }
   std::cout
       << "timing_exclusions: Runtime setup around the separately recorded "
-         "Ort::Session constructor, statistics, benchmark JSON write, and "
+         "backend initialization, statistics, benchmark JSON write, and "
          "visualization\n"
-      << "scope: fixed single image, batch=1, CPU, warm-cache Release "
+      << "scope: fixed single image, batch=1, configured provider, "
+         "warm-cache Release "
          "benchmark; see JSON limitations before comparison.\n";
 }
 
 void print_profile_summary(
     const yolo_defect_cpp::ProfileResult& result) {
   std::cout
-      << "S2-01 ORT profiling completed\n"
+      << "ORT profiling completed\n"
       << "profile_trace_path: " << result.trace_path.string() << "\n"
       << "profile_runs: " << result.run_count << "\n"
       << "model_id: " << result.model_id << "\n"
@@ -1046,6 +1078,15 @@ int main(int argc, char* argv[]) {
       const yolo_defect_cpp::RuntimeContract contract =
           yolo_defect_cpp::load_runtime_contract(options.config_path);
       if (options.batch) {
+        if (contract.runtime.provider !=
+            yolo_defect_cpp::ExecutionProvider::kCpu) {
+          throw std::runtime_error(
+              "--batch currently supports provider=cpu only; use the "
+              "single-image or --benchmark path for the S2-04 TensorRT "
+              "evidence instead of creating concurrent GPU sessions that "
+              "share one engine cache; --profile is available only for the "
+              "ORT TensorRT EP backend.");
+        }
         yolo_defect_cpp::BatchRequest request;
         request.input_kind = options.input_directory_path.empty()
                                  ? yolo_defect_cpp::BatchInputKind::kManifest
@@ -1092,11 +1133,19 @@ int main(int argc, char* argv[]) {
 
         yolo_defect_cpp::BenchmarkRunner runner(contract);
         const yolo_defect_cpp::BenchmarkResult result = runner.run(request);
-        const std::vector<std::filesystem::path> protected_paths = {
+        std::vector<std::filesystem::path> protected_paths = {
             contract.runtime.declaration_path,
             contract.artifact.declaration_path,
             contract.artifact.model_path,
             std::filesystem::path(options.image_path)};
+        if (contract.runtime.tensorrt.has_value()) {
+          const yolo_defect_cpp::TensorRtProviderConfig& tensorrt =
+              *contract.runtime.tensorrt;
+          protected_paths.push_back(tensorrt.engine_cache_path);
+          if (tensorrt.native_engine_path.has_value()) {
+            protected_paths.push_back(*tensorrt.native_engine_path);
+          }
+        }
         const std::filesystem::path written_path =
             yolo_defect_cpp::write_benchmark_json(
                 result, options.benchmark_json_path,

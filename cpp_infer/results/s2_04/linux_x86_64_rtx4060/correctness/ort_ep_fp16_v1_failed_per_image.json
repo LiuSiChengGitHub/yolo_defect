@@ -1,0 +1,4542 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_04_tensorrt_fp16_correctness_per_image",
+  "timestamp_utc": "2026-08-30T18:26:02Z",
+  "passed": false,
+  "sources": {
+    "protocol": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/protocols/s2_04_tensorrt_fp16_protocol.json",
+    "manifest": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/tests/fixtures/consistency_manifest.json",
+    "artifact_spec": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/artifacts/yolov8_neu_det.artifact.txt",
+    "model": "/mnt/d/01_Base/CodingSpace/yolo_defect/models/best.onnx",
+    "cpu_directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_final/cpu_reference",
+    "tensorrt_run_a_directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_final/tensorrt_run_a",
+    "tensorrt_run_b_directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_final/tensorrt_run_b"
+  },
+  "gate": {
+    "comparisons": [
+      "cpu_vs_tensorrt_run_a",
+      "cpu_vs_tensorrt_run_b",
+      "tensorrt_run_a_vs_tensorrt_run_b"
+    ],
+    "detection_count": "exact",
+    "class_id": "exact",
+    "class_name": "exact",
+    "confidence_abs_error_max": 0.005,
+    "bbox_coordinate_abs_error_max_pixels": 0.5,
+    "matching_iou_min": 0.995,
+    "matching_strategy": "class_id_then_greedy_max_iou_with_canonical_value_tie_break",
+    "same_gate_applies_to_repeated_tensorrt_runs": true
+  },
+  "items": [
+    {
+      "sequence_index": 0,
+      "sample_id": "crazing_241",
+      "source_image_path": "../../../data/images/val/crazing_241.jpg",
+      "source_image_sha256": "1D65EF27EAA9BF27608D954DFE57B40E401FC1AED435884400F35E8000BBF98D",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0012280639999999732,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.00296400000000574,
+                0.0704499999999939,
+                0.017989999999997508
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0704499999999939,
+              "iou": 0.9993757192033882,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0020651819999999987,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.09973139999999958,
+                0.026413000000005127,
+                0.0473479999999995,
+                0.001632000000000744
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.09973139999999958,
+              "iou": 0.9987544169030109,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.000511884000000018,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0356751000000024,
+                0.0026550300000001137,
+                0.0013270000000034088,
+                0.0029601999999897544
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0356751000000024,
+              "iou": 0.9997147150804525,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_241"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0012280639999999732,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.00296400000000574,
+                0.0704499999999939,
+                0.017989999999997508
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0704499999999939,
+              "iou": 0.9993757192033882,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0020651819999999987,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.09973139999999958,
+                0.026413000000005127,
+                0.0473479999999995,
+                0.001632000000000744
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.09973139999999958,
+              "iou": 0.9987544169030109,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.000511884000000018,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0356751000000024,
+                0.0026550300000001137,
+                0.0013270000000034088,
+                0.0029601999999897544
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0356751000000024,
+              "iou": 0.9997147150804525,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_241"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_241"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 1,
+      "sample_id": "crazing_255",
+      "source_image_path": "../../../data/images/val/crazing_255.jpg",
+      "source_image_sha256": "A96B1FD4135862349A69A761E76DFBB3AF6FACCDC3EFB97E0D4E52A1F605076D",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0001871589999999923,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.03346249999999884,
+                0.005447400000001323,
+                0.013337000000007038,
+                0.002364999999997508
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.03346249999999884,
+              "iou": 0.9995157627442025,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0013247730000000013,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.009491000000000582,
+                0.0021509999999977936,
+                0.07099900000000048,
+                0.004866999999990185
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.07099900000000048,
+              "iou": 0.9993194535108526,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_255"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0001871589999999923,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.03346249999999884,
+                0.005447400000001323,
+                0.013337000000007038,
+                0.002364999999997508
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.03346249999999884,
+              "iou": 0.9995157627442025,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0013247730000000013,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.009491000000000582,
+                0.0021509999999977936,
+                0.07099900000000048,
+                0.004866999999990185
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.07099900000000048,
+              "iou": 0.9993194535108526,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_255"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_255"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 2,
+      "sample_id": "crazing_270",
+      "source_image_path": "../../../data/images/val/crazing_270.jpg",
+      "source_image_sha256": "4C67250C57703F8FABB6D97CC0AD72000B690E8412C071F0A63FC5A03BB2A5B7",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.00045767499999999073,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.012298600000008264,
+                0.05834900000002108,
+                0.10257000000001426
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.10257000000001426,
+              "iou": 0.9982754581978878,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0006604500000000346,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.049362000000002126,
+                0.05378699999999981,
+                0.014236999999980071
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.05378699999999981,
+              "iou": 0.9984532835776596,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.002344877000000023,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.03826140000000322,
+                0.016112999999990052,
+                0.02143099999999265
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.03826140000000322,
+              "iou": 0.9990219852791651,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_270"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.00045767499999999073,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.012298600000008264,
+                0.05834900000002108,
+                0.10257000000001426
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.10257000000001426,
+              "iou": 0.9982754581978878,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0006604500000000346,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.049362000000002126,
+                0.05378699999999981,
+                0.014236999999980071
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.05378699999999981,
+              "iou": 0.9984532835776596,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.002344877000000023,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.03826140000000322,
+                0.016112999999990052,
+                0.02143099999999265
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.03826140000000322,
+              "iou": 0.9990219852791651,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_270"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_270"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 3,
+      "sample_id": "crazing_285",
+      "source_image_path": "../../../data/images/val/crazing_285.jpg",
+      "source_image_sha256": "F93B867670DC0F2AC94CF98DB4FA8ABCAEC09BD2B3A22098BC46A20CDEA1C891",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0021566739999999696,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00843048099999999,
+                0.017524719199999997,
+                0.07123599999999897,
+                0.005657199999994589
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.07123599999999897,
+              "iou": 0.9989419356743345,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.00037613499999999966,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.005661000000003469,
+                0.006866999999999734,
+                0.003341999999975087,
+                0.007476999999994405
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.007476999999994405,
+              "iou": 0.9994220297123056,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_285"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0021566739999999696,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00843048099999999,
+                0.017524719199999997,
+                0.07123599999999897,
+                0.005657199999994589
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.07123599999999897,
+              "iou": 0.9989419356743345,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.00037613499999999966,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.005661000000003469,
+                0.006866999999999734,
+                0.003341999999975087,
+                0.007476999999994405
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.007476999999994405,
+              "iou": 0.9994220297123056,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_285"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_285"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 4,
+      "sample_id": "crazing_300",
+      "source_image_path": "../../../data/images/val/crazing_300.jpg",
+      "source_image_sha256": "87595C05D2A5F7792C219DFA245DCE2CFC26784E165A5172FECAAB73EAEE288D",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 4,
+          "candidate_detection_count": 4,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0006712080000000897,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.008171079999999886,
+                0.012175999999982423,
+                0.014756000000005542,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.014756000000005542,
+              "iou": 0.9995561080458543,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0005717270000000219,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0032196050000000143,
+                0.007766799999998852,
+                0.06481170000000702,
+                0.002014000000002625
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.06481170000000702,
+              "iou": 0.9990724894163082,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0002611880000000233,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.008597999999992112,
+                0.009963999999996531,
+                0.009658999999999196,
+                0.015944999999987886
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.015944999999987886,
+              "iou": 0.9995241575707587,
+              "passed": true
+            },
+            {
+              "reference_index": 3,
+              "candidate_index": 3,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0026139020000000013,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.023559499999997513,
+                0.021241000000003396,
+                0.04409799999999109
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.04409799999999109,
+              "iou": 0.9991280529508337,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_300"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 4,
+          "candidate_detection_count": 4,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0006712080000000897,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.008171079999999886,
+                0.012175999999982423,
+                0.014756000000005542,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.014756000000005542,
+              "iou": 0.9995561080458543,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0005717270000000219,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0032196050000000143,
+                0.007766799999998852,
+                0.06481170000000702,
+                0.002014000000002625
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.06481170000000702,
+              "iou": 0.9990724894163082,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0002611880000000233,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.008597999999992112,
+                0.009963999999996531,
+                0.009658999999999196,
+                0.015944999999987886
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.015944999999987886,
+              "iou": 0.9995241575707587,
+              "passed": true
+            },
+            {
+              "reference_index": 3,
+              "candidate_index": 3,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0026139020000000013,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.023559499999997513,
+                0.021241000000003396,
+                0.04409799999999109
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.04409799999999109,
+              "iou": 0.9991280529508337,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_300"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 4,
+          "candidate_detection_count": 4,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 3,
+              "candidate_index": 3,
+              "class_id": 0,
+              "class_name": "crazing",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "crazing_300"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 5,
+      "sample_id": "inclusion_241",
+      "source_image_path": "../../../data/images/val/inclusion_241.jpg",
+      "source_image_sha256": "5AF978330766FCF9ACD3823E99BCAC51352DCB5315F0E2D9D39109120C60DDC8",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0006928440000000258,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00205200000000616,
+                0.006088300000001823,
+                0.0031429999999943448,
+                0.006484999999997854
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.006484999999997854,
+              "iou": 0.9993669980939107,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0003338449999999993,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0008850000000002467,
+                0.0028839999999945576,
+                0.005844099999997354,
+                0.003342000000003509
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.005844099999997354,
+              "iou": 0.9993996225153966,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0007090570000000129,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0032634739999999884,
+                0.005950999999981832,
+                0.00498580000000004,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.005950999999981832,
+              "iou": 0.9994354886251615,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_241"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0006928440000000258,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00205200000000616,
+                0.006088300000001823,
+                0.0031429999999943448,
+                0.006484999999997854
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.006484999999997854,
+              "iou": 0.9993669980939107,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0003338449999999993,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0008850000000002467,
+                0.0028839999999945576,
+                0.005844099999997354,
+                0.003342000000003509
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.005844099999997354,
+              "iou": 0.9993996225153966,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0007090570000000129,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0032634739999999884,
+                0.005950999999981832,
+                0.00498580000000004,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.005950999999981832,
+              "iou": 0.9994354886251615,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_241"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_241"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 6,
+      "sample_id": "inclusion_255",
+      "source_image_path": "../../../data/images/val/inclusion_255.jpg",
+      "source_image_sha256": "AA1149E239A31E679E30CC8B54CB5E7891F110AD1BEFDF8530CEF58A206D4188",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 4.088899999998841e-05,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.004989699999995878,
+                0.0,
+                0.002609999999990009,
+                0.01771540000000016
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.01771540000000016,
+              "iou": 0.9994616175366836,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.00039434400000004644,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.005989099999993641,
+                0.003333999999995285,
+                0.005897000000004482,
+                0.016142999999999574
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.016142999999999574,
+              "iou": 0.9994756271235137,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_255"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 4.088899999998841e-05,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.004989699999995878,
+                0.0,
+                0.002609999999990009,
+                0.01771540000000016
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.01771540000000016,
+              "iou": 0.9994616175366836,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.00039434400000004644,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.005989099999993641,
+                0.003333999999995285,
+                0.005897000000004482,
+                0.016142999999999574
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.016142999999999574,
+              "iou": 0.9994756271235137,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_255"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_255"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 7,
+      "sample_id": "inclusion_270",
+      "source_image_path": "../../../data/images/val/inclusion_270.jpg",
+      "source_image_sha256": "3C3E1D109A401B6CB4ABEAA4DA07BF3D621794041C8B02E80768282614F5073A",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0009795429999999161,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0017318999999993423,
+                0.0055084229999999845,
+                0.03423310000000157,
+                0.05790700000000015
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.05790700000000015,
+              "iou": 0.998744200792691,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_270"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0009795429999999161,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0017318999999993423,
+                0.0055084229999999845,
+                0.03423310000000157,
+                0.05790700000000015
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.05790700000000015,
+              "iou": 0.998744200792691,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_270"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_270"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 8,
+      "sample_id": "inclusion_285",
+      "source_image_path": "../../../data/images/val/inclusion_285.jpg",
+      "source_image_sha256": "7E4866042E496E3E7AF263172C498FF5A3D75584797CE827E4AD3DD869DE43EA",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.00012379900000003552,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0013924000000002934,
+                0.0,
+                0.05238340000001074,
+                0.029191000000025724
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.05238340000001074,
+              "iou": 0.9985624836826238,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0007078950000000139,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.003742219999999463,
+                0.0,
+                0.002920199999998374,
+                0.012138300000000157
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.012138300000000157,
+              "iou": 0.9991453740311486,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_285"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.00012379900000003552,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0013924000000002934,
+                0.0,
+                0.05238340000001074,
+                0.029191000000025724
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.05238340000001074,
+              "iou": 0.9985624836826238,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0007078950000000139,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.003742219999999463,
+                0.0,
+                0.002920199999998374,
+                0.012138300000000157
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.012138300000000157,
+              "iou": 0.9991453740311486,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_285"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_285"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 9,
+      "sample_id": "inclusion_300",
+      "source_image_path": "../../../data/images/val/inclusion_300.jpg",
+      "source_image_sha256": "0AA52D34C0E0BAF7E5288F54CB48307C5C76492081BA736CBBDEA1EDFB94C47B",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0008003709999999664,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0024559999999951287,
+                0.001007100000002481,
+                0.01008600000000115,
+                0.005935999999991282
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.01008600000000115,
+              "iou": 0.9992347217469658,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0004565709999999612,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.007842999999979838,
+                0.0018929999999954816,
+                0.002349999999978536,
+                0.008148000000005595
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.008148000000005595,
+              "iou": 0.9991397841816954,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.00019195599999999313,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.20149199999997336,
+                0.3029780000000244,
+                0.7097929999999906,
+                0.6642460000000199
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.7097929999999906,
+              "iou": 0.9042129178762993,
+              "passed": false
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [
+            "match 2->2 exceeds gate: confidence_abs=0.000191956, bbox_abs_max=0.709793, iou=0.904212918"
+          ],
+          "passed": false,
+          "sample_id": "inclusion_300"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0008003709999999664,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0024559999999951287,
+                0.001007100000002481,
+                0.01008600000000115,
+                0.005935999999991282
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.01008600000000115,
+              "iou": 0.9992347217469658,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0004565709999999612,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.007842999999979838,
+                0.0018929999999954816,
+                0.002349999999978536,
+                0.008148000000005595
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.008148000000005595,
+              "iou": 0.9991397841816954,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.00019195599999999313,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.20149199999997336,
+                0.3029780000000244,
+                0.7097929999999906,
+                0.6642460000000199
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.7097929999999906,
+              "iou": 0.9042129178762993,
+              "passed": false
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [
+            "match 2->2 exceeds gate: confidence_abs=0.000191956, bbox_abs_max=0.709793, iou=0.904212918"
+          ],
+          "passed": false,
+          "sample_id": "inclusion_300"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 1,
+              "class_name": "inclusion",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "inclusion_300"
+        }
+      },
+      "passed": false
+    },
+    {
+      "sequence_index": 10,
+      "sample_id": "patches_241",
+      "source_image_path": "../../../data/images/val/patches_241.jpg",
+      "source_image_sha256": "D8EE841AFE3D24B39A3F1F5656780B75CE9B1E1B6BB11CB6953A99D0CBAAFFDE",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0003314620000000046,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0020217999999943004,
+                0.040847800000001655,
+                0.009558999999995876,
+                0.0012200000000177624
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.040847800000001655,
+              "iou": 0.999488510412991,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_241"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0003314620000000046,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0020217999999943004,
+                0.040847800000001655,
+                0.009558999999995876,
+                0.0012200000000177624
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.040847800000001655,
+              "iou": 0.999488510412991,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_241"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_241"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 11,
+      "sample_id": "patches_255",
+      "source_image_path": "../../../data/images/val/patches_255.jpg",
+      "source_image_sha256": "877905B79E570196B42D6E2BEFD56A28578A93CAAA1AD87ADCC64C6E7E2D887A",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0008291009999999988,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0018239999999991596,
+                0.006630000000001246,
+                0.013213999999976522,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.013213999999976522,
+              "iou": 0.9996696405731715,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.00112122300000006,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.006904601999999982,
+                0.01956180000000529,
+                0.006280900000000145,
+                0.005096000000008871
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.01956180000000529,
+              "iou": 0.9988989014995557,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0006621479999999735,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.001739000000014812,
+                0.007130599999999987,
+                0.0027770000000089112,
+                0.003436999999998136
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.007130599999999987,
+              "iou": 0.9994803584977734,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_255"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0008291009999999988,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0018239999999991596,
+                0.006630000000001246,
+                0.013213999999976522,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.013213999999976522,
+              "iou": 0.9996696405731715,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.00112122300000006,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.006904601999999982,
+                0.01956180000000529,
+                0.006280900000000145,
+                0.005096000000008871
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.01956180000000529,
+              "iou": 0.9988989014995557,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0006621479999999735,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.001739000000014812,
+                0.007130599999999987,
+                0.0027770000000089112,
+                0.003436999999998136
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.007130599999999987,
+              "iou": 0.9994803584977734,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_255"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_255"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 12,
+      "sample_id": "patches_270",
+      "source_image_path": "../../../data/images/val/patches_270.jpg",
+      "source_image_sha256": "839E441D971B5032B74387B4C6AD73E4A763066AE091E72D34FF2D8F33B5CCDA",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0007975099999999458,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.004836999999994873,
+                0.004592900000005784,
+                0.014907999999991262,
+                0.003647000000000844
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.014907999999991262,
+              "iou": 0.9995635192429162,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 6.514800000001486e-05,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.015686099999996372,
+                0.0358428955,
+                0.003951999999998179,
+                0.004596700000000453
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0358428955,
+              "iou": 0.998442610594442,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_270"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0007975099999999458,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.004836999999994873,
+                0.004592900000005784,
+                0.014907999999991262,
+                0.003647000000000844
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.014907999999991262,
+              "iou": 0.9995635192429162,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 6.514800000001486e-05,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.015686099999996372,
+                0.0358428955,
+                0.003951999999998179,
+                0.004596700000000453
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0358428955,
+              "iou": 0.998442610594442,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_270"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_270"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 13,
+      "sample_id": "patches_285",
+      "source_image_path": "../../../data/images/val/patches_285.jpg",
+      "source_image_sha256": "7DEF0954602B375C6D4A4C57DDF5A78851549F58F91F4B5E6370343815B029BA",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0006534460000000575,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0016480000000171913,
+                0.00558853149,
+                0.0,
+                0.012088800000000788
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.012088800000000788,
+              "iou": 0.9995937233268056,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.001004695,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.004867599999997196,
+                0.0,
+                0.006730000000004566,
+                0.2099460000000022
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.2099460000000022,
+              "iou": 0.9982980657566418,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_285"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0006534460000000575,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0016480000000171913,
+                0.00558853149,
+                0.0,
+                0.012088800000000788
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.012088800000000788,
+              "iou": 0.9995937233268056,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.001004695,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.004867599999997196,
+                0.0,
+                0.006730000000004566,
+                0.2099460000000022
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.2099460000000022,
+              "iou": 0.9982980657566418,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_285"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_285"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 14,
+      "sample_id": "patches_300",
+      "source_image_path": "../../../data/images/val/patches_300.jpg",
+      "source_image_sha256": "C97E4426198AD6989DDF6C2CF1449E6231B1A6D05CC75443398C4CCC77C51D08",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0007710450000000257,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.018367800000000045,
+                0.0018385999999992464,
+                0.014617999999998688,
+                0.003951999999998179
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.018367800000000045,
+              "iou": 0.9993288030670144,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_300"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0007710450000000257,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.018367800000000045,
+                0.0018385999999992464,
+                0.014617999999998688,
+                0.003951999999998179
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.018367800000000045,
+              "iou": 0.9993288030670144,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_300"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 2,
+              "class_name": "patches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "patches_300"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 15,
+      "sample_id": "pitted_surface_241",
+      "source_image_path": "../../../data/images/val/pitted_surface_241.jpg",
+      "source_image_sha256": "311893098116D7261E0B6A16E668067C7B6ABF509FC77286FAD3236EB66700F1",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0021668679999999885,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.06977840000000057,
+                0.0694885300000001,
+                0.005812999999989188,
+                0.05752599999999575
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.06977840000000057,
+              "iou": 0.9988964429688487,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_241"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0021668679999999885,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.06977840000000057,
+                0.0694885300000001,
+                0.005812999999989188,
+                0.05752599999999575
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.06977840000000057,
+              "iou": 0.9988964429688487,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_241"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_241"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 16,
+      "sample_id": "pitted_surface_255",
+      "source_image_path": "../../../data/images/val/pitted_surface_255.jpg",
+      "source_image_sha256": "7D9A04EA3A7B664AE945103616F22EF85164B8A217A61890F02E26017C11AD05",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0009945630000000039,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.09133909999999901,
+                0.01927184999999998,
+                0.0,
+                0.002364999999997508
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.09133909999999901,
+              "iou": 0.999410199801355,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_255"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0009945630000000039,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.09133909999999901,
+                0.01927184999999998,
+                0.0,
+                0.002364999999997508
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.09133909999999901,
+              "iou": 0.999410199801355,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_255"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_255"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 17,
+      "sample_id": "pitted_surface_270",
+      "source_image_path": "../../../data/images/val/pitted_surface_270.jpg",
+      "source_image_sha256": "4D4074AF862F2A649838D3E4EA4503D74DE1A05B3D242EEB3EFF323F9B2E1EBD",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0017383100000000207,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.07855230000000013,
+                0.012115478999999985,
+                0.0,
+                0.0731049999999982
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.07855230000000013,
+              "iou": 0.9991453195318133,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0011247389999999857,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00017547600000000774,
+                0.0055084229999999845,
+                0.002311699999992811,
+                0.003401999999994132
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0055084229999999845,
+              "iou": 0.999926504325528,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_270"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0017383100000000207,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.07855230000000013,
+                0.012115478999999985,
+                0.0,
+                0.0731049999999982
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.07855230000000013,
+              "iou": 0.9991453195318133,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0011247389999999857,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00017547600000000774,
+                0.0055084229999999845,
+                0.002311699999992811,
+                0.003401999999994132
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0055084229999999845,
+              "iou": 0.999926504325528,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_270"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_270"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 18,
+      "sample_id": "pitted_surface_285",
+      "source_image_path": "../../../data/images/val/pitted_surface_285.jpg",
+      "source_image_sha256": "67BA9FBC2930C05BC1F4563F9124A711B16F1BE6424CF1DAB9278B9EDF45FEFE",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.00032144800000000195,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0660552999999986,
+                0.0008087099999998237,
+                0.42224099999998543,
+                0.00926300000000424
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.42224099999998543,
+              "iou": 0.9966404011897826,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_285"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.00032144800000000195,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0660552999999986,
+                0.0008087099999998237,
+                0.42224099999998543,
+                0.00926300000000424
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.42224099999998543,
+              "iou": 0.9966404011897826,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_285"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_285"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 19,
+      "sample_id": "pitted_surface_300",
+      "source_image_path": "../../../data/images/val/pitted_surface_300.jpg",
+      "source_image_sha256": "8ED56DF34F6BCBCB5C60384C1C37B05D01365DFBB81B1A8855FBBE260718A32A",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.000197828000000011,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00747681,
+                0.0,
+                0.0,
+                0.007538000000010925
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.007538000000010925,
+              "iou": 0.9999234299018576,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_300"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.000197828000000011,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00747681,
+                0.0,
+                0.0,
+                0.007538000000010925
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.007538000000010925,
+              "iou": 0.9999234299018576,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_300"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 3,
+              "class_name": "pitted_surface",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "pitted_surface_300"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 20,
+      "sample_id": "rolled-in_scale_241",
+      "source_image_path": "../../../data/images/val/rolled-in_scale_241.jpg",
+      "source_image_sha256": "3AE0C8E0B0DDAB539BCB0AB86E04909543015FBBD4B0BF5EB12232E2274DEA2B",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0005798339999999458,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.03532399999998859,
+                0.0,
+                0.010910000000023956,
+                0.0016170000000101936
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.03532399999998859,
+              "iou": 0.9992031315138075,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0018537050000000388,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.010242499999996824,
+                0.002075000000004934,
+                0.0015410000000031232,
+                0.005065999999999349
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.010242499999996824,
+              "iou": 0.9998166079177442,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_241"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0005798339999999458,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.03532399999998859,
+                0.0,
+                0.010910000000023956,
+                0.0016170000000101936
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.03532399999998859,
+              "iou": 0.9992031315138075,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0018537050000000388,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.010242499999996824,
+                0.002075000000004934,
+                0.0015410000000031232,
+                0.005065999999999349
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.010242499999996824,
+              "iou": 0.9998166079177442,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_241"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_241"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 21,
+      "sample_id": "rolled-in_scale_255",
+      "source_image_path": "../../../data/images/val/rolled-in_scale_255.jpg",
+      "source_image_sha256": "A72BCF50BDD2205F21E997197CFD9B4773F53CF38059D358C225AD7C88A140B2",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.000792503,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.029953009999999836,
+                0.009857000000010885,
+                0.002044600000004948,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.029953009999999836,
+              "iou": 0.9992430881379689,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.00047576499999996136,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00875899999999774,
+                0.0,
+                0.0004269999999735319,
+                0.007537799999994377
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.00875899999999774,
+              "iou": 0.9996577566008872,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0012334879999999493,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0020065300000000064,
+                0.10899349999999686,
+                0.04633330000000058,
+                0.01219199999999887
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.10899349999999686,
+              "iou": 0.9983295243210236,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_255"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.000792503,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.029953009999999836,
+                0.009857000000010885,
+                0.002044600000004948,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.029953009999999836,
+              "iou": 0.9992430881379689,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.00047576499999996136,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00875899999999774,
+                0.0,
+                0.0004269999999735319,
+                0.007537799999994377
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.00875899999999774,
+              "iou": 0.9996577566008872,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0012334879999999493,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0020065300000000064,
+                0.10899349999999686,
+                0.04633330000000058,
+                0.01219199999999887
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.10899349999999686,
+              "iou": 0.9983295243210236,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_255"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_255"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 22,
+      "sample_id": "rolled-in_scale_270",
+      "source_image_path": "../../../data/images/val/rolled-in_scale_270.jpg",
+      "source_image_sha256": "5A93C2C21A0CE009675AAC1ED811CCBA0595C25EF5653BC1D3F915E8832C8741",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 6.967800000001745e-05,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.016609200000001323,
+                0.02968597000000006,
+                0.001808000000011134,
+                0.0007858999999967864
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.02968597000000006,
+              "iou": 0.9994214099910714,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0011869070000000148,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.026897399999999294,
+                0.0031740000000013424,
+                0.02058399999999949,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.026897399999999294,
+              "iou": 0.9994766427073247,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_270"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 6.967800000001745e-05,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.016609200000001323,
+                0.02968597000000006,
+                0.001808000000011134,
+                0.0007858999999967864
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.02968597000000006,
+              "iou": 0.9994214099910714,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0011869070000000148,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.026897399999999294,
+                0.0031740000000013424,
+                0.02058399999999949,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.026897399999999294,
+              "iou": 0.9994766427073247,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_270"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 2,
+          "candidate_detection_count": 2,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_270"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 23,
+      "sample_id": "rolled-in_scale_285",
+      "source_image_path": "../../../data/images/val/rolled-in_scale_285.jpg",
+      "source_image_sha256": "A8CCA6D91EA7FB73283D88EFD2D30E067B6D09CE645E5E85438441683F134E99",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.001711636999999988,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.21426389999999884,
+                0.10921480000000017,
+                0.03352399999999989,
+                0.09902200000000505
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.21426389999999884,
+              "iou": 0.996479048619174,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_285"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.001711636999999988,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.21426389999999884,
+                0.10921480000000017,
+                0.03352399999999989,
+                0.09902200000000505
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.21426389999999884,
+              "iou": 0.996479048619174,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_285"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_285"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 24,
+      "sample_id": "rolled-in_scale_300",
+      "source_image_path": "../../../data/images/val/rolled-in_scale_300.jpg",
+      "source_image_sha256": "2599551F47CDB8515D126969FE26A968F9519BF6A2EBEB7978FBEEDDD0DD9300",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0003574490000000097,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0008926000000002432,
+                0.0,
+                0.05379499999999382,
+                0.016357400000003963
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.05379499999999382,
+              "iou": 0.9989835332523204,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_300"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0003574490000000097,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0008926000000002432,
+                0.0,
+                0.05379499999999382,
+                0.016357400000003963
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.05379499999999382,
+              "iou": 0.9989835332523204,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_300"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 4,
+              "class_name": "rolled-in_scale",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "rolled-in_scale_300"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 25,
+      "sample_id": "scratches_241",
+      "source_image_path": "../../../data/images/val/scratches_241.jpg",
+      "source_image_sha256": "808C8053268C526A8230DD0D1C286AF89A2F4D9E2FA015E64A9B3C0DEFC37F56",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 4,
+          "candidate_detection_count": 4,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0005852580000000884,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.012146000000001322,
+                0.05436700000001338,
+                0.0028839999999945576
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.05436700000001338,
+              "iou": 0.9990778800811898,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0004068019999999839,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.012023999999996704,
+                0.0106049999999982,
+                0.01232899999999404,
+                0.01338200000000711
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.01338200000000711,
+              "iou": 0.998859880468034,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0009495619999999594,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.019886099999997242,
+                0.004242000000004964,
+                0.00443260000000123
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.019886099999997242,
+              "iou": 0.9986940728057124,
+              "passed": true
+            },
+            {
+              "reference_index": 3,
+              "candidate_index": 3,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.00022578300000003493,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0020522999999883496,
+                0.00019839999998794156,
+                0.005790000000004625,
+                0.0024871000000104004
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.005790000000004625,
+              "iou": 0.999431168483914,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_241"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 4,
+          "candidate_detection_count": 4,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0005852580000000884,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.012146000000001322,
+                0.05436700000001338,
+                0.0028839999999945576
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.05436700000001338,
+              "iou": 0.9990778800811898,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0004068019999999839,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.012023999999996704,
+                0.0106049999999982,
+                0.01232899999999404,
+                0.01338200000000711
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.01338200000000711,
+              "iou": 0.998859880468034,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0009495619999999594,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.019886099999997242,
+                0.004242000000004964,
+                0.00443260000000123
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.019886099999997242,
+              "iou": 0.9986940728057124,
+              "passed": true
+            },
+            {
+              "reference_index": 3,
+              "candidate_index": 3,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.00022578300000003493,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0020522999999883496,
+                0.00019839999998794156,
+                0.005790000000004625,
+                0.0024871000000104004
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.005790000000004625,
+              "iou": 0.999431168483914,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_241"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 4,
+          "candidate_detection_count": 4,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 3,
+              "candidate_index": 3,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_241"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 26,
+      "sample_id": "scratches_255",
+      "source_image_path": "../../../data/images/val/scratches_255.jpg",
+      "source_image_sha256": "CBCE8CEC9FCD71DD78F91976544B9544AF1C346172EFA4C335959F3FF6FD68B6",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.00018489400000010203,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.013732909999999876,
+                0.002502999999990152,
+                0.03794800000000009,
+                0.0032349999999894408
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.03794800000000009,
+              "iou": 0.999544219632776,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_255"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.00018489400000010203,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.013732909999999876,
+                0.002502999999990152,
+                0.03794800000000009,
+                0.0032349999999894408
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.03794800000000009,
+              "iou": 0.999544219632776,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_255"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_255"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 27,
+      "sample_id": "scratches_270",
+      "source_image_path": "../../../data/images/val/scratches_270.jpg",
+      "source_image_sha256": "CF07FC75C1B3FC8E03CE7EBFEB7E6881D3DAC5967012F06A1FAEC86BDB1D7A87",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.000304579000000027,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.007851000000002273,
+                0.0034180000000105792,
+                0.006530999999995402
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.007851000000002273,
+              "iou": 0.9995984922004643,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.00019353599999993865,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.006866500000000997,
+                0.03384399999998777,
+                0.002517699999998513
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.03384399999998777,
+              "iou": 0.9993106044581745,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0021020770000000355,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.006821000000002186,
+                0.06994599999998741,
+                0.0,
+                0.021393000000017537
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.06994599999998741,
+              "iou": 0.9967015915662724,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_270"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.000304579000000027,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.007851000000002273,
+                0.0034180000000105792,
+                0.006530999999995402
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.007851000000002273,
+              "iou": 0.9995984922004643,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.00019353599999993865,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.006866500000000997,
+                0.03384399999998777,
+                0.002517699999998513
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.03384399999998777,
+              "iou": 0.9993106044581745,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0021020770000000355,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.006821000000002186,
+                0.06994599999998741,
+                0.0,
+                0.021393000000017537
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.06994599999998741,
+              "iou": 0.9967015915662724,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_270"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 3,
+          "candidate_detection_count": 3,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_270"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 28,
+      "sample_id": "scratches_285",
+      "source_image_path": "../../../data/images/val/scratches_285.jpg",
+      "source_image_sha256": "5255774B455B8B94EEFA05C803D031A4F3AC8E2B7A3936D2D694B29935ACCB60",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.00201690099999996,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.002746500000000651,
+                0.08006299999999555,
+                0.01197049999998967
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.08006299999999555,
+              "iou": 0.9989089099209393,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_285"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.00201690099999996,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.002746500000000651,
+                0.08006299999999555,
+                0.01197049999998967
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.08006299999999555,
+              "iou": 0.9989089099209393,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_285"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 1,
+          "candidate_detection_count": 1,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_285"
+        }
+      },
+      "passed": true
+    },
+    {
+      "sequence_index": 29,
+      "sample_id": "scratches_300",
+      "source_image_path": "../../../data/images/val/scratches_300.jpg",
+      "source_image_sha256": "16419BC0544FFE145AA39C786BE8AF7D45C1B740B144E4366429FB8C7912713E",
+      "comparisons": {
+        "cpu_vs_tensorrt_run_a": {
+          "comparison": "cpu_vs_tensorrt_run_a",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 4,
+          "candidate_detection_count": 4,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 1.5676000000020007e-05,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.004440299999998842,
+                0.07025100000001316,
+                0.01114650000000239
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.07025100000001316,
+              "iou": 0.9986989658140409,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0005790290000000087,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0008011000000038848,
+                0.01171875,
+                0.0008849999999824831,
+                0.008247399999994798
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.01171875,
+              "iou": 0.999293928235055,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0016562929999999754,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00021300000000223918,
+                0.0,
+                0.005980999999991354,
+                0.010575300000001064
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.010575300000001064,
+              "iou": 0.998631112853852,
+              "passed": true
+            },
+            {
+              "reference_index": 3,
+              "candidate_index": 3,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0007406769999999674,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.017417909999999814,
+                0.004604400000001618,
+                0.007164000000003057,
+                0.0001983000000009838
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.017417909999999814,
+              "iou": 0.999444965883803,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_300"
+        },
+        "cpu_vs_tensorrt_run_b": {
+          "comparison": "cpu_vs_tensorrt_run_b",
+          "reference_provider": "CPUExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 4,
+          "candidate_detection_count": 4,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 1.5676000000020007e-05,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.004440299999998842,
+                0.07025100000001316,
+                0.01114650000000239
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.07025100000001316,
+              "iou": 0.9986989658140409,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0005790290000000087,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0008011000000038848,
+                0.01171875,
+                0.0008849999999824831,
+                0.008247399999994798
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.01171875,
+              "iou": 0.999293928235055,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0016562929999999754,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.00021300000000223918,
+                0.0,
+                0.005980999999991354,
+                0.010575300000001064
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.010575300000001064,
+              "iou": 0.998631112853852,
+              "passed": true
+            },
+            {
+              "reference_index": 3,
+              "candidate_index": 3,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0007406769999999674,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.017417909999999814,
+                0.004604400000001618,
+                0.007164000000003057,
+                0.0001983000000009838
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.017417909999999814,
+              "iou": 0.999444965883803,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_300"
+        },
+        "tensorrt_run_a_vs_tensorrt_run_b": {
+          "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+          "reference_provider": "TensorrtExecutionProvider",
+          "candidate_provider": "TensorrtExecutionProvider",
+          "reference_detection_count": 4,
+          "candidate_detection_count": 4,
+          "matches": [
+            {
+              "reference_index": 0,
+              "candidate_index": 0,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 1,
+              "candidate_index": 1,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 2,
+              "candidate_index": 2,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            },
+            {
+              "reference_index": 3,
+              "candidate_index": 3,
+              "class_id": 5,
+              "class_name": "scratches",
+              "confidence_abs_error": 0.0,
+              "bbox_coordinate_abs_errors_pixels": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "bbox_coordinate_abs_error_max_pixels": 0.0,
+              "iou": 1.0,
+              "passed": true
+            }
+          ],
+          "unmatched_reference_indices": [],
+          "unmatched_candidate_indices": [],
+          "failures": [],
+          "passed": true,
+          "sample_id": "scratches_300"
+        }
+      },
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+&&&& RUNNING TensorRT.trtexec [TensorRT v100400] [b26] # /home/everbreath/.local/opt/tensorrt-10.4.0.26-cuda12.6/usr/src/tensorrt/bin/trtexec --loadEngine=/home/everbreath/.local/state/yolo-defect-s2-04/native_candidate_dfl_softmax_fp16.engine --warmUp=1000 --iterations=100 --duration=0 --profilingVerbosity=detailed --separateProfileRun --exportTimes=/home/everbreath/.local/state/yolo-defect-s2-04/native_candidate_dfl_softmax_fp16_reload_times.json --exportProfile=/home/everbreath/.local/state/yolo-defect-s2-04/native_candidate_dfl_softmax_fp16_reload_profile.json --exportLayerInfo=/home/everbreath/.local/state/yolo-defect-s2-04/native_candidate_dfl_softmax_fp16_reload_layers.json
+[08/31/2026-03:58:35] [I] === Model Options ===
+[08/31/2026-03:58:35] [I] Format: *
+[08/31/2026-03:58:35] [I] Model: 
+[08/31/2026-03:58:35] [I] Output:
+[08/31/2026-03:58:35] [I] 
+[08/31/2026-03:58:35] [I] === System Options ===
+[08/31/2026-03:58:35] [I] Device: 0
+[08/31/2026-03:58:35] [I] DLACore: 
+[08/31/2026-03:58:35] [I] Plugins:
+[08/31/2026-03:58:35] [I] setPluginsToSerialize:
+[08/31/2026-03:58:35] [I] dynamicPlugins:
+[08/31/2026-03:58:35] [I] ignoreParsedPluginLibs: 0
+[08/31/2026-03:58:35] [I] 
+[08/31/2026-03:58:35] [I] === Inference Options ===
+[08/31/2026-03:58:35] [I] Batch: Explicit
+[08/31/2026-03:58:35] [I] Input inference shapes: model
+[08/31/2026-03:58:35] [I] Iterations: 100
+[08/31/2026-03:58:35] [I] Duration: 0s (+ 1000ms warm up)
+[08/31/2026-03:58:35] [I] Sleep time: 0ms
+[08/31/2026-03:58:35] [I] Idle time: 0ms
+[08/31/2026-03:58:35] [I] Inference Streams: 1
+[08/31/2026-03:58:35] [I] ExposeDMA: Disabled
+[08/31/2026-03:58:35] [I] Data transfers: Enabled
+[08/31/2026-03:58:35] [I] Spin-wait: Disabled
+[08/31/2026-03:58:35] [I] Multithreading: Disabled
+[08/31/2026-03:58:35] [I] CUDA Graph: Disabled
+[08/31/2026-03:58:35] [I] Separate profiling: Enabled
+[08/31/2026-03:58:35] [I] Time Deserialize: Disabled
+[08/31/2026-03:58:35] [I] Time Refit: Disabled
+[08/31/2026-03:58:35] [I] NVTX verbosity: 2
+[08/31/2026-03:58:35] [I] Persistent Cache Ratio: 0
+[08/31/2026-03:58:35] [I] Optimization Profile Index: 0
+[08/31/2026-03:58:35] [I] Weight Streaming Budget: 100.000000%
+[08/31/2026-03:58:35] [I] Inputs:
+[08/31/2026-03:58:35] [I] Debug Tensor Save Destinations:
+[08/31/2026-03:58:35] [I] === Reporting Options ===
+[08/31/2026-03:58:35] [I] Verbose: Disabled
+[08/31/2026-03:58:35] [I] Averages: 10 inferences
+[08/31/2026-03:58:35] [I] Percentiles: 90,95,99
+[08/31/2026-03:58:35] [I] Dump refittable layers:Disabled
+[08/31/2026-03:58:35] [I] Dump output: Disabled
+[08/31/2026-03:58:35] [I] Profile: Disabled
+[08/31/2026-03:58:35] [I] Export timing to JSON file: /home/everbreath/.local/state/yolo-defect-s2-04/native_candidate_dfl_softmax_fp16_reload_times.json
+[08/31/2026-03:58:35] [I] Export output to JSON file: 
+[08/31/2026-03:58:35] [I] Export profile to JSON file: /home/everbreath/.local/state/yolo-defect-s2-04/native_candidate_dfl_softmax_fp16_reload_profile.json
+[08/31/2026-03:58:35] [I] 
+[08/31/2026-03:58:35] [I] === Device Information ===
+[08/31/2026-03:58:36] [I] Available Devices: 
+[08/31/2026-03:58:36] [I]   Device 0: "NVIDIA GeForce RTX 4060 Laptop GPU" UUID: GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e
+[08/31/2026-03:58:36] [I] Selected Device: NVIDIA GeForce RTX 4060 Laptop GPU
+[08/31/2026-03:58:36] [I] Selected Device ID: 0
+[08/31/2026-03:58:36] [I] Selected Device UUID: GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e
+[08/31/2026-03:58:36] [I] Compute Capability: 8.9
+[08/31/2026-03:58:36] [I] SMs: 24
+[08/31/2026-03:58:36] [I] Device Global Memory: 8187 MiB
+[08/31/2026-03:58:36] [I] Shared Memory per SM: 100 KiB
+[08/31/2026-03:58:36] [I] Memory Bus Width: 128 bits (ECC disabled)
+[08/31/2026-03:58:36] [I] Application Compute Clock Rate: 2.37 GHz
+[08/31/2026-03:58:36] [I] Application Memory Clock Rate: 8.001 GHz
+[08/31/2026-03:58:36] [I] 
+[08/31/2026-03:58:36] [I] Note: The application clock rates do not reflect the actual clock rates that the GPU is currently running at.
+[08/31/2026-03:58:36] [I] 
+[08/31/2026-03:58:36] [I] TensorRT version: 10.4.0
+[08/31/2026-03:58:36] [I] Loading standard plugins
+[08/31/2026-03:58:37] [I] [TRT] Loaded engine size: 20 MiB
+[08/31/2026-03:58:37] [I] Engine deserialized in 0.0946971 sec.
+[08/31/2026-03:58:37] [I] [TRT] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +29, now: CPU 0, GPU 47 (MiB)
+[08/31/2026-03:58:37] [I] Setting persistentCacheLimit to 0 bytes.
+[08/31/2026-03:58:37] [I] Created execution context with device memory size: 27.9282 MiB
+[08/31/2026-03:58:37] [I] Using random values for input images
+[08/31/2026-03:58:37] [I] Input binding for images with dimensions 1x3x800x800 is created.
+[08/31/2026-03:58:37] [I] Output binding for output0 with dimensions 1x10x13125 is created.
+[08/31/2026-03:58:37] [I] Starting inference
+[08/31/2026-03:58:38] [I] Warmup completed 181 queries over 1000 ms
+[08/31/2026-03:58:38] [I] Timing trace has 100 queries over 0.33162 s
+[08/31/2026-03:58:38] [I] 
+[08/31/2026-03:58:38] [I] === Trace details ===
+[08/31/2026-03:58:38] [I] Trace averages of 10 runs:
+[08/31/2026-03:58:38] [I] Average on 10 runs - GPU latency: 3.85859 ms - Host latency: 4.53777 ms (enqueue 3.11372 ms)
+[08/31/2026-03:58:38] [I] Average on 10 runs - GPU latency: 2.42052 ms - Host latency: 3.07299 ms (enqueue 0.923688 ms)
+[08/31/2026-03:58:38] [I] Average on 10 runs - GPU latency: 2.42646 ms - Host latency: 3.08346 ms (enqueue 0.901837 ms)
+[08/31/2026-03:58:38] [I] Average on 10 runs - GPU latency: 2.45815 ms - Host latency: 3.11351 ms (enqueue 0.997565 ms)
+[08/31/2026-03:58:38] [I] Average on 10 runs - GPU latency: 2.48359 ms - Host latency: 3.13857 ms (enqueue 0.945435 ms)
+[08/31/2026-03:58:38] [I] Average on 10 runs - GPU latency: 2.39749 ms - Host latency: 3.05428 ms (enqueue 0.906543 ms)
+[08/31/2026-03:58:38] [I] Average on 10 runs - GPU latency: 2.39728 ms - Host latency: 3.04976 ms (enqueue 0.935828 ms)
+[08/31/2026-03:58:38] [I] Average on 10 runs - GPU latency: 2.44657 ms - Host latency: 3.10341 ms (enqueue 0.880554 ms)
+[08/31/2026-03:58:38] [I] Average on 10 runs - GPU latency: 2.49844 ms - Host latency: 3.15089 ms (enqueue 0.886084 ms)
+[08/31/2026-03:58:38] [I] Average on 10 runs - GPU latency: 2.38007 ms - Host latency: 3.0339 ms (enqueue 0.895117 ms)
+[08/31/2026-03:58:38] [I] 
+[08/31/2026-03:58:38] [I] === Performance summary ===
+[08/31/2026-03:58:38] [I] Throughput: 301.55 qps
+[08/31/2026-03:58:38] [I] Latency: min = 2.98682 ms, max = 6.3418 ms, mean = 3.23385 ms, median = 3.07379 ms, percentile(90%) = 3.22205 ms, percentile(95%) = 3.53577 ms, percentile(99%) = 6.3418 ms
+[08/31/2026-03:58:38] [I] Enqueue Time: min = 0.785645 ms, max = 5.65009 ms, mean = 1.13864 ms, median = 0.893738 ms, percentile(90%) = 1.11841 ms, percentile(95%) = 1.44678 ms, percentile(99%) = 5.65009 ms
+[08/31/2026-03:58:38] [I] H2D Latency: min = 0.607056 ms, max = 0.651855 ms, mean = 0.60999 ms, median = 0.607727 ms, percentile(90%) = 0.61084 ms, percentile(95%) = 0.616333 ms, percentile(99%) = 0.651855 ms
+[08/31/2026-03:58:38] [I] GPU Compute Time: min = 2.33362 ms, max = 5.61127 ms, mean = 2.57672 ms, median = 2.41962 ms, percentile(90%) = 2.56213 ms, percentile(95%) = 2.88257 ms, percentile(99%) = 5.61127 ms
+[08/31/2026-03:58:38] [I] D2H Latency: min = 0.0445557 ms, max = 0.122498 ms, mean = 0.0471484 ms, median = 0.0447998 ms, percentile(90%) = 0.0456543 ms, percentile(95%) = 0.0498047 ms, percentile(99%) = 0.122498 ms
+[08/31/2026-03:58:38] [I] Total Host Walltime: 0.33162 s
+[08/31/2026-03:58:38] [I] Total GPU Compute Time: 0.257672 s
+[08/31/2026-03:58:38] [W] * GPU compute time is unstable, with coefficient of variance = 24.1758%.
+[08/31/2026-03:58:38] [W]   If not already in use, locking GPU clock frequency or adding --useSpinWait may improve the stability.
+[08/31/2026-03:58:38] [I] Explanations of the performance metrics are printed in the verbose logs.
+[08/31/2026-03:58:38] [I] 
+&&&& PASSED TensorRT.trtexec [TensorRT v100400] [b26] # /home/everbreath/.local/opt/tensorrt-10.4.0.26-cuda12.6/usr/src/tensorrt/bin/trtexec --loadEngine=/home/everbreath/.local/state/yolo-defect-s2-04/native_candidate_dfl_softmax_fp16.engine --warmUp=1000 --iterations=100 --duration=0 --profilingVerbosity=detailed --separateProfileRun --exportTimes=/home/everbreath/.local/state/yolo-defect-s2-04/native_candidate_dfl_softmax_fp16_reload_times.json --exportProfile=/home/everbreath/.local/state/yolo-defect-s2-04/native_candidate_dfl_softmax_fp16_reload_profile.json --exportLayerInfo=/home/everbreath/.local/state/yolo-defect-s2-04/native_candidate_dfl_softmax_fp16_reload_layers.json

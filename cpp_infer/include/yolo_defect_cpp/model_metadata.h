@@ -3,6 +3,7 @@
 
 #include "yolo_defect_cpp/config_loader.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -50,6 +51,15 @@ struct ModelMetadata {
   std::vector<std::string> available_providers;
   std::string session_provider;
   std::string provider_evidence;
+  std::vector<std::string> registered_provider_chain;
+  std::string inference_precision;
+  int device_id = -1;
+  bool engine_cache_enabled = false;
+  std::string engine_cache_path;
+  std::string engine_cache_prefix;
+  std::string engine_cache_state;
+  std::size_t engine_cache_files_before = 0;
+  std::size_t engine_cache_files_after = 0;
   int intra_op_num_threads = 0;
   int inter_op_num_threads = 0;
   std::string execution_mode;

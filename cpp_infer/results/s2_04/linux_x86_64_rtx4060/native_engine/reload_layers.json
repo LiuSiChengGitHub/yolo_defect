@@ -1,0 +1,5123 @@
+{"Layers": [{
+  "Name": "/model.0/conv/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "images",
+    "Location": "Device",
+    "Dimensions": [1,3,800,800],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.0/conv/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,400,400],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 16,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 432},
+  "Bias": {"Type": "Float", "Count": 16},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "ampere_scudnn_128x32_relu_small_nn_v1",
+  "TacticValue": "0xa8609adc4e0ceb90",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.0/conv/Conv]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to PWN(PWN(/model.0/act/Sigmoid), PWN(/model.0/act/Mul))",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.0/conv/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,400,400],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to PWN(PWN(/model.0/act/Sigmoid), PWN(/model.0/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,16,400,400],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "PWN(PWN(/model.0/act/Sigmoid), PWN(/model.0/act/Mul))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to PWN(PWN(/model.0/act/Sigmoid), PWN(/model.0/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,16,400,400],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,400,400],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var4"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbOperations": 5,
+  "Operations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticValue": "0x0000000000000008",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.0/act/Sigmoid]\u001e[ONNX Layer: /model.0/act/Mul]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to /model.1/conv/Conv + PWN(PWN(/model.1/act/Sigmoid), PWN(/model.1/act/Mul))",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,400,400],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.1/conv/Conv + PWN(PWN(/model.1/act/Sigmoid), PWN(/model.1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,16,400,400],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/model.1/conv/Conv + PWN(PWN(/model.1/act/Sigmoid), PWN(/model.1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.1/conv/Conv + PWN(PWN(/model.1/act/Sigmoid), PWN(/model.1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,16,400,400],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 32,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 4608},
+  "Bias": {"Type": "Float", "Count": 32},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_128x32_relu_small_nn_v1",
+  "TacticValue": "0xa8609adc4e0ceb90",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.1/conv/Conv]\u001e[ONNX Layer: /model.1/act/Sigmoid]\u001e[ONNX Layer: /model.1/act/Mul]"
+},{
+  "Name": "/model.2/cv1/conv/Conv + PWN(PWN(/model.2/cv1/act/Sigmoid), PWN(/model.2/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.2/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 32,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 1024},
+  "Bias": {"Type": "Float", "Count": 32},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_128x32_relu_interior_nn_v1",
+  "TacticValue": "0x9808072e706def96",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.2/cv1/conv/Conv]\u001e[ONNX Layer: /model.2/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.2/cv1/act/Mul]"
+},{
+  "Name": "/model.2/Split_1",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.2/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.2/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "SLICE",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.2/Split]"
+},{
+  "Name": "/model.2/m.0/cv1/conv/Conv + PWN(PWN(/model.2/m.0/cv1/act/Sigmoid), PWN(/model.2/m.0/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.2/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.2/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 16,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 2304},
+  "Bias": {"Type": "Float", "Count": 16},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x16x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0xe38e9dfd56c33779",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.2/m.0/cv1/conv/Conv]\u001e[ONNX Layer: /model.2/m.0/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.2/m.0/cv1/act/Mul]"
+},{
+  "Name": "/model.2/m.0/cv2/conv/Conv + PWN(PWN(PWN(/model.2/m.0/cv2/act/Sigmoid), PWN(/model.2/m.0/cv2/act/Mul)), PWN(/model.2/m.0/Add))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.2/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/model.2/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.2/m.0/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 16,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 2304},
+  "Bias": {"Type": "Float", "Count": 16},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 2,
+  "PointWiseExpressionInputArgs": ["arg0", "arg1"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var5"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 6,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);", "auto const var5 = pwgen::iPlus(arg1, var4);"],
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x16x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0xe38e9dfd56c33779",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.2/m.0/cv2/conv/Conv]\u001e[ONNX Layer: /model.2/m.0/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.2/m.0/cv2/act/Mul]\u001e[ONNX Layer: /model.2/m.0/Add]"
+},{
+  "Name": "/model.2/Split_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.2/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.2/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.2/Concat]"
+},{
+  "Name": "/model.2/Split_output_1 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.2/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.2/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.2/Concat]"
+},{
+  "Name": "/model.2/m.0/Add_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.2/m.0/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.2/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.2/Concat]"
+},{
+  "Name": "/model.2/cv2/conv/Conv + PWN(PWN(/model.2/cv2/act/Sigmoid), PWN(/model.2/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.2/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,48,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.2/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 32,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 1536},
+  "Bias": {"Type": "Float", "Count": 32},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_128x32_relu_interior_nn_v1",
+  "TacticValue": "0x9808072e706def96",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.2/cv2/conv/Conv]\u001e[ONNX Layer: /model.2/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.2/cv2/act/Mul]"
+},{
+  "Name": "/model.3/conv/Conv + PWN(PWN(/model.3/act/Sigmoid), PWN(/model.3/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.2/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,200,200],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.3/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 18432},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_t1r3s3_aligna4_alignc4",
+  "TacticValue": "0x4727434768e46395",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.3/conv/Conv]\u001e[ONNX Layer: /model.3/act/Sigmoid]\u001e[ONNX Layer: /model.3/act/Mul]"
+},{
+  "Name": "/model.4/cv1/conv/Conv + PWN(PWN(/model.4/cv1/act/Sigmoid), PWN(/model.4/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.3/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.4/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 4096},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_aligna4_alignc4",
+  "TacticValue": "0xa31d27de74b895ff",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/cv1/conv/Conv]\u001e[ONNX Layer: /model.4/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.4/cv1/act/Mul]"
+},{
+  "Name": "/model.4/Split_4",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.4/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.4/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "SLICE",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/Split]"
+},{
+  "Name": "/model.4/m.0/cv1/conv/Conv + PWN(PWN(/model.4/m.0/cv1/act/Sigmoid), PWN(/model.4/m.0/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.4/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.4/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 32,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 9216},
+  "Bias": {"Type": "Float", "Count": 32},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/m.0/cv1/conv/Conv]\u001e[ONNX Layer: /model.4/m.0/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.4/m.0/cv1/act/Mul]"
+},{
+  "Name": "/model.4/m.0/cv2/conv/Conv + PWN(PWN(PWN(/model.4/m.0/cv2/act/Sigmoid), PWN(/model.4/m.0/cv2/act/Mul)), PWN(/model.4/m.0/Add))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.4/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/model.4/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.4/m.0/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 32,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 9216},
+  "Bias": {"Type": "Float", "Count": 32},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 2,
+  "PointWiseExpressionInputArgs": ["arg0", "arg1"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var5"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 6,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);", "auto const var5 = pwgen::iPlus(arg1, var4);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/m.0/cv2/conv/Conv]\u001e[ONNX Layer: /model.4/m.0/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.4/m.0/cv2/act/Mul]\u001e[ONNX Layer: /model.4/m.0/Add]"
+},{
+  "Name": "/model.4/m.1/cv1/conv/Conv + PWN(PWN(/model.4/m.1/cv1/act/Sigmoid), PWN(/model.4/m.1/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.4/m.0/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.4/m.1/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 32,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 9216},
+  "Bias": {"Type": "Float", "Count": 32},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/m.1/cv1/conv/Conv]\u001e[ONNX Layer: /model.4/m.1/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.4/m.1/cv1/act/Mul]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to /model.4/m.1/cv2/conv/Conv + PWN(PWN(PWN(/model.4/m.1/cv2/act/Sigmoid), PWN(/model.4/m.1/cv2/act/Mul)), PWN(/model.4/m.1/Add))",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.4/m.1/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.4/m.1/cv2/conv/Conv + PWN(PWN(PWN(/model.4/m.1/cv2/act/Sigmoid), PWN(/model.4/m.1/cv2/act/Mul)), PWN(/model.4/m.1/Add))",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 1 to /model.4/m.1/cv2/conv/Conv + PWN(PWN(PWN(/model.4/m.1/cv2/act/Sigmoid), PWN(/model.4/m.1/cv2/act/Mul)), PWN(/model.4/m.1/Add))",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.4/m.0/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 1 to /model.4/m.1/cv2/conv/Conv + PWN(PWN(PWN(/model.4/m.1/cv2/act/Sigmoid), PWN(/model.4/m.1/cv2/act/Mul)), PWN(/model.4/m.1/Add))",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/model.4/m.1/cv2/conv/Conv + PWN(PWN(PWN(/model.4/m.1/cv2/act/Sigmoid), PWN(/model.4/m.1/cv2/act/Mul)), PWN(/model.4/m.1/Add))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.4/m.1/cv2/conv/Conv + PWN(PWN(PWN(/model.4/m.1/cv2/act/Sigmoid), PWN(/model.4/m.1/cv2/act/Mul)), PWN(/model.4/m.1/Add))",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  },
+  {
+    "Name": "Reformatted Input Tensor 1 to /model.4/m.1/cv2/conv/Conv + PWN(PWN(PWN(/model.4/m.1/cv2/act/Sigmoid), PWN(/model.4/m.1/cv2/act/Mul)), PWN(/model.4/m.1/Add))",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.4/m.1/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 32,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 9216},
+  "Bias": {"Type": "Float", "Count": 32},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 2,
+  "PointWiseExpressionInputArgs": ["arg0", "arg1"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var5"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 6,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);", "auto const var5 = pwgen::iPlus(arg1, var4);"],
+  "TacticName": "ampere_scudnn_128x32_sliced1x4_ldg4_relu_exp_small_nhwc_tn_v1",
+  "TacticValue": "0x3e2b881168d9689d",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/m.1/cv2/conv/Conv]\u001e[ONNX Layer: /model.4/m.1/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.4/m.1/cv2/act/Mul]\u001e[ONNX Layer: /model.4/m.1/Add]"
+},{
+  "Name": "/model.4/Split_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.4/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.4/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/Concat]"
+},{
+  "Name": "/model.4/Split_output_1 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.4/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.4/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/Concat]"
+},{
+  "Name": "/model.4/m.0/Add_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.4/m.0/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.4/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/Concat]"
+},{
+  "Name": "/model.4/m.1/Add_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.4/m.1/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.4/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/Concat]"
+},{
+  "Name": "/model.4/cv2/conv/Conv + PWN(PWN(/model.4/cv2/act/Sigmoid), PWN(/model.4/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.4/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.14/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 8192},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nhwckrsc_nhwc_tilesize256x64x8_stage3_warpsize2x2x1_g1_ffma_aligna4_alignc4",
+  "TacticValue": "0x8014228ec08b4d49",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.4/cv2/conv/Conv]\u001e[ONNX Layer: /model.4/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.4/cv2/act/Mul]"
+},{
+  "Name": "/model.5/conv/Conv + PWN(PWN(/model.5/act/Sigmoid), PWN(/model.5/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.14/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.5/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 73728},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nhwckrsc_nhwc_tilesize256x64x8_stage3_warpsize2x2x1_g1_ffma_aligna4_alignc4",
+  "TacticValue": "0x8014228ec08b4d49",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.5/conv/Conv]\u001e[ONNX Layer: /model.5/act/Sigmoid]\u001e[ONNX Layer: /model.5/act/Mul]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to /model.6/cv1/conv/Conv + PWN(PWN(/model.6/cv1/act/Sigmoid), PWN(/model.6/cv1/act/Mul))",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.5/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.6/cv1/conv/Conv + PWN(PWN(/model.6/cv1/act/Sigmoid), PWN(/model.6/cv1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/model.6/cv1/conv/Conv + PWN(PWN(/model.6/cv1/act/Sigmoid), PWN(/model.6/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.6/cv1/conv/Conv + PWN(PWN(/model.6/cv1/act/Sigmoid), PWN(/model.6/cv1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.6/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 16384},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_128x64_sliced1x2_ldg4_relu_exp_interior_nhwc_tn_v1",
+  "TacticValue": "0xae0c89d047932ba3",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/cv1/conv/Conv]\u001e[ONNX Layer: /model.6/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.6/cv1/act/Mul]"
+},{
+  "Name": "/model.6/Split_7",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.6/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.6/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "SLICE",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/Split]"
+},{
+  "Name": "/model.6/m.0/cv1/conv/Conv + PWN(PWN(/model.6/m.0/cv1/act/Sigmoid), PWN(/model.6/m.0/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.6/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.6/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/m.0/cv1/conv/Conv]\u001e[ONNX Layer: /model.6/m.0/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.6/m.0/cv1/act/Mul]"
+},{
+  "Name": "/model.6/m.0/cv2/conv/Conv + PWN(PWN(PWN(/model.6/m.0/cv2/act/Sigmoid), PWN(/model.6/m.0/cv2/act/Mul)), PWN(/model.6/m.0/Add))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.6/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/model.6/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.6/m.0/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 2,
+  "PointWiseExpressionInputArgs": ["arg0", "arg1"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var5"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 6,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);", "auto const var5 = pwgen::iPlus(arg1, var4);"],
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x16x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0xe38e9dfd56c33779",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/m.0/cv2/conv/Conv]\u001e[ONNX Layer: /model.6/m.0/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.6/m.0/cv2/act/Mul]\u001e[ONNX Layer: /model.6/m.0/Add]"
+},{
+  "Name": "/model.6/m.1/cv1/conv/Conv + PWN(PWN(/model.6/m.1/cv1/act/Sigmoid), PWN(/model.6/m.1/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.6/m.0/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.6/m.1/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/m.1/cv1/conv/Conv]\u001e[ONNX Layer: /model.6/m.1/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.6/m.1/cv1/act/Mul]"
+},{
+  "Name": "/model.6/m.1/cv2/conv/Conv + PWN(PWN(PWN(/model.6/m.1/cv2/act/Sigmoid), PWN(/model.6/m.1/cv2/act/Mul)), PWN(/model.6/m.1/Add))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.6/m.1/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/model.6/m.0/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.6/m.1/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 2,
+  "PointWiseExpressionInputArgs": ["arg0", "arg1"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var5"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 6,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);", "auto const var5 = pwgen::iPlus(arg1, var4);"],
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x16x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0xe38e9dfd56c33779",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/m.1/cv2/conv/Conv]\u001e[ONNX Layer: /model.6/m.1/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.6/m.1/cv2/act/Mul]\u001e[ONNX Layer: /model.6/m.1/Add]"
+},{
+  "Name": "/model.6/Split_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.6/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.6/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/Concat]"
+},{
+  "Name": "/model.6/Split_output_1 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.6/Split_output_1",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.6/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/Concat]"
+},{
+  "Name": "/model.6/m.0/Add_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.6/m.0/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.6/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/Concat]"
+},{
+  "Name": "/model.6/m.1/Add_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.6/m.1/Add_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.6/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/Concat]"
+},{
+  "Name": "/model.6/cv2/conv/Conv + PWN(PWN(/model.6/cv2/act/Sigmoid), PWN(/model.6/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.6/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.11/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 32768},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x128x8_stage3_warpsize1x4x1_g1_ffma_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0xc0b05b61d128e46e",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.6/cv2/conv/Conv]\u001e[ONNX Layer: /model.6/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.6/cv2/act/Mul]"
+},{
+  "Name": "/model.7/conv/Conv + PWN(PWN(/model.7/act/Sigmoid), PWN(/model.7/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.11/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.7/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 294912},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_t1r3s3_aligna4_alignc4",
+  "TacticValue": "0x4727434768e46395",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.7/conv/Conv]\u001e[ONNX Layer: /model.7/act/Sigmoid]\u001e[ONNX Layer: /model.7/act/Mul]"
+},{
+  "Name": "/model.8/cv1/conv/Conv + PWN(PWN(/model.8/cv1/act/Sigmoid), PWN(/model.8/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.7/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.8/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 65536},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0x865894c4635db7fd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.8/cv1/conv/Conv]\u001e[ONNX Layer: /model.8/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.8/cv1/act/Mul]"
+},{
+  "Name": "/model.8/m.0/cv1/conv/Conv + PWN(PWN(/model.8/m.0/cv1/act/Sigmoid), PWN(/model.8/m.0/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.8/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.8/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 147456},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.8/m.0/cv1/conv/Conv]\u001e[ONNX Layer: /model.8/m.0/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.8/m.0/cv1/act/Mul]"
+},{
+  "Name": "/model.8/m.0/cv2/conv/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.8/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.8/m.0/cv2/conv/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 147456},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x64x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0x0190806602534cfd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.8/m.0/cv2/conv/Conv]"
+},{
+  "Name": "PWN(PWN(PWN(/model.8/m.0/cv2/act/Sigmoid), PWN(/model.8/m.0/cv2/act/Mul)), PWN(/model.8/m.0/Add))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.8/m.0/cv2/conv/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/model.8/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.8/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 2,
+  "InputArgs": ["arg0", "arg1"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var5"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbOperations": 6,
+  "Operations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);", "auto const var5 = pwgen::iPlus(arg1, var4);"],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.8/m.0/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.8/m.0/cv2/act/Mul]\u001e[ONNX Layer: /model.8/m.0/Add]"
+},{
+  "Name": "/model.8/Split_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.8/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.8/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.8/Concat]"
+},{
+  "Name": "/model.8/Split_output_1 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.8/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.8/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.8/Concat]"
+},{
+  "Name": "/model.8/cv2/conv/Conv + PWN(PWN(/model.8/cv2/act/Sigmoid), PWN(/model.8/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.8/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,384,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.8/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 98304},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x128x8_stage3_warpsize1x4x1_g1_ffma_simple_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0x9cd5cdc35441c505",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.8/cv2/conv/Conv]\u001e[ONNX Layer: /model.8/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.8/cv2/act/Mul]"
+},{
+  "Name": "/model.9/cv1/conv/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.8/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.9/cv1/conv/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 32768},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0x865894c4635db7fd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.9/cv1/conv/Conv]"
+},{
+  "Name": "/model.9/m/MaxPool",
+  "LayerType": "CaskPooling",
+  "Inputs": [
+  {
+    "Name": "/model.9/cv1/conv/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.9/m/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Pooling",
+  "PoolingType": "MAX",
+  "WindowSize": [5,5],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [2,2],
+  "PostPadding": [2,2],
+  "Stride": [1,1],
+  "BlendFactor": 0,
+  "AverageCountExcludesPadding": 1,
+  "TacticName": "sm50_xmma_pooling_nd_NCDHW_kMAX_kGENERIC_3D_POOLING_MODE_kFLOAT_0",
+  "TacticValue": "0x5faf4a0a8a5670ed",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.9/m/MaxPool]"
+},{
+  "Name": "/model.9/m_1/MaxPool",
+  "LayerType": "CaskPooling",
+  "Inputs": [
+  {
+    "Name": "/model.9/m/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.9/m_1/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Pooling",
+  "PoolingType": "MAX",
+  "WindowSize": [5,5],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [2,2],
+  "PostPadding": [2,2],
+  "Stride": [1,1],
+  "BlendFactor": 0,
+  "AverageCountExcludesPadding": 1,
+  "TacticName": "sm50_xmma_pooling_nd_NCDHW_kMAX_kGENERIC_3D_POOLING_MODE_kFLOAT_0",
+  "TacticValue": "0x5faf4a0a8a5670ed",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.9/m_1/MaxPool]"
+},{
+  "Name": "/model.9/m_2/MaxPool",
+  "LayerType": "CaskPooling",
+  "Inputs": [
+  {
+    "Name": "/model.9/m_1/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to /model.9/m_2/MaxPool",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Pooling",
+  "PoolingType": "MAX",
+  "WindowSize": [5,5],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [2,2],
+  "PostPadding": [2,2],
+  "Stride": [1,1],
+  "BlendFactor": 0,
+  "AverageCountExcludesPadding": 1,
+  "TacticName": "sm50_xmma_pooling_nd_NCDHW_kMAX_kGENERIC_3D_POOLING_MODE_kFLOAT_0",
+  "TacticValue": "0x5faf4a0a8a5670ed",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.9/m_2/MaxPool]"
+},{
+  "Name": "Reformatting CopyNode for Output Tensor 0 to /model.9/m_2/MaxPool",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to /model.9/m_2/MaxPool",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.9/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/model.9/cv1/conv/Conv_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.9/cv1/conv/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.9/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.9/Concat]"
+},{
+  "Name": "/model.9/m/MaxPool_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.9/m/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.9/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.9/Concat]"
+},{
+  "Name": "/model.9/m_1/MaxPool_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.9/m_1/MaxPool_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.9/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.9/Concat]"
+},{
+  "Name": "/model.9/cv2/conv/Conv + PWN(PWN(/model.9/cv2/act/Sigmoid), PWN(/model.9/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.9/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,512,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.9/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 131072},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x128x8_stage3_warpsize1x4x1_g1_ffma_aligna4_alignc4",
+  "TacticValue": "0x5aa723e0481da855",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.9/cv2/conv/Conv]\u001e[ONNX Layer: /model.9/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.9/cv2/act/Mul]"
+},{
+  "Name": "/model.10/Resize",
+  "LayerType": "Resize",
+  "Inputs": [
+  {
+    "Name": "/model.9/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.10/Resize_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Resize",
+  "InterpolationMode": "NEAREST",
+  "ResizeScales": [1, 1, 2, 2, 0, 0, 0, 0],
+  "ExcludeOutside": 0,
+  "CubicCoeff": -0.75,
+  "CoordTransform": "kASYMMETRIC",
+  "ResizeSelector": "kFORMULA",
+  "NNRounding": "kFLOOR",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.10/Resize]"
+},{
+  "Name": "/model.10/Resize_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.10/Resize_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.11/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.11/Concat]"
+},{
+  "Name": "/model.12/cv1/conv/Conv + PWN(PWN(/model.12/cv1/act/Sigmoid), PWN(/model.12/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.11/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,384,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.12/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 49152},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x128x8_stage3_warpsize1x4x1_g1_ffma_simple_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0x9cd5cdc35441c505",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.12/cv1/conv/Conv]\u001e[ONNX Layer: /model.12/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.12/cv1/act/Mul]"
+},{
+  "Name": "/model.12/m.0/cv1/conv/Conv + PWN(PWN(/model.12/m.0/cv1/act/Sigmoid), PWN(/model.12/m.0/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.12/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.12/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.12/m.0/cv1/conv/Conv]\u001e[ONNX Layer: /model.12/m.0/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.12/m.0/cv1/act/Mul]"
+},{
+  "Name": "/model.12/m.0/cv2/conv/Conv + PWN(PWN(/model.12/m.0/cv2/act/Sigmoid), PWN(/model.12/m.0/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.12/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.12/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.12/m.0/cv2/conv/Conv]\u001e[ONNX Layer: /model.12/m.0/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.12/m.0/cv2/act/Mul]"
+},{
+  "Name": "/model.12/Split_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.12/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.12/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.12/Concat]"
+},{
+  "Name": "/model.12/Split_output_1 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.12/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.12/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.12/Concat]"
+},{
+  "Name": "/model.12/cv2/conv/Conv + PWN(PWN(/model.12/cv2/act/Sigmoid), PWN(/model.12/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.12/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,192,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.12/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 24576},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x128x8_stage3_warpsize1x4x1_g1_ffma_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0xc0b05b61d128e46e",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.12/cv2/conv/Conv]\u001e[ONNX Layer: /model.12/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.12/cv2/act/Mul]"
+},{
+  "Name": "/model.13/Resize",
+  "LayerType": "Resize",
+  "Inputs": [
+  {
+    "Name": "/model.12/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.13/Resize_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Resize",
+  "InterpolationMode": "NEAREST",
+  "ResizeScales": [1, 1, 2, 2, 0, 0, 0, 0],
+  "ExcludeOutside": 0,
+  "CubicCoeff": -0.75,
+  "CoordTransform": "kASYMMETRIC",
+  "ResizeSelector": "kFORMULA",
+  "NNRounding": "kFLOOR",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.13/Resize]"
+},{
+  "Name": "/model.13/Resize_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.13/Resize_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.14/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.14/Concat]"
+},{
+  "Name": "/model.15/cv1/conv/Conv + PWN(PWN(/model.15/cv1/act/Sigmoid), PWN(/model.15/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.14/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,192,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to /model.15/cv1/conv/Conv + PWN(PWN(/model.15/cv1/act/Sigmoid), PWN(/model.15/cv1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 12288},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nhwckrsc_nhwc_tilesize256x64x8_stage3_warpsize2x2x1_g1_ffma_aligna4_alignc4",
+  "TacticValue": "0x8014228ec08b4d49",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.15/cv1/conv/Conv]\u001e[ONNX Layer: /model.15/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.15/cv1/act/Mul]"
+},{
+  "Name": "Reformatting CopyNode for Output Tensor 0 to /model.15/cv1/conv/Conv + PWN(PWN(/model.15/cv1/act/Sigmoid), PWN(/model.15/cv1/act/Mul))",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to /model.15/cv1/conv/Conv + PWN(PWN(/model.15/cv1/act/Sigmoid), PWN(/model.15/cv1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Channel major FP32 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.15/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to /model.15/m.0/cv1/conv/Conv + PWN(PWN(/model.15/m.0/cv1/act/Sigmoid), PWN(/model.15/m.0/cv1/act/Mul))",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.15/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.15/m.0/cv1/conv/Conv + PWN(PWN(/model.15/m.0/cv1/act/Sigmoid), PWN(/model.15/m.0/cv1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/model.15/m.0/cv1/conv/Conv + PWN(PWN(/model.15/m.0/cv1/act/Sigmoid), PWN(/model.15/m.0/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.15/m.0/cv1/conv/Conv + PWN(PWN(/model.15/m.0/cv1/act/Sigmoid), PWN(/model.15/m.0/cv1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.15/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 32,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 9216},
+  "Bias": {"Type": "Float", "Count": 32},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.15/m.0/cv1/conv/Conv]\u001e[ONNX Layer: /model.15/m.0/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.15/m.0/cv1/act/Mul]"
+},{
+  "Name": "/model.15/m.0/cv2/conv/Conv + PWN(PWN(/model.15/m.0/cv2/act/Sigmoid), PWN(/model.15/m.0/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.15/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.15/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 32,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 9216},
+  "Bias": {"Type": "Float", "Count": 32},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.15/m.0/cv2/conv/Conv]\u001e[ONNX Layer: /model.15/m.0/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.15/m.0/cv2/act/Mul]"
+},{
+  "Name": "/model.15/Split_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.15/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.15/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.15/Concat]"
+},{
+  "Name": "/model.15/Split_output_1 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.15/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Channel major FP32 format where channel % 4 == 0"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.15/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,32,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.15/Concat]"
+},{
+  "Name": "/model.15/cv2/conv/Conv + PWN(PWN(/model.15/cv2/act/Sigmoid), PWN(/model.15/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.15/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,96,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.15/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 6144},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0x865894c4635db7fd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.15/cv2/conv/Conv]\u001e[ONNX Layer: /model.15/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.15/cv2/act/Mul]"
+},{
+  "Name": "/model.16/conv/Conv + PWN(PWN(/model.16/act/Sigmoid), PWN(/model.16/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.15/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.17/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_t1r3s3_aligna4_alignc4",
+  "TacticValue": "0x4727434768e46395",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.16/conv/Conv]\u001e[ONNX Layer: /model.16/act/Sigmoid]\u001e[ONNX Layer: /model.16/act/Mul]"
+},{
+  "Name": "/model.12/cv2/act/Mul_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.12/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.17/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.17/Concat]"
+},{
+  "Name": "/model.18/cv1/conv/Conv + PWN(PWN(/model.18/cv1/act/Sigmoid), PWN(/model.18/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.17/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,192,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.18/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 24576},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x128x8_stage3_warpsize1x4x1_g1_ffma_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0xc0b05b61d128e46e",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.18/cv1/conv/Conv]\u001e[ONNX Layer: /model.18/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.18/cv1/act/Mul]"
+},{
+  "Name": "/model.18/m.0/cv1/conv/Conv + PWN(PWN(/model.18/m.0/cv1/act/Sigmoid), PWN(/model.18/m.0/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.18/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.18/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.18/m.0/cv1/conv/Conv]\u001e[ONNX Layer: /model.18/m.0/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.18/m.0/cv1/act/Mul]"
+},{
+  "Name": "/model.18/m.0/cv2/conv/Conv + PWN(PWN(/model.18/m.0/cv2/act/Sigmoid), PWN(/model.18/m.0/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.18/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.18/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.18/m.0/cv2/conv/Conv]\u001e[ONNX Layer: /model.18/m.0/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.18/m.0/cv2/act/Mul]"
+},{
+  "Name": "/model.18/Split_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.18/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.18/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.18/Concat]"
+},{
+  "Name": "/model.18/Split_output_1 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.18/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.18/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.18/Concat]"
+},{
+  "Name": "/model.18/cv2/conv/Conv + PWN(PWN(/model.18/cv2/act/Sigmoid), PWN(/model.18/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.18/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,192,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.18/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 24576},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x128x8_stage3_warpsize1x4x1_g1_ffma_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0xc0b05b61d128e46e",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.18/cv2/conv/Conv]\u001e[ONNX Layer: /model.18/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.18/cv2/act/Mul]"
+},{
+  "Name": "/model.19/conv/Conv + PWN(PWN(/model.19/act/Sigmoid), PWN(/model.19/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.18/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.20/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [2,2],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 147456},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_t1r3s3_aligna4_alignc4",
+  "TacticValue": "0x4727434768e46395",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.19/conv/Conv]\u001e[ONNX Layer: /model.19/act/Sigmoid]\u001e[ONNX Layer: /model.19/act/Mul]"
+},{
+  "Name": "/model.9/cv2/act/Mul_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.9/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.20/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.20/Concat]"
+},{
+  "Name": "/model.21/cv1/conv/Conv + PWN(PWN(/model.21/cv1/act/Sigmoid), PWN(/model.21/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.20/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,384,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.21/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 98304},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x128x8_stage3_warpsize1x4x1_g1_ffma_simple_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0x9cd5cdc35441c505",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.21/cv1/conv/Conv]\u001e[ONNX Layer: /model.21/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.21/cv1/act/Mul]"
+},{
+  "Name": "/model.21/m.0/cv1/conv/Conv + PWN(PWN(/model.21/m.0/cv1/act/Sigmoid), PWN(/model.21/m.0/cv1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.21/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.21/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 147456},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.21/m.0/cv1/conv/Conv]\u001e[ONNX Layer: /model.21/m.0/cv1/act/Sigmoid]\u001e[ONNX Layer: /model.21/m.0/cv1/act/Mul]"
+},{
+  "Name": "/model.21/m.0/cv2/conv/Conv + PWN(PWN(/model.21/m.0/cv2/act/Sigmoid), PWN(/model.21/m.0/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.21/m.0/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.21/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 147456},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.21/m.0/cv2/conv/Conv]\u001e[ONNX Layer: /model.21/m.0/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.21/m.0/cv2/act/Mul]"
+},{
+  "Name": "/model.21/Split_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.21/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.21/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.21/Concat]"
+},{
+  "Name": "/model.21/Split_output_1 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.21/cv1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.21/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.21/Concat]"
+},{
+  "Name": "/model.21/cv2/conv/Conv + PWN(PWN(/model.21/cv2/act/Sigmoid), PWN(/model.21/cv2/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.21/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,384,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.21/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 256,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 98304},
+  "Bias": {"Type": "Float", "Count": 256},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x128x8_stage3_warpsize1x4x1_g1_ffma_simple_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0x9cd5cdc35441c505",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.21/cv2/conv/Conv]\u001e[ONNX Layer: /model.21/cv2/act/Sigmoid]\u001e[ONNX Layer: /model.21/cv2/act/Mul]"
+},{
+  "Name": "/model.22/cv2.2/cv2.2.0/conv/Conv || /model.22/cv3.2/cv3.2.0/conv/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.21/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,256,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.2/cv2.2.0/conv/Conv || /model.22/cv3.2/cv3.2.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,128,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 294912},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x64x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0x0190806602534cfd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.2/cv2.2.0/conv/Conv]\u001e[ONNX Layer: /model.22/cv3.2/cv3.2.0/conv/Conv]"
+},{
+  "Name": "PWN(PWN(/model.22/cv2.2/cv2.2.0/act/Sigmoid), PWN(/model.22/cv2.2/cv2.2.0/act/Mul))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.2/cv2.2.0/conv/Conv || /model.22/cv3.2/cv3.2.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.2/cv2.2.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var4"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbOperations": 5,
+  "Operations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticValue": "0x0000000000000008",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.2/cv2.2.0/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv2.2/cv2.2.0/act/Mul]"
+},{
+  "Name": "/model.22/cv2.2/cv2.2.1/conv/Conv + PWN(PWN(/model.22/cv2.2/cv2.2.1/act/Sigmoid), PWN(/model.22/cv2.2/cv2.2.1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.2/cv2.2.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.2/cv2.2.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.2/cv2.2.1/conv/Conv]\u001e[ONNX Layer: /model.22/cv2.2/cv2.2.1/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv2.2/cv2.2.1/act/Mul]"
+},{
+  "Name": "/model.22/cv2.2/cv2.2.2/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.2/cv2.2.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.2/cv2.2.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 4096},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_aligna4_alignc4",
+  "TacticValue": "0xa31d27de74b895ff",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.2/cv2.2.2/Conv]"
+},{
+  "Name": "/model.22/Reshape_2",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.2/cv2.2.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Reshape_2_copy_output",
+    "Location": "Device",
+    "Dimensions": [1,64,625],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Reshape_2]"
+},{
+  "Name": "/model.22/Reshape_2_copy_output",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.22/Reshape_2_copy_output",
+    "Location": "Device",
+    "Dimensions": [1,64,625],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,625],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Reshape_2]"
+},{
+  "Name": "PWN(PWN(/model.22/cv3.2/cv3.2.0/act/Sigmoid), PWN(/model.22/cv3.2/cv3.2.0/act/Mul))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.2/cv2.2.0/conv/Conv || /model.22/cv3.2/cv3.2.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv3.2/cv3.2.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var4"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbOperations": 5,
+  "Operations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticValue": "0x0000000000000008",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv3.2/cv3.2.0/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv3.2/cv3.2.0/act/Mul]"
+},{
+  "Name": "/model.22/cv3.2/cv3.2.1/conv/Conv + PWN(PWN(/model.22/cv3.2/cv3.2.1/act/Sigmoid), PWN(/model.22/cv3.2/cv3.2.1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv3.2/cv3.2.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv3.2/cv3.2.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv3.2/cv3.2.1/conv/Conv]\u001e[ONNX Layer: /model.22/cv3.2/cv3.2.1/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv3.2/cv3.2.1/act/Mul]"
+},{
+  "Name": "/model.22/cv3.2/cv3.2.2/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv3.2/cv3.2.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv3.2/cv3.2.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 6,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 384},
+  "Bias": {"Type": "Float", "Count": 6},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm50_xmma_conv_fprop_fused_conv_act_fp32_NCHW_fp32_NCHW_KCRS_fp32_fp32_fp32_Accfloat_1_1_cC1_dC1_srcVec2_fltVec2_2_TP7_TQ2_C4_R1_S1_U1_V1",
+  "TacticValue": "0xc0bfd75233df14d7",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv3.2/cv3.2.2/Conv]"
+},{
+  "Name": "/model.22/Reshape_5",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv3.2/cv3.2.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,25,25],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Reshape_5_copy_output",
+    "Location": "Device",
+    "Dimensions": [1,6,625],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Reshape_5]"
+},{
+  "Name": "/model.22/Reshape_5_copy_output",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.22/Reshape_5_copy_output",
+    "Location": "Device",
+    "Dimensions": [1,6,625],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Concat_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,625],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Reshape_5]"
+},{
+  "Name": "/model.22/cv2.1/cv2.1.0/conv/Conv || /model.22/cv3.1/cv3.1.0/conv/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.18/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.1/cv2.1.0/conv/Conv || /model.22/cv3.1/cv3.1.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,128,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 147456},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x64x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0x0190806602534cfd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.1/cv2.1.0/conv/Conv]\u001e[ONNX Layer: /model.22/cv3.1/cv3.1.0/conv/Conv]"
+},{
+  "Name": "PWN(PWN(/model.22/cv2.1/cv2.1.0/act/Sigmoid), PWN(/model.22/cv2.1/cv2.1.0/act/Mul))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.1/cv2.1.0/conv/Conv || /model.22/cv3.1/cv3.1.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.1/cv2.1.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var4"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbOperations": 5,
+  "Operations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticValue": "0x0000000000000008",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.1/cv2.1.0/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv2.1/cv2.1.0/act/Mul]"
+},{
+  "Name": "/model.22/cv2.1/cv2.1.1/conv/Conv + PWN(PWN(/model.22/cv2.1/cv2.1.1/act/Sigmoid), PWN(/model.22/cv2.1/cv2.1.1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.1/cv2.1.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.1/cv2.1.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.1/cv2.1.1/conv/Conv]\u001e[ONNX Layer: /model.22/cv2.1/cv2.1.1/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv2.1/cv2.1.1/act/Mul]"
+},{
+  "Name": "/model.22/cv2.1/cv2.1.2/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.1/cv2.1.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.1/cv2.1.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 4096},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize64x64x8_stage3_warpsize1x4x1_g1_ffma_t1r1s1_aligna4_alignc4",
+  "TacticValue": "0x865894c4635db7fd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.1/cv2.1.2/Conv]"
+},{
+  "Name": "/model.22/Reshape_1",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.1/cv2.1.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Reshape_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,2500],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Reshape_1]"
+},{
+  "Name": "PWN(PWN(/model.22/cv3.1/cv3.1.0/act/Sigmoid), PWN(/model.22/cv3.1/cv3.1.0/act/Mul))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.1/cv2.1.0/conv/Conv || /model.22/cv3.1/cv3.1.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv3.1/cv3.1.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var4"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbOperations": 5,
+  "Operations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticValue": "0x0000000000000008",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv3.1/cv3.1.0/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv3.1/cv3.1.0/act/Mul]"
+},{
+  "Name": "/model.22/cv3.1/cv3.1.1/conv/Conv + PWN(PWN(/model.22/cv3.1/cv3.1.1/act/Sigmoid), PWN(/model.22/cv3.1/cv3.1.1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv3.1/cv3.1.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv3.1/cv3.1.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1",
+  "TacticValue": "0x94119b4c514b211a",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv3.1/cv3.1.1/conv/Conv]\u001e[ONNX Layer: /model.22/cv3.1/cv3.1.1/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv3.1/cv3.1.1/act/Mul]"
+},{
+  "Name": "/model.22/cv3.1/cv3.1.2/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv3.1/cv3.1.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv3.1/cv3.1.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 6,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 384},
+  "Bias": {"Type": "Float", "Count": 6},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize32x32x8_stage3_warpsize1x2x1_g1_ffma_aligna4_alignc4",
+  "TacticValue": "0xb0bf940d5e0f9f45",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv3.1/cv3.1.2/Conv]"
+},{
+  "Name": "/model.22/Reshape_4",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv3.1/cv3.1.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,50,50],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Reshape_4_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,2500],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Reshape_4]"
+},{
+  "Name": "/model.22/cv2.0/cv2.0.0/conv/Conv || /model.22/cv3.0/cv3.0.0/conv/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.15/cv2/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to /model.22/cv2.0/cv2.0.0/conv/Conv || /model.22/cv3.0/cv3.0.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,128,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 128,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 73728},
+  "Bias": {"Type": "Float", "Count": 128},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x64x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0x0190806602534cfd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.0/cv2.0.0/conv/Conv]\u001e[ONNX Layer: /model.22/cv3.0/cv3.0.0/conv/Conv]"
+},{
+  "Name": "Reformatting CopyNode for Output Tensor 0 to /model.22/cv2.0/cv2.0.0/conv/Conv || /model.22/cv3.0/cv3.0.0/conv/Conv",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "Reformatted Output Tensor 0 to /model.22/cv2.0/cv2.0.0/conv/Conv || /model.22/cv3.0/cv3.0.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,128,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.0/cv2.0.0/conv/Conv || /model.22/cv3.0/cv3.0.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,128,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "PWN(PWN(/model.22/cv2.0/cv2.0.0/act/Sigmoid), PWN(/model.22/cv2.0/cv2.0.0/act/Mul))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.0/cv2.0.0/conv/Conv || /model.22/cv3.0/cv3.0.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.0/cv2.0.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var4"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbOperations": 5,
+  "Operations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticValue": "0x0000000000000002",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.0/cv2.0.0/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv2.0/cv2.0.0/act/Mul]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to /model.22/cv2.0/cv2.0.1/conv/Conv + PWN(PWN(/model.22/cv2.0/cv2.0.1/act/Sigmoid), PWN(/model.22/cv2.0/cv2.0.1/act/Mul))",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.0/cv2.0.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.22/cv2.0/cv2.0.1/conv/Conv + PWN(PWN(/model.22/cv2.0/cv2.0.1/act/Sigmoid), PWN(/model.22/cv2.0/cv2.0.1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/model.22/cv2.0/cv2.0.1/conv/Conv + PWN(PWN(/model.22/cv2.0/cv2.0.1/act/Sigmoid), PWN(/model.22/cv2.0/cv2.0.1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.22/cv2.0/cv2.0.1/conv/Conv + PWN(PWN(/model.22/cv2.0/cv2.0.1/act/Sigmoid), PWN(/model.22/cv2.0/cv2.0.1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.0/cv2.0.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x64x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0x0190806602534cfd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.0/cv2.0.1/conv/Conv]\u001e[ONNX Layer: /model.22/cv2.0/cv2.0.1/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv2.0/cv2.0.1/act/Mul]"
+},{
+  "Name": "/model.22/cv2.0/cv2.0.2/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.0/cv2.0.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv2.0/cv2.0.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 4096},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "ampere_scudnn_128x64_relu_interior_nn_v1",
+  "TacticValue": "0xc3cf6e1d1c6aff27",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv2.0/cv2.0.2/Conv]"
+},{
+  "Name": "/model.22/Reshape",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.0/cv2.0.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Reshape_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,10000],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Reshape]"
+},{
+  "Name": "/model.22/Reshape_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.22/Reshape_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,10000],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,10000],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Concat]"
+},{
+  "Name": "/model.22/Reshape_1_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.22/Reshape_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,2500],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,2500],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Concat]"
+},{
+  "Name": "/model.22/dfl/Reshape + /model.22/dfl/Transpose",
+  "LayerType": "Shuffle",
+  "Inputs": [
+  {
+    "Name": "/model.22/Concat_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/dfl/Transpose_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Shuffle",
+  "FirstTranspose": [0,1,2],
+  "Reshape": [1,4,16,13125],
+  "SecondTranspose": [0,2,1,3],
+  "ZeroIsPlaceholder": 1,
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/dfl/Reshape]\u001e[ONNX Layer: /model.22/dfl/Transpose]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to /model.22/dfl/Softmax",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.22/dfl/Transpose_output_0",
+    "Location": "Device",
+    "Dimensions": [1,16,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.22/dfl/Softmax",
+    "Location": "Device",
+    "Dimensions": [1,16,4,13125],
+    "Format/Datatype": "Row major linear FP16 format"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/model.22/dfl/Softmax",
+  "LayerType": "CaskSoftMaxV2",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.22/dfl/Softmax",
+    "Location": "Device",
+    "Dimensions": [1,16,4,13125],
+    "Format/Datatype": "Row major linear FP16 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 225) [Softmax]_output",
+    "Location": "Device",
+    "Dimensions": [1,16,4,13125],
+    "Format/Datatype": "Row major linear FP16 format"
+  }],
+  "ParameterType": "SoftMax",
+  "Axes": 2,
+  "HasLog": 0,
+  "TacticValue": "0xd49ab000cdcd2713",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/dfl/Softmax]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to /model.22/dfl/conv/Conv",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "(Unnamed Layer* 225) [Softmax]_output",
+    "Location": "Device",
+    "Dimensions": [1,16,4,13125],
+    "Format/Datatype": "Row major linear FP16 format"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.22/dfl/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,16,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "REFORMAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/model.22/dfl/conv/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.22/dfl/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,16,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/dfl/conv/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,1,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 1,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 16},
+  "Bias": {"Type": "Float", "Count": 0},
+  "HasBias": 0,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize128x16x8_stage3_warpsize4x1x1_g1_ffma_aligna4_alignc4",
+  "TacticValue": "0x9d9fdb5fd9945f64",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/dfl/conv/Conv]"
+},{
+  "Name": "/model.22/dfl/Reshape_1",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.22/dfl/conv/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,1,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/dfl/Reshape_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/dfl/Reshape_1]"
+},{
+  "Name": "PWN(PWN(/model.22/cv3.0/cv3.0.0/act/Sigmoid), PWN(/model.22/cv3.0/cv3.0.0/act/Mul))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv2.0/cv2.0.0/conv/Conv || /model.22/cv3.0/cv3.0.0/conv/Conv",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv3.0/cv3.0.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var4"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbOperations": 5,
+  "Operations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticValue": "0x0000000000000002",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv3.0/cv3.0.0/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv3.0/cv3.0.0/act/Mul]"
+},{
+  "Name": "Reformatting CopyNode for Input Tensor 0 to /model.22/cv3.0/cv3.0.1/conv/Conv + PWN(PWN(/model.22/cv3.0/cv3.0.1/act/Sigmoid), PWN(/model.22/cv3.0/cv3.0.1/act/Mul))",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv3.0/cv3.0.0/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.22/cv3.0/cv3.0.1/conv/Conv + PWN(PWN(/model.22/cv3.0/cv3.0.1/act/Sigmoid), PWN(/model.22/cv3.0/cv3.0.1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/model.22/cv3.0/cv3.0.1/conv/Conv + PWN(PWN(/model.22/cv3.0/cv3.0.1/act/Sigmoid), PWN(/model.22/cv3.0/cv3.0.1/act/Mul))",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "Reformatted Input Tensor 0 to /model.22/cv3.0/cv3.0.1/conv/Conv + PWN(PWN(/model.22/cv3.0/cv3.0.1/act/Sigmoid), PWN(/model.22/cv3.0/cv3.0.1/act/Mul))",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv3.0/cv3.0.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [3,3],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [1,1],
+  "PostPadding": [1,1],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 64,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 36864},
+  "Bias": {"Type": "Float", "Count": 64},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "GENERIC",
+  "ParameterSubType": "PointWiseExpression",
+  "NbPointWiseExpressionInputArgs": 1,
+  "PointWiseExpressionInputArgs": ["arg0"],
+  "NbPointWiseExpressionOutputVars": 1,
+  "PointWiseExpressionOutputVars": ["var4"],
+  "NbPointWiseExpressionParams": 0,
+  "PointWiseExpressionParams": [],
+  "NbPointWiseExpressionLiterals": 5,
+  "PointWiseExpressionLiterals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbPointWiseExpressionOperations": 5,
+  "PointWiseExpressionOperations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);", "auto const var4 = pwgen::iMul(arg0, var3);"],
+  "TacticName": "sm80_xmma_fprop_wngd_f32f32_f32_f32_nchwkcrs_nchw_tilesize8x16x64x8_warpsize8x1x1_wngd2x2",
+  "TacticValue": "0x0190806602534cfd",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv3.0/cv3.0.1/conv/Conv]\u001e[ONNX Layer: /model.22/cv3.0/cv3.0.1/act/Sigmoid]\u001e[ONNX Layer: /model.22/cv3.0/cv3.0.1/act/Mul]"
+},{
+  "Name": "/model.22/cv3.0/cv3.0.2/Conv",
+  "LayerType": "CaskConvolution",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv3.0/cv3.0.1/act/Mul_output_0",
+    "Location": "Device",
+    "Dimensions": [1,64,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/cv3.0/cv3.0.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Convolution",
+  "Kernel": [1,1],
+  "PaddingMode": "kEXPLICIT_ROUND_DOWN",
+  "PrePadding": [0,0],
+  "PostPadding": [0,0],
+  "Stride": [1,1],
+  "Dilation": [1,1],
+  "OutMaps": 6,
+  "Groups": 1,
+  "Weights": {"Type": "Float", "Count": 384},
+  "Bias": {"Type": "Float", "Count": 6},
+  "HasBias": 1,
+  "HasReLU": 0,
+  "HasSparseWeights": 0,
+  "HasDynamicFilter": 0,
+  "HasDynamicBias": 0,
+  "HasResidual": 0,
+  "ConvXAsActInputIdx": -1,
+  "BiasAsActInputIdx": -1,
+  "ResAsActInputIdx": -1,
+  "Activation": "NONE",
+  "TacticName": "sm80_xmma_fprop_implicit_gemm_f32f32_f32f32_f32_nchwkcrs_nchw_tilesize128x16x8_stage3_warpsize4x1x1_g1_ffma_aligna4_alignc4",
+  "TacticValue": "0x9d9fdb5fd9945f64",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/cv3.0/cv3.0.2/Conv]"
+},{
+  "Name": "/model.22/Reshape_3",
+  "LayerType": "NoOp",
+  "Inputs": [
+  {
+    "Name": "/model.22/cv3.0/cv3.0.2/Conv_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,100,100],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Reshape_3_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,10000],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Reshape_3]"
+},{
+  "Name": "/model.22/Reshape_3_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.22/Reshape_3_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,10000],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Concat_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,10000],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Concat_1]"
+},{
+  "Name": "/model.22/Reshape_4_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.22/Reshape_4_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,2500],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Concat_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,2500],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Concat_1]"
+},{
+  "Name": "PWN(/model.22/Sigmoid)",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.22/Concat_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,6,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "output0",
+    "Location": "Device",
+    "Dimensions": [1,6,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 1,
+  "InputArgs": ["arg0"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var3"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 5,
+  "Literals": ["0.000000e+00f", "1.000000e+00f", "0.000000e+00f", "0.000000e+00f", "5.000000e-01f"],
+  "NbOperations": 4,
+  "Operations": ["auto const var0 = pwgen::iMul(literal4, arg0);", "auto const var1 = pwgen::iTanh(var0);", "auto const var2 = pwgen::iMul(var1, literal4);", "auto const var3 = pwgen::iPlus(var2, literal4);"],
+  "TacticValue": "0x0000000000000005",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Sigmoid]"
+},{
+  "Name": "/model.22/Constant_15_output_0 + ONNXTRT_Broadcast_95",
+  "LayerType": "Constant",
+  "Inputs": [],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 303) [Shuffle]_output",
+    "Location": "Device",
+    "Dimensions": [1,1,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Constant",
+  "weights": {"Type": "Float", "Count": 13125},
+  "dimensions": [1,1,13125],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "/model.22/Constant_13_output_0",
+  "LayerType": "Constant",
+  "Inputs": [],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 294) [Constant]_output",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Constant",
+  "weights": {"Type": "Float", "Count": 26250},
+  "dimensions": [1,2,13125],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "PWN(/model.22/Add_1)",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "(Unnamed Layer* 294) [Constant]_output",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/model.22/dfl/Reshape_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Add_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 2,
+  "InputArgs": ["arg0", "arg1"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var0"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 0,
+  "Literals": [],
+  "NbOperations": 1,
+  "Operations": ["auto const var0 = pwgen::iPlus(arg0, arg1);"],
+  "TacticValue": "0x0000000000000002",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Add_1]"
+},{
+  "Name": "/model.22/Constant_12_output_0",
+  "LayerType": "Constant",
+  "Inputs": [],
+  "Outputs": [
+  {
+    "Name": "(Unnamed Layer* 292) [Constant]_output",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Constant",
+  "weights": {"Type": "Float", "Count": 26250},
+  "dimensions": [1,2,13125],
+  "TacticValue": "0x0000000000000000",
+  "StreamId": 0,
+  "Metadata": ""
+},{
+  "Name": "PWN(/model.22/Sub)",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "(Unnamed Layer* 292) [Constant]_output",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/model.22/dfl/Reshape_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Sub_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 2,
+  "InputArgs": ["arg0", "arg1"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var0"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 0,
+  "Literals": [],
+  "NbOperations": 1,
+  "Operations": ["auto const var0 = pwgen::iMinus(arg0, arg1);"],
+  "TacticValue": "0x0000000000000002",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Sub]"
+},{
+  "Name": "PWN(/model.22/Sub_1)",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.22/Add_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/model.22/Sub_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Concat_2_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 2,
+  "InputArgs": ["arg0", "arg1"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var0"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 0,
+  "Literals": [],
+  "NbOperations": 1,
+  "Operations": ["auto const var0 = pwgen::iMinus(arg0, arg1);"],
+  "TacticValue": "0x0000000000000004",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Sub_1]"
+},{
+  "Name": "PWN(PWN(/model.22/Add_2), PWN(/model.22/Constant_14_output_0 + ONNXTRT_Broadcast, PWN(/model.22/Div_1)))",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.22/Sub_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "/model.22/Add_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Div_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 2,
+  "InputArgs": ["arg0", "arg1"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var1"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 1,
+  "Literals": ["2.000000e+00f"],
+  "NbOperations": 2,
+  "Operations": ["auto const var0 = pwgen::iPlus(arg0, arg1);", "auto const var1 = pwgen::iDiv(var0, literal0);"],
+  "TacticValue": "0x000000000000001c",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Add_2]\u001e[ONNX Layer: /model.22/Div_1]"
+},{
+  "Name": "/model.22/Div_1_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.22/Div_1_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Concat_2_output_0",
+    "Location": "Device",
+    "Dimensions": [1,2,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Concat_2]"
+},{
+  "Name": "PWN(/model.22/Mul_2)",
+  "LayerType": "PointWiseV2",
+  "Inputs": [
+  {
+    "Name": "/model.22/Concat_2_output_0",
+    "Location": "Device",
+    "Dimensions": [1,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  },
+  {
+    "Name": "(Unnamed Layer* 303) [Shuffle]_output",
+    "Location": "Device",
+    "Dimensions": [1,1,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "/model.22/Mul_2_output_0",
+    "Location": "Device",
+    "Dimensions": [1,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "PointWise",
+  "ParameterSubType": "PointWiseExpression",
+  "NbInputArgs": 2,
+  "InputArgs": ["arg0", "arg1"],
+  "NbOutputVars": 1,
+  "OutputVars": ["var0"],
+  "NbParams": 0,
+  "Params": [],
+  "NbLiterals": 0,
+  "Literals": [],
+  "NbOperations": 1,
+  "Operations": ["auto const var0 = pwgen::iMul(arg0, arg1);"],
+  "TacticValue": "0x0000000000000005",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Mul_2]"
+},{
+  "Name": "/model.22/Mul_2_output_0 copy",
+  "LayerType": "Reformat",
+  "Inputs": [
+  {
+    "Name": "/model.22/Mul_2_output_0",
+    "Location": "Device",
+    "Dimensions": [1,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "Outputs": [
+  {
+    "Name": "output0",
+    "Location": "Device",
+    "Dimensions": [1,4,13125],
+    "Format/Datatype": "Row major linear FP32"
+  }],
+  "ParameterType": "Reformat",
+  "Origin": "CONCAT",
+  "TacticValue": "0x00000000000003e8",
+  "StreamId": 0,
+  "Metadata": "[ONNX Layer: /model.22/Concat_3]"
+}],
+"Bindings": ["images"
+,"output0"
+]}

@@ -529,3 +529,178 @@ JPEG 精确 2 成功 + 1 失败、exit 2。三份 summary 同时记录编译 tar
 QEMU user-mode 不是开发板、原生 ARM 或部署性能环境。本项目不发布、
 比较或解释该运行中的 latency、throughput、RSS、worker speedup、功耗、
 温度或稳定性数字；AArch64 S2-03 结论仅限构建与功能可移植性。
+
+## 11. S2-04：WSL2/Linux x86_64 + RTX 4060 TensorRT
+
+### 11.1 已验证环境与隔离运行入口
+
+本单元实测环境是 Ubuntu 24.04.4 on WSL2、kernel
+`6.18.33.2-microsoft-standard-WSL2`、x86_64、RTX 4060 Laptop
+(compute capability 8.9)、Windows host driver `581.42`、GCC 13.3、
+CMake 3.28、Ninja 1.11、OpenCV 4.6、ORT GPU 1.20.1、TensorRT
+10.4.0.26、CUDA 12.6.1 与 cuDNN 9.4.0.58。WSL 使用 Windows host
+NVIDIA driver；不要在 WSL 中安装 Linux display driver。
+
+机器本地依赖不写入 tracked config。进入同一个 WSL shell 后使用：
+
+```bash
+export YOLO_DEFECT_REPO=/mnt/d/01_Base/CodingSpace/yolo_defect
+export YOLO_DEFECT_S2_04_ROOT="$HOME/.local/state/yolo-defect-s2-04"
+export YOLO_DEFECT_ORT_GPU="$HOME/.local/opt/onnxruntime-linux-x64-gpu-1.20.1"
+export YOLO_DEFECT_TRT_ROOT="$HOME/.local/opt/tensorrt-10.4.0.26-cuda12.6"
+export YOLO_DEFECT_CUDA_BUNDLE="$HOME/.local/opt/cuda-12.6.1-cudnn-9.4.0.58"
+export YOLO_DEFECT_CUDA_ROOT="$YOLO_DEFECT_CUDA_BUNDLE/usr/local/cuda-12.6"
+export YOLO_DEFECT_GPU_BUILD="$YOLO_DEFECT_S2_04_ROOT/build_gpu_release"
+export LD_LIBRARY_PATH="$YOLO_DEFECT_ORT_GPU/lib:$YOLO_DEFECT_TRT_ROOT/usr/lib/x86_64-linux-gnu:$YOLO_DEFECT_CUDA_ROOT/targets/x86_64-linux/lib:$YOLO_DEFECT_CUDA_BUNDLE/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+```
+
+`LD_LIBRARY_PATH` 的四段分别提供 ORT GPU、TensorRT、CUDA runtime 与
+cuDNN；不要混入另一套 CUDA/cuDNN。可先运行 `nvidia-smi`、
+`ldd "$YOLO_DEFECT_GPU_BUILD/bin/yolo_defect_cpp"` 与
+`"$YOLO_DEFECT_TRT_ROOT/usr/src/tensorrt/bin/trtexec" --version` 检查
+GPU 可见性、loader 和版本。
+
+### 11.2 GPU product build
+
+```bash
+cmake -S "$YOLO_DEFECT_REPO/cpp_infer" -B "$YOLO_DEFECT_GPU_BUILD" -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+  -DYOLO_DEFECT_REQUIRE_TENSORRT_EP=ON \
+  -DYOLO_DEFECT_ENABLE_NATIVE_TENSORRT_BACKEND=ON \
+  -DONNXRUNTIME_ROOT="$YOLO_DEFECT_ORT_GPU" \
+  -DTENSORRT_ROOT="$YOLO_DEFECT_TRT_ROOT" \
+  -DCUDAToolkit_ROOT="$YOLO_DEFECT_CUDA_ROOT" \
+  -DOpenCV_DIR=/usr/lib/x86_64-linux-gnu/cmake/opencv4
+cmake --build "$YOLO_DEFECT_GPU_BUILD" --parallel 4
+```
+
+native backend 只支持 Linux x86_64、TensorRT 10.x name-based I/O 和
+load-only plan。ORT GPU build 同时保留 `tensorrt -> cuda -> cpu` provider
+注册用于诊断；最终发布路径是 `TensorRTNative`，没有 fallback。
+
+### 11.3 当前 ONNX 的 `trtexec` 与最终 E0 plan
+
+当前模型是 `models/best.onnx`，SHA-256
+`7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68`，
+opset 17，I/O `[1,3,800,800] float32 -> [1,10,13125] float32`。先用
+unconstrained `--fp16` 成功完成 parser/build/reload；最终 correctness
+通过的 E0 policy 只让 `/model.22/dfl/Softmax` compute 使用 FP16，其余
+compute 为 FP32 并禁用 TF32：
+
+```bash
+export YOLO_DEFECT_TRT_CACHE="$YOLO_DEFECT_REPO/cpp_infer/.cache/tensorrt_native/7b8a37610018a6ae_trt10_4_cuda12_6_sm89_fp16_dfl_softmax_fp32_else_no_tf32"
+export YOLO_DEFECT_TRT_ENGINE="$YOLO_DEFECT_TRT_CACHE/best_fp16_dfl_softmax_fp32_else.engine"
+export YOLO_DEFECT_TRT_RUN="$YOLO_DEFECT_S2_04_ROOT/rerun_engine_20260831_01"
+export YOLO_DEFECT_TRT_CANDIDATE="$YOLO_DEFECT_TRT_RUN/candidate.engine"
+export YOLO_DEFECT_TRT_TIMING_CACHE="$YOLO_DEFECT_TRT_RUN/candidate.timing.cache"
+test ! -e "$YOLO_DEFECT_TRT_RUN"
+mkdir -p "$YOLO_DEFECT_TRT_RUN"
+
+"$YOLO_DEFECT_TRT_ROOT/usr/src/tensorrt/bin/trtexec" \
+  --onnx="$YOLO_DEFECT_REPO/models/best.onnx" --fp16 --noTF32 \
+  --memPoolSize=workspace:2048M --precisionConstraints=obey \
+  '--layerPrecisions=*:fp32,/model.22/dfl/Softmax:fp16' \
+  --timingCacheFile="$YOLO_DEFECT_TRT_TIMING_CACHE" \
+  --saveEngine="$YOLO_DEFECT_TRT_CANDIDATE" --profilingVerbosity=detailed \
+  --exportLayerInfo="$YOLO_DEFECT_TRT_RUN/build_layers.json" --skipInference
+sha256sum "$YOLO_DEFECT_TRT_CANDIDATE"
+
+"$YOLO_DEFECT_TRT_ROOT/usr/src/tensorrt/bin/trtexec" \
+  --loadEngine="$YOLO_DEFECT_TRT_CANDIDATE" --warmUp=1000 --iterations=100 \
+  --duration=0 --profilingVerbosity=detailed --separateProfileRun \
+  --exportTimes="$YOLO_DEFECT_TRT_RUN/reload_times.json" \
+  --exportProfile="$YOLO_DEFECT_TRT_RUN/reload_profile.json" \
+  --exportLayerInfo="$YOLO_DEFECT_TRT_RUN/reload_layers.json"
+```
+
+本次验收冻结的 E0 SHA-256 是
+`E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746`。
+TensorRT build 不承诺新 plan 与 E0 按字节相同；若重建 SHA 不同，不得
+把它冒充 E0，而要生成新的 engine SHA、versioned config/protocol identity，
+并使用未消费的新 holdout 重新跑 correctness。上面的 build 始终写 fresh
+candidate，绝不覆盖 `$YOLO_DEFECT_TRT_ENGINE`。精确复跑 v4 需要机器本地
+仍保留这个 E0 plan；它受 `.gitignore` 保护且未随仓库分发，fresh clone
+只能重建新 candidate，不能从 tracked files 推导出逐字节相同的 E0。
+plan 与 TensorRT/CUDA/SM、模型 SHA 和 builder policy 绑定；换环境后必须
+重建并重新过门禁，不能把这份 plan 当通用 artifact。
+
+### 11.4 正式 v4 correctness 与重复运行
+
+下例的 run root 必须不存在；A/B 是相同 binary/config/engine 的独立运行：
+
+```bash
+export YOLO_DEFECT_S2_04_RUN="$YOLO_DEFECT_S2_04_ROOT/rerun_v4_20260831_01"
+export YOLO_DEFECT_MODEL_SHA=7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68
+export YOLO_DEFECT_ENGINE_SHA=E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746
+export YOLO_DEFECT_V4_MANIFEST="$YOLO_DEFECT_REPO/cpp_infer/tests/fixtures/s2_04_correctness_manifest_v4.json"
+
+python3 "$YOLO_DEFECT_REPO/cpp_infer/tools/run_s2_04_product_set.py" \
+  --cli "$YOLO_DEFECT_GPU_BUILD/bin/yolo_defect_cpp" \
+  --config "$YOLO_DEFECT_REPO/cpp_infer/configs/default_config.txt" \
+  --manifest "$YOLO_DEFECT_V4_MANIFEST" --output-dir "$YOLO_DEFECT_S2_04_RUN/cpu" \
+  --expected-model-sha256 "$YOLO_DEFECT_MODEL_SHA" \
+  --expected-actual-provider CPUExecutionProvider
+python3 "$YOLO_DEFECT_REPO/cpp_infer/tools/run_s2_04_product_set.py" \
+  --cli "$YOLO_DEFECT_GPU_BUILD/bin/yolo_defect_cpp" \
+  --config "$YOLO_DEFECT_REPO/cpp_infer/configs/tensorrt_native_fp16_config_v4.txt" \
+  --manifest "$YOLO_DEFECT_V4_MANIFEST" --output-dir "$YOLO_DEFECT_S2_04_RUN/native_a" \
+  --expected-model-sha256 "$YOLO_DEFECT_MODEL_SHA" \
+  --expected-actual-provider TensorRTNative --expected-engine-sha256 "$YOLO_DEFECT_ENGINE_SHA"
+python3 "$YOLO_DEFECT_REPO/cpp_infer/tools/run_s2_04_product_set.py" \
+  --cli "$YOLO_DEFECT_GPU_BUILD/bin/yolo_defect_cpp" \
+  --config "$YOLO_DEFECT_REPO/cpp_infer/configs/tensorrt_native_fp16_config_v4.txt" \
+  --manifest "$YOLO_DEFECT_V4_MANIFEST" --output-dir "$YOLO_DEFECT_S2_04_RUN/native_b" \
+  --expected-model-sha256 "$YOLO_DEFECT_MODEL_SHA" \
+  --expected-actual-provider TensorRTNative --expected-engine-sha256 "$YOLO_DEFECT_ENGINE_SHA"
+
+python3 "$YOLO_DEFECT_REPO/cpp_infer/tools/compare_s2_04_correctness.py" \
+  --protocol "$YOLO_DEFECT_REPO/cpp_infer/protocols/s2_04_tensorrt_native_fp16_protocol_v4.json" \
+  --cpu-dir "$YOLO_DEFECT_S2_04_RUN/cpu" \
+  --tensorrt-run-a-dir "$YOLO_DEFECT_S2_04_RUN/native_a" \
+  --tensorrt-run-b-dir "$YOLO_DEFECT_S2_04_RUN/native_b" \
+  --expected-cpu-provider CPUExecutionProvider \
+  --expected-tensorrt-provider TensorRTNative \
+  --summary-output "$YOLO_DEFECT_S2_04_RUN/correctness_summary.json" \
+  --per-image-output "$YOLO_DEFECT_S2_04_RUN/correctness_per_image.json"
+```
+
+正式 v4 结果为 30/30 图片通过、64 个 matched detections；CPU 对 A/B
+各自最大 confidence 误差 `1.0044e-5`、最大坐标误差 `0.032166 px`、
+最小 IoU `0.998619`，native A/B detection JSON 字节一致。v1/v2 ORT EP
+与 v3 native 失败证据必须保留，不得通过事后放宽阈值改写。
+
+### 11.5 正式 benchmark、memory 与回归
+
+```bash
+python3 "$YOLO_DEFECT_REPO/cpp_infer/tools/run_s2_04_gpu_benchmark.py" \
+  --backend-mode native \
+  --benchmark-json "$YOLO_DEFECT_S2_04_RUN/native_benchmark_source.json" \
+  --output "$YOLO_DEFECT_S2_04_RUN/native_benchmark_gpu.json" \
+  --cache-dir "$YOLO_DEFECT_TRT_CACHE" -- \
+  "$YOLO_DEFECT_GPU_BUILD/bin/yolo_defect_cpp" \
+  --config "$YOLO_DEFECT_REPO/cpp_infer/configs/tensorrt_native_fp16_config_v4.txt" \
+  --image "$YOLO_DEFECT_REPO/data/images/val/crazing_241.jpg" \
+  --benchmark --warmup 10 --repeat 100 \
+  --benchmark-json "$YOLO_DEFECT_S2_04_RUN/native_benchmark_source.json"
+```
+
+正式 A/B 的 initialization 是 `684.570/619.423 ms`，session P50/P95
+是 `3.877/5.329 ms` 与 `3.633/7.468 ms`，pipeline P50/P95 是
+`6.974/8.779 ms` 与 `6.519/10.490 ms`，pipeline throughput 是
+`137.652/140.555 img/s`，host peak RSS 是 `384.668/384.371 MiB`。
+GPU memory 为 device-wide baseline-to-peak `155 MiB`，不是 PID-specific；
+吞吐重复稳定，P95 不稳定。与同 SDK ORT CPU 的约 16.5--16.9x pipeline
+throughput 差异是整体 CPU→TensorRT/GPU backend 对照，不是被隔离出的
+单层 FP16 speedup。
+
+CPU regression：Windows Release/NMake 与 WSL2/Linux Release/Ninja 均为
+179/179 CTest 通过；Python S2-04 工具 35/35 通过。Windows 改动 public
+header 后若旧增量 tree 出现随机 enum/heap 错误，先运行受保护的
+`cpp_infer\\tools\\stage1.cmd clean-build` 再运行
+`cpp_infer\\tools\\stage1.cmd test`，不要把 stale ABI 当 Runtime 失败。
+
+完整九部分教学收口见 [`details/s2_04_closure.md`](details/s2_04_closure.md)，
+证据根目录见
+[`../cpp_infer/results/s2_04/linux_x86_64_rtx4060/`](../cpp_infer/results/s2_04/linux_x86_64_rtx4060/)。
+INT8 没有执行：当前 FP32 artifact 缺少冻结 calibration/QDQ contract；它是
+非阻塞可选项，不能为追求勾选而扩张已通过的 FP16 主链。

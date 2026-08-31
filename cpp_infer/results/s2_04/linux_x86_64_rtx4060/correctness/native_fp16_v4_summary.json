@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_04_tensorrt_native_fp16_correctness",
+  "protocol_id": "s2_04_tensorrt_native_fp16_correctness_v4",
+  "timestamp_utc": "2026-08-30T20:03:07Z",
+  "passed": true,
+  "sources": {
+    "protocol": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/protocols/s2_04_tensorrt_native_fp16_protocol_v4.json",
+    "manifest": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/tests/fixtures/s2_04_correctness_manifest_v4.json",
+    "artifact_spec": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/artifacts/yolov8_neu_det.artifact.txt",
+    "model": "/mnt/d/01_Base/CodingSpace/yolo_defect/models/best.onnx",
+    "cpu_directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_native_v4/cpu_reference",
+    "tensorrt_run_a_directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_native_v4/tensorrt_run_a",
+    "tensorrt_run_b_directory": "/home/everbreath/.local/state/yolo-defect-s2-04/runtime_20260831/runs/correctness_native_v4/tensorrt_run_b"
+  },
+  "provider_expectations": {
+    "cpu": "CPUExecutionProvider",
+    "tensorrt": "TensorRTNative"
+  },
+  "artifact": {
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "declared_and_actual_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "semantics_verified_against_protocol": true
+  },
+  "runtime_configs": {
+    "cpu": {
+      "path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/configs/default_config.txt",
+      "provider": "cpu",
+      "precision": "fp32",
+      "artifact_spec_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/artifacts/yolov8_neu_det.artifact.txt"
+    },
+    "tensorrt": {
+      "path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/configs/tensorrt_native_fp16_config_v4.txt",
+      "provider": "tensorrt_native",
+      "precision": "mixed_fp16_fp32",
+      "artifact_spec_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/artifacts/yolov8_neu_det.artifact.txt",
+      "engine_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/.cache/tensorrt_native/7b8a37610018a6ae_trt10_4_cuda12_6_sm89_fp16_dfl_softmax_fp32_else_no_tf32/best_fp16_dfl_softmax_fp32_else.engine",
+      "declared_and_actual_engine_sha256": "E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746",
+      "precision_policy": "fp16_dfl_softmax_fp32_else_no_tf32"
+    }
+  },
+  "gate": {
+    "comparisons": [
+      "cpu_vs_tensorrt_run_a",
+      "cpu_vs_tensorrt_run_b",
+      "tensorrt_run_a_vs_tensorrt_run_b"
+    ],
+    "detection_count": "exact",
+    "class_id": "exact",
+    "class_name": "exact",
+    "confidence_abs_error_max": 0.005,
+    "bbox_coordinate_abs_error_max_pixels": 1.0,
+    "matching_iou_min": 0.9,
+    "matching_strategy": "class_id_then_greedy_max_iou_with_canonical_value_tie_break",
+    "same_gate_applies_to_repeated_tensorrt_runs": true
+  },
+  "comparisons": [
+    {
+      "comparison": "cpu_vs_tensorrt_run_a",
+      "sample_count": 30,
+      "failed_sample_count": 0,
+      "failed_sample_ids": [],
+      "matched_detection_count": 64,
+      "confidence_abs_error_max": 1.0043999999986841e-05,
+      "bbox_coordinate_abs_error_max_pixels": 0.03216599999998948,
+      "matching_iou_min": 0.9986192172603804,
+      "passed": true
+    },
+    {
+      "comparison": "cpu_vs_tensorrt_run_b",
+      "sample_count": 30,
+      "failed_sample_count": 0,
+      "failed_sample_ids": [],
+      "matched_detection_count": 64,
+      "confidence_abs_error_max": 1.0043999999986841e-05,
+      "bbox_coordinate_abs_error_max_pixels": 0.03216599999998948,
+      "matching_iou_min": 0.9986192172603804,
+      "passed": true
+    },
+    {
+      "comparison": "tensorrt_run_a_vs_tensorrt_run_b",
+      "sample_count": 30,
+      "failed_sample_count": 0,
+      "failed_sample_ids": [],
+      "matched_detection_count": 64,
+      "confidence_abs_error_max": 0.0,
+      "bbox_coordinate_abs_error_max_pixels": 0.0,
+      "matching_iou_min": 1.0,
+      "passed": true
+    }
+  ],
+  "performance_publication_allowed": true
+}

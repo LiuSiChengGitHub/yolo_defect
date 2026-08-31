@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "protocol_id": "s2_04_tensorrt_native_fp16_correctness_v3",
+  "frozen_before_formal_run": true,
+  "scope": "Disjoint 30-image holdout for Linux x86_64 + RTX 4060 Laptop native TensorRT mixed FP16/FP32 versus ORT CPU FP32",
+  "revision_rationale": {
+    "v1_status": "retained unchanged as a failed over-strict ORT TensorRT EP numerical-equivalence diagnostic",
+    "v2_status": "retained unchanged as a failed disjoint ORT TensorRT EP semantic gate and as the regression set used to select the native precision policy",
+    "holdout_rule": "v3 uses image indices absent from v1 and v2 and was frozen before any native TensorRT inference on a v3 sample",
+    "tolerance_basis": "same immutable semantic gate as v2: one source pixel coordinate bound, IoU 0.90, confidence 0.005, with exact count/class/name",
+    "anti_tuning_rule": "v3 samples, limits, provider contract, engine SHA, and precision policy are immutable after the first native v3 run; any first-run failure consumes v3 and requires a newly versioned untouched holdout",
+    "final_engine_freeze": "The final class-Sigmoid-only FP16/noTF32 precision policy was selected exclusively against the v2 tuning set. The exact CE2D25F9ABD4370A7E5325777CEB1982E42E82C7A3238C24A48E7FDD264467D2 plan was then built and reloaded with captured evidence before any CPU or native inference on a v3 sample. No v3 sample or result informed either the precision policy or the frozen engine bytes."
+  },
+  "sources": {
+    "consistency_manifest_path": "../tests/fixtures/s2_04_correctness_manifest_v3.json",
+    "cpu_runtime_config_path": "../configs/default_config.txt",
+    "tensorrt_runtime_config_path": "../configs/tensorrt_native_fp16_config.txt",
+    "artifact_spec_path": "../artifacts/yolov8_neu_det.artifact.txt"
+  },
+  "sample_contract": {
+    "manifest_id": "neu_det_val_s2_04_native_holdout_6x5_v3",
+    "sample_count": 30,
+    "samples_per_class": 5,
+    "selection_indices": [243, 257, 272, 287, 298]
+  },
+  "artifact_semantics": {
+    "model_id": "yolov8n_neu_det_final_train_2",
+    "model_family": "yolov8",
+    "model_sha256": "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68",
+    "opset": 17,
+    "input_name": "images",
+    "input_shape": [1, 3, 800, 800],
+    "input_dtype": "float32",
+    "input_layout": "nchw",
+    "output_name": "output0",
+    "output_shape": [1, 10, 13125],
+    "output_dtype": "float32",
+    "output_layout": "bcn",
+    "class_names": ["crazing", "inclusion", "patches", "pitted_surface", "rolled-in_scale", "scratches"],
+    "preprocess_type": "letterbox_rgb_0_1_nchw",
+    "postprocess_type": "yolov8_raw",
+    "score_threshold": 0.25,
+    "nms_threshold": 0.45,
+    "nms_mode": "class_agnostic"
+  },
+  "engine_contract": {
+    "engine_sha256": "CE2D25F9ABD4370A7E5325777CEB1982E42E82C7A3238C24A48E7FDD264467D2",
+    "tensorrt_runtime_version": "10.4.0",
+    "tensorrt_header_package_version": "10.4.0.26",
+    "cuda_runtime_version": "12.6",
+    "compute_capability": "8.9",
+    "precision_policy": "fp16_class_sigmoid_fp32_else_no_tf32",
+    "builder_contract": "trtexec --fp16 --noTF32 --precisionConstraints=obey --layerPrecisions=*:fp32,/model.22/Sigmoid:fp16",
+    "portable_across_gpu_or_tensorrt_versions": false
+  },
+  "execution_contract": {
+    "cpu_precision": "fp32",
+    "tensorrt_precision": "mixed_fp16_fp32",
+    "tensorrt_run_count": 2,
+    "same_onnx_artifact_for_all_runs": true,
+    "same_native_engine_for_both_tensorrt_runs": true,
+    "same_preprocess_and_postprocess_for_all_runs": true,
+    "provider_expectations_are_explicit_cli_arguments": true
+  },
+  "provider_contract": {
+    "cpu_actual_provider": "CPUExecutionProvider",
+    "tensorrt_actual_provider": "TensorRTNative",
+    "fallback_provider": null,
+    "provider_names_are_not_user_redefinable": true
+  },
+  "correctness_gate": {
+    "comparisons": ["cpu_vs_tensorrt_run_a", "cpu_vs_tensorrt_run_b", "tensorrt_run_a_vs_tensorrt_run_b"],
+    "detection_count": "exact",
+    "class_id": "exact",
+    "class_name": "exact",
+    "confidence_abs_error_max": 0.005,
+    "bbox_coordinate_abs_error_max_pixels": 1.0,
+    "matching_iou_min": 0.9,
+    "matching_strategy": "class_id_then_greedy_max_iou_with_canonical_value_tie_break",
+    "same_gate_applies_to_repeated_tensorrt_runs": true
+  },
+  "publication_limits": [
+    "Publish native TensorRT performance only if this untouched v3 holdout passes; retain both failed ORT TensorRT EP v1/v2 results beside it.",
+    "This proves local WSL2/Linux x86_64 GPU/edge-node execution, not Jetson, native ARM64 GPU, or embedded hardware.",
+    "This is implementation correctness on a bounded set, not full-dataset mAP or PyTorch lineage evidence."
+  ]
+}

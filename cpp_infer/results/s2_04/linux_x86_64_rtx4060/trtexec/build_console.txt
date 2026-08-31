@@ -1,0 +1,177 @@
+&&&& RUNNING TensorRT.trtexec [TensorRT v100400] [b26] # /home/everbreath/.local/opt/tensorrt-10.4.0.26-cuda12.6/usr/src/tensorrt/bin/trtexec --onnx=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best.onnx --fp16 --memPoolSize=workspace:2048M --warmUp=1000 --iterations=100 --duration=0 --saveEngine=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best_fp16.engine --timingCacheFile=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best_fp16.timing.cache --profilingVerbosity=detailed --separateProfileRun --exportTimes=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/build_times.json --exportProfile=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/build_profile.json --exportLayerInfo=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/build_layers.json
+[08/31/2026-01:48:49] [I] === Model Options ===
+[08/31/2026-01:48:49] [I] Format: ONNX
+[08/31/2026-01:48:49] [I] Model: /home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best.onnx
+[08/31/2026-01:48:49] [I] Output:
+[08/31/2026-01:48:49] [I] === Build Options ===
+[08/31/2026-01:48:49] [I] Memory Pools: workspace: 2048 MiB, dlaSRAM: default, dlaLocalDRAM: default, dlaGlobalDRAM: default, tacticSharedMem: default
+[08/31/2026-01:48:49] [I] avgTiming: 8
+[08/31/2026-01:48:49] [I] Precision: FP32+FP16
+[08/31/2026-01:48:49] [I] LayerPrecisions: 
+[08/31/2026-01:48:49] [I] Layer Device Types: 
+[08/31/2026-01:48:49] [I] Calibration: 
+[08/31/2026-01:48:49] [I] Refit: Disabled
+[08/31/2026-01:48:49] [I] Strip weights: Disabled
+[08/31/2026-01:48:49] [I] Version Compatible: Disabled
+[08/31/2026-01:48:49] [I] ONNX Plugin InstanceNorm: Disabled
+[08/31/2026-01:48:49] [I] TensorRT runtime: full
+[08/31/2026-01:48:49] [I] Lean DLL Path: 
+[08/31/2026-01:48:49] [I] Tempfile Controls: { in_memory: allow, temporary: allow }
+[08/31/2026-01:48:49] [I] Exclude Lean Runtime: Disabled
+[08/31/2026-01:48:49] [I] Sparsity: Disabled
+[08/31/2026-01:48:49] [I] Safe mode: Disabled
+[08/31/2026-01:48:49] [I] Build DLA standalone loadable: Disabled
+[08/31/2026-01:48:49] [I] Allow GPU fallback for DLA: Disabled
+[08/31/2026-01:48:49] [I] DirectIO mode: Disabled
+[08/31/2026-01:48:49] [I] Restricted mode: Disabled
+[08/31/2026-01:48:49] [I] Skip inference: Disabled
+[08/31/2026-01:48:49] [I] Save engine: /home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best_fp16.engine
+[08/31/2026-01:48:49] [I] Load engine: 
+[08/31/2026-01:48:49] [I] Profiling verbosity: 2
+[08/31/2026-01:48:49] [I] Tactic sources: Using default tactic sources
+[08/31/2026-01:48:49] [I] timingCacheMode: global
+[08/31/2026-01:48:49] [I] timingCacheFile: /home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best_fp16.timing.cache
+[08/31/2026-01:48:49] [I] Enable Compilation Cache: Enabled
+[08/31/2026-01:48:49] [I] errorOnTimingCacheMiss: Disabled
+[08/31/2026-01:48:49] [I] Preview Features: Use default preview flags.
+[08/31/2026-01:48:49] [I] MaxAuxStreams: -1
+[08/31/2026-01:48:49] [I] BuilderOptimizationLevel: -1
+[08/31/2026-01:48:49] [I] MaxTactics: -1
+[08/31/2026-01:48:49] [I] Calibration Profile Index: 0
+[08/31/2026-01:48:49] [I] Weight Streaming: Disabled
+[08/31/2026-01:48:49] [I] Runtime Platform: Same As Build
+[08/31/2026-01:48:49] [I] Debug Tensors: 
+[08/31/2026-01:48:49] [I] Input(s)s format: fp32:CHW
+[08/31/2026-01:48:49] [I] Output(s)s format: fp32:CHW
+[08/31/2026-01:48:49] [I] Input build shapes: model
+[08/31/2026-01:48:49] [I] Input calibration shapes: model
+[08/31/2026-01:48:49] [I] === System Options ===
+[08/31/2026-01:48:49] [I] Device: 0
+[08/31/2026-01:48:49] [I] DLACore: 
+[08/31/2026-01:48:49] [I] Plugins:
+[08/31/2026-01:48:49] [I] setPluginsToSerialize:
+[08/31/2026-01:48:49] [I] dynamicPlugins:
+[08/31/2026-01:48:49] [I] ignoreParsedPluginLibs: 0
+[08/31/2026-01:48:49] [I] 
+[08/31/2026-01:48:49] [I] === Inference Options ===
+[08/31/2026-01:48:49] [I] Batch: Explicit
+[08/31/2026-01:48:49] [I] Input inference shapes: model
+[08/31/2026-01:48:49] [I] Iterations: 100
+[08/31/2026-01:48:49] [I] Duration: 0s (+ 1000ms warm up)
+[08/31/2026-01:48:49] [I] Sleep time: 0ms
+[08/31/2026-01:48:49] [I] Idle time: 0ms
+[08/31/2026-01:48:49] [I] Inference Streams: 1
+[08/31/2026-01:48:49] [I] ExposeDMA: Disabled
+[08/31/2026-01:48:49] [I] Data transfers: Enabled
+[08/31/2026-01:48:49] [I] Spin-wait: Disabled
+[08/31/2026-01:48:49] [I] Multithreading: Disabled
+[08/31/2026-01:48:49] [I] CUDA Graph: Disabled
+[08/31/2026-01:48:49] [I] Separate profiling: Enabled
+[08/31/2026-01:48:49] [I] Time Deserialize: Disabled
+[08/31/2026-01:48:49] [I] Time Refit: Disabled
+[08/31/2026-01:48:49] [I] NVTX verbosity: 2
+[08/31/2026-01:48:49] [I] Persistent Cache Ratio: 0
+[08/31/2026-01:48:49] [I] Optimization Profile Index: 0
+[08/31/2026-01:48:49] [I] Weight Streaming Budget: 100.000000%
+[08/31/2026-01:48:49] [I] Inputs:
+[08/31/2026-01:48:49] [I] Debug Tensor Save Destinations:
+[08/31/2026-01:48:49] [I] === Reporting Options ===
+[08/31/2026-01:48:49] [I] Verbose: Disabled
+[08/31/2026-01:48:49] [I] Averages: 10 inferences
+[08/31/2026-01:48:49] [I] Percentiles: 90,95,99
+[08/31/2026-01:48:49] [I] Dump refittable layers:Disabled
+[08/31/2026-01:48:49] [I] Dump output: Disabled
+[08/31/2026-01:48:49] [I] Profile: Disabled
+[08/31/2026-01:48:49] [I] Export timing to JSON file: /home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/build_times.json
+[08/31/2026-01:48:49] [I] Export output to JSON file: 
+[08/31/2026-01:48:49] [I] Export profile to JSON file: /home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/build_profile.json
+[08/31/2026-01:48:49] [I] 
+[08/31/2026-01:48:49] [I] === Device Information ===
+[08/31/2026-01:48:51] [I] Available Devices: 
+[08/31/2026-01:48:51] [I]   Device 0: "NVIDIA GeForce RTX 4060 Laptop GPU" UUID: GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e
+[08/31/2026-01:48:51] [I] Selected Device: NVIDIA GeForce RTX 4060 Laptop GPU
+[08/31/2026-01:48:51] [I] Selected Device ID: 0
+[08/31/2026-01:48:51] [I] Selected Device UUID: GPU-00954c6d-1d18-67a1-3bfc-ecb5c72f911e
+[08/31/2026-01:48:51] [I] Compute Capability: 8.9
+[08/31/2026-01:48:51] [I] SMs: 24
+[08/31/2026-01:48:51] [I] Device Global Memory: 8187 MiB
+[08/31/2026-01:48:51] [I] Shared Memory per SM: 100 KiB
+[08/31/2026-01:48:51] [I] Memory Bus Width: 128 bits (ECC disabled)
+[08/31/2026-01:48:51] [I] Application Compute Clock Rate: 2.37 GHz
+[08/31/2026-01:48:51] [I] Application Memory Clock Rate: 8.001 GHz
+[08/31/2026-01:48:51] [I] 
+[08/31/2026-01:48:51] [I] Note: The application clock rates do not reflect the actual clock rates that the GPU is currently running at.
+[08/31/2026-01:48:51] [I] 
+[08/31/2026-01:48:51] [I] TensorRT version: 10.4.0
+[08/31/2026-01:48:51] [I] Loading standard plugins
+[08/31/2026-01:48:51] [I] [TRT] [MemUsageChange] Init CUDA: CPU +2, GPU +0, now: CPU 29, GPU 1090 (MiB)
+[08/31/2026-01:48:56] [I] [TRT] [MemUsageChange] Init builder kernel library: CPU +2238, GPU +428, now: CPU 2422, GPU 1518 (MiB)
+[08/31/2026-01:48:56] [I] Start parsing network model.
+[08/31/2026-01:48:56] [I] [TRT] ----------------------------------------------------------------
+[08/31/2026-01:48:56] [I] [TRT] Input filename:   /home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best.onnx
+[08/31/2026-01:48:56] [I] [TRT] ONNX IR version:  0.0.8
+[08/31/2026-01:48:56] [I] [TRT] Opset version:    17
+[08/31/2026-01:48:56] [I] [TRT] Producer name:    pytorch
+[08/31/2026-01:48:56] [I] [TRT] Producer version: 2.0.0
+[08/31/2026-01:48:56] [I] [TRT] Domain:           
+[08/31/2026-01:48:56] [I] [TRT] Model version:    0
+[08/31/2026-01:48:56] [I] [TRT] Doc string:       
+[08/31/2026-01:48:56] [I] [TRT] ----------------------------------------------------------------
+[08/31/2026-01:48:56] [I] Finished parsing network model. Parse time: 0.0370224
+[08/31/2026-01:48:56] [W] [TRT] Could not read timing cache from: /home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best_fp16.timing.cache. A new timing cache will be generated and written.
+[08/31/2026-01:48:56] [I] [TRT] Global timing cache in use. Profiling results in this builder pass will be stored.
+[08/31/2026-01:51:27] [I] [TRT] Detected 1 inputs and 3 output network tensors.
+[08/31/2026-01:51:30] [I] [TRT] Total Host Persistent Memory: 380496 bytes
+[08/31/2026-01:51:30] [I] [TRT] Total Device Persistent Memory: 960512 bytes
+[08/31/2026-01:51:30] [I] [TRT] Max Scratch Memory: 0 bytes
+[08/31/2026-01:51:30] [I] [TRT] [BlockAssignment] Started assigning block shifts. This will take 122 steps to complete.
+[08/31/2026-01:51:30] [I] [TRT] [BlockAssignment] Algorithm ShiftNTopDown took 2.71214ms to assign 9 blocks to 122 nodes requiring 24461824 bytes.
+[08/31/2026-01:51:30] [I] [TRT] Total Activation Memory: 24460800 bytes
+[08/31/2026-01:51:30] [I] [TRT] Total Weights Memory: 6119700 bytes
+[08/31/2026-01:51:30] [I] [TRT] Engine generation completed in 153.718 seconds.
+[08/31/2026-01:51:30] [I] [TRT] [MemUsageStats] Peak memory usage of TRT CPU/GPU memory allocators: CPU 0 MiB, GPU 181 MiB
+[08/31/2026-01:51:30] [I] [TRT] [MemUsageStats] Peak memory usage during Engine building and serialization: CPU: 3711 MiB
+[08/31/2026-01:51:30] [I] Engine built in 153.763 sec.
+[08/31/2026-01:51:30] [I] Created engine with size: 9.43596 MiB
+[08/31/2026-01:51:30] [I] [TRT] Serialized 27 bytes of code generator cache.
+[08/31/2026-01:51:30] [I] [TRT] Serialized 6372 timing cache entries
+[08/31/2026-01:51:30] [I] [TRT] Saved 662857 bytes of timing cache to /home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best_fp16.timing.cache
+[08/31/2026-01:51:30] [I] [TRT] Loaded engine size: 9 MiB
+[08/31/2026-01:51:30] [I] Engine deserialized in 0.0431478 sec.
+[08/31/2026-01:51:30] [I] [TRT] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +24, now: CPU 0, GPU 30 (MiB)
+[08/31/2026-01:51:30] [I] Setting persistentCacheLimit to 0 bytes.
+[08/31/2026-01:51:30] [I] Created execution context with device memory size: 23.3276 MiB
+[08/31/2026-01:51:30] [I] Using random values for input images
+[08/31/2026-01:51:30] [I] Input binding for images with dimensions 1x3x800x800 is created.
+[08/31/2026-01:51:30] [I] Output binding for output0 with dimensions 1x10x13125 is created.
+[08/31/2026-01:51:30] [I] Starting inference
+[08/31/2026-01:51:32] [I] Warmup completed 254 queries over 1000 ms
+[08/31/2026-01:51:32] [I] Timing trace has 100 queries over 0.264888 s
+[08/31/2026-01:51:32] [I] 
+[08/31/2026-01:51:32] [I] === Trace details ===
+[08/31/2026-01:51:32] [I] Trace averages of 10 runs:
+[08/31/2026-01:51:32] [I] Average on 10 runs - GPU latency: 1.49266 ms - Host latency: 2.44909 ms (enqueue 1.08182 ms)
+[08/31/2026-01:51:32] [I] Average on 10 runs - GPU latency: 1.54626 ms - Host latency: 2.50438 ms (enqueue 1.1488 ms)
+[08/31/2026-01:51:32] [I] Average on 10 runs - GPU latency: 1.6349 ms - Host latency: 2.59711 ms (enqueue 0.9604 ms)
+[08/31/2026-01:51:32] [I] Average on 10 runs - GPU latency: 1.58763 ms - Host latency: 2.60311 ms (enqueue 1.19845 ms)
+[08/31/2026-01:51:32] [I] Average on 10 runs - GPU latency: 1.65251 ms - Host latency: 2.60941 ms (enqueue 0.862366 ms)
+[08/31/2026-01:51:32] [I] Average on 10 runs - GPU latency: 1.55188 ms - Host latency: 2.51108 ms (enqueue 1.12986 ms)
+[08/31/2026-01:51:32] [I] Average on 10 runs - GPU latency: 1.59613 ms - Host latency: 2.55847 ms (enqueue 1.18187 ms)
+[08/31/2026-01:51:32] [I] Average on 10 runs - GPU latency: 1.55641 ms - Host latency: 2.51577 ms (enqueue 1.2531 ms)
+[08/31/2026-01:51:32] [I] Average on 10 runs - GPU latency: 1.59452 ms - Host latency: 2.55287 ms (enqueue 0.917334 ms)
+[08/31/2026-01:51:32] [I] Average on 10 runs - GPU latency: 1.67208 ms - Host latency: 2.68822 ms (enqueue 0.975525 ms)
+[08/31/2026-01:51:32] [I] 
+[08/31/2026-01:51:32] [I] === Performance summary ===
+[08/31/2026-01:51:32] [I] Throughput: 377.518 qps
+[08/31/2026-01:51:32] [I] Latency: min = 2.26611 ms, max = 3.00769 ms, mean = 2.55895 ms, median = 2.54413 ms, percentile(90%) = 2.72595 ms, percentile(95%) = 2.91589 ms, percentile(99%) = 3.00769 ms
+[08/31/2026-01:51:32] [I] Enqueue Time: min = 0.794312 ms, max = 2.93164 ms, mean = 1.07095 ms, median = 0.952637 ms, percentile(90%) = 1.28015 ms, percentile(95%) = 1.56458 ms, percentile(99%) = 2.93164 ms
+[08/31/2026-01:51:32] [I] H2D Latency: min = 0.892456 ms, max = 1.12524 ms, mean = 0.916467 ms, median = 0.902802 ms, percentile(90%) = 0.940308 ms, percentile(95%) = 1.02258 ms, percentile(99%) = 1.12524 ms
+[08/31/2026-01:51:32] [I] GPU Compute Time: min = 1.30872 ms, max = 2.02026 ms, mean = 1.5885 ms, median = 1.58514 ms, percentile(90%) = 1.76245 ms, percentile(95%) = 1.8739 ms, percentile(99%) = 2.02026 ms
+[08/31/2026-01:51:32] [I] D2H Latency: min = 0.0509033 ms, max = 0.0723877 ms, mean = 0.0539856 ms, median = 0.0524902 ms, percentile(90%) = 0.0574951 ms, percentile(95%) = 0.067749 ms, percentile(99%) = 0.0723877 ms
+[08/31/2026-01:51:32] [I] Total Host Walltime: 0.264888 s
+[08/31/2026-01:51:32] [I] Total GPU Compute Time: 0.15885 s
+[08/31/2026-01:51:32] [W] * GPU compute time is unstable, with coefficient of variance = 9.1079%.
+[08/31/2026-01:51:32] [W]   If not already in use, locking GPU clock frequency or adding --useSpinWait may improve the stability.
+[08/31/2026-01:51:32] [I] Explanations of the performance metrics are printed in the verbose logs.
+[08/31/2026-01:51:32] [I] 
+&&&& PASSED TensorRT.trtexec [TensorRT v100400] [b26] # /home/everbreath/.local/opt/tensorrt-10.4.0.26-cuda12.6/usr/src/tensorrt/bin/trtexec --onnx=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best.onnx --fp16 --memPoolSize=workspace:2048M --warmUp=1000 --iterations=100 --duration=0 --saveEngine=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best_fp16.engine --timingCacheFile=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/best_fp16.timing.cache --profilingVerbosity=detailed --separateProfileRun --exportTimes=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/build_times.json --exportProfile=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/build_profile.json --exportLayerInfo=/home/everbreath/.local/state/yolo-defect-s2-04/trtexec_20260831/build_layers.json

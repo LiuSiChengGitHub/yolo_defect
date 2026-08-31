@@ -241,5 +241,38 @@ TEST(ResultWriterFileTest, RejectsRegularFileUsedAsOutputParent) {
   EXPECT_FALSE(cleanup_error) << cleanup_error.message();
 }
 
+TEST(ResultWriterFileTest, RejectsOutputInsideProtectedCacheDirectory) {
+  const auto unique_suffix = std::chrono::steady_clock::now()
+                                 .time_since_epoch()
+                                 .count();
+  const std::filesystem::path test_root =
+      std::filesystem::temp_directory_path() /
+      ("yolo_defect_protected_cache_" + std::to_string(unique_suffix));
+  const std::filesystem::path source_image = test_root / "source.jpg";
+  const std::filesystem::path cache = test_root / "engine_cache";
+  ASSERT_TRUE(std::filesystem::create_directories(cache));
+  {
+    std::ofstream source(source_image, std::ios::binary);
+    ASSERT_TRUE(source.is_open());
+    source << "synthetic source placeholder";
+  }
+  SingleImageDetectionResult result = make_valid_result();
+  result.image.source_path = source_image;
+  DetectionOutputRequest request;
+  request.json_path = cache / "frozen.engine";
+  request.overwrite_existing = true;
+
+  const std::string message = capture_runtime_error([&] {
+    (void)write_detection_outputs(result, request, {cache});
+  });
+
+  EXPECT_NE(message.find("output.json_path"), std::string::npos) << message;
+  EXPECT_NE(message.find("protected input"), std::string::npos) << message;
+  EXPECT_FALSE(std::filesystem::exists(*request.json_path));
+  std::error_code cleanup_error;
+  std::filesystem::remove_all(test_root, cleanup_error);
+  EXPECT_FALSE(cleanup_error) << cleanup_error.message();
+}
+
 }  // namespace
 }  // namespace yolo_defect_cpp

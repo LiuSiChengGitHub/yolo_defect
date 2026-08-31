@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "manifest_id": "neu_det_val_s2_04_native_holdout_6x5_v3",
+  "selection": {
+    "dataset_split": "NEU-DET validation images",
+    "rule": "For each artifact class, use fixed validation indices 243, 257, 272, 287, and 298. They are disjoint from v1 and v2 and were frozen before the first native TensorRT inference on any v3 sample.",
+    "samples_per_class": 5
+  },
+  "classes": [
+    {"class_id": 0, "class_name": "crazing"},
+    {"class_id": 1, "class_name": "inclusion"},
+    {"class_id": 2, "class_name": "patches"},
+    {"class_id": 3, "class_name": "pitted_surface"},
+    {"class_id": 4, "class_name": "rolled-in_scale"},
+    {"class_id": 5, "class_name": "scratches"}
+  ],
+  "samples": [
+    {"sample_id": "crazing_243", "source_class_id": 0, "source_class_name": "crazing", "image_path": "../../../data/images/val/crazing_243.jpg", "image_sha256": "94E839F26E6B51D8DEE5D8A8C3FFC0D4F820015F18E7BCB5FEF9582A2DF2B295"},
+    {"sample_id": "crazing_257", "source_class_id": 0, "source_class_name": "crazing", "image_path": "../../../data/images/val/crazing_257.jpg", "image_sha256": "F4E5CF14E8E352B89DA12ED84A98DE3D5B7E7E402694D64ECAED9ACB7EFE9454"},
+    {"sample_id": "crazing_272", "source_class_id": 0, "source_class_name": "crazing", "image_path": "../../../data/images/val/crazing_272.jpg", "image_sha256": "E57AC6B9B586284AE7D07CF487540D03092DAA569D6F949F67DB398D23CFA439"},
+    {"sample_id": "crazing_287", "source_class_id": 0, "source_class_name": "crazing", "image_path": "../../../data/images/val/crazing_287.jpg", "image_sha256": "793AA8808F567CD6552258C01904817B28D481C5224CCE86C6B78BDD2721D42F"},
+    {"sample_id": "crazing_298", "source_class_id": 0, "source_class_name": "crazing", "image_path": "../../../data/images/val/crazing_298.jpg", "image_sha256": "767EF7B4C31AFD770CD2DFD17341AF33CA3EEC6A0018AD9CF9EF6C69C13C97A0"},
+
+    {"sample_id": "inclusion_243", "source_class_id": 1, "source_class_name": "inclusion", "image_path": "../../../data/images/val/inclusion_243.jpg", "image_sha256": "BC912FA169B782795D9CCA21F50B8E9C991147D964FED06A146CF6A07E056A4B"},
+    {"sample_id": "inclusion_257", "source_class_id": 1, "source_class_name": "inclusion", "image_path": "../../../data/images/val/inclusion_257.jpg", "image_sha256": "E276DA9FA99083BE544B0AC21A958E1754E3EF80598C0F5756DCD7D3786C4745"},
+    {"sample_id": "inclusion_272", "source_class_id": 1, "source_class_name": "inclusion", "image_path": "../../../data/images/val/inclusion_272.jpg", "image_sha256": "C15071996140E92CF42AEDC58A27E178A20C3F592DBBF62F9BCC18A9EBDFDBDC"},
+    {"sample_id": "inclusion_287", "source_class_id": 1, "source_class_name": "inclusion", "image_path": "../../../data/images/val/inclusion_287.jpg", "image_sha256": "AA4A04BFC65AD081A4165644E442EF1CE050501215DD1B83219FF2481B1A23E9"},
+    {"sample_id": "inclusion_298", "source_class_id": 1, "source_class_name": "inclusion", "image_path": "../../../data/images/val/inclusion_298.jpg", "image_sha256": "8B05AAA4648D3760F79E9D6805E2070C332F9648A9DF7415533ADCC17D9ECF3E"},
+
+    {"sample_id": "patches_243", "source_class_id": 2, "source_class_name": "patches", "image_path": "../../../data/images/val/patches_243.jpg", "image_sha256": "8E8FCD54563E51CB9D72BF739BF1EAD8BFEE6EC5C39FD6C9134CE0DD5ED714C0"},
+    {"sample_id": "patches_257", "source_class_id": 2, "source_class_name": "patches", "image_path": "../../../data/images/val/patches_257.jpg", "image_sha256": "0A3C01F45EF41E5D16A39722FA4F1211CFD2D2E8D9AD17FF1170E491CBC973A7"},
+    {"sample_id": "patches_272", "source_class_id": 2, "source_class_name": "patches", "image_path": "../../../data/images/val/patches_272.jpg", "image_sha256": "FAB6BCCD498BA53F8A27BEDE2EC0EFFA53D3B30C05F2A1DF1923AB9DD6417DB9"},
+    {"sample_id": "patches_287", "source_class_id": 2, "source_class_name": "patches", "image_path": "../../../data/images/val/patches_287.jpg", "image_sha256": "5261D0B7EE9C4CA06E32CB1B4888D139BEB9ACBD009AC4EADCB859DDA106B5AC"},
+    {"sample_id": "patches_298", "source_class_id": 2, "source_class_name": "patches", "image_path": "../../../data/images/val/patches_298.jpg", "image_sha256": "7F1193EB62C98CA54123CC9B92CECC4486A79CDB3F489F7F863836EF09EA4A38"},
+
+    {"sample_id": "pitted_surface_243", "source_class_id": 3, "source_class_name": "pitted_surface", "image_path": "../../../data/images/val/pitted_surface_243.jpg", "image_sha256": "0FF5B95F2010A0AB272018255023C9AAC1018EC23243759E4D9EAB1DAFBFF718"},
+    {"sample_id": "pitted_surface_257", "source_class_id": 3, "source_class_name": "pitted_surface", "image_path": "../../../data/images/val/pitted_surface_257.jpg", "image_sha256": "CAF4B9386A635786A2CF3F09ADFEEB163F36266378A0C31FCD904A97CB62C590"},
+    {"sample_id": "pitted_surface_272", "source_class_id": 3, "source_class_name": "pitted_surface", "image_path": "../../../data/images/val/pitted_surface_272.jpg", "image_sha256": "5276AEF701A487548D42471C70CE9B1407C304313D9A36A5F7BF0E10C92467F5"},
+    {"sample_id": "pitted_surface_287", "source_class_id": 3, "source_class_name": "pitted_surface", "image_path": "../../../data/images/val/pitted_surface_287.jpg", "image_sha256": "C77CC92BE88C61EE91D1B79C527E158D457DB236C4BCB844874350CB7DDA7335"},
+    {"sample_id": "pitted_surface_298", "source_class_id": 3, "source_class_name": "pitted_surface", "image_path": "../../../data/images/val/pitted_surface_298.jpg", "image_sha256": "FFD6C20B0571B9D4A4CD08D8DE1E3EA851989C12C5348C2ACDD9BAE2A4AD2A76"},
+
+    {"sample_id": "rolled-in_scale_243", "source_class_id": 4, "source_class_name": "rolled-in_scale", "image_path": "../../../data/images/val/rolled-in_scale_243.jpg", "image_sha256": "76F707B0DDCB61796CEDE17B2AF374B1A9F9C3856E214F6190DB45A9A7D59A10"},
+    {"sample_id": "rolled-in_scale_257", "source_class_id": 4, "source_class_name": "rolled-in_scale", "image_path": "../../../data/images/val/rolled-in_scale_257.jpg", "image_sha256": "9365FE96679D4A92779B3C016AFDEED83D9FE56655EFFFE2DEF0723B38DA34DA"},
+    {"sample_id": "rolled-in_scale_272", "source_class_id": 4, "source_class_name": "rolled-in_scale", "image_path": "../../../data/images/val/rolled-in_scale_272.jpg", "image_sha256": "B21248385A58FADA6936F04F5081B2198616126D34B1AA2E6E6F8BE47BA18375"},
+    {"sample_id": "rolled-in_scale_287", "source_class_id": 4, "source_class_name": "rolled-in_scale", "image_path": "../../../data/images/val/rolled-in_scale_287.jpg", "image_sha256": "45B1154FFCD65C9A971BF2A42AA3F0F489C9227A8550C1F52E04125E1CE05C40"},
+    {"sample_id": "rolled-in_scale_298", "source_class_id": 4, "source_class_name": "rolled-in_scale", "image_path": "../../../data/images/val/rolled-in_scale_298.jpg", "image_sha256": "4EE977480D64DA6F6FF4C5DE36BB2D534ABCFD35D85B853FC3ABD228B689CD86"},
+
+    {"sample_id": "scratches_243", "source_class_id": 5, "source_class_name": "scratches", "image_path": "../../../data/images/val/scratches_243.jpg", "image_sha256": "21179D3BAEBAD95F0DE55C026EC10FC343D86134193F7DDDFBFDC82FA450BF9B"},
+    {"sample_id": "scratches_257", "source_class_id": 5, "source_class_name": "scratches", "image_path": "../../../data/images/val/scratches_257.jpg", "image_sha256": "B397D474777DA6843CBD252388515502C645877636B353B46F0CE6E5C770EC35"},
+    {"sample_id": "scratches_272", "source_class_id": 5, "source_class_name": "scratches", "image_path": "../../../data/images/val/scratches_272.jpg", "image_sha256": "36C685908F06B7609FEE229A4F5283176BF1ED5DC3953EB4BECAF76B5E7E5E08"},
+    {"sample_id": "scratches_287", "source_class_id": 5, "source_class_name": "scratches", "image_path": "../../../data/images/val/scratches_287.jpg", "image_sha256": "6DAF546F9BB1A4B58B9A76F4FE912418426B9A97448610EDEC52314F66FC140F"},
+    {"sample_id": "scratches_298", "source_class_id": 5, "source_class_name": "scratches", "image_path": "../../../data/images/val/scratches_298.jpg", "image_sha256": "C408389639CCE8C2DA2BA020370457279429B80420E7379BB997392BCAFD03D5"}
+  ]
+}

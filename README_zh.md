@@ -16,15 +16,15 @@ YOLOv8 和 NEU-DET 是首个 Runtime 实现所使用的稳定模型与数据集�
 本仓库的价值在于围绕该产物建立工程闭环：可执行契约、C++ 推理、确定性输出、
 正确性门禁、Benchmark 证据，以及受控推进 Linux、并发、量化和 TensorRT 的路径。
 
-> **状态 — 2026-08-30：** 大阶段一、用户负责的 L2，以及 S2-01 至 S2-03
-> 的实现与证据均已完成。S2-03 在共享单图 `DetectorPipeline` 之上增加确定性的
-> 目录/manifest 发现、有界队列、每 worker 独占 ORT session、背压、逐图输出、
-> 部分失败统计、协作式退出和机器可读 `BatchSummary`。Windows x86_64 与
-> WSL2/Linux x86_64 的 clean Release 均通过 156/156 测试，并分别完成正式
-> 361 图 workers=1/workers=4 正确性、吞吐和内存比较。AArch64 构建也在 QEMU
-> user-mode 下通过相同的目录/manifest/部分失败 batch 功能链。当前停止等待用户
-> L1，S2-04 尚未开始。QEMU 不是 ARM 开发板，因此不发布模拟器性能、内存或
-> 原生设备结论。
+> **状态 — 2026-08-31：** 大阶段一、用户负责的 L2，以及 S2-01 至 S2-04
+> 均已完成。S2-04 在 WSL2/Linux x86_64 + RTX 4060 Laptop GPU 上形成真实
+> TensorRT 执行。ORT TensorRT EP 已证明真实 placement，但未通过两轮冻结
+> correctness；最终产品路径因此采用 SHA 绑定、load-only 的 native TensorRT
+> engine，只有 DFL Softmax 是实际 FP16 compute，其余为 FP32/noTF32。未触碰的
+> v4 30 图 holdout 重复两轮通过，并保留 same-SDK CPU/native 延迟、吞吐、host
+> RSS 与 device-wide GPU memory 证据。最终 Windows 与 WSL2/Linux CPU gate
+> 均为 179/179 通过。当前停止等待用户 L1，S2-05 未开始。本结论仅代表本地
+> WSL2 GPU/edge-node，不是 Jetson、ARM64 GPU、嵌入式硬件或裸机原生 Linux。
 
 ![固定推理 Demo](docs/assets/demo_inference_result.gif)
 
@@ -82,7 +82,7 @@ FP32 ONNX
   -> [Gate A 已交付] Windows and Linux x86_64 shared-source Runtime
   -> [Gate B 已交付] AArch64 cross-build + QEMU 功能可移植性
   -> [S2-03 已交付] directory/manifest + bounded queue + workers
-  -> Linux x86_64 + RTX 4060 TensorRT path
+  -> [S2-04 已交付] WSL2/Linux x86_64 + RTX 4060 TensorRT path
   -> full evidence, resume variants, interview closure, recruiting freeze
 ```
 
@@ -184,7 +184,9 @@ Gate A 的准确机器快照、证据与解释见
 [S2-02 Gate A 收口](docs/details/s2_02_gate_a_closure.md)；Gate B 的 host/target
 边界和 QEMU 证据见 [S2-02 Gate B 收口](docs/details/s2_02_gate_b_closure.md)。
 S2-03 的设计、三平台功能证据和同平台性能比较统一见
-[S2-03 收口](docs/details/s2_03_closure.md)。
+[S2-03 收口](docs/details/s2_03_closure.md)。S2-04 的 provider 决策、native
+TensorRT 实现、冻结门禁、实测指标和命令见
+[S2-04 收口](docs/details/s2_04_closure.md)。
 
 ## 5. 核心模块
 
@@ -192,7 +194,7 @@ S2-03 的设计、三平台功能证据和同平台性能比较统一见
 |---|---|
 | Runtime/artifact/metadata 契约 | 分离可调 Runtime 策略、声明的产物语义和 ORT 实际观察到的张量/provider 事实；在推理前拒绝不匹配 |
 | `ImagePreprocessor` | 解码或接收 `CV_8UC3` 图片；执行 letterbox、BGR-to-RGB、归一化，生成连续 NCHW 数据，并保留逆变换元数据 |
-| `OnnxRunner` / `InferenceOutput` | 通过 RAII/PImpl 管理 ORT 资源，验证输入/输出，同步执行，并把输出复制到生命周期独立于 ORT 的存储中 |
+| `OnnxRunner` / `NativeTensorRtRunner` / `InferenceOutput` | 在统一 owned-I/O 边界后选择 ORT session 或 SHA 绑定的 native TensorRT plan，验证 provider/engine/I/O，同步执行并返回与实现无关的 host 生命周期 |
 | Static PTQ 工具链 | 冻结校准输入与量化配置，按声明的 activation/weight 类型执行 Conv-only QDQ PTQ，检查选中/量化/失败节点，验证 actual metadata，并生成派生产物卡 |
 | `ProfileRunner` 与 profile 汇总器 | 创建隔离的 profiling session，保留 ORT raw trace，按 node/operator/provider 汇总耗时与调用次数，并把 trace 耗时排除在正式 Benchmark 外 |
 | 后处理/NMS | 验证 YOLO BCN 输出，选择类别分数，执行严格过滤与稳定的类别无关 NMS，再恢复并裁剪源图坐标 |
@@ -212,7 +214,7 @@ S2-03 的设计、三平台功能证据和同平台性能比较统一见
 | S2-01 | Static INT8 PTQ、FP32/INT8 正确性/任务质量/性能对比、ORT operator/node profiling | Windows CPU 个人练习收口；产品/质量结果为 advisory；不做 QAT，也不把 profiler 冒充 Benchmark | **实现/证据完成；等待 L1** |
 | S2-02 | Linux x86_64 原生链路、共享源码可移植性、AArch64 交叉构建与 QEMU smoke | WSL2/QEMU 不是开发板；QEMU 不产出性能结论 | **Gate A/Gate B 实现与证据已完成；等待用户 L1** |
 | S2-03 | 目录/manifest 发现、有界队列、workers、背压、失败计数、干净退出、吞吐对比 | 并发单图任务不等于真正的 ONNX batch；QEMU 只提供功能证据 | **实现/证据完成；等待用户 L1** |
-| S2-04 | 一条真实 Linux x86_64 + RTX 4060 TensorRT 执行路径、FP16 正确性与性能 | 仅为本地 GPU/边缘节点证据；不是 Jetson 或嵌入式部署 | 尚未开始 |
+| S2-04 | 一条真实 Linux x86_64 + RTX 4060 TensorRT 执行路径、FP16 正确性与性能 | 仅为 WSL2 本地 GPU/边缘节点证据；受约束 mixed FP16/FP32，不是 Jetson 或嵌入式部署 | **实现/证据/教学收口完成；等待用户 L1** |
 | S2-05 | 适用的完整门禁、结果矩阵、失败案例、三套简历叙事、面试材料、recruiting freeze | 不增加新技术栈 | 计划中 |
 
 ### S2-01 Windows CPU 记录
@@ -333,16 +335,51 @@ S2-03 保持每次推理 batch=1，并复用现有 preprocess → ORT → postpr
 命令协议与解释见[路径、命令与环境](docs/paths_commands.md)和
 [S2-03 收口](docs/details/s2_03_closure.md)。
 
+### S2-04 RTX 4060 TensorRT 记录
+
+S2-04 保持 `DetectorPipeline`、预处理、decode、NMS、坐标恢复和输出 schema
+不变。第一条路径在 ORT 中注册 TensorRT EP → CUDA EP → CPU EP，并启用 FP16、
+engine/timing cache。`trtexec --fp16` 对当前 ONNX 成功 build/reload，ORT trace
+也记录到 10 个 `TensorrtExecutionProvider` kernel event，CUDA/CPU fallback
+event 均为 0。但冻结的 ORT v1 与互斥 v2 检测门禁都失败，因此旧 ORT benchmark
+只作为诊断，不是可发布的最终性能。
+
+最终 C++ 产品路径是在现有 `OnnxRunner` 接口后的最小 load-only native TensorRT
+backend。它校验 plan SHA、TensorRT/CUDA/SM 8.9 和 tensor contract，再使用自持有的
+非默认 CUDA stream 与持久 device buffer 执行 H2D → `enqueueV3` → D2H，且没有
+fallback。最终 E0 plan 为 21,144,012 bytes，SHA-256
+`E0CBB0A8A620C1FCF3F8FE215BC716313A3884D2A9CCDE4F3D18B4571ABD8746`。
+只有 `/model.22/dfl/Softmax` 是 FP16 compute，两个相邻 reformat 触及 Half，
+其他计算与外部 I/O 全为 FP32，并禁用 TF32；这是受约束 mixed precision，不是
+全 FP16 网络。
+
+| 已接受证据 | 实测结果 |
+|---|---|
+| 冻结正确性 | 未触碰 v4 holdout：CPU-vs-native A 30/30、CPU-vs-native B 30/30 通过；64 个匹配 detection，最大 confidence 误差 `1.0044e-5`、最大坐标误差 `0.032166 px`、最小 IoU `0.998619`；native A/B 输出树逐文件字节一致 |
+| Engine reload | `trtexec` 100 次：`301.55 q/s`；host P50/P95 `3.07379/3.53577 ms`；GPU-compute P50/P95 `2.41962/2.88257 ms` |
+| same-SDK CPU 对照 | ORT 1.20.1 CPU、batch=1、warmup=10/repeat=100：pipeline P50/P95 `118.436/133.059 ms`，`8.3247 img/s`，peak RSS `200.121 MiB` |
+| Native warm A | 初始化 `684.570 ms`；session P50/P95 `3.877/5.329 ms`；pipeline P50/P95 `6.974/8.779 ms`；`137.652 img/s`；peak RSS `384.668 MiB` |
+| Native warm B | 初始化 `619.423 ms`；session P50/P95 `3.633/7.468 ms`；pipeline P50/P95 `6.519/10.490 ms`；`140.555 img/s`；peak RSS `384.371 MiB` |
+| 整体比较 | Native pipeline throughput 是 same-SDK ORT CPU 的 `16.5353x/16.8841x`；这是整体 native TensorRT/GPU 加速，不能归因于单独的 FP16 layer |
+| GPU memory | A/B 的 device-wide `nvidia-smi memory.used` baseline-to-peak 均为 `155 MiB`；未获得 PID-specific memory，因此不是进程或模型独占显存 |
+| 重复性边界 | detection 完全一致、平均吞吐相差约 2.1%，但 P95 差异明显；不声称未锁频 Laptop GPU 的尾延迟稳定 |
+
+当前源码在 Windows x86_64 与 WSL2/Linux x86_64 均通过 179/179 CTest。
+TensorRT INT8 未增加，因为 FP32 artifact 尚无冻结 representative calibration/QDQ
+契约，且 INT8 明确不是阻断项。完整证据和九部分讲解见
+[S2-04 收口](docs/details/s2_04_closure.md)与
+[`cpp_infer/results/s2_04/linux_x86_64_rtx4060/`](cpp_infer/results/s2_04/linux_x86_64_rtx4060/)。
+
 ### 平台矩阵
 
 | 平台/后端 | 能证明什么 | 当前状态 |
 |---|---|---|
-| Windows x86_64 + ORT CPU FP32 | 当前产品链、单图与有界多图正确性、156/156 测试、正式同平台吞吐/PWS 比较 | **S2-03 已验证** |
+| Windows x86_64 + ORT CPU FP32 | 当前产品链、单图与有界多图正确性、最终 179/179 测试、正式同平台吞吐/PWS 比较 | **S2-04 回归已验证** |
 | Windows x86_64 + ORT CPU INT8 | Static PTQ 产物、Runtime 合法性、大小/质量/性能比较、逐节点 profiling | S2-01 已按 advisory 练习口径验证 |
 | WSL2/Linux x86_64 + ORT CPU INT8 | 潜在的共享源码 Linux INT8 路径 | Gate A 未单独实测；不作 Linux INT8 对比结论 |
-| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux 构建/加载/Runtime 可移植性、单图与有界多图正确性、156/156 测试、正式同平台吞吐/RSS 比较 | **S2-03 已在 WSL2 验证** |
+| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux 构建/加载/Runtime 可移植性、单图与有界多图正确性、最终 179/179 测试、正式同平台吞吐/RSS 比较 | **S2-04 回归已在 WSL2 验证** |
 | Linux AArch64 under QEMU | 交叉构建、单图与有界多图 ARM64 ORT CPU 功能正确性 | **S2-03 已在模拟环境验证**；不是板卡且无性能/内存结论 |
-| Linux x86_64 + RTX 4060 + TensorRT | 真实本地 TensorRT 执行、FP16 正确性/性能、GPU 内存 | 计划在 S2-04 完成；不是 Jetson |
+| WSL2/Linux x86_64 + RTX 4060 Laptop + TensorRT | 真实本地 `trtexec`、ORT EP 诊断 placement、已接受 native `enqueueV3`、受约束 FP16 正确性/性能、host RSS 和 device-wide GPU memory | **S2-04 已验证**；不是原生 Linux、Jetson、ARM64 GPU 或嵌入式硬件 |
 
 当前简历无需等待大阶段二即可使用。已完成的 S2 单元可以滚动更新简历；
 尚未完成的目标绝不能写成已交付结果。
@@ -364,10 +401,15 @@ S2-03 保持每次推理 batch=1，并复用现有 preprocess → ORT → postpr
   但平台语义不同；二者都不是模型专属或单次推理内存，数值也不能直接比较。
 - S2-01 ORT trace 已证明优化后节点由 `CPUExecutionProvider` 执行，但 trace
   时长含 profiler 开销，也不能说明 kernel 内部最终选择了哪条 CPU 指令。
-- 当前 Runtime 仍只使用 CPU，且每次推理调用保持 batch=1，但 S2-03 已能通过
-  有界独立 workers 处理多图。这不是真正的 tensor batch、视频、服务、GPU 并发或
-  无锁队列。QEMU 不证明板卡延迟、吞吐、内存、功耗、散热或部署稳定性；TensorRT
-  仍在计划中。
+- Runtime 现在包含 CPU、诊断用 ORT TensorRT EP 和已接受的 load-only native
+  TensorRT 路径。每次调用仍为 batch=1；S2-03 的有界 workers 仍只验证 CPU，
+  不能改写成 GPU 并发证据。当前没有真正 tensor batch、视频、服务、多 stream
+  GPU scheduler 或无锁队列。
+- 最终 E0 plan 只有一个 FP16 compute layer。native/CPU speedup 是整体后端/GPU
+  结果，不是单独 FP16 收益。Native A/B 的 P95 差异明显，host RSS 是进程高水位，
+  155 MiB GPU delta 是 device-wide 而非 PID-specific。
+- QEMU 不证明板卡延迟、吞吐、内存、功耗、散热或部署稳定性；S2-04 同样只证明
+  本地 WSL2 x86_64 GPU/edge-node，不证明原生 Linux、Jetson、ARM64 GPU 或嵌入式。
 - 历史 Python ORT `24.4/72.1 FPS` 使用不同实现、provider、硬件、样本和计时边界；
   只能作为背景，不能与 C++ 结果排名比较。
 - 源码、模型与数据集许可证是彼此独立的检查点。MIT 源码许可证不会自动为已分发的
@@ -396,6 +438,7 @@ D010 集成、Qt、本地 LLM、Agent 工作流和真实 ARM/Jetson 设备保持
 - [S2-02 Gate B AArch64/QEMU 收口](docs/details/s2_02_gate_b_closure.md)
 - [S2-02 完整教学收口](docs/details/s2_02_closure.md)
 - [S2-03 多图有界并发收口](docs/details/s2_03_closure.md)
+- [S2-04 RTX 4060 TensorRT 收口](docs/details/s2_04_closure.md)
 - [路径、命令与环境](docs/paths_commands.md)
 - [C++ Runtime 技术参考](cpp_infer/README.md)
 
