@@ -70,7 +70,7 @@ Usage:
   stage1.cmd batch <input-dir-or-manifest> [output-directory]
                    [-Config <path>] [-Workers <1..64>]
                    [-QueueCapacity <1..4096>] [-OutputImages] [-Overwrite]
-  stage1.cmd batch-compare
+  stage1.cmd batch-compare [-Config <path>]
   stage1.cmd demo
   stage1.cmd consistency
   stage1.cmd benchmark [-Warmup <n>] [-Repeat <n>]
@@ -90,8 +90,9 @@ Actions:
   batch        Run a directory or UTF-8 path-list manifest with bounded
                workers; JSON is always written per successful image.
   batch-compare Run workers=1 and workers=4 as separate Release processes,
-               queue=8, FP32 CPU and JSON-only over data\images\val. Require
-               identical detections and describe throughput/PWS deltas.
+               queue=8 and JSON-only over data\images\val with the selected
+               RuntimeConfig (default FP32). Require identical detections and
+               describe throughput/PWS deltas.
   demo         Build and validate the fixed three-detection Demo.
   consistency  Build and run the frozen 30-image Python/C++ comparison.
   benchmark    Build, rerun consistency, then run the configured benchmark.
@@ -116,6 +117,7 @@ Batch examples:
   stage1.cmd batch "D:\images" "D:\batch-output" -Workers 4 -QueueCapacity 8
   stage1.cmd batch cpp_infer\tests\fixtures\s2_03_consistency_manifest.txt -Workers 2
   stage1.cmd batch-compare
+  stage1.cmd batch-compare -Config cpp_infer\configs\int8_u8s8_config.txt
 
 Profile examples:
   stage1.cmd profile
@@ -656,7 +658,8 @@ function Invoke-Demo {
   Invoke-NativeStep -Name 'Demo JSON contract validation' `
     -FilePath $script:ResolvedPythonExe `
     -Arguments @($script:DetectionValidator, $demoJson,
-                 '--expected-image', $script:ImagePath)
+                 '--expected-image', $script:ImagePath,
+                 '--expected-config', $script:ConfigPath)
   Invoke-NativeStep -Name 'Demo PNG OpenCV probe' `
     -FilePath $script:ImageProbePath -Arguments @($demoImage)
 
@@ -703,6 +706,11 @@ function Invoke-Detect {
     Invoke-NativeStep -Name 'single-image JSON parse' `
       -FilePath $script:ResolvedPythonExe `
       -Arguments @('-m', 'json.tool', $jsonPath) -Quiet
+    Invoke-NativeStep -Name 'single-image JSON contract validation' `
+      -FilePath $script:ResolvedPythonExe `
+      -Arguments @($script:DetectionValidator, $jsonPath,
+                   '--expected-image', $script:DetectImagePath,
+                   '--expected-config', $script:DetectConfigPath)
     $document = Get-Content -LiteralPath $jsonPath -Raw | ConvertFrom-Json
     $detectionCount = [string]$document.detections.Count
     $actualProvider = [string]$document.runtime.actual_provider
@@ -789,18 +797,18 @@ function Invoke-Batch {
 }
 
 function Invoke-BatchComparison {
-  Write-Stage 'formal S2-03 workers=1 versus workers=4 comparison'
+  Write-Stage 'formal workers=1 versus workers=4 comparison'
   $workers1Output = Join-Path $script:RunDir 'batch_workers_1'
   $workers4Output = Join-Path $script:RunDir 'batch_workers_4'
   $workers1Summary = Invoke-BatchRun `
     -InputPath $script:BatchPerformanceInput `
     -InputKind 'directory' -OutputPath $workers1Output `
-    -ConfigPath $script:ConfigPath -WorkerCount 1 -Capacity 8 `
+    -ConfigPath $script:DetectConfigPath -WorkerCount 1 -Capacity 8 `
     -WriteImages $false -AllowOverwrite $false
   $workers4Summary = Invoke-BatchRun `
     -InputPath $script:BatchPerformanceInput `
     -InputKind 'directory' -OutputPath $workers4Output `
-    -ConfigPath $script:ConfigPath -WorkerCount 4 -Capacity 8 `
+    -ConfigPath $script:DetectConfigPath -WorkerCount 4 -Capacity 8 `
     -WriteImages $false -AllowOverwrite $false
   $comparisonPath = Join-Path $script:RunDir 'batch_comparison.json'
   Invoke-NativeStep -Name 'batch correctness/throughput/memory comparison' `
@@ -1033,11 +1041,12 @@ if ($Action -eq 'detect') {
   }
 } elseif (-not [string]::IsNullOrWhiteSpace($Image) -or
           -not [string]::IsNullOrWhiteSpace($OutputDir) -or
-          -not [string]::IsNullOrWhiteSpace($Config) -or $Overwrite) {
+          (-not [string]::IsNullOrWhiteSpace($Config) -and
+           $Action -ne 'batch-compare') -or $Overwrite) {
   Throw-ActionableError -Object "$Action arguments" `
-    -Expected 'input/config only with detect, batch, or profile; output/overwrite only with detect or batch' `
+    -Expected 'input only with detect/batch; config with detect/batch/batch-compare/profile; output/overwrite only with detect or batch' `
     -Actual 'an action-specific argument was supplied' `
-    -ActionText 'remove the argument or use the detect/batch/profile action'
+    -ActionText 'remove the argument or use the matching config/input action'
 }
 if (($PSBoundParameters.ContainsKey('Warmup') -or
      $PSBoundParameters.ContainsKey('Repeat')) -and
@@ -1285,6 +1294,8 @@ if ($Action -eq 'profile') {
   $runtimeConfigObject = 'profile Runtime config'
 } elseif ($Action -eq 'batch') {
   $runtimeConfigObject = 'batch Runtime config'
+} elseif ($Action -eq 'batch-compare') {
+  $runtimeConfigObject = 'batch comparison Runtime config'
 }
 $script:DetectConfigPath = Resolve-RequiredFile `
   -Value $script:DetectConfigPath -Object $runtimeConfigObject `

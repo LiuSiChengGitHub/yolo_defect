@@ -552,6 +552,10 @@ if(BUILD_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/configs/tensorrt_fp16_config.txt")
   set(DEFAULT_NATIVE_TENSORRT_CONFIG
     "${CMAKE_CURRENT_SOURCE_DIR}/configs/tensorrt_native_fp16_config_v4.txt")
+  set(INT8_CONFIG
+    "${CMAKE_CURRENT_SOURCE_DIR}/configs/int8_u8s8_config.txt")
+  set(INT8_MODEL
+    "${CMAKE_CURRENT_SOURCE_DIR}/../models/best.int8.qdq.u8s8.onnx")
   set(TEST_RUNTIME_FIXTURES
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/runtime")
   set(TEST_FAILURE_SCRIPT
@@ -876,11 +880,38 @@ if(BUILD_TESTING)
       --config "${DEFAULT_CONFIG}"
       --image "${FIXED_IMAGE}"
       --work-root "${CMAKE_BINARY_DIR}/test_outputs/batch_cli"
+      --expected-model-id "yolov8n_neu_det_final_train_2"
+      --expected-model-sha256
+        "7B8A37610018A6AE6CACDFC869590A95BBE31AFB7579C39BE0FFEC537196AF68"
   )
   set_tests_properties(yolo_defect_cpp_batch_cli PROPERTIES
     LABELS "batch;concurrency;integration;quality_gate"
     TIMEOUT 300
   )
+
+  if(EXISTS "${INT8_MODEL}" AND NOT IS_DIRECTORY "${INT8_MODEL}")
+    message(STATUS
+      "Registering the INT8 batch integration test with '${INT8_MODEL}'")
+    add_test(
+      NAME yolo_defect_cpp_int8_batch_cli
+      COMMAND "${Python3_EXECUTABLE}" "${TEST_BATCH_CLI_SCRIPT}"
+        --cli $<TARGET_FILE:yolo_defect_cpp>
+        --config "${INT8_CONFIG}"
+        --image "${FIXED_IMAGE}"
+        --work-root "${CMAKE_BINARY_DIR}/test_outputs/int8_batch_cli"
+        --expected-model-id "yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2"
+        --expected-model-sha256
+          "9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1"
+    )
+    set_tests_properties(yolo_defect_cpp_int8_batch_cli PROPERTIES
+      LABELS "ptq;batch;concurrency;integration;quality_gate"
+      TIMEOUT 300
+    )
+  else()
+    message(STATUS
+      "Formal U8S8 model is absent at '${INT8_MODEL}'; "
+      "not registering yolo_defect_cpp_int8_batch_cli")
+  endif()
 
   add_test(
     NAME yolo_defect_consistency_unit

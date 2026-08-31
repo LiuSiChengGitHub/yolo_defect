@@ -29,6 +29,7 @@ cpp_infer\tools\stage1.cmd detect "data\images\val\crazing_241.jpg"
 cpp_infer\tools\stage1.cmd batch "data\images\val" -Workers 4 -QueueCapacity 8
 cpp_infer\tools\stage1.cmd batch cpp_infer\tests\fixtures\s2_03_consistency_manifest.txt -Workers 2
 cpp_infer\tools\stage1.cmd batch-compare
+cpp_infer\tools\stage1.cmd batch-compare -Config cpp_infer\configs\int8_u8s8_config.txt
 cpp_infer\tools\stage1.cmd profile
 cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_u8s8_config.txt -ProfileRuns 10
 ```
@@ -42,7 +43,7 @@ cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_u8s8_config.tx
 | `test` | 构建当前源码并运行完整 CTest；日常局部改动优先运行相关 target/test |
 | `detect <image> [output-directory]` | 复用 `DetectorPipeline` 运行单图，可选 `-Config` 与 `-Overwrite` |
 | `batch <input> [output-directory]` | 输入是目录时递归确定性发现，输入是文件时按 UTF-8 path-list manifest 解析；默认 workers=1、queue=`2*workers`，可选 `-Config`、`-Workers`、`-QueueCapacity`、`-OutputImages` 与 `-Overwrite` |
-| `batch-compare` | 固定 FP32 CPU、361 图、JSON-only、queue=8，以两个独立 Release 进程比较 workers=1/4；先要求逐图 detection JSON 字节与语义一致，再报告 throughput/PWS 差异，不设 speedup 门槛 |
+| `batch-compare [-Config <path>]` | 固定 361 图、JSON-only、queue=8，以两个独立 Release 进程比较 workers=1/4；默认 FP32，可选 Round 2 U8S8 config；先要求逐图 detection JSON 字节与语义一致，再报告 throughput/PWS 差异，不设 speedup 门槛 |
 | `demo` | 固定样本的 JSON/PNG smoke |
 | `consistency` | 固定 manifest 的 Python ORT/C++ ORT 比较 |
 | `benchmark` | 先运行 workflow 定义的 correctness 前置，再采集分段 latency/throughput/memory |
@@ -107,6 +108,8 @@ cpp_infer\tools\stage1.cmd profile -Config cpp_infer\configs\int8_u8s8_config.tx
 | [`../cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt`](../cpp_infer/artifacts/yolov8_neu_det_int8_qdq.artifact.txt) | S2-01 Round 1 S8S8 模型语义契约（历史对照）；派生 ONNX 本体受 `.gitignore` 管理 |
 | [`../cpp_infer/artifacts/yolov8_neu_det_int8_qdq_u8s8.artifact.txt`](../cpp_infer/artifacts/yolov8_neu_det_int8_qdq_u8s8.artifact.txt) | S2-01 Round 2 U8S8 模型语义契约 |
 | [`../models/best.onnx`](../models/best.onnx) | 当前 FP32 ONNX |
+| `../models/best.int8.qdq.u8s8.onnx` | 正式 Round 2 U8S8 本地 artifact；model id `yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2`，SHA-256 `9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1`；模型本体受 `.gitignore` 管理 |
+| [`../cpp_infer/results/s2_03/int8_integration/`](../cpp_infer/results/s2_03/int8_integration/) | S2-01/S2-02/S2-03 正式 U8S8 融合证据根 |
 | [`../data/images/val/crazing_241.jpg`](../data/images/val/crazing_241.jpg) | 固定单图 Demo/benchmark 样本 |
 
 `CMakeCache.txt`、Makefiles、objects、binaries 和 staged DLL 都是可丢弃构建状态，不应手工维护或提交。
@@ -237,7 +240,7 @@ bash cpp_infer/tools/stage1.sh doctor
 | `test` | 构建当前源码并运行完整 CTest |
 | `detect <image> [output-dir]` | 复用 `DetectorPipeline` 运行任意单图；可选 `--config` 与 `--overwrite` |
 | `batch <input> [output-dir]` | 输入是目录或 UTF-8 path-list manifest；默认 workers=1、queue=`2*workers`，可选 `--config`、`--workers`、`--queue-capacity`、`--output-images` 与 `--overwrite` |
-| `batch-compare` | 固定 FP32 CPU、361 图、JSON-only、queue=8，以两个独立 Release 进程比较 workers=1/4；逐图结果完全一致后报告 throughput/peak-RSS 差异，不设 speedup 门槛 |
+| `batch-compare [--config <path>]` | 固定 361 图、JSON-only、queue=8，以两个独立 Release 进程比较 workers=1/4；默认 FP32，可选 Round 2 U8S8 config；逐图结果完全一致后报告 throughput/peak-RSS 差异，不设 speedup 门槛 |
 | `demo` | 验证固定 `crazing_241` 的 JSON/PNG 与 3 个 detections |
 | `consistency` | 固定 30 图 Python ORT/C++ ORT 比较 |
 | `benchmark` | 先跑 consistency，再运行分段 benchmark；默认 warmup `10`、repeat `100`，可覆盖 |
@@ -252,6 +255,7 @@ bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
 bash cpp_infer/tools/stage1.sh batch data/images/val --workers 4 --queue-capacity 8
 bash cpp_infer/tools/stage1.sh batch cpp_infer/tests/fixtures/s2_03_consistency_manifest.txt --workers 2
 bash cpp_infer/tools/stage1.sh batch-compare
+bash cpp_infer/tools/stage1.sh batch-compare --config cpp_infer/configs/int8_u8s8_config.txt
 bash cpp_infer/tools/stage1.sh demo
 bash cpp_infer/tools/stage1.sh consistency
 bash cpp_infer/tools/stage1.sh benchmark --warmup 1 --repeat 2
@@ -268,6 +272,15 @@ unset YOLO_DEFECT_RUN_DIR
 ```bash
 export YOLO_DEFECT_RUN_DIR="$PWD/cpp_infer/results/s2_03/linux_x86_64/performance_rerun_20260830_01"
 bash cpp_infer/tools/stage1.sh batch-compare
+unset YOLO_DEFECT_RUN_DIR
+```
+
+正式 U8S8 比较复跑同样要使用 fresh 目录：
+
+```bash
+export YOLO_DEFECT_RUN_DIR="$PWD/cpp_infer/results/s2_03/int8_integration/linux_x86_64/rerun_YYYYMMDD_HHMMSS"
+bash cpp_infer/tools/stage1.sh batch-compare \
+  --config cpp_infer/configs/int8_u8s8_config.txt
 unset YOLO_DEFECT_RUN_DIR
 ```
 
@@ -367,17 +380,25 @@ bash cpp_infer/tools/stage2_aarch64.sh batch
 bash cpp_infer/tools/stage2_aarch64.sh all
 ```
 
+默认使用 FP32 `configs/default_config.txt`。使用正式 U8S8 时：
+
+```bash
+export YOLO_DEFECT_AARCH64_CONFIG="$PWD/cpp_infer/configs/int8_u8s8_config.txt"
+bash cpp_infer/tools/stage2_aarch64.sh all
+unset YOLO_DEFECT_AARCH64_CONFIG
+```
+
 | Action | 行为 |
 |---|---|
 | `doctor` | 检查 x86_64 host tools、AArch64 compiler/loader、ARM64 ORT/OpenCV ELF |
 | `build` / `clean-build` | Ninja Release 交叉编译 project-core tree 和完整 Runtime/CLI tree；clean 仅允许两个固定 `/tmp` 边界 |
 | `inspect` | `file/readelf` 检查 core smoke、Runtime object、CLI、ORT；用 ARM64 loader 列出动态依赖并逐个拒绝 x86_64 library |
 | `smoke` | QEMU 实际运行 project-core decode/NMS/坐标恢复、CLI startup/help、config/artifact 和两条错误路径 |
-| `infer` | QEMU 下运行固定图片 → ARM64 OpenCV/ORT CPU → Detection JSON，并调用既有 validator |
-| `batch` | QEMU 下正式验收 2 图目录 workers=1、同集合 manifest workers=2/queue=1、两入口逐图 JSON 一致，以及损坏 JPEG 精确 `2 succeeded + 1 failed`/退出码 2；严格校验三份 `BatchSummary` |
+| `infer` | QEMU 下使用选定 RuntimeConfig 运行固定图片 → ARM64 OpenCV/ORT CPU → Detection JSON，并按该 config 的 model id/SHA 调用 validator |
+| `batch` | QEMU 下使用选定 RuntimeConfig 验收 2 图目录 workers=1、同集合 manifest workers=2/queue=1、两入口逐图 JSON 一致，以及损坏 JPEG 精确 `2 succeeded + 1 failed`/退出码 2；严格校验三份 `BatchSummary` |
 | `all` | doctor → clean-build → inspect → smoke → infer → batch；不包含 benchmark |
 
-可覆盖的 machine-local 路径都使用环境变量，不写死到源码：`YOLO_DEFECT_AARCH64_DEPS_ROOT`、`YOLO_DEFECT_AARCH64_ORT_ROOT`、`YOLO_DEFECT_AARCH64_SYSROOT`、`YOLO_DEFECT_AARCH64_DEB_CACHE_ROOT`、`YOLO_DEFECT_AARCH64_LOADER_PREFIX`、`YOLO_DEFECT_AARCH64_CORE_BUILD_DIR`、`YOLO_DEFECT_AARCH64_FULL_BUILD_DIR`、`YOLO_DEFECT_AARCH64_RESULT_DIR`、`YOLO_DEFECT_AARCH64_BATCH_RESULT_DIR` 与 `YOLO_DEFECT_AARCH64_BATCH_RUN_ID`。batch run id 必须是一个安全 path component，且目标 run root 必须不存在；脚本用 fresh-root 规则防止旧输出误满足验收。
+可覆盖的 machine-local 路径和运行选择都使用环境变量，不写死到源码：`YOLO_DEFECT_AARCH64_CONFIG`、`YOLO_DEFECT_AARCH64_DEPS_ROOT`、`YOLO_DEFECT_AARCH64_ORT_ROOT`、`YOLO_DEFECT_AARCH64_SYSROOT`、`YOLO_DEFECT_AARCH64_DEB_CACHE_ROOT`、`YOLO_DEFECT_AARCH64_LOADER_PREFIX`、`YOLO_DEFECT_AARCH64_CORE_BUILD_DIR`、`YOLO_DEFECT_AARCH64_FULL_BUILD_DIR`、`YOLO_DEFECT_AARCH64_RESULT_DIR`、`YOLO_DEFECT_AARCH64_BATCH_RESULT_DIR` 与 `YOLO_DEFECT_AARCH64_BATCH_RUN_ID`。`YOLO_DEFECT_AARCH64_CONFIG` 省略时继续使用默认 FP32；batch run id 必须是一个安全 path component，且目标 run root 必须不存在；脚本用 fresh-root 规则防止旧输出误满足验收。
 
 两个默认 build tree 位于 `/tmp`。如果从 PowerShell 分多次启动 `wsl.exe`，WSL 发行版可能在两次命令之间停止并清空 `/tmp`；需要拆开运行 action 时，应留在同一个交互式 WSL shell 中。完整复现优先单次运行 `stage2_aarch64.sh all`。
 
@@ -474,8 +495,8 @@ Windows 记录位于
 对应文件是 `batch_workers_1/batch_summary.json`、
 `batch_workers_4/batch_summary.json` 与 `batch_comparison.json`。
 
-当前 clean Release 收口在 Windows x86_64 与 WSL2/Linux x86_64 均为
-`156/156` CTest 通过；Windows 中两个需要本地创建 symlink/reparse 的
+S2-03 原 FP32 clean Release 收口在 Windows x86_64 与 WSL2/Linux x86_64 均为
+`156/156` CTest 通过；当前 U8S8 融合收口已更新为两平台 `157/157`。Windows 中两个需要本地创建 symlink/reparse 的
 GTest case 因账号权限显示 skip，对应 path-safety case 已在 Linux
 执行。Linux 同轮还检查 11 个 ELF 的 `ldd` 无 `not found`。这些是当前
 S2-03 收口事实；上文 S2-02 的 `119/119` 是历史里程碑，不回写。
@@ -693,8 +714,9 @@ GPU memory 为 device-wide baseline-to-peak `155 MiB`，不是 PID-specific；
 throughput 差异是整体 CPU→TensorRT/GPU backend 对照，不是被隔离出的
 单层 FP16 speedup。
 
-CPU regression：Windows Release/NMake 与 WSL2/Linux Release/Ninja 均为
-179/179 CTest 通过；Python S2-04 工具 35/35 通过。Windows 改动 public
+CPU regression：S2-04 分支原先在 Windows Release/NMake 与 WSL2/Linux
+Release/Ninja 均为 179/179；合并正式 U8S8 batch integration 后，当前源码
+在两平台均为 180/180 CTest 通过。Python S2-04 工具 35/35 通过。Windows 改动 public
 header 后若旧增量 tree 出现随机 enum/heap 错误，先运行受保护的
 `cpp_infer\\tools\\stage1.cmd clean-build` 再运行
 `cpp_infer\\tools\\stage1.cmd test`，不要把 stale ABI 当 Runtime 失败。
@@ -704,3 +726,52 @@ header 后若旧增量 tree 出现随机 enum/heap 错误，先运行受保护�
 [`../cpp_infer/results/s2_04/linux_x86_64_rtx4060/`](../cpp_infer/results/s2_04/linux_x86_64_rtx4060/)。
 INT8 没有执行：当前 FP32 artifact 缺少冻结 calibration/QDQ contract；它是
 非阻塞可选项，不能为追求勾选而扩张已通过的 FP16 主链。
+
+## 12. S2-01/S2-02/S2-03 正式 U8S8 融合收口
+
+本轮冻结对象是 `configs/int8_u8s8_config.txt` 选中的
+`yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2`，SHA-256 为
+`9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1`。
+U8S8 模型外部 I/O 仍为 float32，因此产品 Runtime、`DetectorPipeline`、
+后处理、`BatchRunner`、有界队列和 `BatchSummary` 均直接复用。默认
+config 仍为 FP32。
+
+实测结果：
+
+- Windows x86_64 最终 Release 为 `157/157` CTest；两个依赖
+  symlink/reparse 权限的 GTest case 在当前账号下 skip，对应 Linux
+  用例已执行通过；U8S8 固定图实际得到 3 detections。
+- WSL2/Linux x86_64 全量 `157/157` CTest 通过，U8S8 固定图为
+  3 detections；30 图 manifest 在 workers=2/queue=4 下 `30/30`成功，
+  queue peak=4、producer waits=25。
+- 361 图 U8S8 CPU、JSON-only、queue=8 比较中，worker=1 为
+  `4.591151 img/s` / peak RSS `192.933594 MiB` / waits=353，worker=4 为
+  `15.903088 img/s` / `556.882812 MiB` / waits=350，吞吐比
+  `3.463857`，361 份逐图 JSON 字节与语义完全一致。本轮直接
+  在仓库所在的 `/mnt/d` DrvFs 运行，数字只用于此次 WSL2/Linux
+  同协议内 workers=1/4 比较，不与旧 WSL 原生 ext4 FP32 数字直接对比。
+- AArch64 clean cross-build、ELF 和 loader 检查通过。QEMU user-mode
+  下 U8S8 单图为 3 detections；目录 workers=1 和 manifest workers=2
+  各 `2/2`，两入口逐图 JSON 字节/语义一致；损坏 JPEG 精确得到
+  `2 成功 + 1 失败`、exit 2，partial-failure queue=1 且 waits=1。
+  三份 summary 的 `memory.publishable=false`；其 latency、throughput 和 RSS
+  字段不得当作性能或原生 ARM 证据。
+- 可选 config 改动后，默认 FP32 Linux Demo 和 AArch64/QEMU `all`
+  回归通过。
+
+S2-01 advisory 结果继续如实保留：agreement precision
+`0.938462 < 0.95`，mAP50 drop `0.010356 > 0.01`；本轮不宣称
+strict 质量门全部通过。
+
+证据根为
+[`../cpp_infer/results/s2_03/int8_integration/`](../cpp_infer/results/s2_03/int8_integration/)：
+
+- `windows_x86_64/final_20260831_single/`：Windows U8S8 单图 JSON/PNG；
+- `linux_x86_64/final_20260831/`：Linux U8S8 单图、30 图 manifest、
+  workers=1/4 summaries 与 comparison；
+- `linux_aarch64_qemu/final_20260831_single/`：AArch64 ELF/loader/smoke 与
+  U8S8 单图；
+- `linux_aarch64_qemu/final_20260831/`：U8S8 目录、manifest、partial-failure
+  summaries 与 acceptance log；
+- `linux_x86_64/fp32_regression_20260831/` 与
+  `linux_aarch64_qemu/fp32_regression_20260831*`：默认 FP32 回归。

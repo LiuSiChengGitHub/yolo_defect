@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "evidence_type": "s2_01_s2_02_s2_03_int8_arm64_batch_integration_closure",
+  "timestamp_utc": "2026-08-31T05:10:00Z",
+  "passed": true,
+  "formal_artifact": {
+    "model_id": "yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2",
+    "path": "models/best.int8.qdq.u8s8.onnx",
+    "size_bytes": 3544494,
+    "sha256": "9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1",
+    "quantization": "ONNX Runtime static PTQ, QDQ/U8S8, all 64 Conv nodes quantized",
+    "external_io": {
+      "input_name": "images",
+      "input_dtype": "float32",
+      "input_shape": [1, 3, 800, 800],
+      "output_name": "output0",
+      "output_dtype": "float32",
+      "output_shape": [1, 10, 13125]
+    }
+  },
+  "integration_decision": {
+    "runtime_inference_or_postprocess_fork_added": false,
+    "reused_components": [
+      "RuntimeConfig and ModelArtifactSpec",
+      "DetectorPipeline",
+      "OnnxRunner",
+      "BatchRunner",
+      "BoundedQueue",
+      "per-image result writer",
+      "BatchSummary"
+    ],
+    "closed_gaps": [
+      "registered the formal INT8 artifact in the existing batch CLI integration test",
+      "made Windows and Linux batch-compare accept an explicit RuntimeConfig while keeping FP32 as the default",
+      "made single-image JSON validation derive model identity from the selected RuntimeConfig and ModelArtifactSpec",
+      "made the AArch64 workflow accept an explicit RuntimeConfig while keeping FP32 as the default",
+      "recorded fresh Linux x86_64 and AArch64/QEMU INT8 product-chain evidence"
+    ]
+  },
+  "regression": {
+    "windows_x86_64": {
+      "ctest_registered": 157,
+      "ctest_passed": 157,
+      "ctest_failed": 0,
+      "skipped": 2,
+      "skip_reason": "two symlink/reparse-point cases require Windows privileges; both executed and passed on Linux",
+      "formal_int8_single_image_detection_count": 3,
+      "formal_int8_batch_cli_integration": "passed",
+      "fp32_batch_cli_integration": "passed"
+    },
+    "wsl2_linux_x86_64": {
+      "ctest_registered": 157,
+      "ctest_passed": 157,
+      "ctest_failed": 0,
+      "formal_int8_batch_cli_integration": "passed",
+      "fp32_batch_cli_integration": "passed",
+      "fp32_fixed_demo_detection_count": 3
+    },
+    "linux_aarch64_qemu_fp32": {
+      "clean_cross_build": "passed",
+      "single_image_detection_count": 3,
+      "directory_and_manifest_parity": "passed",
+      "partial_failure": "2 succeeded, 1 failed, exit code 2"
+    }
+  },
+  "linux_x86_64_int8": {
+    "environment": "WSL2/Linux x86_64, Release, GNU 13.3.0, OpenCV 4.6.0, ONNX Runtime 1.19.2 CPUExecutionProvider, intra-op=1, inter-op=1 per session",
+    "result_root": "cpp_infer/results/s2_03/int8_integration/linux_x86_64/final_20260831",
+    "single_image": {
+      "detection_count": 3,
+      "model_identity_validation": "passed"
+    },
+    "manifest_workers_2": {
+      "images": 30,
+      "succeeded": 30,
+      "failed": 0,
+      "queue_capacity": 4,
+      "queue_peak_depth": 4,
+      "producer_wait_count": 25,
+      "throughput_images_per_second": 9.465303,
+      "peak_rss_mebibytes": 313.828125,
+      "single_image_item_0_byte_and_semantic_equal": true
+    },
+    "directory_workers_1": {
+      "images": 361,
+      "succeeded": 361,
+      "failed": 0,
+      "queue_capacity": 8,
+      "queue_peak_depth": 8,
+      "producer_wait_count": 353,
+      "processing_wall_ms": 78629.523769,
+      "throughput_images_per_second": 4.591151,
+      "peak_rss_mebibytes": 192.933594
+    },
+    "directory_workers_4": {
+      "images": 361,
+      "succeeded": 361,
+      "failed": 0,
+      "queue_capacity": 8,
+      "queue_peak_depth": 8,
+      "producer_wait_count": 350,
+      "processing_wall_ms": 22699.993822,
+      "throughput_images_per_second": 15.903088,
+      "peak_rss_mebibytes": 556.882812
+    },
+    "comparison": {
+      "passed": true,
+      "compared_item_count": 361,
+      "detection_json_byte_equal": true,
+      "detection_json_semantic_equal": true,
+      "workers_4_div_workers_1_throughput": 3.463857,
+      "peak_rss_delta_bytes": 381628416,
+      "interpretation": "four independent batch=1 sessions improved throughput in this run and increased process peak RSS"
+    },
+    "protocol_limit": "the fresh run used the repository through WSL2 /mnt/d (DrvFs); performance is comparable only between these two fresh runs and is not directly compared with the earlier FP32 ext4 evidence"
+  },
+  "linux_aarch64_int8_qemu": {
+    "environment": "AArch64 Linux target cross-compiled on WSL2/Linux x86_64 and executed by QEMU user mode",
+    "result_root": "cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu",
+    "clean_cross_build": "passed",
+    "elf_machine": "AArch64",
+    "target_loader_and_dependency_resolution": "passed; 138 resolved target libraries inspected with no x86_64 target library",
+    "single_image": {
+      "detection_count": 3,
+      "model_identity_validation": "passed"
+    },
+    "directory_workers_1": {
+      "discovered": 2,
+      "succeeded": 2,
+      "failed": 0,
+      "queue_capacity": 2
+    },
+    "manifest_workers_2": {
+      "discovered": 2,
+      "succeeded": 2,
+      "failed": 0,
+      "queue_capacity": 1
+    },
+    "directory_manifest_parity": {
+      "compared_item_count": 2,
+      "byte_equal": true,
+      "semantic_equal": true
+    },
+    "partial_failure": {
+      "discovered": 3,
+      "succeeded": 2,
+      "failed": 1,
+      "cancelled": 0,
+      "exit_code": 2,
+      "queue_capacity": 1,
+      "queue_peak_depth": 1,
+      "producer_wait_count": 1
+    },
+    "performance_or_memory_publishable": false
+  },
+  "s2_01_advisory_quality_truth": {
+    "strict_acceptance_passed": false,
+    "int8_agreement_precision": 0.938462,
+    "int8_agreement_precision_min": 0.95,
+    "map50_absolute_drop": 0.010356,
+    "map50_absolute_drop_max": 0.01,
+    "interpretation": "the formal U8S8 artifact is usable and integrated, but the original strict quality booleans remain false and were not rewritten"
+  },
+  "limitations": [
+    "QEMU proves AArch64 build and functional portability only; it does not prove native ARM64 latency, throughput, RSS, power, thermals, stability, or device-driver behavior.",
+    "The batch design is concurrent batch=1 with one DetectorPipeline and one Ort::Session per worker; it is not true tensor batching.",
+    "The model file is local and ignored by Git; public distribution still requires separate source-model and dataset license review.",
+    "The matching PyTorch checkpoint is unavailable, so this integration does not recreate PyTorch-to-ONNX lineage."
+  ]
+}

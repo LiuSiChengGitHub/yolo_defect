@@ -2,7 +2,7 @@
 
 This directory is the C++ Runtime workspace for the **Industrial Vision Edge AI Runtime and C++ Engineering System**.
 
-Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete, and S2-01 through S2-04 have complete implementations, evidence, and teaching closure.** S2-04 proves real TensorRT on WSL2/Linux x86_64 + RTX 4060 Laptop. The ORT TensorRT EP path remains a real-execution but failed-correctness diagnostic; the accepted product path is a SHA-bound load-only native TensorRT plan with one FP16 DFL Softmax compute layer and FP32/noTF32 elsewhere. Its untouched v4 holdout passed twice, same-SDK CPU/native performance and resource evidence is retained, and the final Windows/WSL2 CPU gates pass 179/179 CTest. Work stops for user L1; S2-05 has not started. QEMU is not a physical ARM board, and S2-04 is local WSL2 GPU/edge-node evidence rather than native Linux, Jetson, ARM64 GPU, or embedded evidence. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
+Current status: **the Large-Stage-One automatic engineering gate and user-owned L2 are complete; S2-01 through S2-04 have complete implementations, evidence, and teaching closure.** S2-01/S2-02/S2-03 now share a consolidated Round 2 QDQ/U8S8 product chain across Windows single-image inference, Linux x86_64 bounded multi-image execution, and cross-built Linux AArch64/QEMU functional execution. The formal artifact is `yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2`, SHA-256 `9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1`; default FP32 regressions remain retained. S2-04 separately proves real TensorRT on WSL2/Linux x86_64 + RTX 4060 Laptop. Its ORT TensorRT EP path remains a real-execution but failed-correctness diagnostic; the accepted product path is a SHA-bound load-only native TensorRT plan with one FP16 DFL Softmax compute layer and FP32/noTF32 elsewhere, and its untouched v4 holdout passed twice. The merged source passes 180/180 CTest on both Windows x86_64 and WSL2/Linux x86_64. Work stops for user L1; S2-05 has not started. QEMU is not a physical ARM board, and S2-04 is local WSL2 GPU/edge-node evidence rather than native Linux, Jetson, ARM64 GPU, or embedded evidence. The root bilingual READMEs remain the project-status and roadmap entry points; this file retains the Runtime's technical details and historical evidence.
 
 | Gate | Status |
 |---|---|
@@ -11,11 +11,11 @@ Current status: **the Large-Stage-One automatic engineering gate and user-owned 
 | User Large-Stage-One L2 | Accepted |
 | Large Stage One | Complete |
 | S2 preparatory documentation closure | Complete |
-| S2-01 implementation and evidence | Complete under advisory exercise policy |
+| S2-01 implementation and evidence | Round 2 U8S8 integrated into the cross-platform multi-image chain; advisory quality facts retained |
 | S2-01 user L1 | Awaiting |
-| S2-02 Gate A + Gate B implementation/evidence/final closure | Complete |
+| S2-02 Gate A + Gate B implementation/evidence/final closure | Complete, including selected U8S8 on Linux x86_64 and AArch64/QEMU |
 | S2-02 user L1 | Awaiting |
-| S2-03 bounded multi-image implementation/evidence/final closure | Complete |
+| S2-03 bounded multi-image implementation/evidence/final closure | FP32 closure and formal U8S8 integration evidence complete |
 | S2-03 user L1 | Awaiting |
 | S2-04 TensorRT implementation/evidence/final closure | Complete |
 | S2-04 user L1 | Awaiting |
@@ -112,6 +112,16 @@ RuntimeConfig v2 + one ModelArtifactSpec
 
 The native path has no fallback and verifies the TensorRT/CUDA/SM, engine SHA,
 execution policy, tensor names/shapes/dtypes, and cache namespace before use.
+
+The completed S2-01/S2-02/S2-03 integration selects the model only through the
+existing declaration layer:
+
+```text
+int8_u8s8_config.txt -> U8S8 ModelArtifactSpec + frozen model SHA
+-> unchanged DetectorPipeline / ORT CPU float32 external I/O
+-> single-image output or unchanged BatchRunner
+-> Linux x86_64 native evidence | AArch64 ELF under QEMU functional evidence
+```
 
 ## Layout and responsibilities
 
@@ -294,8 +304,8 @@ cpp_infer/
 - `evaluate_s2_01_correctness.py` runs the same FP32/INT8 product semantics over the frozen product and labeled quality manifests and invokes the Release C++ CLI for legality/consistency evidence. Its original failed product gate remains machine-readable.
 - `summarize_ort_profile.py` counts `Session/model_run` and per-node calls, validates CPU placement and an optimized-graph FP32/INT8 signature, and aggregates top nodes/operators with percentages and cumulative percentages. Raw trace time remains diagnostic.
 - `assemble_s2_01_evidence.py` defaults to strict correctness. Its explicit `--correctness-policy advisory` mode still requires model/protocol/manifest/runtime/benchmark/trace bindings, preserves every failed quality boolean, and emits `strict_acceptance_passed=false` rather than laundering the result.
-- `stage1.sh` is the thin WSL2/Linux x86_64 workflow. It checks the pinned Linux SDK/toolchain, uses a guarded `/tmp` Ninja Release tree, verifies built ELF dependencies with `ldd`, and orchestrates the same product/test/consistency/benchmark/batch behavior as the Windows entry where applicable.
-- `bootstrap_aarch64_deps.sh` downloads the official ARM64 ORT SDK and extracts Ubuntu ARM64 OpenCV packages into a private target tree without installing them over the host development packages. `stage2_aarch64.sh` cross-builds, inspects, and functionally executes the AArch64 artifacts under QEMU; its `batch` action is functional acceptance and never a benchmark.
+- `stage1.sh` is the thin WSL2/Linux x86_64 workflow. It checks the pinned Linux SDK/toolchain, uses a guarded `/tmp` Ninja Release tree, verifies built ELF dependencies with `ldd`, and orchestrates the same product/test/consistency/benchmark/batch behavior as the Windows entry where applicable. `batch-compare --config` selects FP32 or U8S8 while retaining the frozen 361-image/workers/queue/output protocol.
+- `bootstrap_aarch64_deps.sh` downloads the official ARM64 ORT SDK and extracts Ubuntu ARM64 OpenCV packages into a private target tree without installing them over the host development packages. `stage2_aarch64.sh` cross-builds, inspects, and functionally executes the AArch64 artifacts under QEMU; `YOLO_DEFECT_AARCH64_CONFIG` selects the RuntimeConfig while the default stays FP32, and its `batch` action is functional acceptance and never a benchmark.
 - GTest targets link `yolo_defect::runtime`; they never compile or reuse `main.cpp`.
 
 ## S2-01 static PTQ, comparison, and ORT Profiling
@@ -472,8 +482,9 @@ The formal throughput numerator is successful images and the denominator is
 processing wall time. That interval includes queue waits, image processing,
 per-image writes, drain/cancellation, and joins; it excludes discovery,
 Runtime/artifact loading, worker session construction, and summary
-serialization. The clean current regression contains `156/156` passing CTest
-entries on Windows x86_64 and WSL2/Linux x86_64. Two Windows tests that require
+serialization. The historical S2-03 closure contained `156/156` passing CTest
+entries on Windows x86_64 and WSL2/Linux x86_64; the current integration gate is
+`157/157` on both platforms. Two Windows tests that require
 creating symlinks/reparse points reported GTest skips because the local account
 lacked that privilege; the corresponding path-safety tests ran on Linux.
 
@@ -601,13 +612,54 @@ the native path; the load-only runtime does not allocate builder workspace.
 BatchRunner remains CPU-only. TensorRT INT8 is not implemented because the FP32
 artifact has no frozen calibration/QDQ contract and INT8 was non-blocking.
 
-The final source passes 179/179 CTest on Windows x86_64 and WSL2/Linux x86_64;
-the rebuilt GPU product passed model inspection, raw `enqueueV3`, and one-image
+The S2-04 branch originally passed 179/179 CTest; after merging the formal U8S8
+batch integration, the current source passes 180/180 on Windows x86_64 and
+WSL2/Linux x86_64. The rebuilt GPU product passed model inspection, raw `enqueueV3`, and one-image
 three-detection output. Reproduction commands and exact local dependency entry
 points are in [`paths_commands.md`](../docs/paths_commands.md). Durable machine
 records are under [`results/s2_04/linux_x86_64_rtx4060/`](results/s2_04/linux_x86_64_rtx4060/),
 and the decision history, evidence limits, and nine-part teaching record are in
 [`s2_04_closure.md`](../docs/details/s2_04_closure.md).
+
+## S2-01/S2-02/S2-03 formal U8S8 integration closure
+
+The formal model is
+`yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2`, SHA-256
+`9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1`,
+selected by [`int8_u8s8_config.txt`](configs/int8_u8s8_config.txt). Its external
+input/output remain float32, so the integration does not duplicate or change
+Runtime, preprocessing, postprocessing, `DetectorPipeline`, `BatchRunner`,
+bounded-queue, item-output, partial-failure, or `BatchSummary` behavior.
+
+The current test and workflow layer adds only model selection and evidence
+identity checks. When the ignored local U8S8 ONNX exists, CMake registers a
+second real batch CLI integration test with the expected model id/SHA; the
+existing FP32 test remains unchanged. `batch-compare` accepts an optional
+RuntimeConfig on Windows and Linux, and `YOLO_DEFECT_AARCH64_CONFIG` selects the
+AArch64/QEMU config while defaulting to FP32.
+
+| Evidence | Result |
+|---|---|
+| Windows x86_64 | Final Release `157/157` CTest; two permission-dependent symlink/reparse GTest cases skipped locally and their Linux equivalents passed; U8S8 `crazing_241` produced 3 detections |
+| WSL2/Linux x86_64 | Final Release `157/157` CTest; U8S8 fixed image produced 3 detections; 30-image manifest workers=2/queue=4 completed 30/30 with queue peak 4 and 25 producer waits |
+| Linux 361-image U8S8 | workers=1: `4.591151 img/s`, peak RSS `192.933594 MiB`, 353 waits; workers=4: `15.903088 img/s`, `556.882812 MiB`, 350 waits; throughput ratio `3.463857`; queue peak 8; all 361 detection JSON files byte- and semantic-equal |
+| AArch64/QEMU U8S8 | Clean cross-build, AArch64 ELF, and target-loader checks passed; fixed image produced 3 detections; directory workers=1 and manifest workers=2/queue=1 each completed 2/2 with identical outputs; corrupt JPEG produced exact 2 success + 1 failure, exit 2, and one producer wait at queue=1 |
+| Default FP32 regression | Linux Demo and AArch64/QEMU `all` passed with no config override |
+
+The U8S8 Linux pair ran directly from the repository under `/mnt/d` DrvFs.
+The older FP32 pair ran in a WSL-native ext4 work area, so the new values are
+only a same-run U8S8 workers=1/4 comparison and are not a controlled
+FP32-versus-INT8 comparison. QEMU summaries record target `aarch64`, running
+kernel `x86_64`, context `qemu_user_mode_on_x86_64_host`, and
+`memory.publishable=false`; their timing/RSS fields are not reported as
+performance evidence.
+
+The engineering closure does not rewrite S2-01's advisory quality result:
+agreement precision remains `0.938462 < 0.95`, and mAP50 drop remains
+`0.010356 > 0.01`. Machine-readable results are under
+[`results/s2_03/int8_integration/`](results/s2_03/int8_integration/), and the
+frozen scope is in the
+[`S2-01/S2-02/S2-03 integration SPEC`](../docs/details/s2_int8_arm64_batch_integration_spec.md).
 
 ## Frozen YOLOv8 baseline semantics
 
@@ -689,6 +741,7 @@ Run the wrapper from an ordinary PowerShell or CMD at the repository root:
 .\cpp_infer\tools\stage1.cmd build
 .\cpp_infer\tools\stage1.cmd batch data\images\val -Workers 4 -QueueCapacity 8
 .\cpp_infer\tools\stage1.cmd batch-compare
+.\cpp_infer\tools\stage1.cmd batch-compare -Config cpp_infer\configs\int8_u8s8_config.txt
 ```
 
 The wrapper initializes the x64 Visual Studio environment before invoking the
@@ -712,13 +765,17 @@ bash cpp_infer/tools/stage1.sh test
 bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
 bash cpp_infer/tools/stage1.sh batch data/images/val --workers 4 --queue-capacity 8
 bash cpp_infer/tools/stage1.sh batch-compare
+bash cpp_infer/tools/stage1.sh batch-compare --config cpp_infer/configs/int8_u8s8_config.txt
 bash cpp_infer/tools/stage1.sh consistency
 bash cpp_infer/tools/stage1.sh benchmark
 bash cpp_infer/tools/stage1.sh all
 ```
 
 `doctor` is read-only. `batch-compare` fixes 361 images, workers `1/4`,
-queue `8`, FP32 CPU, and JSON-only output in independent processes. `all`
+queue `8`, CPUExecutionProvider, and JSON-only output in independent processes;
+its optional config selects FP32 (the default) or U8S8. For AArch64/QEMU, set
+`YOLO_DEFECT_AARCH64_CONFIG="$PWD/cpp_infer/configs/int8_u8s8_config.txt"`
+before `stage2_aarch64.sh all` and unset it afterward; omission keeps FP32. `all`
 performs a clean build, full CTest, Demo, consistency, the workflow's normal
 benchmark, and frozen 30-image batch acceptance, so it is a closure action
 rather than the default after every edit. Use the verified versions and
@@ -1065,7 +1122,7 @@ Required core-behavior-plus-GTest exercise:
 3. **GREEN:** temporarily change the comparison in `postprocessor.cpp` from strict `>` to inclusive `>=`, update the other exact-threshold expectations, rebuild the same target, and require the focused test to pass. Explain how equality changes detections and why a real contract change would also require the Python reference, consistency evidence, and README updates.
 4. Because schema-v1 freezes strict `>`, return to the checkpoint without merging the practice branch, rebuild, rerun the original focused test and complete CTest, and verify no temporary exercise diff remains. Do not leave `>=` in the product merely to finish the exercise.
 
-The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01 implementation and evidence complete under the explicit advisory-quality exercise policy; S2-02 Gate A native Linux and Gate B AArch64/QEMU complete; S2-03 bounded multi-image implementation and three-platform evidence complete; S2-04 real TensorRT implementation/evidence/teaching closure complete; user L1 pending; S2-05 not started**.
+The root bilingual READMEs are the project-status and roadmap entry points and contain the consolidated interview-facing record. This technical README records the same state: **Large Stage One complete; S2-01/S2-02/S2-03 formal Round 2 U8S8 integration complete across Windows single-image, Linux x86_64 bounded multi-image, and AArch64/QEMU functional execution while preserving the advisory-quality record; S2-04 real TensorRT implementation/evidence/teaching closure complete; user L1 pending; S2-05 not started**.
 
 ## Current limits
 
@@ -1083,6 +1140,7 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - Gate A's Linux warmup-1/repeat-2 samples varied materially and are functional performance smokes. They are neither the formal 10/100 protocol nor a Windows-versus-Linux speed comparison.
 - Linux `getrusage` peak RSS and Windows Peak Working Set are both process-lifetime high-water measurements, but their platform semantics differ and their numeric values must not be compared directly.
 - Gate B/S2-03 were executed with Linux AArch64 binaries under QEMU user-mode, including fixed-image ARM64 ORT CPU inference and directory/manifest bounded-concurrency acceptance. This is functional emulation evidence only: QEMU summary time/RSS is explicitly non-publishable, and no physical-board, native-ARM performance, latency, throughput, power, thermal, driver, or deployment-stability claim follows from it.
+- The current U8S8 workers=1/4 comparison ran under `/mnt/d` DrvFs, while the historical Linux FP32 pair ran in WSL-native ext4. Their absolute throughput and peak-RSS values are not a controlled precision comparison; only each same-run workers=1/4 ratio is interpreted.
 - S2-04 ran under WSL2/Linux x86_64 on an RTX 4060 Laptop GPU. It is not
   bare-metal native Linux, Jetson, ARM64 GPU, embedded-device, power, thermal,
   or long-duration stability evidence.
@@ -1107,11 +1165,16 @@ The root bilingual READMEs are the project-status and roadmap entry points and c
 - Class-agnostic NMS remains deliberate baseline behavior and can suppress a lower-scoring box from another class when boxes overlap.
 - The visualization is deterministic for the pinned OpenCV build; it is evidence output, not an annotation editor or GUI.
 
-Large Stage One and S2-01 through S2-04 are complete. Work stops here for user
-L1; S2-05 evidence/resume/interview closure and recruiting freeze has not
+Large Stage One, the S2-01/S2-02/S2-03 formal Round 2 U8S8 integration closure,
+and S2-04 TensorRT are complete. The shared CPU product chain covers Windows
+U8S8 single-image inference, Linux x86_64 U8S8 manifest and bounded-concurrency
+evidence, and AArch64/QEMU U8S8 functional acceptance while default FP32
+regressions remain green; the separate S2-04 product path covers accepted native
+TensorRT execution on the local WSL2/Linux x86_64 RTX 4060. Work stops here for
+user L1; S2-05 evidence/resume/interview closure and recruiting freeze has not
 started. QEMU remains functional portability evidence only, and the RTX 4060
-Laptop result remains local WSL2 GPU/edge-node evidence rather than Jetson or
-embedded deployment.
+result remains local WSL2 GPU/edge-node evidence rather than Jetson or embedded
+deployment.
 
 ## License checkpoint
 

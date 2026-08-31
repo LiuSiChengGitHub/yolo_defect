@@ -6,7 +6,9 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 CPP_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
 REPO_ROOT="$(cd -- "${CPP_DIR}/.." && pwd -P)"
 TOOLCHAIN="${CPP_DIR}/cmake/toolchains/linux-aarch64-gnu.cmake"
-CONFIG="${CPP_DIR}/configs/default_config.txt"
+DEFAULT_CONFIG="${CPP_DIR}/configs/default_config.txt"
+CONFIG_REQUEST="${YOLO_DEFECT_AARCH64_CONFIG:-${DEFAULT_CONFIG}}"
+CONFIG=""
 DEMO_IMAGE="${REPO_ROOT}/data/images/val/crazing_241.jpg"
 SECOND_BATCH_IMAGE="${REPO_ROOT}/data/images/val/crazing_242.jpg"
 DETECTION_VALIDATOR="${CPP_DIR}/tests/assert_detection_json.py"
@@ -75,6 +77,8 @@ Actions:
 The batch action records functional evidence under
 cpp_infer/results/s2_03/linux_aarch64_qemu by default. No action records or
 interprets QEMU latency, throughput, memory, power, or board performance.
+Set YOLO_DEFECT_AARCH64_CONFIG to select another existing RuntimeConfig;
+the default remains configs/default_config.txt (FP32).
 Run bootstrap_aarch64_deps.sh first; see docs/paths_commands.md.
 EOF
 }
@@ -114,6 +118,10 @@ verify_aarch64_elf() {
 
 doctor() {
   stage "host tools and target dependencies"
+  [[ -f "${CONFIG_REQUEST}" ]] ||
+    fail "RuntimeConfig" "an existing regular file" "${CONFIG_REQUEST}" \
+      "set YOLO_DEFECT_AARCH64_CONFIG to the selected config"
+  CONFIG="$(realpath -e -- "${CONFIG_REQUEST}")"
   [[ "$(uname -s)" == Linux && "$(uname -m)" == x86_64 ]] ||
     fail "host" "Linux x86_64" "$(uname -s)/$(uname -m)" \
       "run inside the documented WSL2 Ubuntu x86_64 host"
@@ -121,6 +129,7 @@ doctor() {
       aarch64-linux-gnu-readelf cmp file qemu-aarch64 python3 readelf timeout; do
     need_command "${command_name}" "install the documented minimal host tools"
   done
+  printf '[pass] selected RuntimeConfig: %s\n' "${CONFIG}"
   [[ "$(aarch64-linux-gnu-g++ -dumpmachine)" == aarch64-linux-gnu ]] ||
     fail "compiler target" "aarch64-linux-gnu" \
       "$(aarch64-linux-gnu-g++ -dumpmachine)" \
@@ -313,9 +322,9 @@ run_smokes() {
       "missing" "restore the existing project-core portability smoke"
   grep -q 'Usage:' "${evidence}" ||
     fail "CLI help" "Usage output" "missing" "restore --help startup behavior"
-  grep -q 'yolov8n_neu_det_final_train_2' "${evidence}" ||
-    fail "config/artifact contract" "frozen model_id" "missing" \
-      "restore relative artifact resolution and contract validation"
+  grep -q '^model_id: .\+' "${evidence}" ||
+    fail "config/artifact contract" "a non-empty selected model_id" \
+      "missing" "restore relative artifact resolution and contract validation"
   grep -q 'invalid RuntimeConfig threshold rejected' "${evidence}" ||
     fail "negative RuntimeConfig evidence" "recorded rejection" "missing" \
       "keep negative contract checks inside the raw QEMU evidence"
@@ -335,7 +344,7 @@ run_full_inference() {
   qemu_target_timed "${CLI}" --config "${CONFIG}" --image "${DEMO_IMAGE}" \
     --output-json "${output_json}" --overwrite
   python3 "${DETECTION_VALIDATOR}" "${output_json}" \
-    --expected-image "${DEMO_IMAGE}"
+    --expected-image "${DEMO_IMAGE}" --expected-config "${CONFIG}"
   local detection_count=""
   detection_count="$(python3 -c \
     'import json, sys; print(len(json.load(open(sys.argv[1], encoding="utf-8"))["detections"]))' \

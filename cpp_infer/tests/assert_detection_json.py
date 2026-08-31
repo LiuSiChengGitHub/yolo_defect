@@ -7,7 +7,7 @@ import json
 import math
 import os
 from pathlib import Path
-from typing import Any, NoReturn, Optional, Set
+from typing import Any, Dict, NoReturn, Optional, Set, Tuple
 
 
 EXPECTED_MODEL_ID = "yolov8n_neu_det_final_train_2"
@@ -83,7 +83,12 @@ def normalized_path(value: str) -> str:
     return os.path.normcase(os.path.abspath(os.path.normpath(value)))
 
 
-def validate_document(document: Any, expected_image: Optional[str]) -> int:
+def validate_document(
+    document: Any,
+    expected_image: Optional[str],
+    expected_model_id: str = EXPECTED_MODEL_ID,
+    expected_sha256: str = EXPECTED_SHA256,
+) -> int:
     expect_exact_keys(
         document,
         {"schema_version", "model", "image", "runtime", "detections"},
@@ -98,17 +103,17 @@ def validate_document(document: Any, expected_image: Optional[str]) -> int:
 
     model = document["model"]
     expect_exact_keys(model, {"model_id", "declared_sha256"}, "model")
-    if expect_string(model["model_id"], "model.model_id") != EXPECTED_MODEL_ID:
+    if expect_string(model["model_id"], "model.model_id") != expected_model_id:
         fail(
-            f"model.model_id: expected {EXPECTED_MODEL_ID!r}, actual "
+            f"model.model_id: expected {expected_model_id!r}, actual "
             f"{model['model_id']!r}"
         )
     declared_sha256 = expect_string(
         model["declared_sha256"], "model.declared_sha256"
     )
-    if declared_sha256 != EXPECTED_SHA256:
+    if declared_sha256 != expected_sha256:
         fail(
-            f"model.declared_sha256: expected {EXPECTED_SHA256!r}, actual "
+            f"model.declared_sha256: expected {expected_sha256!r}, actual "
             f"{declared_sha256!r}"
         )
 
@@ -282,21 +287,87 @@ def validate_document(document: Any, expected_image: Optional[str]) -> int:
     return len(detections)
 
 
+def parse_declaration(path: Path, object_name: str) -> Dict[str, str]:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as error:
+        fail(f"{object_name}: expected readable UTF-8 file, actual {error}")
+
+    values: Dict[str, str] = {}
+    for line_number, raw_line in enumerate(text.splitlines(), start=1):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            fail(
+                f"{object_name}:{line_number}: expected 'key = value', "
+                f"actual {raw_line!r}"
+            )
+        key, value = (part.strip() for part in line.split("=", 1))
+        if not key or not value:
+            fail(
+                f"{object_name}:{line_number}: expected non-empty key and "
+                f"value, actual {raw_line!r}"
+            )
+        if key in values:
+            fail(f"{object_name}:{line_number}: duplicate key {key!r}")
+        values[key] = value
+    return values
+
+
+def expected_identity_from_config(config_path: Path) -> Tuple[str, str]:
+    config_path = config_path.resolve()
+    config = parse_declaration(config_path, "RuntimeConfig")
+    artifact_value = config.get("artifact_spec_path")
+    if not artifact_value:
+        fail("RuntimeConfig: missing required artifact_spec_path")
+    artifact_path = (config_path.parent / artifact_value).resolve()
+    artifact = parse_declaration(artifact_path, "ModelArtifactSpec")
+    model_id = artifact.get("model_id")
+    sha256 = artifact.get("model_sha256")
+    if not model_id:
+        fail("ModelArtifactSpec: missing required model_id")
+    if not sha256:
+        fail("ModelArtifactSpec: missing required model_sha256")
+    return model_id, sha256
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Validate the frozen S1-05 detection JSON schema."
     )
     parser.add_argument("json_path", type=Path)
     parser.add_argument("--expected-image")
+    parser.add_argument(
+        "--expected-config",
+        type=Path,
+        help=(
+            "derive the expected model_id and declared SHA-256 from this "
+            "RuntimeConfig and its ModelArtifactSpec"
+        ),
+    )
+    parser.add_argument("--expected-model-id", default=EXPECTED_MODEL_ID)
+    parser.add_argument("--expected-model-sha256", default=EXPECTED_SHA256)
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     try:
+        expected_model_id = args.expected_model_id
+        expected_model_sha256 = args.expected_model_sha256
+        if args.expected_config is not None:
+            expected_model_id, expected_model_sha256 = (
+                expected_identity_from_config(args.expected_config)
+            )
         with args.json_path.open("r", encoding="utf-8") as source:
             document = json.load(source)
-        detection_count = validate_document(document, args.expected_image)
+        detection_count = validate_document(
+            document,
+            args.expected_image,
+            expected_model_id,
+            expected_model_sha256,
+        )
     except (OSError, UnicodeError, json.JSONDecodeError, AssertionError) as error:
         print(f"S1-05 detection JSON validation failed: {error}")
         return 1

@@ -17,14 +17,20 @@ YOLOv8 和 NEU-DET 是首个 Runtime 实现所使用的稳定模型与数据集�
 正确性门禁、Benchmark 证据，以及受控推进 Linux、并发、量化和 TensorRT 的路径。
 
 > **状态 — 2026-08-31：** 大阶段一、用户负责的 L2，以及 S2-01 至 S2-04
-> 均已完成。S2-04 在 WSL2/Linux x86_64 + RTX 4060 Laptop GPU 上形成真实
-> TensorRT 执行。ORT TensorRT EP 已证明真实 placement，但未通过两轮冻结
-> correctness；最终产品路径因此采用 SHA 绑定、load-only 的 native TensorRT
-> engine，只有 DFL Softmax 是实际 FP16 compute，其余为 FP32/noTF32。未触碰的
-> v4 30 图 holdout 重复两轮通过，并保留 same-SDK CPU/native 延迟、吞吐、host
-> RSS 与 device-wide GPU memory 证据。最终 Windows 与 WSL2/Linux CPU gate
-> 均为 179/179 通过。当前停止等待用户 L1，S2-05 未开始。本结论仅代表本地
-> WSL2 GPU/edge-node，不是 Jetson、ARM64 GPU、嵌入式硬件或裸机原生 Linux。
+> 均已完成。正式 Round 2 QDQ/U8S8 产物
+> `yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2`（SHA-256
+> `9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1`）
+> 已通过共享 C++ 单图与有界多图链路运行于 Windows 和 WSL2/Linux
+> x86_64，并以交叉编译的 AArch64 目标在 QEMU user-mode 下运行。S2-04
+> 还在 WSL2/Linux x86_64 + RTX 4060 Laptop GPU 上形成真实 TensorRT
+> 执行。ORT TensorRT EP 虽证明真实 placement，但未通过两轮冻结
+> correctness；最终产品路径采用 SHA 绑定、load-only 的 native TensorRT
+> engine，只有 DFL Softmax 是实际 FP16 compute，其余为 FP32/noTF32。
+> 未触碰的 v4 30 图 holdout 重复两轮通过，并保留 same-SDK CPU/native
+> 性能与资源证据。合并后的当前源码在 Windows x86_64 与 WSL2/Linux
+> x86_64 均通过 180/180 CTest。当前停止等待用户 L1，S2-05 未开始。QEMU 不是 ARM
+> 开发板；RTX 4060 结论也只代表本地 WSL2 GPU/edge-node，不是 Jetson、
+> ARM64 GPU、嵌入式硬件或裸机原生 Linux。
 
 ![固定推理 Demo](docs/assets/demo_inference_result.gif)
 
@@ -82,6 +88,7 @@ FP32 ONNX
   -> [Gate A 已交付] Windows and Linux x86_64 shared-source Runtime
   -> [Gate B 已交付] AArch64 cross-build + QEMU 功能可移植性
   -> [S2-03 已交付] directory/manifest + bounded queue + workers
+  -> [融合已交付] formal U8S8 through Linux + AArch64/QEMU batch
   -> [S2-04 已交付] WSL2/Linux x86_64 + RTX 4060 TensorRT path
   -> full evidence, resume variants, interview closure, recruiting freeze
 ```
@@ -150,6 +157,7 @@ contract + metadata -> model-specific preprocess
 .\cpp_infer\tools\stage1.cmd build
 .\cpp_infer\tools\stage1.cmd batch data\images\val batch-output -Workers 4 -QueueCapacity 8
 .\cpp_infer\tools\stage1.cmd batch-compare
+.\cpp_infer\tools\stage1.cmd batch-compare -Config cpp_infer\configs\int8_u8s8_config.txt
 ```
 
 在 WSL2/Linux x86_64 中选择固定版本的 Linux SDK，并使用 Bash 入口：
@@ -165,6 +173,7 @@ bash cpp_infer/tools/stage1.sh test
 bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
 bash cpp_infer/tools/stage1.sh batch data/images/val batch-output --workers 4 --queue-capacity 8
 bash cpp_infer/tools/stage1.sh batch-compare
+bash cpp_infer/tools/stage1.sh batch-compare --config cpp_infer/configs/int8_u8s8_config.txt
 bash cpp_infer/tools/stage1.sh consistency
 bash cpp_infer/tools/stage1.sh benchmark
 bash cpp_infer/tools/stage1.sh all
@@ -176,6 +185,10 @@ bash cpp_infer/tools/stage1.sh all
 bash cpp_infer/tools/bootstrap_aarch64_deps.sh fetch
 bash cpp_infer/tools/stage2_aarch64.sh doctor
 bash cpp_infer/tools/stage2_aarch64.sh all
+
+export YOLO_DEFECT_AARCH64_CONFIG="$PWD/cpp_infer/configs/int8_u8s8_config.txt"
+bash cpp_infer/tools/stage2_aarch64.sh all
+unset YOLO_DEFECT_AARCH64_CONFIG
 ```
 
 完整 action 矩阵、当前依赖路径、本机配置优先级、底层 CMake/CTest 审计命令
@@ -211,9 +224,9 @@ TensorRT 实现、冻结门禁、实测指标和命令见
 
 | 单元 | 交付内容 | 诚实边界 | 状态 |
 |---|---|---|---|
-| S2-01 | Static INT8 PTQ、FP32/INT8 正确性/任务质量/性能对比、ORT operator/node profiling | Windows CPU 个人练习收口；产品/质量结果为 advisory；不做 QAT，也不把 profiler 冒充 Benchmark | **实现/证据完成；等待 L1** |
-| S2-02 | Linux x86_64 原生链路、共享源码可移植性、AArch64 交叉构建与 QEMU smoke | WSL2/QEMU 不是开发板；QEMU 不产出性能结论 | **Gate A/Gate B 实现与证据已完成；等待用户 L1** |
-| S2-03 | 目录/manifest 发现、有界队列、workers、背压、失败计数、干净退出、吞吐对比 | 并发单图任务不等于真正的 ONNX batch；QEMU 只提供功能证据 | **实现/证据完成；等待用户 L1** |
+| S2-01 | Static INT8 PTQ、FP32/INT8 正确性/任务质量/性能对比、ORT operator/node profiling | 产品/质量结果仍为 advisory；不做 QAT，也不把 profiler 冒充 Benchmark | **Round 2 U8S8 已融入跨平台多图链；等待 L1** |
+| S2-02 | Linux x86_64 原生链路、共享源码可移植性、AArch64 交叉构建与 QEMU smoke | WSL2/QEMU 不是开发板；QEMU 不产出性能结论 | **U8S8 Linux/AArch64 功能融合完成；等待用户 L1** |
+| S2-03 | 目录/manifest 发现、有界队列、workers、背压、失败计数、干净退出、吞吐对比 | 并发单图任务不等于真正的 ONNX batch；QEMU 只提供功能证据 | **FP32 原收口与正式 U8S8 融合证据完成；等待用户 L1** |
 | S2-04 | 一条真实 Linux x86_64 + RTX 4060 TensorRT 执行路径、FP16 正确性与性能 | 仅为 WSL2 本地 GPU/边缘节点证据；受约束 mixed FP16/FP32，不是 Jetson 或嵌入式部署 | **实现/证据/教学收口完成；等待用户 L1** |
 | S2-05 | 适用的完整门禁、结果矩阵、失败案例、三套简历叙事、面试材料、recruiting freeze | 不增加新技术栈 | 计划中 |
 
@@ -364,21 +377,50 @@ fallback。最终 E0 plan 为 21,144,012 bytes，SHA-256
 | GPU memory | A/B 的 device-wide `nvidia-smi memory.used` baseline-to-peak 均为 `155 MiB`；未获得 PID-specific memory，因此不是进程或模型独占显存 |
 | 重复性边界 | detection 完全一致、平均吞吐相差约 2.1%，但 P95 差异明显；不声称未锁频 Laptop GPU 的尾延迟稳定 |
 
-当前源码在 Windows x86_64 与 WSL2/Linux x86_64 均通过 179/179 CTest。
+S2-04 分支原先通过 179/179 CTest；合并正式 U8S8 batch integration 后，
+当前源码在 Windows x86_64 与 WSL2/Linux x86_64 均通过 180/180 CTest。
 TensorRT INT8 未增加，因为 FP32 artifact 尚无冻结 representative calibration/QDQ
 契约，且 INT8 明确不是阻断项。完整证据和九部分讲解见
 [S2-04 收口](docs/details/s2_04_closure.md)与
 [`cpp_infer/results/s2_04/linux_x86_64_rtx4060/`](cpp_infer/results/s2_04/linux_x86_64_rtx4060/)。
 
+### S2-01/S2-02/S2-03 U8S8 融合记录
+
+本次融合没有改动 `RuntimeConfig`、`ModelArtifactSpec`、
+`DetectorPipeline`、后处理或 `BatchRunner` 数据面。U8S8 图的外部 I/O
+仍为 float32，因此选择 `cpp_infer/configs/int8_u8s8_config.txt` 只替换
+模型产物，单图和 batch 契约保持不变；默认配置仍为 FP32。
+
+| 融合证据 | 实测结果 |
+|---|---|
+| 正式身份 | `yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2`；SHA-256 `9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1` |
+| Windows x86_64 | 最终 Release 门禁 `157/157`；两个需要 symlink/reparse 权限的 GTest 用例在本机 skip，对应 Linux 用例通过；U8S8 固定图得到 3 detections |
+| WSL2/Linux 功能正确性 | 最终 Release 门禁 `157/157`；U8S8 固定图得到 3 detections；30 图 manifest 以 workers=2/queue=4 完成 30/30，queue peak=4、producer waits=25 |
+| WSL2/Linux 361 图比较 | U8S8 CPU、JSON-only、queue=8：workers=1 `4.591151 img/s`、peak RSS `192.933594 MiB`、waits=353；workers=4 `15.903088 img/s`、`556.882812 MiB`、waits=350；吞吐比 `3.463857`；361 份输出字节和语义完全一致 |
+| Linux AArch64/QEMU | clean cross-build 与 ELF/loader 检查通过；U8S8 固定图得到 3 detections；目录 workers=1 与 manifest workers=2 各 2/2 且输出一致；损坏输入精确得到 2 成功 + 1 失败、exit 2，queue=1 且 producer waits=1 |
+| FP32 回归 | 可选配置改动后，默认 FP32 Linux Demo 与 AArch64/QEMU `all` 工作流均通过 |
+
+新 Linux 比较在仓库所在的 `/mnt/d` DrvFs 中运行，而旧 FP32 比较
+使用 WSL 原生 ext4 工作区。新数字只表示本轮 WSL2/Linux U8S8
+同协议下 workers=1/4 的对比，不得与旧 ext4 FP32 结果直接排名。
+QEMU 的 timing/RSS 字段仍明确不可发布，只证明 AArch64 功能可移植性。
+S2-01 advisory 质量事实也不变：agreement precision 为
+`0.938462 < 0.95`，mAP50 drop 为 `0.010356 > 0.01`；strict 质量结果
+没有被改写为全绿。
+
+机器可读融合证据位于
+[`cpp_infer/results/s2_03/int8_integration/`](cpp_infer/results/s2_03/int8_integration/)，
+冻结范围见[融合 SPEC](docs/details/s2_int8_arm64_batch_integration_spec.md)。
+
 ### 平台矩阵
 
 | 平台/后端 | 能证明什么 | 当前状态 |
 |---|---|---|
-| Windows x86_64 + ORT CPU FP32 | 当前产品链、单图与有界多图正确性、最终 179/179 测试、正式同平台吞吐/PWS 比较 | **S2-04 回归已验证** |
-| Windows x86_64 + ORT CPU INT8 | Static PTQ 产物、Runtime 合法性、大小/质量/性能比较、逐节点 profiling | S2-01 已按 advisory 练习口径验证 |
-| WSL2/Linux x86_64 + ORT CPU INT8 | 潜在的共享源码 Linux INT8 路径 | Gate A 未单独实测；不作 Linux INT8 对比结论 |
-| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux 构建/加载/Runtime 可移植性、单图与有界多图正确性、最终 179/179 测试、正式同平台吞吐/RSS 比较 | **S2-04 回归已在 WSL2 验证** |
-| Linux AArch64 under QEMU | 交叉构建、单图与有界多图 ARM64 ORT CPU 功能正确性 | **S2-03 已在模拟环境验证**；不是板卡且无性能/内存结论 |
+| Windows x86_64 + ORT CPU FP32 | 当前产品链、单图与有界多图正确性、历史同平台吞吐/PWS 比较 | **合并后 180/180 回归通过** |
+| Windows x86_64 + ORT CPU INT8 | Static PTQ、Runtime 合法性、advisory 质量/性能/profile 证据与固定图产品推理 | **Round 2 U8S8 固定图已验证并纳入融合门禁** |
+| WSL2/Linux x86_64 + ORT CPU INT8 | 共享产品链、固定图、30 图 manifest、有界 workers/背压与同轮 361 图正确性/吞吐/RSS 比较 | **Round 2 U8S8 融合已验证** |
+| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux 构建/加载/Runtime 可移植性、单图与有界多图正确性、历史同平台吞吐/RSS 比较 | **合并后 180/180 回归通过** |
+| Linux AArch64 under QEMU + ORT CPU FP32/U8S8 | clean cross-build、ELF/loader、单图与有界多图的可选配置功能正确性 | **两种配置均已在模拟环境验证**；不是板卡且无可发布性能/内存结论 |
 | WSL2/Linux x86_64 + RTX 4060 Laptop + TensorRT | 真实本地 `trtexec`、ORT EP 诊断 placement、已接受 native `enqueueV3`、受约束 FP16 正确性/性能、host RSS 和 device-wide GPU memory | **S2-04 已验证**；不是原生 Linux、Jetson、ARM64 GPU 或嵌入式硬件 |
 
 当前简历无需等待大阶段二即可使用。已完成的 S2 单元可以滚动更新简历；
@@ -394,9 +436,10 @@ TensorRT INT8 未增加，因为 FP32 artifact 尚无冻结 representative calib
   一台 Windows CPU 主机、串行 ORT 执行，并且没有锁定 CPU affinity/priority。
   Gate A 的 Linux warmup-1/repeat-2 样本波动明显，只是功能性性能 smoke，
   不是正式结果，也不能用作跨操作系统速度比较。
-- S2-03 正式比较在每个 x86_64 平台内使用同一 361 图目录、FP32 CPU、
-  JSON-only 输出、queue=8 和独立的 workers=1/workers=4 Release 进程；先比较
-  每份 detection JSON，再计算 speedup。Windows 与 WSL2 数字不作跨平台比较。
+- 历史 S2-03 比较使用 FP32 CPU，当前融合比较使用 U8S8 CPU；两者都
+  固定 361 图目录、JSON-only、queue=8 和独立 workers=1/4 Release 进程，
+  并在计算比值前检查每份输出。U8S8 本轮使用 `/mnt/d` DrvFs，旧 Linux
+  FP32 使用 WSL 原生 ext4，因此它们的绝对吞吐/RSS 不是直接 FP32/INT8 对比。
 - Windows Peak Working Set 与 Linux `getrusage` peak RSS 都是进程生命周期高水位，
   但平台语义不同；二者都不是模型专属或单次推理内存，数值也不能直接比较。
 - S2-01 ORT trace 已证明优化后节点由 `CPUExecutionProvider` 执行，但 trace
@@ -439,6 +482,7 @@ D010 集成、Qt、本地 LLM、Agent 工作流和真实 ARM/Jetson 设备保持
 - [S2-02 完整教学收口](docs/details/s2_02_closure.md)
 - [S2-03 多图有界并发收口](docs/details/s2_03_closure.md)
 - [S2-04 RTX 4060 TensorRT 收口](docs/details/s2_04_closure.md)
+- [S2-01/S2-02/S2-03 U8S8 融合 SPEC](docs/details/s2_int8_arm64_batch_integration_spec.md)
 - [路径、命令与环境](docs/paths_commands.md)
 - [C++ Runtime 技术参考](cpp_infer/README.md)
 

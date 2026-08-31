@@ -13,7 +13,7 @@ import subprocess
 import time
 import uuid
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Optional, Sequence
 
 
 class BatchCliAssertionError(RuntimeError):
@@ -37,6 +37,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--image", type=Path, required=True)
     parser.add_argument("--work-root", type=Path, required=True)
+    parser.add_argument("--expected-model-id")
+    parser.add_argument("--expected-model-sha256")
     return parser.parse_args()
 
 
@@ -101,6 +103,8 @@ def assert_summary(
     expected_workers: int,
     expected_sources: Sequence[Path],
     expected_cooperative_stop_requested: bool = False,
+    expected_model_id: Optional[str] = None,
+    expected_model_sha256: Optional[str] = None,
 ) -> dict[str, Any]:
     document = read_json(path)
     if document.get("schema_version") != 1:
@@ -149,6 +153,24 @@ def assert_summary(
     if runtime.get("effective_workers") != min(expected_workers, discovered):
         raise BatchCliAssertionError(
             f"effective_workers mismatch at {path}: {runtime!r}"
+        )
+
+    model = document.get("model")
+    if not isinstance(model, dict):
+        raise BatchCliAssertionError(f"Batch model object is missing: {path}")
+    if expected_model_id is not None and model.get("model_id") != expected_model_id:
+        raise BatchCliAssertionError(
+            f"Batch model_id mismatch at {path}: "
+            f"expected={expected_model_id!r}, actual={model.get('model_id')!r}"
+        )
+    if (
+        expected_model_sha256 is not None
+        and model.get("declared_sha256") != expected_model_sha256
+    ):
+        raise BatchCliAssertionError(
+            f"Batch declared_sha256 mismatch at {path}: "
+            f"expected={expected_model_sha256!r}, "
+            f"actual={model.get('declared_sha256')!r}"
         )
 
     items = document.get("items")
@@ -452,6 +474,8 @@ def main() -> int:
             cancelled=0,
             expected_workers=1,
             expected_sources=[first_image, second_image],
+            expected_model_id=arguments.expected_model_id,
+            expected_model_sha256=arguments.expected_model_sha256,
         )
         assert_detection_json(item_json(directory_output, 0), first_image)
         assert_detection_json(item_json(directory_output, 1), second_image)
@@ -516,6 +540,8 @@ def main() -> int:
                 cancelled=0,
                 expected_workers=workers,
                 expected_sources=manifest_sources,
+                expected_model_id=arguments.expected_model_id,
+                expected_model_sha256=arguments.expected_model_sha256,
             )
             for index, expected_source in enumerate(manifest_sources):
                 assert_detection_json(
@@ -559,6 +585,8 @@ def main() -> int:
             cancelled=0,
             expected_workers=1,
             expected_sources=[unicode_image],
+            expected_model_id=arguments.expected_model_id,
+            expected_model_sha256=arguments.expected_model_sha256,
         )
         assert_detection_json(item_json(unicode_output, 0), unicode_image)
 
@@ -595,6 +623,8 @@ def main() -> int:
             cancelled=0,
             expected_workers=2,
             expected_sources=partial_sources,
+            expected_model_id=arguments.expected_model_id,
+            expected_model_sha256=arguments.expected_model_sha256,
         )
         statuses = [item.get("status") for item in partial["items"]]
         if statuses != ["succeeded", "failed", "succeeded"]:

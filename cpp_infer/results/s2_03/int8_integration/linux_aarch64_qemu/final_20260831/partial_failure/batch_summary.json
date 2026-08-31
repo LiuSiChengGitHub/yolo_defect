@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "evidence_type": "cpp_ort_multi_image_batch_summary",
+  "timestamp_utc": "2026-08-31T05:00:41Z",
+  "status": "partial_failure",
+  "cooperative_stop_requested": false,
+  "command_arguments": [
+    "/tmp/yolo_defect_stage2_aarch64_full/deploy/bin/yolo_defect_cpp",
+    "--config",
+    "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/configs/int8_u8s8_config.txt",
+    "--batch",
+    "--manifest",
+    "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/inputs/partial_failure_manifest.txt",
+    "--output-dir",
+    "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/partial_failure",
+    "--batch-summary",
+    "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/partial_failure/batch_summary.json",
+    "--workers",
+    "2",
+    "--queue-capacity",
+    "1"
+  ],
+  "environment": {
+    "hostname": "DESKTOP-6OGK71C",
+    "processor": "aarch64",
+    "logical_cpu_count": 16,
+    "os_name": "Linux",
+    "os_version": "6.18.33.2-microsoft-standard-WSL2",
+    "target_architecture": "aarch64",
+    "runtime_kernel_architecture": "x86_64",
+    "execution_context": "qemu_user_mode_on_x86_64_host",
+    "compiler_id": "GNU",
+    "compiler_version": "13.3.0",
+    "build_type": "Release",
+    "cxx_standard": 17,
+    "opencv_version": "4.6.0",
+    "onnxruntime_version": "1.19.2"
+  },
+  "runtime": {
+    "config_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/configs/int8_u8s8_config.txt",
+    "requested_provider": "cpu",
+    "actual_provider": "CPUExecutionProvider",
+    "provider_evidence": "explicit_cpu_ep_registration_and_session_creation",
+    "execution_mode": "sequential",
+    "intra_op_num_threads": 1,
+    "inter_op_num_threads": 1,
+    "graph_optimization_level": "all",
+    "score_threshold": 0.25,
+    "nms_threshold": 0.45000000000000001,
+    "nms_mode": "class_agnostic",
+    "requested_workers": 2,
+    "effective_workers": 2,
+    "session_count": 2,
+    "session_initialization_ms": [1382.4044879999999, 1083.816049]
+  },
+  "model": {
+    "model_id": "yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2",
+    "model_family": "yolov8",
+    "model_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/models/best.int8.qdq.u8s8.onnx",
+    "declared_sha256": "9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1",
+    "opset": 17,
+    "input_name": "images",
+    "input_shape": [1, 3, 800, 800],
+    "input_dtype": "float32",
+    "input_layout": "nchw"
+  },
+  "input": {
+    "kind": "manifest",
+    "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/inputs/partial_failure_manifest.txt",
+    "ordering": "UTF-8 path-list declaration order"
+  },
+  "output": {
+    "directory": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/partial_failure",
+    "batch_summary_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/partial_failure/batch_summary.json",
+    "item_directory": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/partial_failure/items",
+    "json_outputs": true,
+    "image_outputs": false,
+    "overwrite_existing": false
+  },
+  "counts": {"discovered": 3, "enqueued": 3, "started": 3, "succeeded": 2, "failed": 1, "cancelled": 0},
+  "queue": {"capacity": 1, "peak_depth": 1, "producer_wait_count": 1, "producer_wait_ms": 0.31211899999999998},
+  "timing": {
+    "processing_wall_ms": 6849.2488970000004,
+    "includes": [
+      "bounded-queue producer waits and task hand-off",
+      "image decode, preprocess, one batch=1 Ort::Session::Run, postprocess, and per-image output writes",
+      "worker drain/cancellation and thread joins"
+    ],
+    "excludes": [
+      "directory/manifest discovery and validation",
+      "RuntimeConfig/ModelArtifactSpec loading",
+      "worker DetectorPipeline and Ort::Session construction",
+      "BatchSummary validation, serialization, and filesystem write"
+    ]
+  },
+  "latency_ms": {"sample_count": 2, "mean_ms": 6829.2321274999995, "p50_ms": 6829.1480590000001, "p95_ms": 6829.3161959999998},
+  "throughput_images_per_second": 0.29200282105035025,
+  "memory": {"supported": true, "status": "supported", "metric": "peak_rss", "bytes": 285974528, "mebibytes": 272.7265625, "scope": "process lifetime including task discovery, worker session construction, bounded-queue execution, per-image output, retained results, joins, and the memory query; excludes BatchSummary JSON serialization/write", "reason": "emulated or cross-architecture execution is functional evidence, not publishable native performance evidence", "publishable": false},
+  "items": [
+    {
+      "sequence_index": 0,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/inputs/good_directory/crazing_241.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/partial_failure/items/000000.detections.json",
+      "image_output_path": null,
+      "detection_count": 3,
+      "latency_ms": 6829.3161959999998,
+      "error": null
+    },
+    {
+      "sequence_index": 1,
+      "status": "succeeded",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/inputs/good_directory/crazing_242.jpg",
+      "json_output_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/partial_failure/items/000001.detections.json",
+      "image_output_path": null,
+      "detection_count": 3,
+      "latency_ms": 6829.1480590000001,
+      "error": null
+    },
+    {
+      "sequence_index": 2,
+      "status": "failed",
+      "source_path": "/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/inputs/corrupt.jpg",
+      "json_output_path": null,
+      "image_output_path": null,
+      "detection_count": 0,
+      "latency_ms": 15.265245,
+      "error": "Image decode validation failed: object image_path='/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/final_20260831/inputs/corrupt.jpg'; expected an OpenCV-decodable 8-bit color image; actual file exists but OpenCV decoding returned an empty image; action: check for damaged or unsupported image content, then retry with a known-good image"
+    }
+  ],
+  "limitations": [
+    "Concurrency is image-level batch=1 work; this is not true tensor batching.",
+    "Each worker owns one DetectorPipeline and CPU Ort::Session with sequential execution and intra/inter-op thread counts fixed at 1/1.",
+    "No video, service, GPU concurrency, or lock-free queue is included.",
+    "Process peak memory is a lifetime high-water mark, not incremental per-worker or per-stage memory.",
+    "QEMU user-mode execution, when declared or inferred, proves only AArch64 functional portability and is not performance evidence."
+  ],
+  "fatal_error": null
+}
