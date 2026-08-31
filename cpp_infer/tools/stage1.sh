@@ -69,7 +69,7 @@ Usage:
   stage1.sh batch <input-dir-or-manifest> [output-dir] [--config <path>]
                   [--workers <1..64>] [--queue-capacity <1..4096>]
                   [--output-images] [--overwrite]
-  stage1.sh batch-compare
+  stage1.sh batch-compare [--config <path>]
   stage1.sh demo
   stage1.sh consistency
   stage1.sh benchmark [--warmup <n>] [--repeat <n>]
@@ -83,8 +83,9 @@ Actions:
   detect       Write JSON and PNG for one arbitrary image.
   batch        Run one directory/path-list manifest with bounded workers.
   batch-compare Run workers=1 and workers=4, queue=8, JSON-only on all
-               data/images/val images; require identical detections and
-               describe throughput/peak-RSS deltas without a speedup gate.
+               data/images/val images with the selected RuntimeConfig
+               (default FP32); require identical detections and describe
+               throughput/peak-RSS deltas without a speedup gate.
   demo         Validate the fixed crazing_241 JSON/PNG result.
   consistency  Run the frozen Python ORT/C++ ORT comparison.
   benchmark    Run consistency, then benchmark (default 10/100).
@@ -412,7 +413,7 @@ run_demo() {
   [[ -s "${png}" ]] || fail "demo PNG" "a non-empty image" "${png}" \
     "inspect OpenCV encoding"
   run "demo JSON validator" "${PYTHON_EXE}" "${DETECTION_VALIDATOR}" \
-    "${json}" --expected-image "${DEMO_IMAGE}"
+    "${json}" --expected-image "${DEMO_IMAGE}" --expected-config "${CONFIG}"
   run "demo PNG probe" "${IMAGE_PROBE}" "${png}"
   run "demo detection count" "${PYTHON_EXE}" -c \
     'import json,sys; assert len(json.load(open(sys.argv[1],encoding="utf-8"))["detections"])==3' \
@@ -475,7 +476,7 @@ run_detect() {
   run "detect CLI" "${CLI}" "${args[@]}"
   check_json "${json}" "detect JSON"
   run "detect JSON validator" "${PYTHON_EXE}" "${DETECTION_VALIDATOR}" \
-    "${json}" --expected-image "${image}"
+    "${json}" --expected-image "${image}" --expected-config "${config}"
   [[ -s "${png}" ]] || fail "detect PNG" "a non-empty image" "${png}" \
     "inspect OpenCV encoding"
   run "detect PNG probe" "${IMAGE_PROBE}" "${png}"
@@ -527,15 +528,19 @@ run_batch() {
 }
 
 run_batch_comparison() {
-  stage "formal S2-03 workers=1 versus workers=4 comparison"
+  local config="$1"
+  [[ -z "${config}" ]] || config="$(absolute_file "${config}" \
+    "batch comparison config" "pass an existing RuntimeConfig")"
+  [[ -n "${config}" ]] || config="${CONFIG}"
+  stage "formal workers=1 versus workers=4 comparison"
   [[ -d "${BATCH_PERFORMANCE_INPUT}" ]] ||
     fail "batch performance input" "data/images/val directory" \
       "${BATCH_PERFORMANCE_INPUT}" "restore the validation images"
   local workers_1_out="${RUN_DIR}/batch_workers_1"
   local workers_4_out="${RUN_DIR}/batch_workers_4"
-  run_batch "${BATCH_PERFORMANCE_INPUT}" "${workers_1_out}" "${CONFIG}" \
+  run_batch "${BATCH_PERFORMANCE_INPUT}" "${workers_1_out}" "${config}" \
     1 8 0 0
-  run_batch "${BATCH_PERFORMANCE_INPUT}" "${workers_4_out}" "${CONFIG}" \
+  run_batch "${BATCH_PERFORMANCE_INPUT}" "${workers_4_out}" "${config}" \
     4 8 0 0
   local comparison="${RUN_DIR}/batch_comparison.json"
   run "batch comparison" "${PYTHON_EXE}" "${BATCH_COMPARISON_TOOL}" \
@@ -552,6 +557,7 @@ main() {
   local detect_image="" detect_out="" detect_config="" detect_overwrite=0
   local batch_input="" batch_out="" batch_config="" batch_workers=1
   local batch_capacity="" batch_output_images=0 batch_overwrite=0
+  local batch_comparison_config=""
   local warmup=10 repeat=100
 
   case "${action}" in
@@ -609,8 +615,14 @@ main() {
           "${batch_capacity}" "correct --queue-capacity"
       ;;
     batch-compare)
-      (( $# == 0 )) || fail "batch-compare arguments" "none" "$*" \
-        "the formal protocol fixes input/workers/queue/output policy"
+      while (( $# > 0 )); do
+        case "$1" in
+          --config) (( $# > 1 )) || fail "--config" "a value" "missing" \
+            "pass a RuntimeConfig"; batch_comparison_config="$2"; shift 2 ;;
+          *) fail "batch-compare argument" "--config <path>" "$1" \
+            "the protocol fixes input/workers/queue/output policy" ;;
+        esac
+      done
       ;;
     benchmark)
       while (( $# > 0 )); do
@@ -651,7 +663,8 @@ main() {
     batch) ensure_build; run_batch "${batch_input}" "${batch_out}" \
       "${batch_config}" "${batch_workers}" "${batch_capacity}" \
       "${batch_output_images}" "${batch_overwrite}" ;;
-    batch-compare) ensure_build; new_run_dir; run_batch_comparison ;;
+    batch-compare) ensure_build; new_run_dir; \
+      run_batch_comparison "${batch_comparison_config}" ;;
     demo) ensure_build; new_run_dir; run_demo ;;
     consistency) ensure_build; new_run_dir; run_consistency ;;
     benchmark) ensure_build; new_run_dir; run_consistency; \

@@ -1,0 +1,76 @@
+[directory: workers=1, queue=2]
+S2-03 bounded multi-image batch completed
+batch_summary: /mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/fp32_regression_20260831_batch/directory_workers1/batch_summary.json
+status: succeeded
+input_kind: directory
+input_path: /mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/fp32_regression_20260831_batch/inputs/good_directory
+requested_workers: 1
+effective_workers: 1
+queue_capacity: 2
+queue_peak_depth: 2
+producer_wait_count: 0
+discovered: 2
+succeeded: 2
+failed: 0
+cancelled: 0
+processing_wall_ms: 61411.083750
+throughput_images_per_second: 0.032567
+memory_metric: peak_rss
+memory_mebibytes: 232.324219
+memory_publishable: false
+scope: independent batch=1 DetectorPipeline workers with bounded queue; no true batch, video, service, GPU concurrency, or lock-free queue.
+BatchSummary validation: status=succeeded, discovered=2, succeeded=2, failed=0, cancelled=0, path=/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/fp32_regression_20260831_batch/directory_workers1/batch_summary.json
+
+[manifest: workers=2, queue=1]
+S2-03 bounded multi-image batch completed
+batch_summary: /mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/fp32_regression_20260831_batch/manifest_workers2/batch_summary.json
+status: succeeded
+input_kind: manifest
+input_path: /mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/fp32_regression_20260831_batch/inputs/good_manifest.txt
+requested_workers: 2
+effective_workers: 2
+queue_capacity: 1
+queue_peak_depth: 1
+producer_wait_count: 0
+discovered: 2
+succeeded: 2
+failed: 0
+cancelled: 0
+processing_wall_ms: 31737.833807
+throughput_images_per_second: 0.063016
+memory_metric: peak_rss
+memory_mebibytes: 263.964844
+memory_publishable: false
+scope: independent batch=1 DetectorPipeline workers with bounded queue; no true batch, video, service, GPU concurrency, or lock-free queue.
+BatchSummary validation: status=succeeded, discovered=2, succeeded=2, failed=0, cancelled=0, path=/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/fp32_regression_20260831_batch/manifest_workers2/batch_summary.json
+
+[directory/manifest per-image parity]
+[pass] 000000 byte-identical and semantically identical
+[pass] 000001 byte-identical and semantically identical
+
+[partial failure: exact 2 succeeded + 1 failed]
+S2-03 bounded multi-image batch completed
+batch_summary: /mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/fp32_regression_20260831_batch/partial_failure/batch_summary.json
+status: partial_failure
+input_kind: manifest
+input_path: /mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/fp32_regression_20260831_batch/inputs/partial_failure_manifest.txt
+requested_workers: 2
+effective_workers: 2
+queue_capacity: 1
+queue_peak_depth: 1
+producer_wait_count: 1
+discovered: 3
+succeeded: 2
+failed: 1
+cancelled: 0
+processing_wall_ms: 32501.306717
+throughput_images_per_second: 0.061536
+memory_metric: peak_rss
+memory_mebibytes: 263.214844
+memory_publishable: false
+scope: independent batch=1 DetectorPipeline workers with bounded queue; no true batch, video, service, GPU concurrency, or lock-free queue.
+BatchSummary validation: status=partial_failure, discovered=3, succeeded=2, failed=1, cancelled=0, path=/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/fp32_regression_20260831_batch/partial_failure/batch_summary.json
+[pass] corrupt JPEG isolated; exit=2; succeeded=2; failed=1
+[pass] AArch64 batch evidence is functional QEMU user-mode evidence only
+[pass] no QEMU throughput, latency, RSS, or native-board conclusion published
+[pass] fresh run root=/mnt/d/01_Base/CodingSpace/yolo_defect/cpp_infer/results/s2_03/int8_integration/linux_aarch64_qemu/fp32_regression_20260831_batch

@@ -20,18 +20,16 @@ that artifact: executable contracts, C++ inference, deterministic outputs,
 correctness gates, benchmark evidence, and a controlled path toward Linux,
 concurrency, quantization, and TensorRT.
 
-> **Status — 2026-08-30:** Large Stage One, user-owned L2, and the S2-01 through
-> S2-03 implementations and evidence are complete. S2-03 extends the shared
-> single-image `DetectorPipeline` with deterministic directory/manifest
-> discovery, a bounded queue, per-worker ORT sessions, backpressure, per-image
-> outputs, partial-failure accounting, cooperative shutdown, and a
-> machine-readable `BatchSummary`. Clean Release gates passed 156/156 tests on both
-> Windows x86_64 and WSL2/Linux x86_64; both platforms also completed formal
-> 361-image workers=1/workers=4 correctness, throughput, and memory comparisons.
-> The AArch64 build passed the same directory/manifest/partial-failure batch
-> functionality under QEMU user-mode. Work stops for user L1; S2-04 has not
-> started. QEMU is not an ARM board, so no emulated performance, memory, or
-> native-device claim is published.
+> **Status — 2026-08-31:** Large Stage One and user-owned L2 are complete.
+> S2-01, S2-02, and S2-03 now have a consolidated Round 2 QDQ/U8S8 closure:
+> the formal artifact `yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2` (SHA-256
+> `9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1`)
+> runs through the shared C++ single-image and bounded multi-image chain on
+> Windows and WSL2/Linux x86_64, and through the cross-built AArch64 chain under
+> QEMU user-mode. Final Windows and Linux gates passed 157/157 CTest entries;
+> default FP32 Linux and AArch64/QEMU regressions also passed. Work stops for
+> user L1; S2-04 has not started. QEMU is not an ARM board, so its performance
+> and memory fields are not publishable native-device evidence.
 
 ![Fixed inference demo](docs/assets/demo_inference_result.gif)
 
@@ -93,6 +91,7 @@ FP32 ONNX
   -> [Gate A delivered] Windows and Linux x86_64 shared-source Runtime
   -> [Gate B delivered] AArch64 cross-build + QEMU functional portability
   -> [S2-03 delivered] directory/manifest + bounded queue + workers
+  -> [integration delivered] formal U8S8 through Linux + AArch64/QEMU batch
   -> Linux x86_64 + RTX 4060 TensorRT path
   -> full evidence, resume variants, interview closure, recruiting freeze
 ```
@@ -168,6 +167,7 @@ root. It discovers and initializes the required Visual Studio environment:
 .\cpp_infer\tools\stage1.cmd build
 .\cpp_infer\tools\stage1.cmd batch data\images\val batch-output -Workers 4 -QueueCapacity 8
 .\cpp_infer\tools\stage1.cmd batch-compare
+.\cpp_infer\tools\stage1.cmd batch-compare -Config cpp_infer\configs\int8_u8s8_config.txt
 ```
 
 In WSL2/Linux x86_64, select the pinned Linux SDKs and use the Bash entry:
@@ -183,6 +183,7 @@ bash cpp_infer/tools/stage1.sh test
 bash cpp_infer/tools/stage1.sh detect data/images/val/crazing_241.jpg
 bash cpp_infer/tools/stage1.sh batch data/images/val batch-output --workers 4 --queue-capacity 8
 bash cpp_infer/tools/stage1.sh batch-compare
+bash cpp_infer/tools/stage1.sh batch-compare --config cpp_infer/configs/int8_u8s8_config.txt
 bash cpp_infer/tools/stage1.sh consistency
 bash cpp_infer/tools/stage1.sh benchmark
 bash cpp_infer/tools/stage1.sh all
@@ -195,6 +196,10 @@ run the AArch64 workflow:
 bash cpp_infer/tools/bootstrap_aarch64_deps.sh fetch
 bash cpp_infer/tools/stage2_aarch64.sh doctor
 bash cpp_infer/tools/stage2_aarch64.sh all
+
+export YOLO_DEFECT_AARCH64_CONFIG="$PWD/cpp_infer/configs/int8_u8s8_config.txt"
+bash cpp_infer/tools/stage2_aarch64.sh all
+unset YOLO_DEFECT_AARCH64_CONFIG
 ```
 
 The complete action matrix, current dependency paths, local-configuration
@@ -232,9 +237,9 @@ and then stops for L1 acceptance.
 
 | Unit | Delivery | Honest boundary | Status |
 |---|---|---|---|
-| S2-01 | Static INT8 PTQ, FP32/INT8 correctness/task-quality/performance comparison, ORT operator/node profiling | Windows CPU exercise closure; product/quality results are advisory; no QAT or profiler-as-benchmark claim | **Implementation/evidence complete; awaiting L1** |
-| S2-02 | Linux x86_64 native chain, shared-source portability, AArch64 cross-build and QEMU smoke | WSL2/QEMU is not a board; QEMU produces no performance claim | **Gate A/Gate B implementation and evidence complete; awaiting user L1** |
-| S2-03 | Directory/manifest discovery, bounded queue, workers, backpressure, failure accounting, clean shutdown, throughput comparison | Concurrent single-image work is not true ONNX batch; QEMU is functional evidence only | **Implementation/evidence complete; awaiting user L1** |
+| S2-01 | Static INT8 PTQ, FP32/INT8 correctness/task-quality/performance comparison, ORT operator/node profiling | Product/quality results remain advisory; no QAT or profiler-as-benchmark claim | **Round 2 U8S8 integrated into the cross-platform multi-image chain; awaiting L1** |
+| S2-02 | Linux x86_64 native chain, shared-source portability, AArch64 cross-build and QEMU smoke | WSL2/QEMU is not a board; QEMU produces no performance claim | **U8S8 Linux/AArch64 functional integration complete; awaiting user L1** |
+| S2-03 | Directory/manifest discovery, bounded queue, workers, backpressure, failure accounting, clean shutdown, throughput comparison | Concurrent single-image work is not true ONNX batch; QEMU is functional evidence only | **FP32 closure and formal U8S8 integration evidence complete; awaiting user L1** |
 | S2-04 | One real Linux x86_64 + RTX 4060 TensorRT execution path, FP16 correctness and performance | Local GPU/edge-node evidence only; not Jetson or embedded deployment | Not started |
 | S2-05 | Applicable full gates, result matrix, failure cases, three resume narratives, interview material, recruiting freeze | Adds no new technology stack | Planned |
 
@@ -370,15 +375,46 @@ The command protocol and interpretation are in
 [Paths, commands, and environment](docs/paths_commands.md) and the
 [S2-03 closure](docs/details/s2_03_closure.md).
 
+### S2-01/S2-02/S2-03 U8S8 Integration Record
+
+The integration keeps `RuntimeConfig`, `ModelArtifactSpec`, `DetectorPipeline`,
+postprocessing, and `BatchRunner` unchanged. The U8S8 graph retains float32
+external I/O, so selecting `cpp_infer/configs/int8_u8s8_config.txt` changes the
+model artifact while preserving the established single-image and batch
+contracts. The default configuration remains FP32.
+
+| Integration evidence | Recorded result |
+|---|---|
+| Formal identity | `yolov8n_neu_det_s2_01_int8_qdq_u8s8_r2`; SHA-256 `9F2B3356555232B11F403D2D9071146006DDCB19E531DBF0DA727341B1E268B1` |
+| Windows x86_64 | Final Release gate `157/157`; the two permission-dependent symlink/reparse GTest cases were skipped locally and their Linux counterparts passed; the U8S8 fixed image produced 3 detections |
+| WSL2/Linux functional correctness | Final Release gate `157/157`; U8S8 fixed image produced 3 detections; the 30-image manifest at workers=2/queue=4 completed 30/30 with queue peak 4 and 25 producer waits |
+| WSL2/Linux 361-image comparison | U8S8 CPU, JSON-only, queue=8: workers=1 `4.591151 img/s`, peak RSS `192.933594 MiB`, 353 waits; workers=4 `15.903088 img/s`, peak RSS `556.882812 MiB`, 350 waits; ratio `3.463857`; all 361 outputs were byte- and semantic-equal |
+| Linux AArch64/QEMU | Clean cross-build plus ELF/loader checks passed; U8S8 fixed image produced 3 detections; directory workers=1 and manifest workers=2 each completed 2/2 with identical outputs; corrupt input produced exactly 2 successes + 1 failure, exit 2, with queue=1 and one producer wait |
+| FP32 regression | The default FP32 Linux Demo and AArch64/QEMU `all` workflow passed after the selectable-config change |
+
+The new Linux comparison ran from the repository under `/mnt/d` (DrvFs), not
+the WSL-native ext4 work area used by the older FP32 comparison. Its throughput
+and peak-RSS values are only a within-run WSL2/Linux U8S8 workers=1 versus
+workers=4 comparison; they must not be ranked directly against the old ext4
+FP32 numbers. QEMU timing and RSS fields remain explicitly non-publishable and
+prove only AArch64 functional portability. The S2-01 advisory quality facts also
+remain unchanged: agreement precision is `0.938462 < 0.95`, and mAP50 drop is
+`0.010356 > 0.01`; the strict quality result is not rewritten as fully green.
+
+Machine-readable integration evidence is under
+[`cpp_infer/results/s2_03/int8_integration/`](cpp_infer/results/s2_03/int8_integration/).
+The frozen scope is recorded in the
+[integration SPEC](docs/details/s2_int8_arm64_batch_integration_spec.md).
+
 ### Platform Matrix
 
 | Platform/backend | What it proves | Current status |
 |---|---|---|
-| Windows x86_64 + ORT CPU FP32 | Current product chain, single-image and bounded multi-image correctness, 156/156 tests, formal same-platform throughput/PWS comparison | **S2-03 verified** |
-| Windows x86_64 + ORT CPU INT8 | Static PTQ artifact, Runtime legality, size/quality/performance comparison, per-node profiling | Verified in S2-01 under advisory exercise policy |
-| WSL2/Linux x86_64 + ORT CPU INT8 | Potential shared-source Linux INT8 path | Not separately exercised in Gate A; no Linux INT8 comparison claim |
-| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux build/load/runtime portability, single-image and bounded multi-image correctness, 156/156 tests, formal same-platform throughput/RSS comparison | **S2-03 verified in WSL2** |
-| Linux AArch64 under QEMU | Cross-build plus single-image and bounded multi-image ARM64 ORT CPU functional correctness | **S2-03 verified under emulation**; not a board and no performance/memory claims |
+| Windows x86_64 + ORT CPU FP32 | Current product chain, single-image and bounded multi-image correctness, historical same-platform throughput/PWS comparison | **Current 157/157 regression passed** |
+| Windows x86_64 + ORT CPU INT8 | Static PTQ, Runtime legality, advisory quality/performance/profile evidence, and fixed-image product inference | **Round 2 U8S8 fixed image verified; included in the 157-test gate** |
+| WSL2/Linux x86_64 + ORT CPU INT8 | Shared product chain, fixed image, 30-image manifest, bounded workers/backpressure, and same-run 361-image correctness/throughput/RSS comparison | **Round 2 U8S8 integration verified** |
+| WSL2 Ubuntu 24.04 x86_64 + ORT CPU FP32 | Linux build/load/runtime portability, single-image and bounded multi-image correctness, historical same-platform throughput/RSS comparison | **Default FP32 regression passed in the current 157-test closure** |
+| Linux AArch64 under QEMU + ORT CPU FP32/U8S8 | Clean cross-build, ELF/loader, single-image and bounded multi-image functional correctness for the selected config | **Both configs verified under emulation**; not a board and no publishable performance/memory claim |
 | Linux x86_64 + RTX 4060 + TensorRT | Real local TensorRT execution, FP16 correctness/performance, GPU memory | Planned in S2-04; not Jetson |
 
 The current resume can be used without waiting for Stage Two. Completed S2
@@ -395,10 +431,12 @@ written as delivered results.
   one Windows CPU host, sequential ORT execution, and no CPU-affinity/priority
   lock. Gate A's Linux warmup-1/repeat-2 samples varied materially and are only
   functional performance smokes, not a formal result or a cross-OS comparison.
-- S2-03's formal comparison uses the same 361-image directory, FP32 CPU,
-  JSON-only outputs, queue=8, and independent workers=1/workers=4 Release
-  processes on each x86_64 platform. It checks every detection JSON before
-  calculating speedup; Windows and WSL2 results are not compared to each other.
+- The historical S2-03 comparison uses FP32 CPU and the current integration
+  comparison uses U8S8 CPU; both fix the 361-image directory, JSON-only output,
+  queue=8, and independent workers=1/workers=4 Release processes. Every output
+  is checked before the ratio is calculated. The U8S8 run used `/mnt/d` DrvFs,
+  whereas the old Linux FP32 pair used WSL-native ext4, so their absolute
+  throughput/RSS values are not a direct FP32-versus-INT8 comparison.
 - Windows Peak Working Set and Linux `getrusage` peak RSS are process-lifetime
   high-water metrics with platform-specific semantics; neither is model-only or
   per-inference memory, and their values are not directly comparable.
@@ -442,6 +480,7 @@ Authoritative and operational references:
 - [S2-02 Gate B AArch64/QEMU closure](docs/details/s2_02_gate_b_closure.md)
 - [S2-02 complete teaching closure](docs/details/s2_02_closure.md)
 - [S2-03 bounded multi-image closure](docs/details/s2_03_closure.md)
+- [S2-01/S2-02/S2-03 U8S8 integration SPEC](docs/details/s2_int8_arm64_batch_integration_spec.md)
 - [Paths, commands, and environment](docs/paths_commands.md)
 - [C++ Runtime technical reference](cpp_infer/README.md)
 

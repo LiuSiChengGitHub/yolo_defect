@@ -7,3 +7,4 @@
 /artifacts/*int8*.txt text eol=lf
 /configs/*int8*.txt text eol=lf
 /results/s2_01/**/*.json text eol=lf
+/tools/*.sh text eol=lf
