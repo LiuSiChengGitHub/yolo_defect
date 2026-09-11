@@ -31,28 +31,11 @@ EVIDENCE_TYPE = "s2_01_candidate_product_screen"
 
 
 def screen(arguments: argparse.Namespace) -> Mapping[str, Any]:
-    frozen = machine_protocol.load_s2_01_protocol(arguments.protocol)
+    frozen = machine_protocol.load_s2_01_declaration(arguments.protocol)
     product_manifest = evaluator.load_product_manifest(
         frozen.consistency_manifest_path
     )
-    quality_manifest = evaluator.load_frozen_manifest(
-        frozen.quality_manifest_path, "quality"
-    )
-    if product_manifest["manifest_path"] != frozen.consistency_manifest_path:
-        evaluator.fail(
-            "protocol.product_manifest",
-            str(frozen.consistency_manifest_path),
-            str(product_manifest["manifest_path"]),
-            "restore the product manifest frozen by this protocol",
-        )
-    if quality_manifest["manifest_path"] != frozen.quality_manifest_path:
-        evaluator.fail(
-            "protocol.quality_manifest",
-            str(frozen.quality_manifest_path),
-            str(quality_manifest["manifest_path"]),
-            "restore the gate source frozen by this protocol",
-        )
-
+    evaluator.validate_manifest_binding(product_manifest, frozen.correctness["consistency_manifest"])
     consistency = evaluator.load_consistency_tool()
     consistency.require_dependencies()
     fp32 = consistency.load_contract(arguments.fp32_config)
@@ -75,6 +58,9 @@ def screen(arguments: argparse.Namespace) -> Mapping[str, Any]:
             str(fp32["model_path"]),
             "screen the frozen source model",
         )
+    if fp32["model_actual_sha256"] != frozen.source_model_sha256:
+        evaluator.fail("protocol.fp32_model.sha256", frozen.source_model_sha256,
+                       fp32["model_actual_sha256"], "select the declared FP32 source")
     if int8["model_path"] != frozen.output_model_path:
         evaluator.fail(
             "protocol.int8_model",
@@ -98,7 +84,7 @@ def screen(arguments: argparse.Namespace) -> Mapping[str, Any]:
         detections["fp32"],
         detections["int8"],
         consistency.match_detections,
-        quality_manifest["product_matching_gates"],
+        frozen.product_matching_gates,
     )
     return {
         "schema_version": SCHEMA_VERSION,
@@ -108,9 +94,6 @@ def screen(arguments: argparse.Namespace) -> Mapping[str, Any]:
         "protocol": {
             "protocol_id": frozen.protocol_id,
             "path": str(frozen.declaration_path),
-            "raw_sha256": machine_protocol.sha256_file_raw(
-                frozen.declaration_path
-            ),
             "canonical_lf_sha256": machine_protocol.sha256_file_canonical_lf(
                 frozen.declaration_path
             ),
@@ -119,21 +102,12 @@ def screen(arguments: argparse.Namespace) -> Mapping[str, Any]:
             "product": {
                 "manifest_id": product_manifest.get("manifest_id"),
                 "path": str(product_manifest["manifest_path"]),
-                "raw_sha256": machine_protocol.sha256_file_raw(
-                    product_manifest["manifest_path"]
-                ),
                 "canonical_lf_sha256": product_manifest[
                     "manifest_canonical_lf_sha256"
                 ],
                 "sample_count": len(samples),
             },
-            "quality_gate_source": {
-                "manifest_id": quality_manifest["manifest_id"],
-                "path": str(quality_manifest["manifest_path"]),
-                "canonical_lf_sha256": quality_manifest[
-                    "manifest_canonical_lf_sha256"
-                ],
-            },
+            "quality_gate_source": dict(frozen.correctness["quality_manifest"]),
         },
         "artifacts": {
             "fp32": evaluator.contract_evidence(fp32),
@@ -154,7 +128,6 @@ def screen(arguments: argparse.Namespace) -> Mapping[str, Any]:
         "limitations": [
             "Candidate screen only: it is not formal S2-01 acceptance evidence.",
             "The 361-image task-quality metric and Release C++ consistency are intentionally not run here.",
-            "A passing candidate must still pass the full formal evaluator before benchmark publication.",
         ],
     }
 

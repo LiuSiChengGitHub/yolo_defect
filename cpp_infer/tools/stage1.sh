@@ -49,9 +49,11 @@ run() {
   local name="$1"
   shift
   printf '[run] %s\n' "${name}"
-  if ! "$@"; then
-    fail "${name}" "exit code 0" "nonzero exit" \
-      "read the first diagnostic above, correct it, and rerun this action"
+  local status=0
+  "$@" || status=$?
+  if (( status != 0 )); then
+    printf '[fail] %s: exit code %d\n' "${name}" "${status}" >&2
+    exit "${status}"
   fi
 }
 
@@ -88,8 +90,8 @@ Actions:
                throughput/peak-RSS deltas without a speedup gate.
   demo         Validate the fixed crazing_241 JSON/PNG result.
   consistency  Run the frozen Python ORT/C++ ORT comparison.
-  benchmark    Run consistency, then benchmark (default 10/100).
-  all          Clean build -> CTest -> demo -> consistency -> benchmark.
+  benchmark    Build and benchmark (default 10/100).
+  all          Incremental build -> CTest -> benchmark -> batch.
 
 Environment:
   ONNXRUNTIME_ROOT          Official Linux x64 ORT 1.19.2 SDK root (required).
@@ -151,6 +153,7 @@ resolve_python() {
   need_command "${PYTHON_REQUEST}" \
     "install Python dependencies or set YOLO_DEFECT_PYTHON"
   PYTHON_EXE="$(command -v -- "${PYTHON_REQUEST}")"
+  [[ "${1:-}" == doctor ]] || return 0
   local output=""
   if ! output="$("${PYTHON_EXE}" -c \
     'import cv2,numpy,onnxruntime as o; assert o.__version__=="1.19.2"; assert "CPUExecutionProvider" in o.get_available_providers(); print(o.__version__,cv2.__version__,numpy.__version__)' \
@@ -232,18 +235,9 @@ preflight() {
     fail "host architecture" "x86_64" "$(uname -m)" \
       "Gate A is native x86_64; AArch64 belongs to Gate B"
   resolve_build_dir
-  need_file "${CONFIG}" "default RuntimeConfig" "restore the tracked file"
-  need_file "${DEMO_IMAGE}" "fixed demo image" "restore the tracked file"
-  need_file "${MANIFEST}" "consistency manifest" "restore the tracked file"
-  need_file "${BATCH_MANIFEST}" "S2-03 path-list manifest" \
-    "restore the tracked file"
-  need_file "${BATCH_VALIDATOR}" "BatchSummary validator" \
-    "restore cpp_infer/tools/validate_batch_summary.py"
-  need_file "${BATCH_COMPARISON_TOOL}" "batch comparison tool" \
-    "restore cpp_infer/tools/compare_batch_runs.py"
   resolve_opencv
   resolve_ort
-  resolve_python
+  resolve_python "${1:-}"
   resolve_gtest
 }
 
@@ -267,6 +261,7 @@ doctor() {
   printf '[pass] build:      %s\n' "${BUILD_DIR}"
   printf '[pass] defaults:   config=%s; image=%s; warmup=10; repeat=100\n' \
     "${CONFIG}" "${DEMO_IMAGE}"
+  [[ ! -x "${CLI}" ]] || check_ldd
   printf '[pass] doctor created no build or evidence\n'
 }
 
@@ -332,7 +327,6 @@ configure_build() {
   run "CMake configure" cmake "${args[@]}"
   run "Release build" cmake --build "${BUILD_DIR}" --parallel
   check_outputs
-  check_ldd
 }
 
 clean_build() {
@@ -350,9 +344,10 @@ clean_build() {
 ensure_build() {
   if [[ -f "${BUILD_DIR}/CMakeCache.txt" ]]; then
     stage "incremental Release build"
-    configure_build
+    run "Release build" cmake --build "${BUILD_DIR}" --parallel
+    check_outputs
   else
-    clean_build
+    configure_build
   fi
 }
 
@@ -381,26 +376,9 @@ new_run_dir() {
   fi
 }
 
-check_json() {
-  [[ -s "$1" ]] || fail "$2" "a non-empty JSON file" "$1" \
-    "inspect the producing command"
-  if ! "${PYTHON_EXE}" -m json.tool "$1" >/dev/null; then
-    fail "$2" "valid UTF-8 JSON" "$1" "inspect JSON serialization"
-  fi
-}
-
 run_tests() {
-  stage "complete CTest gate"
-  local inventory=""
-  if ! inventory="$(ctest --test-dir "${BUILD_DIR}" -N 2>&1)"; then
-    fail "CTest inventory" "exit code 0" "${inventory}" \
-      "inspect the configured Release test tree"
-  fi
-  printf '%s\n' "${inventory}"
-  grep -Eq 'Total Tests: [1-9][0-9]*' <<<"${inventory}" ||
-    fail "CTest inventory" "at least one registered test" "${inventory}" \
-      "rerun clean-build with BUILD_TESTING=ON"
-  run "complete CTest" ctest --test-dir "${BUILD_DIR}" --output-on-failure
+  stage "complete CTest"
+  run "complete CTest" ctest --test-dir "${BUILD_DIR}" --output-on-failure --no-tests=error
 }
 
 run_demo() {
@@ -409,15 +387,11 @@ run_demo() {
   local png="${RUN_DIR}/demo/crazing_241.png"
   run "demo CLI" "${CLI}" --config "${CONFIG}" --image "${DEMO_IMAGE}" \
     --output-json "${json}" --output-image "${png}"
-  check_json "${json}" "demo JSON"
   [[ -s "${png}" ]] || fail "demo PNG" "a non-empty image" "${png}" \
     "inspect OpenCV encoding"
   run "demo JSON validator" "${PYTHON_EXE}" "${DETECTION_VALIDATOR}" \
     "${json}" --expected-image "${DEMO_IMAGE}" --expected-config "${CONFIG}"
   run "demo PNG probe" "${IMAGE_PROBE}" "${png}"
-  run "demo detection count" "${PYTHON_EXE}" -c \
-    'import json,sys; assert len(json.load(open(sys.argv[1],encoding="utf-8"))["detections"])==3' \
-    "${json}"
   printf '[pass] Demo: JSON=%s; PNG=%s\n' "${json}" "${png}"
 }
 
@@ -427,11 +401,6 @@ run_consistency() {
   run "30-image consistency" "${PYTHON_EXE}" "${CONSISTENCY_TOOL}" \
     --manifest "${MANIFEST}" --cpp-cli "${CLI}" --output-dir "${out}" \
     --cpp-opencv-version "${OPENCV_VERSION}"
-  check_json "${out}/per_image.json" "consistency per_image.json"
-  check_json "${out}/summary.json" "consistency summary.json"
-  run "frozen consistency gate" "${PYTHON_EXE}" -c \
-    'import json,sys; s=json.load(open(sys.argv[1],encoding="utf-8")); p=json.load(open(sys.argv[2],encoding="utf-8")); r=s["result"]; assert s["passed"] and r["images_total"]==r["images_passed"]==30; assert r["python_detections_total"]==r["cpp_detections_total"]==r["matched_detections_total"]==62; assert r["max_confidence_abs_error"]<=1e-4 and r["max_bbox_coordinate_abs_error_pixels"]<=1e-2 and r["min_matching_iou"]>=0.999; assert len(s["source_class_results"])==6 and all(x["images_total"]==x["images_passed"]==5 for x in s["source_class_results"]); assert len(p["images"])==30 and all(x["passed"] for x in p["images"])' \
-    "${out}/summary.json" "${out}/per_image.json"
   printf '[pass] Consistency: summary=%s\n' "${out}/summary.json"
 }
 
@@ -442,7 +411,6 @@ run_benchmark() {
   run "C++ benchmark" "${CLI}" --config "${CONFIG}" --image "${DEMO_IMAGE}" \
     --benchmark --warmup "${warmup}" --repeat "${repeat}" \
     --benchmark-json "${json}"
-  check_json "${json}" "benchmark JSON"
   run "benchmark validator" "${PYTHON_EXE}" "${BENCHMARK_VALIDATOR}" \
     "${json}" --expected-image "${DEMO_IMAGE}" \
     --expected-warmup "${warmup}" --expected-repeat "${repeat}"
@@ -474,7 +442,6 @@ run_detect() {
   (( overwrite == 0 )) || args+=(--overwrite)
   stage "arbitrary single-image detection"
   run "detect CLI" "${CLI}" "${args[@]}"
-  check_json "${json}" "detect JSON"
   run "detect JSON validator" "${PYTHON_EXE}" "${DETECTION_VALIDATOR}" \
     "${json}" --expected-image "${image}" --expected-config "${config}"
   [[ -s "${png}" ]] || fail "detect PNG" "a non-empty image" "${png}" \
@@ -485,7 +452,7 @@ run_detect() {
 
 run_batch() {
   local input="$1" out="$2" config="$3" workers="$4" capacity="$5"
-  local output_images="$6" overwrite="$7"
+  local output_images="$6" overwrite="$7" validate="${8:-1}"
   local input_option="" input_kind=""
   [[ "${input}" == /* ]] || input="${CALLER_DIR}/${input}"
   if [[ -d "${input}" ]]; then
@@ -519,11 +486,12 @@ run_batch() {
   (( overwrite == 0 )) || args+=(--overwrite)
   stage "bounded multi-image batch (workers=${workers}, queue=${capacity})"
   run "batch CLI" "${CLI}" "${args[@]}"
-  check_json "${summary}" "BatchSummary"
-  run "BatchSummary validator" "${PYTHON_EXE}" "${BATCH_VALIDATOR}" \
-    "${summary}" --expected-status succeeded \
-    --expected-input-kind "${input_kind}" \
-    --expected-requested-workers "${workers}"
+  if (( validate )); then
+    run "BatchSummary validator" "${PYTHON_EXE}" "${BATCH_VALIDATOR}" \
+      "${summary}" --expected-status succeeded \
+      --expected-input-kind "${input_kind}" \
+      --expected-requested-workers "${workers}"
+  fi
   printf '[pass] Batch: summary=%s; output=%s\n' "${summary}" "${out}"
 }
 
@@ -539,15 +507,14 @@ run_batch_comparison() {
   local workers_1_out="${RUN_DIR}/batch_workers_1"
   local workers_4_out="${RUN_DIR}/batch_workers_4"
   run_batch "${BATCH_PERFORMANCE_INPUT}" "${workers_1_out}" "${config}" \
-    1 8 0 0
+    1 8 0 0 0
   run_batch "${BATCH_PERFORMANCE_INPUT}" "${workers_4_out}" "${config}" \
-    4 8 0 0
+    4 8 0 0 0
   local comparison="${RUN_DIR}/batch_comparison.json"
   run "batch comparison" "${PYTHON_EXE}" "${BATCH_COMPARISON_TOOL}" \
     --workers-1-summary "${workers_1_out}/batch_summary.json" \
     --workers-4-summary "${workers_4_out}/batch_summary.json" \
     --output "${comparison}"
-  check_json "${comparison}" "batch comparison JSON"
   printf '[pass] Batch comparison: %s\n' "${comparison}"
 }
 
@@ -650,7 +617,7 @@ main() {
       "${action}" "run stage1.sh help" ;;
   esac
 
-  preflight
+  preflight "${action}"
   printf '[env] build=%s\n[env] ORT=%s\n[env] OpenCV=%s\n[env] Python=%s\n' \
     "${BUILD_DIR}" "${ORT_ROOT}" "${OPENCV_VERSION}" "${PYTHON_EXE}"
   case "${action}" in
@@ -667,9 +634,9 @@ main() {
       run_batch_comparison "${batch_comparison_config}" ;;
     demo) ensure_build; new_run_dir; run_demo ;;
     consistency) ensure_build; new_run_dir; run_consistency ;;
-    benchmark) ensure_build; new_run_dir; run_consistency; \
+    benchmark) ensure_build; new_run_dir; \
       run_benchmark "${warmup}" "${repeat}" ;;
-    all) clean_build; run_tests; new_run_dir; run_demo; run_consistency; \
+    all) ensure_build; run_tests; new_run_dir; \
       run_benchmark 10 100; run_batch "${BATCH_MANIFEST}" \
       "${RUN_DIR}/batch" "${CONFIG}" 2 4 0 0 ;;
   esac

@@ -414,9 +414,7 @@ def load_contract(config_path: Path) -> Mapping[str, Any]:
 
     return {
         "config_path": config_path,
-        "config_sha256": sha256_file(config_path),
         "artifact_path": artifact_path,
-        "artifact_sha256": sha256_file(artifact_path),
         "model_path": model_path,
         "model_actual_sha256": actual_model_sha,
         "model_declared_sha256": declared_model_sha,
@@ -437,9 +435,11 @@ def load_contract(config_path: Path) -> Mapping[str, Any]:
     }
 
 
-def load_manifest(manifest_path: Path, contract: Mapping[str, Any]) -> Mapping[str, Any]:
+def load_manifest(
+    manifest_path: Path, contract: Mapping[str, Any], *, document: Any = None
+) -> Mapping[str, Any]:
     manifest_path = manifest_path.resolve(strict=True)
-    manifest = load_json(manifest_path)
+    manifest = load_json(manifest_path) if document is None else document
     validate_exact_fields(manifest, MANIFEST_FIELDS, "consistency_manifest")
     if manifest["schema_version"] != SCHEMA_VERSION:
         fail(
@@ -1372,9 +1372,7 @@ def build_summary(
         },
         "contract": {
             "config_path": display_path(contract["config_path"]),
-            "config_sha256": contract["config_sha256"],
             "artifact_path": display_path(contract["artifact_path"]),
-            "artifact_sha256": contract["artifact_sha256"],
             "model_id": contract["model_id"],
             "model_declared_sha256": contract["model_declared_sha256"],
             "model_actual_sha256": contract["model_actual_sha256"],
@@ -1461,7 +1459,7 @@ def run_comparison(
         fail("manifest.config_path", "a non-empty path", repr(declared_config), "fix the manifest")
     config_path = (manifest_path.resolve().parent / declared_config).resolve(strict=True)
     contract = load_contract(config_path)
-    manifest = load_manifest(manifest_path, contract)
+    manifest = load_manifest(manifest_path, contract, document=manifest_json)
     session = create_python_session(contract)
     inspection = inspect_cpp_cli(cpp_cli.resolve(), contract["config_path"])
 

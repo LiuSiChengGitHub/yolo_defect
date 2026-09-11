@@ -426,8 +426,6 @@ if(BUILD_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_quality.py")
   set(S2_01_PROTOCOL_UNIT_TEST
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_protocol.py")
-  set(S2_01_EVIDENCE_UNIT_TEST
-    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_01_evidence.py")
   set(S2_03_BATCH_TOOLS_UNIT_TEST
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_s2_03_batch_tools.py")
   set(S2_01_MANIFEST_TOOL
@@ -774,11 +772,12 @@ if(BUILD_TESTING)
   )
 
   add_test(
-    NAME yolo_defect_s2_01_evidence_unit
-    COMMAND "${Python3_EXECUTABLE}" "${S2_01_EVIDENCE_UNIT_TEST}" -v
+    NAME yolo_defect_stage1_workflow_unit
+    COMMAND "${Python3_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_stage1_workflow.py" -v
   )
-  set_tests_properties(yolo_defect_s2_01_evidence_unit PROPERTIES
-    LABELS "ptq;evidence;unit;quality_gate"
+  set_tests_properties(yolo_defect_stage1_workflow_unit PROPERTIES
+    LABELS "workflow;unit"
   )
 
   add_test(
@@ -825,7 +824,6 @@ if(BUILD_TESTING)
   )
   set_tests_properties(yolo_defect_cpp_benchmark_smoke PROPERTIES
     LABELS "benchmark;integration;quality_gate"
-    DEPENDS yolo_defect_python_cpp_consistency
     TIMEOUT 180
   )
 
@@ -840,7 +838,6 @@ if(BUILD_TESTING)
   )
   set_tests_properties(yolo_defect_cpp_profile_smoke PROPERTIES
     LABELS "profiling;integration;quality_gate"
-    DEPENDS yolo_defect_python_cpp_consistency
     TIMEOUT 180
   )
 

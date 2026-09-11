@@ -33,7 +33,7 @@ OpenCV packages into a private target sysroot. It never apt-installs OpenCV
 ARM64 packages, because doing so can remove the host's amd64 OpenCV dev chain.
 
 Prerequisite: apt must know the arm64 foreign architecture and the Ubuntu
-ports repository. See docs/paths_commands.md for the one-time root commands.
+ports repository. See cpp_infer/README.md for the one-time root commands.
 
 Optional environment:
   YOLO_DEFECT_AARCH64_DEPS_ROOT  Parent dependency directory below $HOME.

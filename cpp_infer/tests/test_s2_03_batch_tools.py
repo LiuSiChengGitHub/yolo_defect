@@ -9,6 +9,7 @@ import json
 import shutil
 import sys
 import unittest
+from unittest import mock
 import uuid
 from pathlib import Path
 
@@ -399,6 +400,51 @@ class BatchComparisonTest(unittest.TestCase):
         with self.assertRaises(comparison.BatchComparisonError) as context:
             self.compare()
         self.assertIn("queue.capacity", str(context.exception))
+
+    def test_cli_compares_outputs_without_original_inference_inputs(self):
+        arguments = []
+        for workers, document in ((1, self.workers_1), (4, self.workers_4)):
+            path = self.base / f"workers_{workers}" / "summary.json"
+            path.write_text(json.dumps(document), encoding="utf-8")
+            arguments += [f"--workers-{workers}-summary", str(path)]
+        output = self.base / "comparison.json"
+        # The synthetic fixture has results only: no model, config or inputs.
+        self.assertFalse((self.base / "model.onnx").exists())
+        self.assertFalse((self.base / "inputs").exists())
+        self.assertEqual(comparison.main(arguments + ["--output", str(output)]), 0)
+        self.assertTrue(json.loads(output.read_text(encoding="utf-8"))["passed"])
+
+    def test_reads_each_detection_output_once(self):
+        reads = []
+        original_read = Path.read_bytes
+
+        def record_read(path):
+            reads.append(path)
+            return original_read(path)
+
+        with mock.patch.object(Path, "read_bytes", record_read):
+            self.compare()
+        expected = [
+            Path(item["json_output_path"])
+            for document in (self.workers_1, self.workers_4)
+            for item in document["items"]
+        ]
+        self.assertCountEqual(reads, expected)
+
+    def test_rejects_identically_corrupted_outputs(self):
+        for document in (self.workers_1, self.workers_4):
+            Path(document["items"][0]["json_output_path"]).write_bytes(b"{broken")
+        with self.assertRaisesRegex(comparison.BatchComparisonError, "strict UTF-8 JSON"):
+            self.compare()
+
+    def test_rejects_output_model_mismatch_even_when_bytes_match(self):
+        for summary in (self.workers_1, self.workers_4):
+            path = Path(summary["items"][0]["json_output_path"])
+            document = json.loads(path.read_text(encoding="utf-8"))
+            document["model"]["model_id"] = "wrong-model"
+            path.write_text(json.dumps(document), encoding="utf-8")
+        with self.assertRaisesRegex(validator.BatchSummaryValidationError, "model_id"):
+            self.compare()
 
 
 if __name__ == "__main__":

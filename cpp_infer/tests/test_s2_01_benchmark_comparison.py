@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import copy
 import importlib.util
+import json
+import shutil
+import uuid
 import unittest
 from pathlib import Path
 
@@ -154,8 +157,36 @@ class BenchmarkComparisonTest(unittest.TestCase):
             self.int8,
             self.correctness,
             self.protocol_binding,
-            validate_referenced_models=False,
         )
+
+    def test_cli_comparison_needs_no_original_models_or_dataset(self):
+        declaration = json.loads((CPP_INFER_ROOT / "protocols/s2_01_ptq_protocol.json").read_text())
+        directory = (CPP_INFER_ROOT / "build-test-analysis" / uuid.uuid4().hex).resolve()
+        self.assertEqual(directory.parent, (CPP_INFER_ROOT / "build-test-analysis").resolve())
+        directory.mkdir(parents=True)
+        self.addCleanup(shutil.rmtree, directory)
+        with self.subTest(directory=directory):
+            root = directory
+            declaration["source_model"].update(path="missing/fp32.onnx", sha256="A" * 64, size_bytes=12_000_000)
+            declaration["output"]["model_path"] = "missing/int8.onnx"
+            declaration["calibration"]["manifest_path"] = "missing/calibration.json"
+            declaration["correctness"]["quality_manifest"]["path"] = "missing/quality.json"
+            declaration["correctness"]["consistency_manifest"]["path"] = "missing/product.json"
+            declaration["benchmark"]["sample"]["image_path"] = "missing/sample.jpg"
+            for precision, document in (("fp32", self.fp32), ("int8", self.int8)):
+                document["model"]["path"] = str(root / f"missing/{precision}.onnx")
+                document["sample"]["image_path"] = str(root / "missing/sample.jpg")
+                (root / f"{precision}.json").write_text(json.dumps(document))
+            (root / "protocol.json").write_text(json.dumps(declaration))
+            arguments = [
+                "--protocol", str(root / "protocol.json"), "--fp32", str(root / "fp32.json"),
+                "--int8", str(root / "int8.json"), "--output", str(root / "comparison.json"),
+            ]
+            self.assertEqual(comparison.main(arguments), 0)
+            self.assertFalse((root / "missing").exists())
+            self.int8["model"]["path"] = str(root / "missing/another.onnx")
+            (root / "int8.json").write_text(json.dumps(self.int8))
+            self.assertEqual(comparison.main(arguments), 1)
 
     def test_computes_latency_throughput_memory_and_size_deltas(self):
         result = self.compare()
@@ -185,39 +216,28 @@ class BenchmarkComparisonTest(unittest.TestCase):
             self.compare()
         self.assertIn("protocol", str(context.exception))
 
-    def test_rejects_failed_correctness_prerequisite(self):
+    def test_failed_correctness_is_nonblocking_context(self):
         self.correctness["passed"] = False
-        with self.assertRaises(comparison.BenchmarkComparisonError) as context:
-            self.compare()
-        self.assertIn("correctness.passed", str(context.exception))
-
-    def test_advisory_policy_preserves_failed_correctness_without_blocking_comparison(self):
-        self.correctness["passed"] = False
-        result = comparison.compare_documents(
-            self.fp32,
-            self.int8,
-            self.correctness,
-            self.protocol_binding,
-            validate_referenced_models=False,
-            correctness_policy="advisory",
-        )
+        self.correctness["runtime_legality"]["cpp"]["passed"] = False
+        result = self.compare()
         self.assertTrue(result["passed"])
-        self.assertEqual(result["correctness_prerequisite"]["policy"], "advisory")
         self.assertFalse(result["correctness_prerequisite"]["passed"])
         self.assertFalse(result["correctness_prerequisite"]["blocking"])
-        self.assertTrue(result["correctness_prerequisite"]["accepted_for_comparison"])
 
-    def test_rejects_unknown_correctness_policy(self):
-        with self.assertRaises(comparison.BenchmarkComparisonError) as context:
-            comparison.compare_documents(
-                self.fp32,
-                self.int8,
-                self.correctness,
-                self.protocol_binding,
-                validate_referenced_models=False,
-                correctness_policy="ignored",
-            )
-        self.assertIn("correctness_policy", str(context.exception))
+    def test_correctness_is_optional_and_models_need_not_exist(self):
+        self.correctness = None
+        result = self.compare()
+        self.assertTrue(result["passed"])
+        self.assertIsNone(result["correctness_prerequisite"]["passed"])
+        arguments = comparison.parse_arguments([
+            "--fp32", "fp32.json", "--int8", "int8.json", "--protocol", "p.json", "--output", "out.json",
+        ])
+        self.assertIsNone(arguments.correctness)
+
+    def test_rejects_malformed_correctness(self):
+        self.correctness["passed"] = "false"
+        with self.assertRaisesRegex(comparison.BenchmarkComparisonError, "correctness.passed"):
+            self.compare()
 
     def test_rejects_correctness_for_another_artifact(self):
         self.correctness["artifacts"]["int8"]["model_sha256"] = "D" * 64

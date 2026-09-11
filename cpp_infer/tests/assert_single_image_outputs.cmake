@@ -65,21 +65,6 @@ endfunction()
 
 function(run_json_and_image_validators)
   execute_process(
-    COMMAND "${PYTHON}" -m json.tool "${json_path}"
-    RESULT_VARIABLE json_tool_result
-    OUTPUT_VARIABLE json_tool_stdout
-    ERROR_VARIABLE json_tool_stderr
-  )
-  if(NOT "${json_tool_result}" MATCHES "^-?[0-9]+$" OR
-     NOT json_tool_result EQUAL 0)
-    message(FATAL_ERROR
-      "python -m json.tool rejected '${json_path}'. "
-      "result=${json_tool_result}\n"
-      "stdout:\n${json_tool_stdout}\n"
-      "stderr:\n${json_tool_stderr}")
-  endif()
-
-  execute_process(
     COMMAND "${PYTHON}" "${JSON_VALIDATOR}" "${json_path}"
       --expected-image "${IMAGE}"
     RESULT_VARIABLE validator_result
@@ -136,8 +121,8 @@ assert_regular_nonempty_file("${json_path}" "detection_json")
 assert_regular_nonempty_file("${image_path}" "visualization")
 run_json_and_image_validators()
 
-file(SHA256 "${json_path}" first_json_sha256)
-file(SHA256 "${image_path}" first_image_sha256)
+file(READ "${json_path}" first_json_bytes HEX)
+file(READ "${image_path}" first_image_bytes HEX)
 
 execute_process(
   COMMAND "${CLI}" ${base_arguments}
@@ -167,12 +152,12 @@ if(refusal_position EQUAL -1)
     "stderr:\n${refusal_stderr}")
 endif()
 
-file(SHA256 "${json_path}" refused_json_sha256)
-file(SHA256 "${image_path}" refused_image_sha256)
-if(NOT "${refused_json_sha256}" STREQUAL "${first_json_sha256}" OR
-   NOT "${refused_image_sha256}" STREQUAL "${first_image_sha256}")
+file(READ "${json_path}" refused_json_bytes HEX)
+file(READ "${image_path}" refused_image_bytes HEX)
+if(NOT "${refused_json_bytes}" STREQUAL "${first_json_bytes}" OR
+   NOT "${refused_image_bytes}" STREQUAL "${first_image_bytes}")
   message(FATAL_ERROR
-    "The refused run modified an existing output. Expected both SHA-256 "
+    "The refused run modified an existing output. Expected both output "
     "values to remain unchanged.")
 endif()
 
@@ -197,17 +182,17 @@ assert_regular_nonempty_file("${json_path}" "overwritten_detection_json")
 assert_regular_nonempty_file("${image_path}" "overwritten_visualization")
 run_json_and_image_validators()
 
-file(SHA256 "${json_path}" overwrite_json_sha256)
-file(SHA256 "${image_path}" overwrite_image_sha256)
-if(NOT "${overwrite_json_sha256}" STREQUAL "${first_json_sha256}")
+file(READ "${json_path}" overwrite_json_bytes HEX)
+file(READ "${image_path}" overwrite_image_bytes HEX)
+if(NOT "${overwrite_json_bytes}" STREQUAL "${first_json_bytes}")
   message(FATAL_ERROR
     "Repeated successful run produced different JSON bytes. "
-    "first=${first_json_sha256}, overwrite=${overwrite_json_sha256}")
+    "The bytes must match the original successful run.")
 endif()
-if(NOT "${overwrite_image_sha256}" STREQUAL "${first_image_sha256}")
+if(NOT "${overwrite_image_bytes}" STREQUAL "${first_image_bytes}")
   message(FATAL_ERROR
     "Repeated successful run produced different visualization bytes. "
-    "first=${first_image_sha256}, overwrite=${overwrite_image_sha256}")
+    "The bytes must match the original successful run.")
 endif()
 
 message(STATUS

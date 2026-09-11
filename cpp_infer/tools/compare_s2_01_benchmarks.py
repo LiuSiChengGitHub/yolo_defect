@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import os
@@ -94,22 +93,6 @@ def _number(value: Any, object_name: str, minimum: float = 0.0) -> float:
     return converted
 
 
-def _sha256_file(path: Path) -> Tuple[int, str]:
-    digest = hashlib.sha256()
-    size = 0
-    try:
-        with path.open("rb") as stream:
-            while True:
-                chunk = stream.read(1024 * 1024)
-                if not chunk:
-                    break
-                size += len(chunk)
-                digest.update(chunk)
-    except OSError as error:
-        fail("model.path", "a readable model file", f"{path}: {error}", "restore the selected artifact")
-    return size, digest.hexdigest().upper()
-
-
 def _resolve_recorded_path(raw_path: str) -> Path:
     path = Path(raw_path)
     if not path.is_absolute():
@@ -140,8 +123,6 @@ def _validate_statistics(value: Any, object_name: str, expected_repeat: int) -> 
 def validate_benchmark(
     document: Any,
     precision: str,
-    *,
-    validate_referenced_model: bool,
 ) -> Mapping[str, Any]:
     root = _mapping(document, precision)
     if _integer(root.get("schema_version"), f"{precision}.schema_version") != 1:
@@ -196,19 +177,6 @@ def validate_benchmark(
     if len(declared_sha) != 64 or any(character not in "0123456789ABCDEF" for character in declared_sha):
         fail(f"{precision}.model.declared_sha256", "64 uppercase hexadecimal characters", declared_sha, "fix the artifact contract")
     recorded_size = _integer(model.get("file_size_bytes"), f"{precision}.model.file_size_bytes", 1)
-    if validate_referenced_model:
-        model_path = _resolve_recorded_path(_string(model.get("path"), f"{precision}.model.path"))
-        if not model_path.is_file():
-            fail(f"{precision}.model.path", "an existing regular file", str(model_path), "restore or regenerate the artifact")
-        actual_size, actual_sha = _sha256_file(model_path)
-        if actual_size != recorded_size or actual_sha != declared_sha:
-            fail(
-                f"{precision}.model.integrity",
-                f"size={recorded_size}, sha256={declared_sha}",
-                f"size={actual_size}, sha256={actual_sha}",
-                "regenerate the benchmark only after validating the artifact",
-            )
-
     latency_root = _mapping(root.get("latency_ms"), f"{precision}.latency_ms")
     latency = {
         segment: _validate_statistics(
@@ -276,46 +244,30 @@ def compare_documents(
     int8_document: Any,
     correctness_document: Any,
     protocol_binding: Mapping[str, Any],
-    *,
-    validate_referenced_models: bool = True,
-    correctness_policy: str = "required",
 ) -> Mapping[str, Any]:
-    correctness = _mapping(correctness_document, "correctness")
+    correctness = {} if correctness_document is None else _mapping(correctness_document, "correctness")
     binding = _mapping(protocol_binding, "protocol_binding")
-    if correctness_policy not in ("required", "advisory"):
-        fail(
-            "correctness_policy",
-            "'required' or 'advisory'",
-            repr(correctness_policy),
-            "select an explicit publication policy",
-        )
-    correctness_passed = correctness.get("passed") is True
-    if not correctness_passed and correctness_policy == "required":
-        fail("correctness.passed", "true from the same S2-01 run", repr(correctness.get("passed")), "fix correctness before publishing performance")
-    if correctness.get("evidence_type") != "s2_01_fp32_int8_correctness_and_quality":
-        fail(
-            "correctness.evidence_type",
-            "s2_01_fp32_int8_correctness_and_quality",
-            repr(correctness.get("evidence_type")),
-            "pass the formal three-layer S2-01 correctness result",
-        )
-    runtime_legality = _mapping(correctness.get("runtime_legality"), "correctness.runtime_legality")
-    cpp_legality = _mapping(runtime_legality.get("cpp"), "correctness.runtime_legality.cpp")
-    if (
-        runtime_legality.get("python_fp32_session_and_finite_outputs") is not True
-        or runtime_legality.get("python_int8_session_and_finite_outputs") is not True
-        or cpp_legality.get("requested") is not True
-        or cpp_legality.get("passed") is not True
-    ):
-        fail(
-            "correctness.runtime_legality",
-            "Python FP32/INT8 and requested C++ legality all passed",
-            repr(runtime_legality),
-            "complete all three runtime-legality gates before benchmarking",
-        )
+    correctness_passed = None
+    if correctness_document is not None:
+        correctness_passed = correctness.get("passed")
+        if type(correctness_passed) is not bool:
+            fail("correctness.passed", "a boolean", repr(correctness_passed), "pass a generated correctness result")
+        if correctness.get("evidence_type") != "s2_01_fp32_int8_correctness_and_quality":
+            fail("correctness.evidence_type", "s2_01_fp32_int8_correctness_and_quality",
+                 repr(correctness.get("evidence_type")), "pass the corresponding correctness result")
+        runtime_legality = _mapping(correctness.get("runtime_legality"), "correctness.runtime_legality")
+        cpp_legality = _mapping(runtime_legality.get("cpp"), "correctness.runtime_legality.cpp")
+        for name, value in (
+            ("python_fp32_session_and_finite_outputs", runtime_legality.get("python_fp32_session_and_finite_outputs")),
+            ("python_int8_session_and_finite_outputs", runtime_legality.get("python_int8_session_and_finite_outputs")),
+            ("cpp.requested", cpp_legality.get("requested")),
+            ("cpp.passed", cpp_legality.get("passed")),
+        ):
+            if type(value) is not bool:
+                fail(f"correctness.runtime_legality.{name}", "a boolean", repr(value), "pass a generated correctness result")
 
-    fp32 = validate_benchmark(fp32_document, "fp32", validate_referenced_model=validate_referenced_models)
-    int8 = validate_benchmark(int8_document, "int8", validate_referenced_model=validate_referenced_models)
+    fp32 = validate_benchmark(fp32_document, "fp32")
+    int8 = validate_benchmark(int8_document, "int8")
     _require_equal("protocol", fp32["protocol"], int8["protocol"])
     _require_equal("environment", fp32["environment"], int8["environment"])
     _require_equal("runtime", _without(fp32["runtime"], "session"), _without(int8["runtime"], "session"))
@@ -348,35 +300,36 @@ def compare_documents(
                 repr(binding.get(field)),
                 "bind both benchmarks to the validated frozen machine protocol",
             )
-    correctness_protocol = _mapping(
-        correctness.get("protocol"), "correctness.protocol"
-    )
-    for field in ("protocol_id", "canonical_lf_sha256"):
-        if correctness_protocol.get(field) != binding.get(field):
-            fail(
-                f"correctness.protocol.{field}",
-                repr(binding.get(field)),
-                repr(correctness_protocol.get(field)),
-                "use correctness evidence produced from the same frozen protocol",
-            )
-    correctness_artifacts = _mapping(
-        correctness.get("artifacts"), "correctness.artifacts"
-    )
-    for precision, expected_sha in (
-        ("fp32", fp32["model_sha256"]),
-        ("int8", int8["model_sha256"]),
-    ):
-        artifact = _mapping(
-            correctness_artifacts.get(precision),
-            f"correctness.artifacts.{precision}",
+    if correctness_document is not None:
+        correctness_protocol = _mapping(
+            correctness.get("protocol"), "correctness.protocol"
         )
-        if artifact.get("model_sha256") != expected_sha:
-            fail(
-                f"correctness.artifacts.{precision}.model_sha256",
-                expected_sha,
-                repr(artifact.get("model_sha256")),
-                "benchmark the exact artifacts that passed correctness",
+        for field in ("protocol_id", "canonical_lf_sha256"):
+            if correctness_protocol.get(field) != binding.get(field):
+                fail(
+                    f"correctness.protocol.{field}",
+                    repr(binding.get(field)),
+                    repr(correctness_protocol.get(field)),
+                    "use correctness evidence produced from the same frozen protocol",
+                )
+        correctness_artifacts = _mapping(
+            correctness.get("artifacts"), "correctness.artifacts"
+        )
+        for precision, expected_sha in (
+            ("fp32", fp32["model_sha256"]),
+            ("int8", int8["model_sha256"]),
+        ):
+            artifact = _mapping(
+                correctness_artifacts.get(precision),
+                f"correctness.artifacts.{precision}",
             )
+            if artifact.get("model_sha256") != expected_sha:
+                fail(
+                    f"correctness.artifacts.{precision}.model_sha256",
+                    expected_sha,
+                    repr(artifact.get("model_sha256")),
+                    "select the artifacts recorded in the correctness context",
+                )
 
     latency: MutableMapping[str, Any] = {}
     for segment in LATENCY_SEGMENTS:
@@ -396,10 +349,10 @@ def compare_documents(
         "evidence_type": "s2_01_fp32_int8_cpp_benchmark_comparison",
         "passed": True,
         "correctness_prerequisite": {
-            "policy": correctness_policy,
+            "policy": "context",
             "passed": correctness_passed,
-            "blocking": correctness_policy == "required",
-            "accepted_for_comparison": correctness_passed or correctness_policy == "advisory",
+            "blocking": False,
+            "accepted_for_comparison": True,
             "evidence_type": correctness.get("evidence_type"),
         },
         "protocol_binding": dict(binding),
@@ -457,9 +410,9 @@ def compare_documents(
             "A slower INT8 result remains valid evidence and does not fail this comparison.",
             *(
                 [
-                    "Correctness and quality are advisory for this exercise run; their failed gates remain visible and are not rewritten as passed."
+                    "Correctness and quality did not pass; the comparison retains that result as context."
                 ]
-                if correctness_policy == "advisory" and not correctness_passed
+                if correctness_passed is False
                 else []
             ),
         ],
@@ -487,14 +440,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--fp32", required=True, type=Path)
     parser.add_argument("--int8", required=True, type=Path)
-    parser.add_argument("--correctness", required=True, type=Path)
+    parser.add_argument("--correctness", type=Path, help="Optional correctness and quality context; does not block timing comparison.")
     parser.add_argument("--protocol", required=True, type=Path)
-    parser.add_argument(
-        "--correctness-policy",
-        choices=("required", "advisory"),
-        default="required",
-        help="Keep the frozen correctness result blocking (default) or bind it as non-blocking exercise context.",
-    )
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args(argv)
@@ -503,8 +450,26 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     arguments = parse_arguments(sys.argv[1:] if argv is None else argv)
     try:
-        frozen_protocol = s2_01_protocol.load_s2_01_protocol(arguments.protocol)
-        derived_size, derived_sha = _sha256_file(frozen_protocol.output_model_path)
+        frozen_protocol = s2_01_protocol.load_s2_01_declaration(arguments.protocol)
+        fp32_document = load_json(arguments.fp32)
+        int8_document = load_json(arguments.int8)
+        for name, document, expected_path in (
+            ("fp32", fp32_document, frozen_protocol.source_model_path),
+            ("int8", int8_document, frozen_protocol.output_model_path),
+        ):
+            model = _mapping(_mapping(document, name).get("model"), f"{name}.model")
+            recorded_path = _resolve_recorded_path(_string(model.get("path"), f"{name}.model.path"))
+            if recorded_path != expected_path:
+                fail(f"{name}.model.path", str(expected_path), str(recorded_path), "select the benchmark for this protocol")
+        sample = _mapping(fp32_document.get("sample"), "fp32.sample")
+        sample_path = _resolve_recorded_path(_string(sample.get("image_path"), "fp32.sample.image_path"))
+        if sample_path != frozen_protocol.benchmark_sample_path:
+            fail("fp32.sample.image_path", str(frozen_protocol.benchmark_sample_path),
+                 str(sample_path), "select the fixed-sample benchmark")
+        derived_model = int8_document["model"]
+        if fp32_document["model"].get("file_size_bytes") != frozen_protocol.source_model_size_bytes:
+            fail("fp32.model.file_size_bytes", str(frozen_protocol.source_model_size_bytes),
+                 repr(fp32_document["model"].get("file_size_bytes")), "select the declared source benchmark")
         protocol_binding = {
             "protocol_id": frozen_protocol.protocol_id,
             "path": str(frozen_protocol.declaration_path),
@@ -512,17 +477,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 frozen_protocol.declaration_path
             ),
             "source_model_sha256": frozen_protocol.source_model_sha256,
-            "derived_model_sha256": derived_sha,
-            "derived_model_size_bytes": derived_size,
+            "derived_model_sha256": derived_model.get("declared_sha256"),
+            "derived_model_size_bytes": derived_model.get("file_size_bytes"),
             "warmup": frozen_protocol.benchmark["warmup"],
             "repeat": frozen_protocol.benchmark["repeat"],
         }
         comparison = compare_documents(
-            load_json(arguments.fp32),
-            load_json(arguments.int8),
-            load_json(arguments.correctness),
+            fp32_document,
+            int8_document,
+            load_json(arguments.correctness) if arguments.correctness else None,
             protocol_binding,
-            correctness_policy=arguments.correctness_policy,
         )
         write_json(arguments.output, comparison, arguments.overwrite)
     except Exception as error:

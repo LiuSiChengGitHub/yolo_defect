@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import shutil
+import uuid
 import unittest
 from pathlib import Path
 
@@ -32,6 +35,41 @@ class ProfileSummaryTest(unittest.TestCase):
             expected_profile_runs=expected_runs,
             top_n=top_n,
         )
+
+    def test_cli_summary_needs_only_declaration_artifact_and_trace(self):
+        protocol_document = json.loads((CPP_INFER_ROOT / "protocols/s2_01_ptq_protocol.json").read_text())
+        protocol_document["source_model"]["path"] = "missing/source.onnx"
+        protocol_document["calibration"]["manifest_path"] = "missing/calibration.json"
+        protocol_document["correctness"]["quality_manifest"]["path"] = "missing/quality.json"
+        protocol_document["correctness"]["consistency_manifest"]["path"] = "missing/product.json"
+        protocol_document["benchmark"]["sample"]["image_path"] = "missing/sample.jpg"
+        events = []
+        for _ in range(10):
+            events.extend([
+                {"cat": "Session", "ph": "X", "name": "model_run", "dur": 2},
+                {"cat": "Node", "ph": "X", "name": "conv_kernel_time", "dur": 1,
+                 "args": {"op_name": "Conv", "provider": "CPUExecutionProvider", "node_index": "0"}},
+            ])
+        directory = (CPP_INFER_ROOT / "build-test-analysis" / uuid.uuid4().hex).resolve()
+        self.assertEqual(directory.parent, (CPP_INFER_ROOT / "build-test-analysis").resolve())
+        directory.mkdir(parents=True)
+        self.addCleanup(shutil.rmtree, directory)
+        with self.subTest(directory=directory):
+            root = directory
+            (root / "protocol.json").write_text(json.dumps(protocol_document))
+            (root / "artifact.cfg").write_text(
+                "model_id = fp32\nmodel_path = missing/source.onnx\nmodel_sha256 = "
+                + protocol_document["source_model"]["sha256"] + "\n"
+            )
+            (root / "trace.json").write_text(json.dumps(events))
+            result = profile.main([
+                "--protocol", str(root / "protocol.json"), "--artifact", str(root / "artifact.cfg"),
+                "--trace", str(root / "trace.json"), "--precision", "fp32", "--output", str(root / "summary.json"),
+            ])
+            self.assertEqual(result, 0)
+            summary = json.loads((root / "summary.json").read_text())
+            self.assertIsNone(summary["trace"]["sha256"])
+            self.assertFalse((root / "missing").exists())
 
     def test_filters_fence_events_and_aggregates_nodes_operators_providers(self):
         summary = self.summarize(

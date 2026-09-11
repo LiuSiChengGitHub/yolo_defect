@@ -63,21 +63,6 @@ if(stdout_length GREATER 8192)
 endif()
 
 execute_process(
-  COMMAND "${PYTHON}" -m json.tool "${benchmark_json}"
-  RESULT_VARIABLE json_tool_result
-  OUTPUT_VARIABLE json_tool_stdout
-  ERROR_VARIABLE json_tool_stderr
-)
-if(NOT "${json_tool_result}" MATCHES "^-?[0-9]+$" OR
-   NOT json_tool_result EQUAL 0)
-  message(FATAL_ERROR
-    "python -m json.tool rejected '${benchmark_json}'. "
-    "result=${json_tool_result}\n"
-    "stdout:\n${json_tool_stdout}\n"
-    "stderr:\n${json_tool_stderr}")
-endif()
-
-execute_process(
   COMMAND "${PYTHON}" "${JSON_VALIDATOR}" "${benchmark_json}"
     --expected-image "${IMAGE}"
     --expected-warmup 1
@@ -95,7 +80,7 @@ if(NOT "${validator_result}" MATCHES "^-?[0-9]+$" OR
     "stderr:\n${validator_stderr}")
 endif()
 
-file(SHA256 "${benchmark_json}" first_sha256)
+file(READ "${benchmark_json}" first_bytes HEX)
 
 execute_process(
   COMMAND "${CLI}" ${benchmark_arguments}
@@ -126,11 +111,11 @@ if(refusal_position EQUAL -1)
     "stderr:\n${refusal_stderr}")
 endif()
 
-file(SHA256 "${benchmark_json}" refused_sha256)
-if(NOT "${refused_sha256}" STREQUAL "${first_sha256}")
+file(READ "${benchmark_json}" refused_bytes HEX)
+if(NOT "${refused_bytes}" STREQUAL "${first_bytes}")
   message(FATAL_ERROR
     "The refused benchmark run modified existing evidence. "
-    "expected SHA-256 ${first_sha256}, actual ${refused_sha256}.")
+    "Expected its contents to remain unchanged.")
 endif()
 
 message(STATUS

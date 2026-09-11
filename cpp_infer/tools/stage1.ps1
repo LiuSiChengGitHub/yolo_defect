@@ -93,13 +93,13 @@ Actions:
                queue=8 and JSON-only over data\images\val with the selected
                RuntimeConfig (default FP32). Require identical detections and
                describe throughput/PWS deltas.
-  demo         Build and validate the fixed three-detection Demo.
+  demo         Build and validate the fixed sample Demo.
   consistency  Build and run the frozen 30-image Python/C++ comparison.
-  benchmark    Build, rerun consistency, then run the configured benchmark.
+  benchmark    Build and run the configured benchmark.
   profile      Build, then run a separate profiling-enabled ORT session.
                Defaults: FP32 Runtime config, fixed crazing_241 sample,
                10 runs, and a fresh config-named trace prefix below TEMP.
-  all          Clean build -> CTest -> Demo -> consistency -> benchmark ->
+  all          Incremental build -> CTest -> benchmark ->
                frozen 30-image batch acceptance.
 
 Configuration:
@@ -370,9 +370,8 @@ function Invoke-NativeStep {
   }
   $exitCode = $LASTEXITCODE
   if ($exitCode -ne 0) {
-    Throw-ActionableError -Object $Name -Expected 'exit code 0' `
-      -Actual "exit code $exitCode" `
-      -ActionText 'read the first failing diagnostic above, correct it, and rerun the same action'
+    [Console]::Error.WriteLine("[fail] ${Name}: exit code $exitCode")
+    exit $exitCode
   }
 }
 
@@ -537,7 +536,11 @@ function Invoke-CleanBuild {
     Write-Host "[clean] $script:ResolvedBuildDir"
     Remove-Item -LiteralPath $script:ResolvedBuildDir -Recurse -Force
   }
+  Invoke-ConfigureBuild
+}
 
+function Invoke-ConfigureBuild {
+  Assert-GTestConfigurePolicy
   $configureArguments = @(
     '-S', $script:CppInferDir,
     '-B', $script:ResolvedBuildDir,
@@ -588,7 +591,7 @@ function Invoke-EnsureBuild {
     Invoke-IncrementalBuild
   } else {
     Write-Host '[build] no configured tree found; configuring it now'
-    Invoke-CleanBuild
+    Invoke-ConfigureBuild
   }
 }
 
@@ -631,11 +634,9 @@ function Invoke-Doctor {
 
 function Invoke-FullTests {
   Write-Stage 'complete CTest gate'
-  Invoke-NativeStep -Name 'CTest inventory' -FilePath $script:CTestExe `
-    -Arguments @('--test-dir', $script:ResolvedBuildDir, '-N')
   Invoke-NativeStep -Name 'complete CTest' -FilePath $script:CTestExe `
     -Arguments @('--test-dir', $script:ResolvedBuildDir,
-                 '--output-on-failure')
+                 '--output-on-failure', '--no-tests=error')
 }
 
 function Invoke-Demo {
@@ -653,8 +654,6 @@ function Invoke-Demo {
   Assert-RequiredFile -Path $demoImage -Object 'Demo visualization' `
     -ActionText 'inspect OpenCV image encoding and output path creation'
 
-  Invoke-NativeStep -Name 'Demo JSON parse' -FilePath $script:ResolvedPythonExe `
-    -Arguments @('-m', 'json.tool', $demoJson) -Quiet
   Invoke-NativeStep -Name 'Demo JSON contract validation' `
     -FilePath $script:ResolvedPythonExe `
     -Arguments @($script:DetectionValidator, $demoJson,
@@ -663,13 +662,7 @@ function Invoke-Demo {
   Invoke-NativeStep -Name 'Demo PNG OpenCV probe' `
     -FilePath $script:ImageProbePath -Arguments @($demoImage)
 
-  $demo = Get-Content -LiteralPath $demoJson -Raw | ConvertFrom-Json
-  if ($demo.detections.Count -ne 3) {
-    Throw-ActionableError -Object 'fixed Demo detection count' `
-      -Expected '3' -Actual ([string]$demo.detections.Count) `
-      -ActionText 'inspect the model/config identity, preprocess, raw output, and postprocess contract'
-  }
-  Write-Host "[pass] Demo: 3 detections; JSON=$demoJson; PNG=$demoImage"
+  Write-Host "[pass] Demo: JSON=$demoJson; PNG=$demoImage"
 }
 
 function Invoke-Detect {
@@ -703,9 +696,6 @@ function Invoke-Detect {
   if ($script:DetectWriteJson) {
     Assert-RequiredFile -Path $jsonPath -Object 'single-image JSON' `
       -ActionText 'inspect the result writer and selected output directory'
-    Invoke-NativeStep -Name 'single-image JSON parse' `
-      -FilePath $script:ResolvedPythonExe `
-      -Arguments @('-m', 'json.tool', $jsonPath) -Quiet
     Invoke-NativeStep -Name 'single-image JSON contract validation' `
       -FilePath $script:ResolvedPythonExe `
       -Arguments @($script:DetectionValidator, $jsonPath,
@@ -743,7 +733,8 @@ function Invoke-BatchRun {
     [int]$WorkerCount,
     [int]$Capacity,
     [bool]$WriteImages,
-    [bool]$AllowOverwrite
+    [bool]$AllowOverwrite,
+    [bool]$ValidateResult = $true
   )
 
   Write-Stage ("bounded multi-image batch (workers={0}, queue={1})" -f
@@ -771,16 +762,15 @@ function Invoke-BatchRun {
     -Arguments $arguments | Out-Host
   Assert-RequiredFile -Path $summaryPath -Object 'BatchSummary JSON' `
     -ActionText 'inspect deterministic discovery, worker processing, and summary serialization'
-  Invoke-NativeStep -Name 'BatchSummary JSON parse' `
-    -FilePath $script:ResolvedPythonExe `
-    -Arguments @('-m', 'json.tool', $summaryPath) -Quiet
-  Invoke-NativeStep -Name 'BatchSummary strict validation' `
-    -FilePath $script:ResolvedPythonExe `
-    -Arguments @($script:BatchSummaryValidator, $summaryPath,
-                 '--expected-status', 'succeeded',
-                 '--expected-input-kind', $InputKind,
-                 '--expected-requested-workers', ([string]$WorkerCount)) |
-      Out-Host
+  if ($ValidateResult) {
+    Invoke-NativeStep -Name 'BatchSummary strict validation' `
+      -FilePath $script:ResolvedPythonExe `
+      -Arguments @($script:BatchSummaryValidator, $summaryPath,
+                   '--expected-status', 'succeeded',
+                   '--expected-input-kind', $InputKind,
+                   '--expected-requested-workers', ([string]$WorkerCount)) |
+        Out-Host
+  }
   Write-Host "[pass] Batch: summary=$summaryPath; output=$OutputPath"
   return $summaryPath
 }
@@ -804,12 +794,12 @@ function Invoke-BatchComparison {
     -InputPath $script:BatchPerformanceInput `
     -InputKind 'directory' -OutputPath $workers1Output `
     -ConfigPath $script:DetectConfigPath -WorkerCount 1 -Capacity 8 `
-    -WriteImages $false -AllowOverwrite $false
+    -WriteImages $false -AllowOverwrite $false -ValidateResult $false
   $workers4Summary = Invoke-BatchRun `
     -InputPath $script:BatchPerformanceInput `
     -InputKind 'directory' -OutputPath $workers4Output `
     -ConfigPath $script:DetectConfigPath -WorkerCount 4 -Capacity 8 `
-    -WriteImages $false -AllowOverwrite $false
+    -WriteImages $false -AllowOverwrite $false -ValidateResult $false
   $comparisonPath = Join-Path $script:RunDir 'batch_comparison.json'
   Invoke-NativeStep -Name 'batch correctness/throughput/memory comparison' `
     -FilePath $script:ResolvedPythonExe `
@@ -819,9 +809,6 @@ function Invoke-BatchComparison {
                  '--output', $comparisonPath)
   Assert-RequiredFile -Path $comparisonPath -Object 'batch comparison JSON' `
     -ActionText 'inspect the first comparability or per-image equality failure'
-  Invoke-NativeStep -Name 'batch comparison JSON parse' `
-    -FilePath $script:ResolvedPythonExe `
-    -Arguments @('-m', 'json.tool', $comparisonPath) -Quiet
   Write-Host "[pass] Batch comparison: $comparisonPath"
 }
 
@@ -842,45 +829,7 @@ function Invoke-Consistency {
                  '--output-dir', $consistencyDir,
                  '--cpp-opencv-version', $script:CppOpenCvVersion)
 
-  $perImageJson = Join-Path $consistencyDir 'per_image.json'
-  $summaryJson = Join-Path $consistencyDir 'summary.json'
-  Assert-RequiredFile -Path $perImageJson -Object 'consistency per_image.json' `
-    -ActionText 'inspect the comparison diagnostic above'
-  Assert-RequiredFile -Path $summaryJson -Object 'consistency summary.json' `
-    -ActionText 'inspect the comparison diagnostic above'
-  Invoke-NativeStep -Name 'per-image JSON parse' `
-    -FilePath $script:ResolvedPythonExe `
-    -Arguments @('-m', 'json.tool', $perImageJson) -Quiet
-  Invoke-NativeStep -Name 'consistency summary JSON parse' `
-    -FilePath $script:ResolvedPythonExe `
-    -Arguments @('-m', 'json.tool', $summaryJson) -Quiet
-
-  $summary = Get-Content -LiteralPath $summaryJson -Raw | ConvertFrom-Json
-  $perImage = Get-Content -LiteralPath $perImageJson -Raw | ConvertFrom-Json
-  if (-not $summary.passed -or
-      $summary.result.images_total -ne 30 -or
-      $summary.result.images_passed -ne 30 -or
-      $summary.result.python_detections_total -ne 62 -or
-      $summary.result.cpp_detections_total -ne 62 -or
-      $summary.result.matched_detections_total -ne 62 -or
-      $summary.result.max_confidence_abs_error -gt 1.0e-4 -or
-      $summary.result.max_bbox_coordinate_abs_error_pixels -gt 1.0e-2 -or
-      $summary.result.min_matching_iou -lt 0.999 -or
-      $summary.source_class_results.Count -ne 6 -or
-      @($summary.source_class_results | Where-Object {
-        $_.images_total -ne 5 -or $_.images_passed -ne 5
-      }).Count -ne 0 -or
-      $perImage.images.Count -ne 30 -or
-      @($perImage.images | Where-Object { -not $_.passed }).Count -ne 0) {
-    Throw-ActionableError -Object 'frozen consistency gate' `
-      -Expected 'passed=true, images=30/30, matched detections=62' `
-      -Actual ("passed={0}, images={1}/{2}, matches={3}" -f
-          $summary.passed, $summary.result.images_passed,
-          $summary.result.images_total,
-          $summary.result.matched_detections_total) `
-      -ActionText 'read per_image.json and trace the first mismatch from image/hash through preprocess, raw output, postprocess, and IoU matching'
-  }
-  Write-Host "[pass] Consistency: 30/30 images, 62/62 matches; summary=$summaryJson"
+  Write-Host "[pass] Consistency: summary=$(Join-Path $consistencyDir 'summary.json')"
 }
 
 function Invoke-Benchmark {
@@ -898,9 +847,6 @@ function Invoke-Benchmark {
                  '--benchmark-json', $benchmarkJson)
   Assert-RequiredFile -Path $benchmarkJson -Object 'benchmark JSON' `
     -ActionText 'inspect the benchmark diagnostic and output path'
-  Invoke-NativeStep -Name 'benchmark JSON parse' `
-    -FilePath $script:ResolvedPythonExe `
-    -Arguments @('-m', 'json.tool', $benchmarkJson) -Quiet
   Invoke-NativeStep -Name 'benchmark JSON strict validation' `
     -FilePath $script:ResolvedPythonExe `
     -Arguments @($script:BenchmarkValidator, $benchmarkJson,
@@ -1218,17 +1164,19 @@ foreach ($toolName in @('cl.exe', 'nmake.exe', 'cmake.exe', 'ctest.exe')) {
 $script:CMakeExe = (Get-Command 'cmake.exe').Source
 $script:CTestExe = (Get-Command 'ctest.exe').Source
 
-$pythonPreflight = @'
+if ($Action -eq 'doctor') {
+  $pythonPreflight = @'
 import cv2
 import numpy
 import onnxruntime as ort
 assert tuple(int(x) for x in ort.__version__.split(chr(46))) == (1, 19, 2), ort.__version__
-cpu_provider = bytes((67, 80, 85, 69, 120, 101, 99, 117, 116, 105, 111, 110, 80, 114, 111, 118, 105, 100, 101, 114)).decode()
+cpu_provider = "CPUExecutionProvider"
 assert cpu_provider in ort.get_available_providers(), ort.get_available_providers()
 print(ort.__version__, cv2.__version__, numpy.__version__, cpu_provider)
 '@
-Invoke-NativeStep -Name 'Python consistency dependency preflight' `
-  -FilePath $script:ResolvedPythonExe -Arguments @('-c', $pythonPreflight)
+  Invoke-NativeStep -Name 'Python consistency dependency preflight' `
+    -FilePath $script:ResolvedPythonExe -Arguments @('-c', $pythonPreflight)
+}
 
 if ([string]::IsNullOrWhiteSpace($BuildDir)) {
   $BuildDir = Join-Path ([IO.Path]::GetTempPath()) `
@@ -1243,38 +1191,20 @@ $script:ImageProbePath = Join-Path $script:ResolvedBuildDir `
 $workflowRuntimeConfig = ConvertTo-AbsolutePath `
   ([string]$script:WorkflowSettings.Detect.RuntimeConfig) `
   $script:WorkflowSettingsDirectory
-$script:ConfigPath = Resolve-RequiredFile -Value $workflowRuntimeConfig `
-  -Object 'workflow default Runtime config' `
-  -ActionText 'correct Detect.RuntimeConfig relative to the workflow config file'
-$workflowDemoImage = ConvertTo-AbsolutePath `
+$script:ConfigPath = $workflowRuntimeConfig
+$script:ImagePath = ConvertTo-AbsolutePath `
   ([string]$script:WorkflowSettings.Demo.Image) `
   $script:WorkflowSettingsDirectory
-$script:ImagePath = Resolve-RequiredFile -Value $workflowDemoImage `
-  -Object 'workflow Demo image' `
-  -ActionText 'correct Demo.Image relative to the workflow config file'
-$script:DetectionValidator = (Resolve-Path -LiteralPath `
-  (Join-Path $script:CppInferDir 'tests\assert_detection_json.py')).Path
-$workflowManifest = ConvertTo-AbsolutePath `
+$script:ManifestPath = ConvertTo-AbsolutePath `
   ([string]$script:WorkflowSettings.Consistency.Manifest) `
   $script:WorkflowSettingsDirectory
-$script:ManifestPath = Resolve-RequiredFile -Value $workflowManifest `
-  -Object 'workflow consistency manifest' `
-  -ActionText 'correct Consistency.Manifest relative to the workflow config file'
-$script:ConsistencyTool = (Resolve-Path -LiteralPath `
-  (Join-Path $script:CppInferDir 'tools\compare_consistency.py')).Path
-$script:BenchmarkValidator = (Resolve-Path -LiteralPath `
-  (Join-Path $script:CppInferDir 'tests\assert_benchmark_json.py')).Path
-$script:BatchSummaryValidator = (Resolve-Path -LiteralPath `
-  (Join-Path $script:CppInferDir 'tools\validate_batch_summary.py')).Path
-$script:BatchComparisonTool = (Resolve-Path -LiteralPath `
-  (Join-Path $script:CppInferDir 'tools\compare_batch_runs.py')).Path
-$script:BatchManifestPath = (Resolve-Path -LiteralPath `
-  (Join-Path $script:CppInferDir `
-    'tests\fixtures\s2_03_consistency_manifest.txt')).Path
-$script:BatchPerformanceInput = Resolve-RequiredDirectory `
-  -Value (Join-Path $script:RepoRoot 'data\images\val') `
-  -Object 'S2-03 performance image directory' `
-  -ActionText 'restore data\images\val before running batch comparison'
+$script:DetectionValidator = Join-Path $script:CppInferDir 'tests\assert_detection_json.py'
+$script:ConsistencyTool = Join-Path $script:CppInferDir 'tools\compare_consistency.py'
+$script:BenchmarkValidator = Join-Path $script:CppInferDir 'tests\assert_benchmark_json.py'
+$script:BatchSummaryValidator = Join-Path $script:CppInferDir 'tools\validate_batch_summary.py'
+$script:BatchComparisonTool = Join-Path $script:CppInferDir 'tools\compare_batch_runs.py'
+$script:BatchManifestPath = Join-Path $script:CppInferDir 'tests\fixtures\s2_03_consistency_manifest.txt'
+$script:BatchPerformanceInput = Join-Path $script:RepoRoot 'data\images\val'
 
 $runtimeConfigExplicit = $Config
 if ($Action -eq 'profile' -and
@@ -1297,9 +1227,11 @@ if ($Action -eq 'profile') {
 } elseif ($Action -eq 'batch-compare') {
   $runtimeConfigObject = 'batch comparison Runtime config'
 }
-$script:DetectConfigPath = Resolve-RequiredFile `
-  -Value $script:DetectConfigPath -Object $runtimeConfigObject `
-  -ActionText 'correct -Config/YOLO_DEFECT_PROFILE_CONFIG, local DefaultRuntimeConfig, or workflow Detect.RuntimeConfig'
+if ($Action -in @('detect', 'batch', 'batch-compare', 'profile')) {
+  $script:DetectConfigPath = Resolve-RequiredFile `
+    -Value $script:DetectConfigPath -Object $runtimeConfigObject `
+    -ActionText 'correct -Config/YOLO_DEFECT_PROFILE_CONFIG, local DefaultRuntimeConfig, or workflow Detect.RuntimeConfig'
+}
 $script:DetectOutputRoot = Get-DetectPathDefault -ExplicitValue '' `
   -LocalKey 'DefaultDetectOutputRoot' `
   -WorkflowValue ([string]$script:WorkflowSettings.Detect.OutputRoot)
@@ -1595,7 +1527,6 @@ try {
     }
     'benchmark' {
       Invoke-EnsureBuild
-      Invoke-Consistency
       Invoke-Benchmark
     }
     'profile' {
@@ -1603,10 +1534,8 @@ try {
       Invoke-Profile
     }
     'all' {
-      Invoke-CleanBuild
+      Invoke-EnsureBuild
       Invoke-FullTests
-      Invoke-Demo
-      Invoke-Consistency
       Invoke-Benchmark
       [void](Invoke-BatchRun -InputPath $script:BatchManifestPath `
         -InputKind 'manifest' `

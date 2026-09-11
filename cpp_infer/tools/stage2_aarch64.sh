@@ -79,7 +79,7 @@ cpp_infer/results/s2_03/linux_aarch64_qemu by default. No action records or
 interprets QEMU latency, throughput, memory, power, or board performance.
 Set YOLO_DEFECT_AARCH64_CONFIG to select another existing RuntimeConfig;
 the default remains configs/default_config.txt (FP32).
-Run bootstrap_aarch64_deps.sh first; see docs/paths_commands.md.
+Run bootstrap_aarch64_deps.sh first; see cpp_infer/README.md.
 EOF
 }
 

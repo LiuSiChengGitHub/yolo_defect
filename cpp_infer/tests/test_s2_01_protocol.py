@@ -153,6 +153,32 @@ class S201ProtocolTest(unittest.TestCase):
                 )
             return protocol.load_s2_01_protocol(self.declaration_path)
 
+    def test_declaration_does_not_open_referenced_files(self) -> None:
+        document = self._protocol_document()
+        document["source_model"]["path"] = "missing/source.onnx"
+        document["calibration"]["manifest_path"] = "missing/calibration.json"
+        document["correctness"]["quality_manifest"]["path"] = "missing/quality.json"
+        document["correctness"]["consistency_manifest"]["path"] = "missing/product.json"
+        document["benchmark"]["sample"]["image_path"] = "missing/sample.jpg"
+        with mock.patch.object(protocol, "load_json", return_value=document), \
+             mock.patch.object(protocol, "sha256_file_raw", side_effect=AssertionError("unexpected input scan")):
+            declaration = protocol.load_s2_01_declaration(self.declaration_path)
+        self.assertEqual(declaration.calibration_samples, ())
+        self.assertEqual(declaration.source_model_path.name, "source.onnx")
+
+    def test_quantization_hashes_only_consumed_source_and_calibration_once(self) -> None:
+        document = self._protocol_document()
+        actual_hash = protocol.sha256_file_raw
+        visited = []
+        def record(path):
+            visited.append(path)
+            return actual_hash(path)
+        loaded = self._load(document, raw_sha_side_effect=record)
+        self.assertEqual(len(visited), 181)
+        self.assertEqual(len(set(visited)), 181)
+        self.assertNotIn(BENCHMARK_PATH.resolve(), visited)
+        self.assertEqual(len(loaded.calibration_samples), 180)
+
     def test_loads_complete_frozen_protocol(self) -> None:
         loaded = self._load(self._protocol_document())
 

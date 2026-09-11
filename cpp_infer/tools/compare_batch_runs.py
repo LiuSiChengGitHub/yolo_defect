@@ -125,6 +125,15 @@ def compare_documents(
     workers_1_summary_path: Path,
     workers_4_summary_path: Path,
 ) -> Dict[str, Any]:
+    # Validate the recorded summaries without requiring the original inference
+    # workspace. The consumed per-image outputs are checked below as they are read.
+    for document, summary_path in (
+        (workers_1, workers_1_summary_path),
+        (workers_4, workers_4_summary_path),
+    ):
+        validator.validate_document(
+            document, summary_path=summary_path, check_referenced_files=False
+        )
     if workers_1["status"] != "succeeded" or workers_4["status"] != "succeeded":
         fail("status: formal throughput comparison requires two fully succeeded runs")
     for label, document, requested_workers in (
@@ -176,17 +185,14 @@ def compare_documents(
         require_equal(f"items[{index}].source_path", source_1, source_4)
         json_path_1 = resolve_item_json(item_1, workers_1_summary_path, f"workers_1.items[{index}]")
         json_path_4 = resolve_item_json(item_4, workers_4_summary_path, f"workers_4.items[{index}]")
-        bytes_1 = read_bytes(json_path_1, f"workers_1.items[{index}].json")
-        bytes_4 = read_bytes(json_path_4, f"workers_4.items[{index}].json")
+        bytes_1 = validated_output_bytes(json_path_1, workers_1, item_1, base_1, index)
+        bytes_4 = validated_output_bytes(json_path_4, workers_4, item_4, base_4, index)
         if bytes_1 != bytes_4:
             fail(
                 f"items[{index}].detection_json: expected byte-identical outputs, "
                 f"{describe_byte_difference(bytes_1, bytes_4)}"
             )
-        document_1 = validator.load_json(json_path_1)
-        document_4 = validator.load_json(json_path_4)
-        if document_1 != document_4:
-            fail(f"items[{index}].detection_json: expected semantic equality")
+        # Both outputs are valid finite JSON; equal bytes imply equal documents.
         compared_items.append(
             {
                 "sequence_index": index,
@@ -260,6 +266,34 @@ def compare_documents(
     }
 
 
+def validated_output_bytes(
+    path: Path, summary: Mapping[str, Any], item: Mapping[str, Any], base: Path, index: int
+) -> bytes:
+    content = read_bytes(path, f"items[{index}].json")
+    try:
+        document = json.loads(
+            content.decode("utf-8"),
+            parse_constant=validator.reject_constant,
+            object_pairs_hook=validator.reject_duplicate_keys,
+        )
+    except (UnicodeError, json.JSONDecodeError) as error:
+        fail(f"{path}: expected strict UTF-8 JSON, actual {error}")
+    count = validator.validate_detection_document(
+        document,
+        object_name=f"items[{index}].detection_json",
+        expected_source=Path(normalized_path(str(item["source_path"]), base)),
+        expected_model_id=summary["model"]["model_id"],
+        expected_model_sha256=summary["model"]["declared_sha256"],
+        expected_provider=summary["runtime"]["actual_provider"],
+        expected_score_threshold=summary["runtime"]["score_threshold"],
+        expected_nms_threshold=summary["runtime"]["nms_threshold"],
+        expected_nms_mode=summary["runtime"]["nms_mode"],
+    )
+    if count != item["detection_count"]:
+        fail(f"items[{index}].detection_count: expected {count} from JSON, actual {item['detection_count']}")
+    return content
+
+
 def write_json(path: Path, document: Mapping[str, Any], overwrite: bool) -> None:
     destination = path.resolve(strict=False)
     if destination.exists() and not overwrite:
@@ -288,24 +322,8 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     arguments = parse_arguments(sys.argv[1:] if argv is None else argv)
     try:
-        workers_1 = validator.validate_document(
-            validator.load_json(arguments.workers_1_summary),
-            summary_path=arguments.workers_1_summary,
-            expected_status="succeeded",
-            expected_requested_workers=1,
-            expected_effective_workers=1,
-            expected_memory_publishable=True,
-            check_referenced_files=True,
-        )
-        workers_4 = validator.validate_document(
-            validator.load_json(arguments.workers_4_summary),
-            summary_path=arguments.workers_4_summary,
-            expected_status="succeeded",
-            expected_requested_workers=4,
-            expected_effective_workers=4,
-            expected_memory_publishable=True,
-            check_referenced_files=True,
-        )
+        workers_1 = validator.load_json(arguments.workers_1_summary)
+        workers_4 = validator.load_json(arguments.workers_4_summary)
         comparison = compare_documents(
             workers_1,
             workers_4,

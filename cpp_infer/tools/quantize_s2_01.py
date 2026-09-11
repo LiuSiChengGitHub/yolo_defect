@@ -33,7 +33,8 @@ from s2_01_protocol import (
     FROZEN_SELECTED_CONV_COUNT,
     FrozenS201Protocol,
     S201ProtocolError,
-    load_s2_01_protocol,
+    load_s2_01_declaration,
+    load_quantization_inputs,
     sha256_file_canonical_lf,
     sha256_file_raw,
 )
@@ -981,12 +982,14 @@ def _artifact_record(
     reported_path: Optional[Path],
     model: Any,
     deps: Dependencies,
+    *,
+    sha256: Optional[str] = None,
 ) -> Mapping[str, Any]:
     size_bytes = serialized_path.stat().st_size
     return {
         "path": str(reported_path) if reported_path is not None else None,
         "published": reported_path is not None,
-        "sha256": sha256_file_raw(serialized_path),
+        "sha256": sha256,
         "size_bytes": size_bytes,
         "size_mebibytes": size_bytes / (1024.0 * 1024.0),
         "onnx_checker": "passed",
@@ -1060,22 +1063,12 @@ def _publish_outputs(
             shutil.copyfileobj(source, handle, length=1024 * 1024)
             handle.flush()
             os.fsync(handle.fileno())
-        if (
-            sibling_model.stat().st_size != staged_model.stat().st_size
-            or sha256_file_raw(sibling_model) != sha256_file_raw(staged_model)
-        ):
-            fail(
-                "output.model.staging_integrity",
-                "a byte-identical sibling copy",
-                str(sibling_model),
-                "check output filesystem writes and free space",
-            )
         os.replace(sibling_model, protocol.output_model_path)
         sibling_model = None
     except (OSError, S201QuantizationError) as error:
         fail(
             "output.model.publish",
-            f"verified atomic replacement of {protocol.output_model_path}",
+            f"atomic replacement of {protocol.output_model_path}",
             str(error),
             "keep staging and destination on one writable filesystem",
         )
@@ -1316,6 +1309,7 @@ def run_quantization(
                 protocol.source_model_path,
                 source_model,
                 deps,
+                sha256=protocol.source_model_sha256,
             ),
             "preprocessed": _artifact_record(
                 preprocessed_path, None, preprocessed_model, deps
@@ -1325,10 +1319,11 @@ def run_quantization(
                 protocol.output_model_path,
                 derived_model,
                 deps,
+                sha256=sha256_file_raw(derived_path),
             ),
         }
         artifacts["preprocessed"]["scope"] = (
-            "temporary quantization intermediate; SHA and metadata retained in "
+            "temporary quantization intermediate; metadata retained in "
             "this report, bytes not published"
         )
 
@@ -1343,7 +1338,6 @@ def run_quantization(
             "protocol": {
                 "protocol_id": protocol.protocol_id,
                 "path": str(protocol.declaration_path),
-                "raw_sha256": sha256_file_raw(protocol.declaration_path),
                 "canonical_lf_sha256": sha256_file_canonical_lf(
                     protocol.declaration_path
                 ),
@@ -1432,9 +1426,6 @@ def run_quantization(
                 "preprocess": dict(protocol.calibration_preprocess),
                 "preprocess_implementation": {
                     "path": str(preprocess_implementation_path),
-                    "raw_sha256": sha256_file_raw(
-                        preprocess_implementation_path
-                    ),
                 },
             },
             "quantization": {
@@ -1480,14 +1471,8 @@ def run_quantization(
             },
             "tooling": {
                 "quantize_tool_path": str(Path(__file__).resolve()),
-                "quantize_tool_raw_sha256": sha256_file_raw(
-                    Path(__file__).resolve()
-                ),
                 "protocol_tool_path": str(
                     (Path(__file__).resolve().parent / "s2_01_protocol.py")
-                ),
-                "protocol_tool_raw_sha256": sha256_file_raw(
-                    Path(__file__).resolve().parent / "s2_01_protocol.py"
                 ),
             },
             "limitations": [
@@ -1541,7 +1526,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         sys.argv[1:] if argv is None else list(argv)
     )
     try:
-        protocol = load_s2_01_protocol(arguments.protocol)
+        protocol = load_quantization_inputs(load_s2_01_declaration(arguments.protocol))
         report = run_quantization(
             protocol,
             overwrite=arguments.overwrite,

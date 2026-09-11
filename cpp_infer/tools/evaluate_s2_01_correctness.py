@@ -196,7 +196,25 @@ def validate_protocol_fields(manifest: Mapping[str, Any], kind: str) -> None:
     validate_classes(manifest["classes"])
 
 
-def load_frozen_manifest(path: Path, kind: str) -> Mapping[str, Any]:
+def image_digest(path: Path, digests: Dict[Path, str]) -> str:
+    if path not in digests:
+        digests[path] = protocol.sha256_file(path)
+    return digests[path]
+
+
+def validate_manifest_binding(manifest: Mapping[str, Any], reference: Mapping[str, Any]) -> None:
+    expected_hash = reference.get("sha256_canonical_lf", reference.get("manifest_sha256_canonical_lf"))
+    if manifest["manifest_canonical_lf_sha256"] != expected_hash:
+        fail("protocol.manifest.sha256", str(expected_hash),
+             manifest["manifest_canonical_lf_sha256"], "select the manifest declared by the protocol")
+    if manifest.get("manifest_id") != reference["manifest_id"]:
+        fail("protocol.manifest.manifest_id", reference["manifest_id"],
+             repr(manifest.get("manifest_id")), "select the declared manifest")
+
+
+def load_frozen_manifest(path: Path, kind: str, *, verify_images: bool = True,
+                         image_digests: Optional[Dict[Path, str]] = None) -> Mapping[str, Any]:
+    digests = {} if image_digests is None else image_digests
     manifest_path = path.resolve(strict=True)
     manifest = load_json(manifest_path)
     validate_protocol_fields(manifest, kind)
@@ -257,13 +275,13 @@ def load_frozen_manifest(path: Path, kind: str) -> Mapping[str, Any]:
                 repr((sample_id, source_class_id, source_class_name)),
                 "regenerate the manifest",
             )
-        image_path = resolve_declared_file(
+        image_path = (resolve_declared_file(
             manifest_path, sample["image_path"], f"{kind}.samples[{index}].image_path"
-        )
+        ) if verify_images else (manifest_path.parent / sample["image_path"]).resolve())
         expected_image_hash = validate_hash(
             sample["image_sha256"], f"{kind}.samples[{index}].image_sha256"
         )
-        actual_image_hash = protocol.sha256_file(image_path)
+        actual_image_hash = image_digest(image_path, digests) if verify_images else expected_image_hash
         if actual_image_hash != expected_image_hash:
             fail(
                 f"{kind}.samples[{index}].image_sha256",
@@ -412,7 +430,8 @@ def load_frozen_manifest(path: Path, kind: str) -> Mapping[str, Any]:
     }
 
 
-def load_product_manifest(path: Path) -> Mapping[str, Any]:
+def load_product_manifest(path: Path, *, image_digests: Optional[Dict[Path, str]] = None) -> Mapping[str, Any]:
+    digests = {} if image_digests is None else image_digests
     manifest_path = path.resolve(strict=True)
     manifest = load_json(manifest_path)
     samples = manifest.get("samples")
@@ -436,7 +455,7 @@ def load_product_manifest(path: Path) -> Mapping[str, Any]:
         expected_hash = validate_hash(
             sample.get("image_sha256"), f"product.samples[{index}].image_sha256"
         )
-        actual_hash = protocol.sha256_file(image_path)
+        actual_hash = image_digest(image_path, digests)
         if actual_hash != expected_hash:
             fail(
                 f"product.samples[{index}].image_sha256",
@@ -1159,13 +1178,7 @@ def run_cpp_validation(
 def contract_evidence(contract: Mapping[str, Any]) -> Mapping[str, Any]:
     return {
         "config_path": str(contract["config_path"]),
-        "config_canonical_lf_sha256": protocol.canonical_lf_sha256(
-            contract["config_path"]
-        ),
         "artifact_path": str(contract["artifact_path"]),
-        "artifact_canonical_lf_sha256": protocol.canonical_lf_sha256(
-            contract["artifact_path"]
-        ),
         "model_path": str(contract["model_path"]),
         "model_id": contract["model_id"],
         "model_sha256": contract["model_actual_sha256"],
@@ -1203,11 +1216,14 @@ def write_json(path: Path, value: Mapping[str, Any]) -> None:
 
 
 def run_evaluation(arguments: argparse.Namespace) -> Mapping[str, Any]:
-    frozen_protocol = machine_protocol.load_s2_01_protocol(arguments.protocol)
+    frozen_protocol = machine_protocol.load_s2_01_declaration(arguments.protocol)
+    image_digests: Dict[Path, str] = {}
     calibration_manifest = load_frozen_manifest(
-        arguments.calibration_manifest, "calibration"
+        arguments.calibration_manifest, "calibration", verify_images=False
     )
-    quality_manifest = load_frozen_manifest(arguments.quality_manifest, "quality")
+    quality_manifest = load_frozen_manifest(arguments.quality_manifest, "quality", image_digests=image_digests)
+    validate_manifest_binding(calibration_manifest, frozen_protocol.document["calibration"])
+    validate_manifest_binding(quality_manifest, frozen_protocol.correctness["quality_manifest"])
     for object_name, actual_path, expected_path in (
         (
             "calibration_manifest",
@@ -1240,7 +1256,8 @@ def run_evaluation(arguments: argparse.Namespace) -> Mapping[str, Any]:
             repr(sorted(calibration_hashes & quality_hashes)[:3]),
             "use train-only calibration and validation-only quality data",
         )
-    product_manifest = load_product_manifest(arguments.product_manifest)
+    product_manifest = load_product_manifest(arguments.product_manifest, image_digests=image_digests)
+    validate_manifest_binding(product_manifest, frozen_protocol.correctness["consistency_manifest"])
     if product_manifest["manifest_path"] != frozen_protocol.consistency_manifest_path:
         fail(
             "protocol.product_manifest",
@@ -1269,6 +1286,9 @@ def run_evaluation(arguments: argparse.Namespace) -> Mapping[str, Any]:
             str(fp32_contract["model_path"]),
             "select the frozen FP32 source artifact",
         )
+    if fp32_contract["model_actual_sha256"] != frozen_protocol.source_model_sha256:
+        fail("protocol.fp32_model.sha256", frozen_protocol.source_model_sha256,
+             fp32_contract["model_actual_sha256"], "select the declared FP32 source")
     if int8_contract["model_path"] != frozen_protocol.output_model_path:
         fail(
             "protocol.int8_model",

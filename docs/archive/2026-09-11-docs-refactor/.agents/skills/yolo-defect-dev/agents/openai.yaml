@@ -1,0 +1,7 @@
+interface:
+  display_name: "YOLO Defect Environment"
+  short_description: "Reuse recorded project environment and toolchain paths"
+  default_prompt: "Use $yolo-defect-dev to find the recorded environment or toolchain information needed for this task."
+
+policy:
+  allow_implicit_invocation: true

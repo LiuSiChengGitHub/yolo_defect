@@ -6,6 +6,9 @@ from __future__ import annotations
 import importlib.util
 import math
 import unittest
+from unittest import mock
+from types import SimpleNamespace
+from contextlib import ExitStack
 from pathlib import Path
 
 
@@ -57,6 +60,49 @@ class FrozenManifestTest(unittest.TestCase):
             CALIBRATION_PATH, "calibration"
         )
         cls.quality = evaluator.load_frozen_manifest(QUALITY_PATH, "quality")
+
+    def test_product_screen_does_not_load_quality_or_calibration_inputs(self):
+        screen = import_tool("s2_01_product_screen", CPP_INFER_ROOT / "tools/screen_s2_01_product.py")
+        frozen = screen.machine_protocol.load_s2_01_declaration(CPP_INFER_ROOT / "protocols/s2_01_ptq_protocol.json")
+        fp32 = {"artifact_path": Path("fp32.artifact"), "model_path": frozen.source_model_path,
+                "model_actual_sha256": frozen.source_model_sha256}
+        int8 = {"artifact_path": Path("int8.artifact"), "model_path": frozen.output_model_path}
+        dependency = SimpleNamespace(__version__="test")
+        consistency = SimpleNamespace(
+            require_dependencies=lambda: None, load_contract=lambda name: fp32 if name == "fp32" else int8,
+            create_python_session=lambda contract: None, match_detections=None,
+            ort=dependency, cv2=dependency, np=dependency, CPU_PROVIDER="CPUExecutionProvider",
+        )
+        arguments = SimpleNamespace(protocol=frozen.declaration_path, fp32_config="fp32", int8_config="int8",
+                                    fp32_artifact=None, int8_artifact=None, fp32_model=None, int8_model=None)
+        with ExitStack() as stack:
+            stack.enter_context(mock.patch.object(screen.evaluator, "load_frozen_manifest", side_effect=AssertionError("unconsumed dataset")))
+            stack.enter_context(mock.patch.object(screen.evaluator, "load_consistency_tool", return_value=consistency))
+            stack.enter_context(mock.patch.object(screen.evaluator, "validate_contract_pair"))
+            stack.enter_context(mock.patch.object(screen.evaluator, "contract_evidence", return_value={}))
+            stack.enter_context(mock.patch.object(screen.evaluator, "run_python_product", return_value={}))
+            stack.enter_context(mock.patch.object(screen.evaluator, "product_difference", return_value={"passed": True}))
+            result = screen.screen(arguments)
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["manifests"]["product"]["sample_count"], 30)
+
+    def test_calibration_metadata_does_not_read_training_images(self):
+        with mock.patch.object(evaluator.protocol, "sha256_file", side_effect=AssertionError("training image read")), \
+             mock.patch.object(evaluator, "resolve_declared_file", side_effect=AssertionError("training image stat")):
+            manifest = evaluator.load_frozen_manifest(CALIBRATION_PATH, "calibration", verify_images=False)
+        self.assertEqual(len(manifest["resolved_samples"]), 180)
+
+    def test_product_quality_overlap_is_hashed_once(self):
+        digests = {}
+        with mock.patch.object(evaluator.protocol, "sha256_file", wraps=evaluator.protocol.sha256_file) as digest:
+            evaluator.load_frozen_manifest(QUALITY_PATH, "quality", image_digests=digests)
+            evaluator.load_product_manifest(CPP_INFER_ROOT / "tests/fixtures/consistency_manifest.json", image_digests=digests)
+        self.assertEqual(digest.call_count, 361)
+
+    def test_changed_consumed_product_image_is_rejected(self):
+        with mock.patch.object(evaluator.protocol, "sha256_file", return_value="0" * 64):
+            with self.assertRaisesRegex(evaluator.EvaluationError, "image_sha256"):
+                evaluator.load_product_manifest(CPP_INFER_ROOT / "tests/fixtures/consistency_manifest.json")
 
     def test_calibration_is_exactly_six_by_thirty_strided_train_images(self):
         samples = self.calibration["resolved_samples"]

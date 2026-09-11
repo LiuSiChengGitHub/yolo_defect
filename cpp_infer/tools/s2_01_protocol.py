@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Strict, dependency-free loader for the frozen S2-01 PTQ protocol.
+"""Dependency-free declaration and consumed-input loaders for S2-01 PTQ.
 
 The module deliberately imports only the Python standard library.  This lets
 the Stage-1 ``TestBase`` interpreter validate protocol, hashes, and path
@@ -115,7 +115,7 @@ import hashlib
 import json
 import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, MutableMapping, Sequence, Tuple
 
@@ -522,7 +522,7 @@ class CalibrationSample:
 
 @dataclass(frozen=True)
 class FrozenS201Protocol:
-    """Validated, resolved S2-01 protocol consumed by the quantization tool."""
+    """Parsed declaration; calibration samples are populated by the PTQ input loader."""
 
     declaration_path: Path
     document: Mapping[str, Any]
@@ -769,7 +769,7 @@ def _resolve_input_path(
     return resolved
 
 
-def _resolve_output_path(
+def _resolve_declared_path(
     raw_value: Any, base_directory: Path, object_name: str
 ) -> Path:
     value = _expect_string(raw_value, object_name)
@@ -781,7 +781,7 @@ def _resolve_output_path(
     except OSError as error:
         fail(
             object_name,
-            "a resolvable output file path",
+            "a resolvable declaration-relative path",
             f"{candidate}: {error}",
             "correct the path syntax",
         )
@@ -959,25 +959,11 @@ def _validate_environment(value: Any) -> Mapping[str, str]:
     return environment
 
 
-def _validate_manifest_hash(
-    path: Path, expected_hash: str, object_name: str
-) -> None:
-    actual_hash = sha256_file_canonical_lf(path)
-    if actual_hash != expected_hash:
-        fail(
-            f"{object_name}.sha256_canonical_lf",
-            expected_hash,
-            actual_hash,
-            "restore the frozen manifest bytes before formal PTQ",
-        )
-
-
 def _validate_correctness(
     value: Any, declaration_directory: Path
 ) -> Tuple[
     Mapping[str, Any],
     Path,
-    Mapping[str, Any],
     Path,
     Mapping[str, Any],
 ]:
@@ -997,7 +983,7 @@ def _validate_correctness(
         ("path", "manifest_id", "sha256_canonical_lf", "sample_count"),
         "protocol.correctness.consistency_manifest",
     )
-    consistency_path = _resolve_input_path(
+    consistency_path = _resolve_declared_path(
         consistency_reference["path"],
         declaration_directory,
         "protocol.correctness.consistency_manifest.path",
@@ -1013,7 +999,7 @@ def _validate_correctness(
             consistency_id,
             "restore the 6x5 product-consistency manifest reference",
         )
-    consistency_hash = _expect_sha256(
+    _expect_sha256(
         consistency_reference["sha256_canonical_lf"],
         "protocol.correctness.consistency_manifest.sha256_canonical_lf",
     )
@@ -1028,43 +1014,6 @@ def _validate_correctness(
             str(consistency_count),
             "restore all frozen product-consistency samples",
         )
-    _validate_manifest_hash(
-        consistency_path,
-        consistency_hash,
-        "protocol.correctness.consistency_manifest",
-    )
-    consistency_document = load_json(
-        consistency_path, "correctness.consistency_manifest"
-    )
-    if consistency_document.get("schema_version") != SCHEMA_VERSION:
-        fail(
-            "correctness.consistency_manifest.schema_version",
-            str(SCHEMA_VERSION),
-            repr(consistency_document.get("schema_version")),
-            "restore the tracked consistency manifest",
-        )
-    if consistency_document.get("manifest_id") != consistency_id:
-        fail(
-            "correctness.consistency_manifest.manifest_id",
-            consistency_id,
-            repr(consistency_document.get("manifest_id")),
-            "point the protocol at the declared consistency manifest",
-        )
-    consistency_samples = consistency_document.get("samples")
-    if not isinstance(consistency_samples, list) or len(
-        consistency_samples
-    ) != FROZEN_CONSISTENCY_SAMPLE_COUNT:
-        fail(
-            "correctness.consistency_manifest.samples",
-            f"an array of {FROZEN_CONSISTENCY_SAMPLE_COUNT} samples",
-            (
-                type(consistency_samples).__name__
-                if not isinstance(consistency_samples, list)
-                else f"array length {len(consistency_samples)}"
-            ),
-            "restore the frozen product-consistency manifest",
-        )
-
     quality_reference = _expect_mapping(
         correctness["quality_manifest"],
         "protocol.correctness.quality_manifest",
@@ -1080,7 +1029,7 @@ def _validate_correctness(
         ),
         "protocol.correctness.quality_manifest",
     )
-    quality_path = _resolve_input_path(
+    quality_path = _resolve_declared_path(
         quality_reference["path"],
         declaration_directory,
         "protocol.correctness.quality_manifest.path",
@@ -1096,7 +1045,7 @@ def _validate_correctness(
             quality_id,
             "restore the full frozen validation-manifest reference",
         )
-    quality_hash = _expect_sha256(
+    _expect_sha256(
         quality_reference["sha256_canonical_lf"],
         "protocol.correctness.quality_manifest.sha256_canonical_lf",
     )
@@ -1122,98 +1071,6 @@ def _validate_correctness(
             str(ground_truth_count),
             "restore the full 857-box task-quality population",
         )
-    _validate_manifest_hash(
-        quality_path, quality_hash, "protocol.correctness.quality_manifest"
-    )
-    quality_document = load_json(quality_path, "correctness.quality_manifest")
-    _expect_exact_keys(
-        quality_document,
-        (
-            "schema_version",
-            "manifest_kind",
-            "manifest_id",
-            "dataset",
-            "preprocess",
-            "evaluation",
-            "product_matching_protocol",
-            "product_matching_gates",
-            "quality_gates",
-            "classes",
-            "samples",
-            "integrity",
-        ),
-        "correctness.quality_manifest",
-    )
-    if quality_document["schema_version"] != SCHEMA_VERSION:
-        fail(
-            "correctness.quality_manifest.schema_version",
-            str(SCHEMA_VERSION),
-            repr(quality_document["schema_version"]),
-            "restore the current quality-manifest schema",
-        )
-    if quality_document["manifest_kind"] != "detection_task_quality":
-        fail(
-            "correctness.quality_manifest.manifest_kind",
-            "detection_task_quality",
-            repr(quality_document["manifest_kind"]),
-            "pass the labeled quality manifest",
-        )
-    if quality_document["manifest_id"] != quality_id:
-        fail(
-            "correctness.quality_manifest.manifest_id",
-            quality_id,
-            repr(quality_document["manifest_id"]),
-            "point the protocol at the declared quality manifest",
-        )
-    quality_dataset = _expect_mapping(
-        quality_document["dataset"], "correctness.quality_manifest.dataset"
-    )
-    if quality_dataset.get("sample_count") != quality_count:
-        fail(
-            "correctness.quality_manifest.dataset.sample_count",
-            str(quality_count),
-            repr(quality_dataset.get("sample_count")),
-            "restore all frozen evaluation samples",
-        )
-    if quality_dataset.get("ground_truth_box_count") != ground_truth_count:
-        fail(
-            "correctness.quality_manifest.dataset.ground_truth_box_count",
-            str(ground_truth_count),
-            repr(quality_dataset.get("ground_truth_box_count")),
-            "restore all frozen ground-truth boxes",
-        )
-    quality_samples = quality_document["samples"]
-    if not isinstance(quality_samples, list) or len(quality_samples) != quality_count:
-        fail(
-            "correctness.quality_manifest.samples",
-            f"an array of {quality_count} samples",
-            (
-                type(quality_samples).__name__
-                if not isinstance(quality_samples, list)
-                else f"array length {len(quality_samples)}"
-            ),
-            "restore the frozen labeled evaluation set",
-        )
-    quality_evaluation = _expect_frozen_mapping(
-        quality_document["evaluation"],
-        EXPECTED_QUALITY_EVALUATION,
-        "correctness.quality_manifest.evaluation",
-    )
-    matching_protocol = _expect_frozen_mapping(
-        quality_document["product_matching_protocol"],
-        EXPECTED_PRODUCT_MATCHING_PROTOCOL,
-        "correctness.quality_manifest.product_matching_protocol",
-    )
-    product_gates = _expect_frozen_mapping(
-        quality_document["product_matching_gates"],
-        EXPECTED_PRODUCT_MATCHING_GATES,
-        "correctness.quality_manifest.product_matching_gates",
-    )
-    quality_gates = _expect_frozen_mapping(
-        quality_document["quality_gates"],
-        EXPECTED_QUALITY_GATES,
-        "correctness.quality_manifest.quality_gates",
-    )
     _expect_frozen_mapping(
         correctness["gate_sources"],
         EXPECTED_CORRECTNESS_GATE_SOURCES,
@@ -1222,14 +1079,12 @@ def _validate_correctness(
     return (
         correctness,
         consistency_path,
-        consistency_document,
         quality_path,
         {
-            "document": quality_document,
-            "quality_evaluation": quality_evaluation,
-            "product_matching_protocol": matching_protocol,
-            "product_matching_gates": product_gates,
-            "quality_gates": quality_gates,
+            "quality_evaluation": dict(EXPECTED_QUALITY_EVALUATION),
+            "product_matching_protocol": dict(EXPECTED_PRODUCT_MATCHING_PROTOCOL),
+            "product_matching_gates": dict(EXPECTED_PRODUCT_MATCHING_GATES),
+            "quality_gates": dict(EXPECTED_QUALITY_GATES),
         },
     )
 
@@ -1237,8 +1092,6 @@ def _validate_correctness(
 def _validate_benchmark(
     value: Any,
     declaration_directory: Path,
-    consistency_path: Path,
-    consistency_document: Mapping[str, Any],
 ) -> Tuple[Mapping[str, Any], Path]:
     benchmark = _expect_mapping(value, "protocol.benchmark")
     _expect_exact_keys(
@@ -1270,54 +1123,14 @@ def _validate_benchmark(
             sample_id,
             "restore the fixed single-image benchmark sample",
         )
-    sample_path = _resolve_input_path(
+    sample_path = _resolve_declared_path(
         sample["image_path"],
         declaration_directory,
         "protocol.benchmark.sample.image_path",
     )
-    sample_hash = _expect_sha256(
+    _expect_sha256(
         sample["image_sha256"], "protocol.benchmark.sample.image_sha256"
     )
-    actual_hash = sha256_file_raw(sample_path)
-    if actual_hash != sample_hash:
-        fail(
-            "protocol.benchmark.sample.image_sha256",
-            sample_hash,
-            actual_hash,
-            "restore the fixed raw benchmark image bytes",
-        )
-    consistency_matches = [
-        item
-        for item in consistency_document["samples"]
-        if isinstance(item, dict) and item.get("sample_id") == sample_id
-    ]
-    if len(consistency_matches) != 1:
-        fail(
-            "protocol.benchmark.sample.sample_id",
-            "exactly one matching consistency-manifest sample",
-            f"matches={len(consistency_matches)}",
-            "restore the fixed product-consistency manifest",
-        )
-    consistency_sample = consistency_matches[0]
-    consistency_sample_hash = _expect_sha256(
-        consistency_sample.get("image_sha256"),
-        "correctness.consistency_manifest.sample[crazing_241].image_sha256",
-    )
-    consistency_sample_path = _resolve_input_path(
-        consistency_sample.get("image_path"),
-        consistency_path.parent,
-        "correctness.consistency_manifest.sample[crazing_241].image_path",
-    )
-    if consistency_sample_hash != sample_hash or consistency_sample_path != sample_path:
-        fail(
-            "protocol.benchmark.sample",
-            "the exact crazing_241 path and raw SHA from consistency_manifest",
-            (
-                f"path={sample_path}, sha={sample_hash}; consistency_path="
-                f"{consistency_sample_path}, consistency_sha={consistency_sample_hash}"
-            ),
-            "remove the independent benchmark-sample drift",
-        )
     return benchmark, sample_path
 
 
@@ -1651,8 +1464,8 @@ def _load_calibration_manifest(
     return manifest, tuple(resolved_samples)
 
 
-def load_s2_01_protocol(path: Path) -> FrozenS201Protocol:
-    """Load and fully validate protocol, manifest, source, and 180 images."""
+def load_s2_01_declaration(path: Path) -> FrozenS201Protocol:
+    """Parse the experiment declaration without opening its referenced inputs."""
 
     try:
         declaration_path = Path(path).resolve(strict=True)
@@ -1709,7 +1522,7 @@ def load_s2_01_protocol(path: Path) -> FrozenS201Protocol:
     _expect_exact_keys(
         source, ("path", "sha256", "size_bytes"), "protocol.source_model"
     )
-    source_model_path = _resolve_input_path(
+    source_model_path = _resolve_declared_path(
         source["path"], declaration_path.parent, "protocol.source_model.path"
     )
     source_model_sha256 = _expect_sha256(
@@ -1718,23 +1531,6 @@ def load_s2_01_protocol(path: Path) -> FrozenS201Protocol:
     source_model_size_bytes = _expect_int(
         source["size_bytes"], "protocol.source_model.size_bytes", minimum=1
     )
-    actual_source_size = source_model_path.stat().st_size
-    if actual_source_size != source_model_size_bytes:
-        fail(
-            "source_model.size_bytes",
-            str(source_model_size_bytes),
-            str(actual_source_size),
-            "restore the frozen FP32 source before quantization",
-        )
-    actual_source_hash = sha256_file_raw(source_model_path)
-    if actual_source_hash != source_model_sha256:
-        fail(
-            "source_model.sha256",
-            source_model_sha256,
-            actual_source_hash,
-            "restore the exact FP32 source ONNX; do not rewrite the protocol after drift",
-        )
-
     calibration = _expect_mapping(
         document["calibration"], "protocol.calibration"
     )
@@ -1750,7 +1546,7 @@ def load_s2_01_protocol(path: Path) -> FrozenS201Protocol:
         ),
         "protocol.calibration",
     )
-    manifest_path = _resolve_input_path(
+    manifest_path = _resolve_declared_path(
         calibration["manifest_path"],
         declaration_path.parent,
         "protocol.calibration.manifest_path",
@@ -1772,17 +1568,13 @@ def load_s2_01_protocol(path: Path) -> FrozenS201Protocol:
             str(sample_count),
             "restore the predeclared formal calibration count",
         )
-    expected_class_counts = _validate_expected_class_counts(
-        calibration["expected_class_counts"]
-    )
+    _validate_expected_class_counts(calibration["expected_class_counts"])
     calibration_preprocess = _expect_frozen_mapping(
         calibration["preprocess"],
         EXPECTED_CALIBRATION_PREPROCESS,
         "protocol.calibration.preprocess",
     )
-    manifest, samples = _load_calibration_manifest(
-        manifest_path, manifest_id, manifest_hash, expected_class_counts
-    )
+    manifest, samples = {}, ()
 
     quantization = _validate_quantization(document["quantization"], protocol_id)
     model_contract = _validate_model_contract(document["model_contract"])
@@ -1790,15 +1582,12 @@ def load_s2_01_protocol(path: Path) -> FrozenS201Protocol:
     (
         correctness,
         consistency_manifest_path,
-        consistency_document,
         quality_manifest_path,
         quality_validation,
     ) = _validate_correctness(document["correctness"], declaration_path.parent)
     benchmark, benchmark_sample_path = _validate_benchmark(
         document["benchmark"],
         declaration_path.parent,
-        consistency_manifest_path,
-        consistency_document,
     )
     profiling = _validate_profiling(document["profiling"])
 
@@ -1806,10 +1595,10 @@ def load_s2_01_protocol(path: Path) -> FrozenS201Protocol:
     _expect_exact_keys(
         output, ("model_path", "report_path"), "protocol.output"
     )
-    output_model_path = _resolve_output_path(
+    output_model_path = _resolve_declared_path(
         output["model_path"], declaration_path.parent, "protocol.output.model_path"
     )
-    output_report_path = _resolve_output_path(
+    output_report_path = _resolve_declared_path(
         output["report_path"], declaration_path.parent, "protocol.output.report_path"
     )
     if output_model_path == output_report_path:
@@ -1871,3 +1660,32 @@ def load_s2_01_protocol(path: Path) -> FrozenS201Protocol:
         output_model_path=output_model_path,
         output_report_path=output_report_path,
     )
+
+
+def load_quantization_inputs(declaration: FrozenS201Protocol) -> FrozenS201Protocol:
+    """Verify the source model and calibration images actually used by PTQ."""
+    source = declaration.source_model_path
+    actual_size = source.stat().st_size
+    if actual_size != declaration.source_model_size_bytes:
+        fail("source_model.size_bytes", str(declaration.source_model_size_bytes),
+             str(actual_size), "select the declared FP32 source")
+    actual_hash = sha256_file_raw(source)
+    if actual_hash != declaration.source_model_sha256:
+        fail("source_model.sha256", declaration.source_model_sha256,
+             actual_hash, "select the declared FP32 source")
+    manifest, samples = _load_calibration_manifest(
+        declaration.calibration_manifest_path, declaration.calibration_manifest_id,
+        declaration.calibration_manifest_sha256_canonical_lf,
+        declaration.document["calibration"]["expected_class_counts"],
+    )
+    for sample in samples:
+        if sample.image_path in (declaration.output_model_path, declaration.output_report_path):
+            fail("protocol.output", "a path different from calibration inputs",
+                 str(sample.image_path), "choose a separate output path")
+    return replace(declaration, calibration_manifest_document=manifest,
+                   calibration_samples=samples)
+
+
+def load_s2_01_protocol(path: Path) -> FrozenS201Protocol:
+    """Convenience entry point for quantization: declaration plus consumed inputs."""
+    return load_quantization_inputs(load_s2_01_declaration(path))

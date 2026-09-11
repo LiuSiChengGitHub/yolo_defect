@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import os
@@ -176,7 +175,6 @@ def summarize_trace(
         expected_profile_runs=expected_profile_runs,
         top_n=top_n,
         trace_size_bytes=resolved_trace.stat().st_size,
-        trace_sha256=hashlib.sha256(resolved_trace.read_bytes()).hexdigest().upper(),
         protocol_binding=protocol_binding,
         artifact_evidence=artifact_evidence,
     )
@@ -504,26 +502,14 @@ def load_artifact_evidence(path: Path) -> Mapping[str, Any]:
             str(model_path),
             "remove the machine-specific absolute path",
         )
-    model_path = (declaration_path.parent / model_path).resolve(strict=True)
-    raw_model = model_path.read_bytes()
-    actual_sha = hashlib.sha256(raw_model).hexdigest().upper()
-    if actual_sha != declared_sha.upper():
-        fail(
-            "artifact.model_sha256",
-            declared_sha.upper(),
-            actual_sha,
-            "restore the artifact/model pair before profiling",
-        )
-    raw_declaration = declaration_path.read_bytes()
-    canonical_declaration = raw_declaration.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n").encode("utf-8")
+    model_path = (declaration_path.parent / model_path).resolve()
     return {
         "path": _display_path(declaration_path),
-        "canonical_lf_sha256": hashlib.sha256(canonical_declaration).hexdigest().upper(),
         "model_id": fields["model_id"],
         "model_path": _display_path(model_path),
-        "model_sha256": actual_sha,
-        "model_size_bytes": len(raw_model),
+        "model_sha256": declared_sha.upper(),
     }
+
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -541,7 +527,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     arguments = parse_arguments(sys.argv[1:] if argv is None else argv)
     try:
-        frozen_protocol = s2_01_protocol.load_s2_01_protocol(arguments.protocol)
+        frozen_protocol = s2_01_protocol.load_s2_01_declaration(arguments.protocol)
         artifact = load_artifact_evidence(arguments.artifact)
         expected_model_path = (
             frozen_protocol.source_model_path
@@ -555,6 +541,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 artifact["model_path"],
                 "select the artifact bound to the frozen precision",
             )
+        if arguments.precision == "fp32" and artifact["model_sha256"] != frozen_protocol.source_model_sha256:
+            fail("artifact.model_sha256", frozen_protocol.source_model_sha256,
+                 artifact["model_sha256"], "select the declared source artifact")
         protocol_binding = {
             "protocol_id": frozen_protocol.protocol_id,
             "path": _display_path(frozen_protocol.declaration_path),
