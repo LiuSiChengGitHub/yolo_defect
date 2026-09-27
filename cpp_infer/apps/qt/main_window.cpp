@@ -3,6 +3,8 @@
 #include "detection_table_model.h"
 #include "detection_worker.h"
 #include "image_view.h"
+#include "model_info_panel.h"
+#include "path_edit.h"
 
 #include <QCloseEvent>
 #include <QDesktopServices>
@@ -20,7 +22,6 @@
 #include <QSplitter>
 #include <QStandardPaths>
 #include <QStyle>
-#include <QStringList>
 #include <QTableView>
 #include <QThread>
 #include <QTimer>
@@ -74,36 +75,53 @@ void MainWindow::buildUi() {
   setStyleSheet(QStringLiteral(R"(
     QMainWindow { background: #eef2f6; }
     QWidget { font-family: "Segoe UI", "Microsoft YaHei UI"; font-size: 13px; color: #24364b; }
+    QWidget#workbenchSurface, QWidget#sidebarViewport, QWidget#sidebarContent { background: #eef2f6; }
     QFrame#header { background: #122235; border-radius: 10px; }
-    QLabel#title { color: #f6f9fc; font-size: 25px; font-weight: 600; }
+    QLabel#title { color: #f6f9fc; font-size: 23px; font-weight: 600; }
     QLabel#subtitle { color: #a1b4c9; font-size: 12px; }
     QLabel#brand { color: #6de2c2; font-size: 11px; font-weight: 600; }
     QLabel#stateBadge { color: #146450; background: #dff5ed; border-radius: 12px; padding: 6px 14px; font-weight: 600; }
     QLabel#stateBadge[state="busy"] { color: #825c0b; background: #fff0c9; }
     QLabel#stateBadge[state="error"] { color: #a83838; background: #ffe2e2; }
-    QFrame#card { background: white; border: 1px solid #dde5ed; border-radius: 9px; }
+    QFrame#card { background: white; border: 1px solid #dde5ed; border-radius: 10px; }
     QLabel#sectionTitle { font-size: 15px; font-weight: 600; color: #162e48; }
+    QLabel#sectionNumber { color: #127e6b; background: #e6f3ef; border-radius: 6px; font-size: 11px; font-weight: 600; }
+    QLabel#fieldLabel { color: #61758a; font-size: 12px; font-weight: 600; }
     QLabel#muted, QLabel#outputDetails { color: #6a7d92; font-size: 12px; }
-    QLabel#modelDetails { font-size: 12px; color: #51677e; }
+    QLabel#modelDetails { font-size: 12px; color: #243e56; font-weight: 600; }
+    QLabel#parameterLabel { color: #728396; font-size: 12px; }
+    QLabel#parameterValue, QLabel#scoreThreshold, QLabel#nmsThreshold { color: #243e56; font-size: 12px; font-weight: 600; }
+    QLabel#classNames, QLabel#modelPath, QLabel#runtimeConfigPath { color: #4e647a; font-size: 12px; }
+    QToolButton#modelDetailsToggle { color: #347b70; border: none; background: transparent; padding: 4px 0; font-size: 12px; }
+    QToolButton#modelDetailsToggle:hover { color: #0a6655; }
+    QToolButton#modelDetailsToggle:disabled { color: #9dabb7; }
     QLabel#resultSummary { color: #1e7566; font-weight: 600; }
     QLabel#statusMessage[state="error"] { color: #b13737; }
-    QLineEdit { border: 1px solid #cfd9e4; background: #f8fafc; border-radius: 5px; padding: 8px; selection-background-color: #c7ebe5; }
+    QLineEdit { border: 1px solid #d8e1e9; background: #f8fafc; border-radius: 6px; padding: 8px; selection-background-color: #c7ebe5; selection-color: #164d43; }
     QLineEdit:focus { border: 1px solid #219984; }
     QLineEdit:disabled { color: #8090a3; background: #f0f3f7; }
-    QPushButton { border: 1px solid #cad6e1; border-radius: 5px; background: white; padding: 8px 12px; font-weight: 600; }
+    QPushButton { border: 1px solid #d4dfe8; border-radius: 6px; background: white; padding: 8px 12px; font-weight: 500; }
+    QPushButton#browseButton { background: #f4f7fa; color: #48627b; padding: 8px 10px; font-size: 12px; }
     QPushButton:hover { background: #edf6f4; border-color: #42a38f; }
     QPushButton:disabled { color: #a1acb8; background: #f4f6f8; border-color: #e0e6ec; }
-    QPushButton#runButton { color: white; background: #127e6b; border: none; padding: 13px; font-size: 14px; }
+    QPushButton#runButton { color: white; background: #127e6b; border: none; padding: 11px; font-size: 14px; font-weight: 600; }
     QPushButton#runButton:hover { background: #0c9179; }
     QPushButton#runButton:disabled { background: #91b9b0; }
     QTableView { border: none; background: white; alternate-background-color: #f5f8fb; gridline-color: #edf1f5; selection-background-color: #ddf2ec; selection-color: #185449; }
     QHeaderView::section { border: none; border-bottom: 1px solid #e2e8ef; background: #f4f7fa; color: #607489; padding: 8px; font-size: 12px; }
     QProgressBar { border: none; background: #e8eef3; border-radius: 2px; max-height: 4px; }
     QProgressBar::chunk { background: #209d87; }
-    QScrollArea { border: none; background: transparent; }
+    QScrollArea#sidebarScroll { border: none; background: #eef2f6; }
+    QScrollBar:vertical { border: none; background: transparent; width: 8px; margin: 2px 0; }
+    QScrollBar::handle:vertical { background: #c4d1dc; border-radius: 4px; min-height: 36px; }
+    QScrollBar::handle:vertical:hover { background: #98adbf; }
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
     QSplitter::handle { background: #eef2f6; }
   )"));
   auto* central = new QWidget(this);
+  central->setObjectName("workbenchSurface");
+  central->setAttribute(Qt::WA_StyledBackground);
   setCentralWidget(central);
   auto* root = new QVBoxLayout(central);
   root->setContentsMargins(22, 18, 22, 16);
@@ -125,35 +143,51 @@ void MainWindow::buildUi() {
   auto* body = new QHBoxLayout;
   body->setSpacing(16);
   auto* sidebar_scroll = new QScrollArea(central);
+  sidebar_scroll->setObjectName("sidebarScroll");
+  sidebar_scroll->viewport()->setObjectName("sidebarViewport");
+  sidebar_scroll->viewport()->setAttribute(Qt::WA_StyledBackground);
   sidebar_scroll->setWidgetResizable(true);
-  sidebar_scroll->setFixedWidth(310);
+  sidebar_scroll->setFixedWidth(340);
   sidebar_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   auto* sidebar = new QWidget;
+  sidebar->setObjectName("sidebarContent");
+  sidebar->setAttribute(Qt::WA_StyledBackground);
   auto* side = new QVBoxLayout(sidebar);
-  side->setContentsMargins(0, 0, 4, 0);
+  side->setContentsMargins(0, 0, 6, 0);
   side->setSpacing(12);
   sidebar_scroll->setWidget(sidebar);
   body->addWidget(sidebar_scroll);
 
   input_panel_ = card(sidebar);
   auto* inputs = new QVBoxLayout(input_panel_);
-  inputs->setContentsMargins(16, 16, 16, 16);
+  inputs->setContentsMargins(18, 16, 18, 16);
   inputs->setSpacing(10);
-  inputs->addWidget(label(tr("01  检测任务"), "sectionTitle", input_panel_));
+  auto* task_heading = new QHBoxLayout;
+  auto* task_number = label("01", "sectionNumber", input_panel_);
+  task_number->setFixedSize(26, 26);
+  task_number->setAlignment(Qt::AlignCenter);
+  task_heading->setSpacing(10);
+  task_heading->addWidget(task_number);
+  task_heading->addWidget(label(tr("检测任务"), "sectionTitle", input_panel_), 1);
+  inputs->addLayout(task_heading);
   auto add_path = [&](const QString& title, const QString& object_name,
                       const QString& placeholder, QLineEdit*& field,
                       const QString& filter, bool directory) {
-    inputs->addWidget(label(title, "fieldLabel", input_panel_));
-    field = new QLineEdit(input_panel_);
+    auto* field_group = new QVBoxLayout;
+    field_group->setSpacing(5);
+    field_group->addWidget(label(title, "fieldLabel", input_panel_));
+    field = new PathEdit(input_panel_);
     field->setObjectName(object_name);
     field->setPlaceholderText(placeholder);
     auto* path_row = new QHBoxLayout;
     path_row->setSpacing(6);
     path_row->addWidget(field, 1);
     auto* browse = new QPushButton(tr("浏览"), input_panel_);
+    browse->setObjectName("browseButton");
     browse->setToolTip(title);
     path_row->addWidget(browse);
-    inputs->addLayout(path_row);
+    field_group->addLayout(path_row);
+    inputs->addLayout(field_group);
     connect(browse, &QPushButton::clicked, this, [this, field, filter, directory, object_name] {
       QSettings settings;
       const QString initial = field->text().isEmpty()
@@ -168,7 +202,6 @@ void MainWindow::buildUi() {
                         directory ? path : QFileInfo(path).absolutePath());
     });
     connect(field, &QLineEdit::textChanged, this, &MainWindow::invalidateResult);
-    connect(field, &QLineEdit::textChanged, field, &QLineEdit::setToolTip);
   };
   add_path(tr("模型配置"), "configPath", tr("选择 FP32 / INT8 配置"),
            config_path_, tr("配置文件 (*.txt);;所有文件 (*)"), false);
@@ -176,7 +209,7 @@ void MainWindow::buildUi() {
            tr("图片 (*.jpg *.jpeg *.png *.bmp *.tif *.tiff *.webp);;所有文件 (*)"), false);
   add_path(tr("结果保存位置"), "outputDirectory", tr("选择保存目录"),
            output_directory_, {}, true);
-  auto* output_hint = label(tr("每次检测自动建立子目录，保存 JSON 和标注图。"), "muted", input_panel_);
+  auto* output_hint = label(tr("自动保存 JSON 与标注图，每次检测独立归档。"), "muted", input_panel_);
   output_hint->setWordWrap(true);
   output_hint->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
   inputs->addWidget(output_hint);
@@ -186,16 +219,8 @@ void MainWindow::buildUi() {
   connect(run_button_, &QPushButton::clicked, this, &MainWindow::startDetection);
   side->addWidget(input_panel_);
 
-  auto* model_card = card(sidebar);
-  auto* model_layout = new QVBoxLayout(model_card);
-  model_layout->setContentsMargins(16, 16, 16, 16);
-  model_layout->addWidget(label(tr("02  生效参数"), "sectionTitle", model_card));
-  model_details_ = label({}, "modelDetails", model_card);
-  model_details_->setWordWrap(true);
-  model_details_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-  model_details_->setTextInteractionFlags(Qt::TextSelectableByMouse);
-  model_layout->addWidget(model_details_);
-  side->addWidget(model_card);
+  model_panel_ = new ModelInfoPanel(sidebar);
+  side->addWidget(model_panel_);
   side->addStretch();
 
   auto* workspace = new QSplitter(Qt::Vertical, central);
@@ -240,7 +265,7 @@ void MainWindow::buildUi() {
   table->setMinimumHeight(110);
   result_layout->addWidget(table, 1);
   output_details_ = label({}, "outputDetails", results);
-  output_details_->setWordWrap(true);
+  output_details_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
   output_details_->setTextInteractionFlags(Qt::TextSelectableByMouse);
   result_layout->addWidget(output_details_);
   auto* output_actions = new QHBoxLayout;
@@ -289,8 +314,9 @@ void MainWindow::invalidateResult() {
   original_view_->clear(tr("选择图片并运行检测"));
   annotated_view_->clear(tr("检测完成后显示标注图"));
   result_summary_->setText(tr("尚未检测"));
-  model_details_->setText(tr("运行时加载配置，并在此显示本次使用的模型、阈值和类别。"));
+  model_panel_->reset();
   output_details_->clear();
+  output_details_->setToolTip({});
   open_json_button_->setEnabled(false);
   open_output_button_->setEnabled(false);
   status_message_->setProperty("state", "ready");
@@ -353,17 +379,7 @@ void MainWindow::startDetection() {
 }
 
 void MainWindow::showContract(const RuntimeContract& contract) {
-  QStringList classes;
-  for (const auto& name : contract.artifact.class_names) classes << QString::fromStdString(name);
-  QStringList dimensions;
-  for (const auto value : contract.artifact.input.shape) dimensions << QString::number(value);
-  model_details_->setText(tr("%1\n\n执行后端  %2\n输入尺寸  %3\n置信度阈值  %4\nNMS 阈值  %5\nNMS 模式  %6\n\n类别\n%7\n\n模型文件\n%8\n\n配置\n%9")
-      .arg(QString::fromStdString(contract.artifact.model_id),
-           QString::fromStdString(to_string(contract.runtime.provider)), dimensions.join(" × "))
-      .arg(contract.runtime.score_threshold).arg(contract.runtime.nms_threshold)
-      .arg(QString::fromStdString(to_string(contract.artifact.nms_mode)), classes.join(", "),
-           QDir::fromNativeSeparators(from_path(contract.artifact.model_path)),
-           QDir::fromNativeSeparators(from_path(contract.runtime.declaration_path))));
+  model_panel_->setContract(contract);
 }
 
 void MainWindow::showResult(const DetectionResponse& response) {
@@ -376,7 +392,8 @@ void MainWindow::showResult(const DetectionResponse& response) {
   if (response.result.outputs.json_path) completed_json_ = from_path(*response.result.outputs.json_path);
   const auto count = response.result.detection_result.detections.size();
   result_summary_->setText(count == 0 ? tr("未检出缺陷") : tr("检出 %1 个目标").arg(count));
-  output_details_->setText(tr("本次输出：%1").arg(completed_directory_));
+  output_details_->setText(tr("结果已保存  ·  JSON + PNG"));
+  output_details_->setToolTip(QDir::toNativeSeparators(completed_directory_));
   open_output_button_->setEnabled(true);
   open_json_button_->setEnabled(!completed_json_.isEmpty());
   state_badge_->setProperty("state", "ready");

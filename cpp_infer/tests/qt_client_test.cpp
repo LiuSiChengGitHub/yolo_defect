@@ -1,6 +1,7 @@
 #include "main_window.h"
 
 #include <QApplication>
+#include <QDebug>
 #include <QDir>
 #include <QDirIterator>
 #include <QFile>
@@ -17,12 +18,14 @@
 #include <QProcess>
 #include <QPushButton>
 #include <QRegularExpression>
+#include <QScreen>
 #include <QSettings>
 #include <QSignalSpy>
 #include <QTableView>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
+#include <QToolButton>
 
 namespace {
 
@@ -61,6 +64,13 @@ QJsonDocument readJson(const QString& path) {
   return QJsonDocument::fromJson(file.readAll());
 }
 
+void showTestWindow(MainWindow& window) {
+  if (qEnvironmentVariableIntValue("YOLO_DEFECT_QT_TEST_HIDDEN") != 0) {
+    window.setAttribute(Qt::WA_DontShowOnScreen);
+  }
+  window.show();
+}
+
 bool saveOptionalScreenshot(MainWindow& window, const QString& name) {
   const QString directory = qEnvironmentVariable("YOLO_DEFECT_QT_SCREENSHOT_DIR");
   if (directory.isEmpty()) {
@@ -69,10 +79,33 @@ bool saveOptionalScreenshot(MainWindow& window, const QString& name) {
   if (!QDir().mkpath(directory)) {
     return false;
   }
-  // Optional offscreen renders support visual inspection of actual states;
+  // Optional Qt renders support visual inspection with offscreen or native QPA;
   // they do not replace checking interaction in a visible desktop window.
+  // Resizing and folding panels posts nested layout requests to the event loop.
+  QTest::qWait(40);
   QApplication::processEvents();
   return window.grab().save(QDir(directory).filePath(name + QStringLiteral(".png")));
+}
+
+bool saveOptionalLayoutScreenshots(MainWindow& window) {
+  if (qEnvironmentVariableIsEmpty("YOLO_DEFECT_QT_SCREENSHOT_DIR")) {
+    return true;
+  }
+  auto* toggle = window.findChild<QToolButton*>(QStringLiteral("modelDetailsToggle"));
+  if (!toggle) {
+    return false;
+  }
+  const bool wasExpanded = toggle->isChecked();
+  toggle->setChecked(true);
+  const bool expandedSaved = saveOptionalScreenshot(window, QStringLiteral("complete_FP32_details"));
+  toggle->setChecked(wasExpanded);
+
+  const QSize previousSize = window.size();
+  window.resize(980, 700);
+  const bool minimumSaved = saveOptionalScreenshot(window, QStringLiteral("complete_FP32_minimum"));
+  window.resize(previousSize);
+  QApplication::processEvents();
+  return expandedSaved && minimumSaved;
 }
 
 // Moving the declaration must preserve its artifact reference: relative paths
@@ -107,6 +140,8 @@ class QtClientTest : public QObject {
 
  private slots:
   void initTestCase() {
+    qInfo() << "Qt platform:" << QGuiApplication::platformName()
+            << "screen DPR:" << QGuiApplication::primaryScreen()->devicePixelRatio();
     QVERIFY2(QFileInfo::exists(sampleImage()), "The sample image is required.");
     QVERIFY2(QFileInfo::exists(fp32Config()), "The FP32 config is required.");
     QVERIFY2(QFileInfo::exists(QString::fromUtf8(YOLO_DEFECT_QT_TEST_CLI)),
@@ -135,7 +170,7 @@ class QtClientTest : public QObject {
 
     MainWindow window;
     window.setInputs(config, sampleImage(), guiOutput);
-    window.show();
+    showTestWindow(window);
     QVERIFY(saveOptionalScreenshot(
         window, QStringLiteral("ready_") + QString::fromLatin1(QTest::currentDataTag())));
     auto* run = window.findChild<QPushButton*>(QStringLiteral("runButton"));
@@ -144,9 +179,12 @@ class QtClientTest : public QObject {
     auto* outputField = window.findChild<QLineEdit*>(QStringLiteral("outputDirectory"));
     auto* table = window.findChild<QTableView*>(QStringLiteral("resultTable"));
     auto* details = window.findChild<QLabel*>(QStringLiteral("modelDetails"));
+    auto* scoreThreshold = window.findChild<QLabel*>(QStringLiteral("scoreThreshold"));
+    auto* nmsThreshold = window.findChild<QLabel*>(QStringLiteral("nmsThreshold"));
     auto* openOutput = window.findChild<QPushButton*>(QStringLiteral("openOutputButton"));
     auto* openJson = window.findChild<QPushButton*>(QStringLiteral("openJsonButton"));
     QVERIFY(run && configField && imageField && outputField && table && details &&
+            scoreThreshold && nmsThreshold &&
             openOutput && openJson);
     QVERIFY(window.findChild<QWidget*>(QStringLiteral("originalView")));
     QVERIFY(window.findChild<QWidget*>(QStringLiteral("annotatedView")));
@@ -184,6 +222,9 @@ class QtClientTest : public QObject {
     QVERIFY(openJson->isEnabled());
     QVERIFY(saveOptionalScreenshot(
         window, QStringLiteral("complete_") + QString::fromLatin1(QTest::currentDataTag())));
+    if (QString::fromLatin1(QTest::currentDataTag()) == QStringLiteral("FP32")) {
+      QVERIFY(saveOptionalLayoutScreenshots(window));
+    }
 
     const QStringList jsonPaths = outputFiles(guiOutput, QStringLiteral("*.json"));
     QCOMPARE(jsonPaths.size(), 1);
@@ -212,8 +253,8 @@ class QtClientTest : public QObject {
     const QString modelId = guiDocument.object().value(QStringLiteral("model"))
                                 .toObject().value(QStringLiteral("model_id")).toString();
     QVERIFY(details->text().contains(modelId));
-    QVERIFY(details->text().contains(QStringLiteral("0.25")));
-    QVERIFY(details->text().contains(QStringLiteral("0.45")));
+    QVERIFY(scoreThreshold->text().contains(QStringLiteral("0.25")));
+    QVERIFY(nmsThreshold->text().contains(QStringLiteral("0.45")));
 
     const QString cliJson = temporary.filePath(QStringLiteral("cli.json"));
     QProcess cli;
@@ -261,7 +302,7 @@ class QtClientTest : public QObject {
 
     MainWindow window;
     window.setInputs(config, damaged, output);
-    window.show();
+    showTestWindow(window);
     auto* run = window.findChild<QPushButton*>(QStringLiteral("runButton"));
     auto* status = window.findChild<QLabel*>(QStringLiteral("statusMessage"));
     auto* imageField = window.findChild<QLineEdit*>(QStringLiteral("imagePath"));
@@ -351,7 +392,7 @@ class QtClientTest : public QObject {
     QVERIFY(temporary.isValid());
     MainWindow window;
     window.setInputs(fp32Config(), sampleImage(), temporary.filePath(QStringLiteral("output")));
-    window.show();
+    showTestWindow(window);
     QSignalSpy finished(&window, &MainWindow::taskFinished);
     int eventsDuringClose = 0;
     QTimer heartbeat;

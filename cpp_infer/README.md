@@ -4,7 +4,7 @@
 
 `cpp_infer` 提供 `yolo_defect_runtime` library 和 `yolo_defect_cpp` CLI。单图、批处理、benchmark 与 profiling 共用配置、模型声明及图像处理组件；Windows、Linux x86_64 与交叉编译的 Linux AArch64 使用同一业务源码。
 
-另有可选的 [Qt 6 Widgets 单图检测客户端](apps/qt/README.md)，支持后台检测、原图与标注图预览、结果表格及文件输出。构建开关 `YOLO_DEFECT_BUILD_QT` 默认关闭，使用原 CLI 时无须安装 Qt。
+另有可选的 [Qt 6 Widgets 单图检测客户端](apps/qt/README.md)，支持后台检测、原图与标注图预览、结果表格及文件输出。Windows 开发入口为 `tools/qt.cmd build|test|run`，机器路径按客户端说明保存在 Git 忽略的本地配置中。构建开关 `YOLO_DEFECT_BUILD_QT` 默认关闭，使用原 CLI 时无须安装 Qt。
 
 ## 构建与依赖
 

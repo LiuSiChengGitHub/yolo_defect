@@ -15,6 +15,7 @@ namespace yolo_defect_cpp::qt {
 
 class DetectionTableModel;
 class ImageView;
+class ModelInfoPanel;
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -51,7 +52,7 @@ class MainWindow : public QMainWindow {
   QPushButton* run_button_ = nullptr;
   QPushButton* open_output_button_ = nullptr;
   QPushButton* open_json_button_ = nullptr;
-  QLabel* model_details_ = nullptr;
+  ModelInfoPanel* model_panel_ = nullptr;
   QLabel* status_message_ = nullptr;
   QLabel* state_badge_ = nullptr;
   QLabel* result_summary_ = nullptr;

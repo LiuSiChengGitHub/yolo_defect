@@ -10,6 +10,10 @@ add_library(yolo_defect_qt_client STATIC
   image_view.h
   main_window.cpp
   main_window.h
+  model_info_panel.cpp
+  model_info_panel.h
+  path_edit.cpp
+  path_edit.h
 )
 target_compile_features(yolo_defect_qt_client PUBLIC cxx_std_17)
 target_include_directories(yolo_defect_qt_client
