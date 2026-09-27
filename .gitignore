@@ -61,6 +61,7 @@ results/*
 temp_eval*/
 .claude/
 docs/me/
+tmp/
 
 # ---------- Machine-local C++ acceptance environment ----------
 cpp_infer/.stage1.local.psd1
