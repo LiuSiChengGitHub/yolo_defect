@@ -4,7 +4,7 @@
 
 基于 C++17、CMake、OpenCV 和 ONNX Runtime 的工业表面缺陷检测系统，包含 Qt 桌面工作台和可复用的推理 Runtime，覆盖模型契约、FP32/INT8 推理、有界批处理、正确性校验及性能分析。
 
-**[可视化演示 · Pages 发布后可访问](https://LiuSiChengGitHub.github.io/yolo_defect/demo/)** · **[离线演示指南](docs/demo/index.html)** · **[Qt 运行说明](cpp_infer/apps/qt/README.md)** · **[C++ 技术手册](cpp_infer/README.md)**
+**[可视化演示](https://LiuSiChengGitHub.github.io/yolo_defect/demo/)**
 
 ![Qt 工业缺陷检测工作台](docs/assets/qt/workbench.png)
 

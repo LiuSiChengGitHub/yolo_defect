@@ -4,7 +4,7 @@
 
 A C++17 system for industrial surface-defect detection, with a Qt desktop workbench and a reusable inference Runtime. Built with CMake, OpenCV and ONNX Runtime, it covers model contracts, FP32/INT8 inference, bounded batch processing, correctness checks and performance analysis.
 
-**[Visual demo · available after Pages deployment](https://LiuSiChengGitHub.github.io/yolo_defect/demo/index.en.html)** · **[Offline demo guide](docs/demo/index.en.html)** · **[Qt setup](cpp_infer/apps/qt/README.md)** · **[C++ technical manual](cpp_infer/README.md)**
+**[Visual demo](https://LiuSiChengGitHub.github.io/yolo_defect/demo/index.en.html)**
 
 ![Qt industrial defect inspection workbench](docs/assets/qt/workbench.png)
 
