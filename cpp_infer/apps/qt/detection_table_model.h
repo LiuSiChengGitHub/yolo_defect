@@ -17,6 +17,7 @@ class DetectionTableModel : public QAbstractTableModel {
   QVariant headerData(int section, Qt::Orientation orientation,
                       int role) const override;
   void setDetections(std::vector<Detection> detections);
+  const Detection* detectionAt(int row) const;
 
  private:
   std::vector<Detection> detections_;

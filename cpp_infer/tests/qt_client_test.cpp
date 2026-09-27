@@ -1,6 +1,10 @@
 #include "main_window.h"
+#include "image_view.h"
+
+#include "yolo_defect_cpp/batch_result.h"
 
 #include <QApplication>
+#include <QComboBox>
 #include <QDebug>
 #include <QDir>
 #include <QDirIterator>
@@ -15,21 +19,26 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPixmap>
+#include <QPlainTextEdit>
 #include <QProcess>
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QScreen>
 #include <QSettings>
 #include <QSignalSpy>
+#include <QSpinBox>
 #include <QTableView>
 #include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
 #include <QToolButton>
+#include <QWheelEvent>
 
 namespace {
 
 using yolo_defect_cpp::qt::MainWindow;
+using yolo_defect_cpp::qt::ImageView;
+using yolo_defect_cpp::BatchInputKind;
 
 constexpr int kTaskTimeoutMs = 60000;
 
@@ -133,6 +142,110 @@ bool copyConfig(const QString& source, const QString& destination) {
   }
   const QByteArray bytes = text.toUtf8();
   return output.write(bytes) == bytes.size();
+}
+
+bool writeText(const QString& path, const QByteArray& bytes) {
+  QFile file(path);
+  return file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size();
+}
+
+// A small real fixture checks Unicode paths, recursive directory discovery,
+// manifest declaration order and per-image failure isolation together.
+struct BatchFixture {
+  QString root;
+  QString config;
+  QString manifest;
+  QStringList directoryOrder;
+  QStringList manifestOrder;
+
+  bool create(const QTemporaryDir& temporary) {
+    // Keep CLI argv ASCII: its Windows batch command_arguments currently use
+    // the local code page. Unicode filenames inside discovery/manifest still
+    // exercise the shared Runtime path handling; GUI config paths are covered
+    // separately by recoversFromFailureWithUnicodePaths().
+    root = temporary.filePath(QStringLiteral("batch input"));
+    config = temporary.filePath(QStringLiteral("detection config.txt"));
+    manifest = temporary.filePath(QStringLiteral("input list.txt"));
+    const QString nested = QDir(root).filePath(QStringLiteral("子目录"));
+    if (!QDir().mkpath(nested) || !copyConfig(fp32Config(), config)) return false;
+    const QString first = QDir(root).filePath(QStringLiteral("01 缺陷.jpg"));
+    const QString damaged = QDir(root).filePath(QStringLiteral("02 损坏.jpg"));
+    const QString last = QDir(nested).filePath(QStringLiteral("03 划痕.jpg"));
+    if (!QFile::copy(sampleImage(), first) ||
+        !QFile::copy(repositoryPath(QStringLiteral("data/images/val/scratches_300.jpg")), last) ||
+        !writeText(damaged, "not encoded image bytes")) return false;
+    directoryOrder = {first, damaged, last};
+    manifestOrder = {last, first, damaged};
+    QByteArray manifestText = "# Declaration order deliberately differs from directory order.\n";
+    for (const QString& source : manifestOrder) {
+      manifestText += QDir(temporary.path()).relativeFilePath(source).toUtf8() + '\n';
+    }
+    return writeText(manifest, manifestText);
+  }
+};
+
+QJsonObject stableBatchSummary(QJsonObject summary) {
+  // Runtime measurements and process metadata naturally differ between two
+  // executions. Preserve every deterministic contract and per-image outcome.
+  for (const auto* key : {"timestamp_utc", "command_arguments", "environment",
+                          "timing", "latency_ms", "throughput_images_per_second", "memory"}) {
+    summary.remove(QString::fromLatin1(key));
+  }
+  auto runtime = summary.value(QStringLiteral("runtime")).toObject();
+  runtime.remove(QStringLiteral("session_initialization_ms"));
+  summary.insert(QStringLiteral("runtime"), runtime);
+  auto output = summary.value(QStringLiteral("output")).toObject();
+  for (const auto* key : {"directory", "batch_summary_path", "item_directory"}) {
+    output.remove(QString::fromLatin1(key));
+  }
+  summary.insert(QStringLiteral("output"), output);
+  summary.insert(QStringLiteral("queue"), QJsonObject{
+      {QStringLiteral("capacity"), summary.value(QStringLiteral("queue"))
+                                       .toObject().value(QStringLiteral("capacity"))}});
+  QJsonArray items;
+  for (const auto& value : summary.value(QStringLiteral("items")).toArray()) {
+    auto item = value.toObject();
+    item.remove(QStringLiteral("latency_ms"));
+    for (const auto* key : {"json_output_path", "image_output_path"}) {
+      const QString field = QString::fromLatin1(key);
+      if (item.value(field).isString()) {
+        item.insert(field, QFileInfo(item.value(field).toString()).fileName());
+      }
+    }
+    items.append(item);
+  }
+  summary.insert(QStringLiteral("items"), items);
+  return summary;
+}
+
+bool tableMatchesDetections(QTableView* table, const QJsonArray& detections) {
+  if (table->model()->rowCount() != detections.size()) return false;
+  for (int row = 0; row < detections.size(); ++row) {
+    const auto detection = detections.at(row).toObject();
+    if (table->model()->index(row, 1).data().toString() !=
+        detection.value(QStringLiteral("class_name")).toString()) return false;
+    QString confidence = table->model()->index(row, 2).data().toString();
+    if (!confidence.endsWith(QLatin1Char('%'))) return false;
+    confidence.chop(1);
+    if (qAbs(confidence.toDouble() / 100.0 -
+             detection.value(QStringLiteral("confidence")).toDouble()) >= 0.000051) return false;
+    const auto bounds = detection.value(QStringLiteral("bbox_xyxy")).toArray();
+    if (bounds.size() != 4) return false;
+    for (int coordinate = 0; coordinate < bounds.size(); ++coordinate) {
+      if (qAbs(table->model()->index(row, coordinate + 3).data().toDouble() -
+               bounds.at(coordinate).toDouble()) >= 0.051) return false;
+    }
+  }
+  return true;
+}
+
+bool makeStopFixture(const QString& input) {
+  if (!QDir().mkpath(input)) return false;
+  for (int index = 0; index < 12; ++index) {
+    if (!QFile::copy(sampleImage(), QDir(input).filePath(
+            QStringLiteral("image_%1.jpg").arg(index, 2, 10, QLatin1Char('0'))))) return false;
+  }
+  return true;
 }
 
 class QtClientTest : public QObject {
@@ -382,6 +495,333 @@ class QtClientTest : public QObject {
       QCOMPARE(table->model()->rowCount(), switchedDocument.object()
                    .value(QStringLiteral("detections")).toArray().size());
     }
+  }
+
+  void batchMatchesCliAndSelection_data() {
+    QTest::addColumn<bool>("manifestInput");
+    QTest::newRow("directory") << false;
+    QTest::newRow("manifest") << true;
+  }
+
+  void batchMatchesCliAndSelection() {
+    QFETCH(bool, manifestInput);
+    if (!QFileInfo::exists(repositoryPath(QStringLiteral("models/best.onnx")))) {
+      QSKIP("The FP32 model artifact has not been downloaded.");
+    }
+    QTemporaryDir temporary;
+    QVERIFY(temporary.isValid());
+    BatchFixture fixture;
+    QVERIFY(fixture.create(temporary));
+    const QString input = manifestInput ? fixture.manifest : fixture.root;
+    const QStringList expectedOrder = manifestInput ? fixture.manifestOrder : fixture.directoryOrder;
+    const auto kind = manifestInput ? BatchInputKind::kManifest : BatchInputKind::kDirectory;
+    const QString guiOutput = temporary.filePath(QStringLiteral("GUI 批量结果"));
+    MainWindow window;
+    window.setBatchInputs(fixture.config, input, guiOutput, kind, 2, 1);
+    showTestWindow(window);
+    auto* mode = window.findChild<QComboBox*>(QStringLiteral("inputMode"));
+    auto* workers = window.findChild<QSpinBox*>(QStringLiteral("workersSpin"));
+    auto* queue = window.findChild<QSpinBox*>(QStringLiteral("queueSpin"));
+    auto* run = window.findChild<QPushButton*>(QStringLiteral("runButton"));
+    auto* stop = window.findChild<QPushButton*>(QStringLiteral("stopButton"));
+    auto* batchTable = window.findChild<QTableView*>(QStringLiteral("batchTable"));
+    auto* table = window.findChild<QTableView*>(QStringLiteral("resultTable"));
+    auto* summaryLabel = window.findChild<QLabel*>(QStringLiteral("batchSummary"));
+    auto* itemDetails = window.findChild<QLabel*>(QStringLiteral("itemDetails"));
+    auto* itemError = window.findChild<QPlainTextEdit*>(QStringLiteral("itemError"));
+    auto* original = window.findChild<ImageView*>(QStringLiteral("originalView"));
+    auto* annotated = window.findChild<ImageView*>(QStringLiteral("annotatedView"));
+    QVERIFY(mode && workers && queue && run && stop && batchTable && table &&
+            summaryLabel && itemDetails && itemError && original && annotated);
+    QCOMPARE(mode->currentIndex(), manifestInput ? 2 : 1);
+    QCOMPARE(workers->value(), 2);
+    QCOMPARE(queue->value(), 1);
+    QSignalSpy finished(&window, &MainWindow::taskFinished);
+    int eventsDuringTask = 0;
+    QTimer heartbeat;
+    heartbeat.setInterval(1);
+    connect(&heartbeat, &QTimer::timeout, &window, [&] {
+      if (window.isBusy()) ++eventsDuringTask;
+    });
+    heartbeat.start();
+    QTest::mouseClick(run, Qt::LeftButton);
+    QVERIFY(window.isBusy());
+    QVERIFY(stop->isEnabled());
+    QVERIFY(!run->isEnabled());
+    QVERIFY(!mode->isEnabled());
+    QVERIFY(!workers->isEnabled());
+    QVERIFY(!queue->isEnabled());
+    window.startDetection();
+    QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, kTaskTimeoutMs);
+    QVERIFY(!finished.at(0).at(0).toBool());  // Partial failure is not all-success.
+    QVERIFY(eventsDuringTask > 0);
+    QVERIFY(!window.isBusy());
+    QVERIFY(run->isEnabled());
+    QVERIFY(!stop->isEnabled());
+    QVERIFY(mode->isEnabled());
+    QVERIFY(workers->isEnabled());
+    QVERIFY(queue->isEnabled());
+
+    const auto summaries = outputFiles(guiOutput, QStringLiteral("batch_summary.json"));
+    QCOMPARE(summaries.size(), 1);
+    const auto guiSummary = readJson(summaries.front()).object();
+    QCOMPARE(guiSummary.value(QStringLiteral("status")).toString(), QStringLiteral("partial_failure"));
+    const auto counts = guiSummary.value(QStringLiteral("counts")).toObject();
+    QCOMPARE(counts.value(QStringLiteral("discovered")).toInt(), 3);
+    QCOMPARE(counts.value(QStringLiteral("succeeded")).toInt(), 2);
+    QCOMPARE(counts.value(QStringLiteral("failed")).toInt(), 1);
+    QCOMPARE(counts.value(QStringLiteral("cancelled")).toInt(), 0);
+    QVERIFY(!summaryLabel->text().trimmed().isEmpty());
+    const auto items = guiSummary.value(QStringLiteral("items")).toArray();
+    QCOMPARE(items.size(), 3);
+    QCOMPARE(batchTable->model()->rowCount(), 3);
+    QCOMPARE(batchTable->model()->columnCount(), 6);
+
+    const QString cliOutput = temporary.filePath(QStringLiteral("CLI batch output"));
+    const QString cliSummaryPath = QDir(cliOutput).filePath(QStringLiteral("batch_summary.json"));
+    QProcess cli;
+    cli.start(QString::fromUtf8(YOLO_DEFECT_QT_TEST_CLI),
+              {QStringLiteral("--config"), fixture.config, QStringLiteral("--batch"),
+               manifestInput ? QStringLiteral("--manifest") : QStringLiteral("--input-dir"), input,
+               QStringLiteral("--output-dir"), cliOutput,
+               QStringLiteral("--batch-summary"), cliSummaryPath,
+               QStringLiteral("--workers"), QStringLiteral("2"),
+               QStringLiteral("--queue-capacity"), QStringLiteral("1"),
+               QStringLiteral("--output-images")});
+    QVERIFY2(cli.waitForStarted(), qPrintable(cli.errorString()));
+    QVERIFY2(cli.waitForFinished(kTaskTimeoutMs), qPrintable(cli.errorString()));
+    const QByteArray cliLog = cli.readAllStandardError() + cli.readAllStandardOutput();
+    QCOMPARE(cli.exitStatus(), QProcess::NormalExit);
+    QVERIFY2(cli.exitCode() == 2, cliLog.constData());
+    const auto cliDocument = readJson(cliSummaryPath);
+    QVERIFY(cliDocument.isObject());
+    const auto cliSummary = cliDocument.object();
+    QCOMPARE(stableBatchSummary(guiSummary), stableBatchSummary(cliSummary));
+    const auto cliItems = cliSummary.value(QStringLiteral("items")).toArray();
+
+    int successfulRow = -1;
+    for (int row = 0; row < items.size(); ++row) {
+      const auto item = items.at(row).toObject();
+      const QString source = item.value(QStringLiteral("source_path")).toString();
+      QCOMPARE(item.value(QStringLiteral("sequence_index")).toInt(), row);
+      QCOMPARE(QFileInfo(source).canonicalFilePath(), QFileInfo(expectedOrder.at(row)).canonicalFilePath());
+      QCOMPARE(batchTable->model()->index(row, 0).data().toInt(), row + 1);
+      QVERIFY(batchTable->model()->index(row, 1).data().toString().contains(QFileInfo(source).fileName()));
+      batchTable->selectRow(row);
+      QTRY_COMPARE(QFileInfo(original->property("sourcePath").toString()).canonicalFilePath(),
+                   QFileInfo(source).canonicalFilePath());
+      if (item.value(QStringLiteral("status")).toString() == QStringLiteral("succeeded")) {
+        const auto guiItem = readJson(item.value(QStringLiteral("json_output_path")).toString());
+        const auto cliItem = readJson(cliItems.at(row).toObject()
+                                         .value(QStringLiteral("json_output_path")).toString());
+        QVERIFY(guiItem.isObject());
+        QCOMPARE(guiItem, cliItem);
+        const auto detections = guiItem.object().value(QStringLiteral("detections")).toArray();
+        QCOMPARE(batchTable->model()->index(row, 3).data().toInt(), detections.size());
+        QTRY_VERIFY_WITH_TIMEOUT(tableMatchesDetections(table, detections), kTaskTimeoutMs);
+        QTRY_COMPARE(original->imageSize(), QImage(source).size());
+        QCOMPARE(annotated->imageSize(), original->imageSize());
+        successfulRow = row;
+        if (!manifestInput) QVERIFY(saveOptionalScreenshot(window, QStringLiteral("batch_success")));
+      } else {
+        const QString error = item.value(QStringLiteral("error")).toString();
+        QVERIFY(!error.isEmpty());
+        QTRY_VERIFY(itemError->toPlainText().contains(error));
+        QCOMPARE(table->model()->rowCount(), 0);
+        QVERIFY(annotated->imageSize().isEmpty());
+        if (!manifestInput) QVERIFY(saveOptionalScreenshot(window, QStringLiteral("batch_failure")));
+      }
+    }
+
+    QVERIFY(successfulRow >= 0);
+    // Rapid selection must not allow an older asynchronous preview to replace
+    // the current item after its read finishes.
+    batchTable->selectRow(0);
+    batchTable->selectRow(1);
+    batchTable->selectRow(successfulRow);
+    const auto selectedItem = items.at(successfulRow).toObject();
+    const auto selectedDetections = readJson(selectedItem.value(QStringLiteral("json_output_path"))
+                                                .toString()).object().value(QStringLiteral("detections")).toArray();
+    QTRY_VERIFY_WITH_TIMEOUT(tableMatchesDetections(table, selectedDetections), kTaskTimeoutMs);
+    QTRY_COMPARE(QFileInfo(original->property("sourcePath").toString()).canonicalFilePath(),
+                 QFileInfo(selectedItem.value(QStringLiteral("source_path")).toString()).canonicalFilePath());
+    QVERIFY(!selectedDetections.isEmpty());
+    const int selectedDetection = selectedDetections.size() - 1;
+    table->selectRow(selectedDetection);
+    QCOMPARE(original->selectedDetection(), selectedDetection);
+    QCOMPARE(annotated->selectedDetection(), selectedDetection);
+    original->actualSize();
+    QCOMPARE(original->zoomFactor(), 1.0);
+    original->zoomIn();
+    QVERIFY(original->zoomFactor() > 1.0);
+    original->zoomOut();
+    QVERIFY(qAbs(original->zoomFactor() - 1.0) < 0.000001);
+    original->fitToWindow();
+    QVERIFY(original->zoomFactor() > 0.0);
+    // Click a real bounding box to exercise the reverse image -> table link.
+    // Choosing the smallest box makes the hit unambiguous if boxes overlap.
+    int smallestBox = 0;
+    double smallestArea = 0.0;
+    for (int index = 0; index < selectedDetections.size(); ++index) {
+      const auto box = selectedDetections.at(index).toObject()
+                           .value(QStringLiteral("bbox_xyxy")).toArray();
+      const double area = (box.at(2).toDouble() - box.at(0).toDouble()) *
+                          (box.at(3).toDouble() - box.at(1).toDouble());
+      if (index == 0 || area < smallestArea) {
+        smallestArea = area;
+        smallestBox = index;
+      }
+    }
+    annotated->fitToWindow();
+    const auto box = selectedDetections.at(smallestBox).toObject()
+                         .value(QStringLiteral("bbox_xyxy")).toArray();
+    const QPointF imagePoint((box.at(0).toDouble() + box.at(2).toDouble()) / 2.0,
+                             (box.at(1).toDouble() + box.at(3).toDouble()) / 2.0);
+    const QPointF imageCenter(annotated->imageSize().width() / 2.0,
+                              annotated->imageSize().height() / 2.0);
+    const QRectF viewport = QRectF(annotated->rect()).adjusted(16, 16, -16, -32);
+    const QPoint click = (viewport.center() +
+                         (imagePoint - imageCenter) * annotated->zoomFactor()).toPoint();
+    table->clearSelection();
+    table->setCurrentIndex(QModelIndex());
+    QCOMPARE(annotated->selectedDetection(), -1);
+    QSignalSpy imageSelection(annotated, &ImageView::detectionSelected);
+    QTest::mouseClick(annotated, Qt::LeftButton, Qt::NoModifier, click);
+    QCOMPARE(imageSelection.count(), 1);
+    QCOMPARE(imageSelection.at(0).at(0).toInt(), smallestBox);
+    QCOMPARE(table->currentIndex().row(), smallestBox);
+    QCOMPARE(original->selectedDetection(), smallestBox);
+    QCOMPARE(annotated->selectedDetection(), smallestBox);
+    // Exercise actual input events as well as toolbar slots. Several wheel
+    // steps enlarge this 200 px image beyond the viewport so a drag can pan.
+    QApplication::processEvents();
+    const QRect imageViewport = QRectF(annotated->rect())
+                                    .adjusted(16, 16, -16, -32).toAlignedRect();
+    const QPoint dragStart = imageViewport.center();
+    const double zoomBeforeWheel = annotated->zoomFactor();
+    QWheelEvent wheel(dragStart, annotated->mapToGlobal(dragStart), QPoint(),
+                      QPoint(0, 6 * 120), Qt::NoButton, Qt::NoModifier,
+                      Qt::NoScrollPhase, false);
+    QApplication::sendEvent(annotated, &wheel);
+    QVERIFY(annotated->zoomFactor() > zoomBeforeWheel);
+    QVERIFY(annotated->imageSize().width() * annotated->zoomFactor() > imageViewport.width());
+    const QImage beforeDrag = annotated->grab(imageViewport).toImage();
+    const QPoint dragEnd = dragStart + QPoint(QApplication::startDragDistance() + 30, 0);
+    QTest::mousePress(annotated, Qt::LeftButton, Qt::NoModifier, dragStart);
+    QTest::mouseMove(annotated, dragEnd);
+    QTest::mouseRelease(annotated, Qt::LeftButton, Qt::NoModifier, dragEnd);
+    QVERIFY(annotated->grab(imageViewport).toImage() != beforeDrag);
+    QCOMPARE(imageSelection.count(), 1);  // A pan must not also select a box.
+    QCOMPARE(table->currentIndex().row(), smallestBox);
+    annotated->fitToWindow();
+    if (!manifestInput) {
+      window.resize(980, 700);
+      QVERIFY(saveOptionalScreenshot(window, QStringLiteral("batch_minimum")));
+      QVERIFY2(table->viewport()->height() >= table->rowHeight(0) * 2,
+               "The minimum-size window must show data rows, not only a table header.");
+    }
+    QCOMPARE(finished.count(), 1);
+  }
+
+  void batchCooperativeStopAndRestart_data() {
+    QTest::addColumn<QString>("stopPhase");
+    QTest::newRow("before_runner_is_registered") << QStringLiteral("immediate");
+    QTest::newRow("while_runner_is_processing") << QStringLiteral("running");
+    QTest::newRow("close_while_runner_is_processing") << QStringLiteral("close");
+  }
+
+  void batchCooperativeStopAndRestart() {
+    QFETCH(QString, stopPhase);
+    if (!QFileInfo::exists(repositoryPath(QStringLiteral("models/best.onnx")))) {
+      QSKIP("The FP32 model artifact has not been downloaded.");
+    }
+    QTemporaryDir temporary;
+    QVERIFY(temporary.isValid());
+    const QString input = temporary.filePath(QStringLiteral("input"));
+    const QString output = temporary.filePath(QStringLiteral("output"));
+    QVERIFY(makeStopFixture(input));
+    MainWindow window;
+    window.setBatchInputs(fp32Config(), input, output, BatchInputKind::kDirectory, 1, 1);
+    showTestWindow(window);
+    auto* run = window.findChild<QPushButton*>(QStringLiteral("runButton"));
+    auto* stop = window.findChild<QPushButton*>(QStringLiteral("stopButton"));
+    auto* table = window.findChild<QTableView*>(QStringLiteral("batchTable"));
+    QVERIFY(run && stop && table);
+    QSignalSpy finished(&window, &MainWindow::taskFinished);
+    int eventsDuringTask = 0;
+    bool requested = false;
+    bool deferredClose = false;
+    QTimer observer;
+    observer.setInterval(1);
+    connect(&observer, &QTimer::timeout, &window, [&] {
+      if (window.isBusy()) ++eventsDuringTask;
+      if (requested || stopPhase == QStringLiteral("immediate") || !window.isBusy()) return;
+      // Observe a completed real image, not a fixed sleep or a synthetic
+      // progress event. run() is still executing the remaining bounded batch.
+      if (outputFiles(output, QStringLiteral("*.detections.json")).isEmpty()) return;
+      requested = true;
+      if (stopPhase == QStringLiteral("close")) {
+        window.close();
+        deferredClose = window.isVisible() && window.isBusy();
+      } else {
+        window.stopDetection();
+        window.stopDetection();  // Idempotent while worker/session cleanup runs.
+      }
+    });
+    observer.start();
+    window.startDetection();
+    QVERIFY(window.isBusy());
+    if (stopPhase == QStringLiteral("immediate")) {
+      requested = true;
+      window.stopDetection();
+      window.stopDetection();
+    }
+    window.startDetection();
+    QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, kTaskTimeoutMs);
+    observer.stop();
+    QVERIFY(requested);
+    QVERIFY(!finished.at(0).at(0).toBool());
+    QVERIFY(!window.isBusy());
+    QVERIFY(eventsDuringTask > 0);
+    QVERIFY(!stop->isEnabled());
+    const auto summaries = outputFiles(output, QStringLiteral("batch_summary.json"));
+    QCOMPARE(summaries.size(), 1);
+    const auto summary = readJson(summaries.front()).object();
+    QCOMPARE(summary.value(QStringLiteral("status")).toString(), QStringLiteral("cancelled"));
+    QVERIFY(summary.value(QStringLiteral("cooperative_stop_requested")).toBool());
+    const auto counts = summary.value(QStringLiteral("counts")).toObject();
+    QCOMPARE(counts.value(QStringLiteral("discovered")).toInt(), 12);
+    QVERIFY(counts.value(QStringLiteral("cancelled")).toInt() > 0);
+    QCOMPARE(counts.value(QStringLiteral("failed")).toInt(), 0);
+    QCOMPARE(counts.value(QStringLiteral("succeeded")).toInt() +
+                 counts.value(QStringLiteral("cancelled")).toInt(), 12);
+    if (stopPhase != QStringLiteral("immediate")) {
+      QVERIFY(counts.value(QStringLiteral("succeeded")).toInt() > 0);
+    }
+    QCOMPARE(table->model()->rowCount(), 12);
+    if (stopPhase == QStringLiteral("close")) {
+      QVERIFY(deferredClose);
+      QTRY_VERIFY(!window.isVisible());
+      return;
+    }
+    QVERIFY(saveOptionalScreenshot(window, QStringLiteral("batch_cancelled")));
+    QVERIFY(run->isEnabled());
+    const QString restartInput = temporary.filePath(QStringLiteral("restart input"));
+    const QString restartOutput = temporary.filePath(QStringLiteral("restart output"));
+    QVERIFY(QDir().mkpath(restartInput));
+    QVERIFY(QFile::copy(sampleImage(), QDir(restartInput).filePath(QStringLiteral("sample.jpg"))));
+    window.setBatchInputs(fp32Config(), restartInput, restartOutput);
+    window.startDetection();
+    QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 2, kTaskTimeoutMs);
+    QVERIFY(finished.at(1).at(0).toBool());
+    QVERIFY(!window.isBusy());
+    const auto restartedSummaries = outputFiles(restartOutput, QStringLiteral("batch_summary.json"));
+    QCOMPARE(restartedSummaries.size(), 1);
+    const auto restarted = readJson(restartedSummaries.front()).object();
+    QCOMPARE(restarted.value(QStringLiteral("status")).toString(), QStringLiteral("succeeded"));
+    QVERIFY(!restarted.value(QStringLiteral("cooperative_stop_requested")).toBool());
+    QCOMPARE(restarted.value(QStringLiteral("counts")).toObject().value(QStringLiteral("succeeded")).toInt(), 1);
+    QCOMPARE(table->model()->rowCount(), 1);
   }
 
   void closeDuringTaskWaitsWithoutBlocking() {

@@ -1,6 +1,6 @@
-# Qt 单图检测客户端
+# Qt 检测客户端
 
-第一步实现 Qt 6 Widgets 单图闭环：选择 RuntimeConfig 和图片，在后台加载模型、检测和写出结果，查看检测框、类别与置信度，并打开 JSON/PNG 输出。客户端直接调用 `yolo_defect::runtime`，与 CLI 共用配置、推理和 writer。
+Qt 6 Widgets 客户端支持单张图片、图片目录和 manifest 清单检测：选择 RuntimeConfig 与输入，在后台执行检测和写出，查看检测框、类别、置信度、批次汇总及逐图失败原因。客户端直接调用 `yolo_defect::runtime`，与 CLI 共用配置、推理、批处理调度和 writer。
 
 ## Windows x64 构建与启动
 
@@ -29,13 +29,19 @@ cpp_infer\tools\qt.cmd run
 ## 操作
 
 1. 选择 `cpp_infer/configs/default_config.txt`（FP32）或 `cpp_infer/configs/int8_u8s8_config.txt`（正式 INT8）。模型文件沿用相应 artifact 声明，取得模型的方式见 [C++ Runtime 说明](../../README.md)。
-2. 选择图片，例如 `data/images/val/crazing_241.jpg`，再选择输出目录。
-3. 开始检测。配置读取、模型构建、推理及写出均在工作线程执行，状态区显示运行、成功或错误；完成后显示本次实际生效的模型和参数。
-4. 查看自动适应窗口的原图和标注图，以及类别、置信度和原图坐标表格；打开 JSON 或输出目录查看 Runtime 生成的文件。切换配置后再次运行即可比较 FP32/INT8。
+2. 选择输入方式：“单张图片”“图片目录”或“Manifest 清单”，再浏览对应文件或目录。单图示例为 `data/images/val/crazing_241.jpg`；目录示例为 `data/images/val/`。manifest 使用 UTF-8 文本，每行一个图片路径，相对路径以清单文件所在目录为基准，规则与 [Runtime 批处理](../../README.md#目录manifest-与有界并发) 一致。
+3. 选择输出目录。目录批处理的输出必须位于输入目录之外；默认的 `results/qt/` 可用于上述数据目录。批处理可设置“并发数量”和“队列容量”，默认分别为 1 和 2，范围分别为 1–64 和 1–4096；两项独立设置。每个 Runtime worker 持有独立模型 session。
+4. 点击“运行检测”或“开始批处理”。配置读取、模型构建、推理和写出均在后台执行；成功读取配置后，左侧显示本次实际生效的模型和参数。运行期间显示忙碌状态，批次结束后显示总数、成功、失败及取消计数，不估算实时百分比。
+5. 批处理完成后，在“逐图结果”中选择图片，查看原图、标注图及“检测明细”。列表包含输入序号、图片、状态、目标数、耗时和说明；失败或取消项显示原因，其他成功项仍可浏览。目录结果按 Runtime 的相对路径排序，manifest 结果按声明顺序排列，不按完成先后重新排序。
+6. 通过“打开 JSON”“打开批次汇总”和“打开结果目录”查看生成文件。切换配置后再次运行即可比较 FP32/INT8。
 
-当前仅包含单图功能。输出命名、失败提示以及运行时关闭窗口的收尾由客户端负责，推理结果和写出格式由 Runtime 负责。
+图像支持滚轮缩放、左键拖动平移、工具栏放大/缩小、适应窗口和 `1:1` 查看；双击恢复适应窗口。选择检测明细行会在两张图中高亮对应框，点击图中的检测框也会选中并滚动到对应明细行。缩放和高亮只影响当前视图，不修改保存的标注 PNG 或检测坐标。图像区与结果区之间的分隔线可拖动调整；最小窗口仍保留表格数据行，长失败原因在独立只读区域中滚动查看。
 
-每次运行创建独立结果子目录，保存 `detections.json` 和 `detections.png`。修改配置、图片或输出目录会清除上一次结果，实际参数在后台成功读取配置后显示。运行中禁止重复启动；此时关闭窗口会等待本次写出完成后自动关闭，窗口仍能响应。界面展示的任务总耗时包含加载和写出，不替代 Runtime benchmark 数据。
+每次运行创建独立结果子目录。单图保存 `detections.json` 和 `detections.png`；批处理保存 `batch_summary.json`，成功项由 Runtime 写入 `items/<六位序号>.detections.json` 和对应的 `.visualized.png`。损坏图片作为逐图失败记录，不中断其他图片；配置、输入发现或输出预检失败则显示整批错误。
+
+运行中禁止重复启动和修改输入。批处理点击“停止”会请求协作停止：未开始的图片取消，已经执行的图片允许完成，随后写出最终汇总并恢复启动按钮。运行中关闭窗口也会发出停止请求，待后台任务和预览线程收尾后自动关闭，期间事件循环仍响应。单图运行中关闭则等待该图片处理和写出完成。界面展示的任务总耗时包含配置加载、session 构建和写出，不替代 Runtime benchmark 或批处理 processing wall time。
+
+修改配置、输入方式、路径或批处理参数会清除上一次显示结果。逐图浏览按需在后台读取已生成的 JSON/PNG 和原图，不再次执行推理；快速切换时只保留最新待加载项，旧请求不会覆盖当前选择。结果文件被移走或损坏时，显示预览错误并清空对应图像和明细。
 
 左侧核心参数按键值对齐显示，展开“类别与文件详情”可查看完整类别、模型和配置路径。长路径在未编辑时使用中间省略，聚焦后编辑全文，悬停可查看完整路径；结果保存提示也可悬停查看输出目录。滚动区固定使用与工作台一致的浅色背景，适配 Windows 深色系统主题。
 
@@ -48,7 +54,15 @@ cpp_infer\tools\qt.cmd run `
   -OutputDir results\qt
 ```
 
-`MainWindow` 负责控件与状态，`DetectionWorker` 通过 `moveToThread` 在后台调用 `load_runtime_contract → DetectorPipeline::run`。跨线程传递配置、检测结果和拥有像素内存的 `QImage` 值；`DetectionTableModel` 只将 Runtime 检测数组映射到表格。Qt 依赖留在 `apps/qt`，原 Runtime 公共接口未改动。批处理、缩放和结果选择联动留给第二步。
+这个启动入口仍预填单图输入；目录和 manifest 模式在窗口中选择。脚本和 Qt 可执行程序没有增加批处理 CLI 参数。
+
+## 后台适配与生命周期
+
+`DetectionWorker` 在 Qt 后台线程调用 `load_runtime_contract → DetectorPipeline::run`；`BatchWorker` 在同样的线程边界调用 `load_runtime_contract → BatchRunner::run → write_batch_summary_json`。每批新建一个 Runner，图片调度、有限队列、worker/session 复用与线程 join 全部沿用 Runtime，Qt 不增加一套推理调度系统。
+
+`BatchRunner::run()` 同步占用后台对象的事件循环，因此停止由 GUI 线程直接调用共享 `BatchTaskControl::requestStop()`，进而调用线程安全的 `BatchRunner::request_stop()`。控制对象只在发布 Runner 和读取停止状态时短暂持锁，运行过程不持锁；配置读取期间提前点击停止也会保留该请求，在 Runner 发布时补交。任务完成后再释放线程和控制对象，下一批使用新实例。
+
+`PreviewWorker` 只负责后台读取所选成功项的原图、标注图和检测 JSON。客户端最多保留一个正在读取项和一个待读取项，通过 generation 判断返回值是否仍对应当前选择。跨线程数据为配置、结果结构体和拥有像素内存的 `QImage` 值；所有控件、视图变换及表格选择操作留在 GUI 线程。Qt 依赖留在 `apps/qt`，Runtime 源码和公共接口未改动。
 
 ## Qt 适配测试
 
@@ -65,21 +79,44 @@ cpp_infer\tools\qt.cmd test -Screenshots
 
 Windows 原生渲染检查可直接运行测试程序并设置 `QT_QPA_PLATFORM=windows`、`YOLO_DEFECT_QT_TEST_HIDDEN=1`，在不弹出窗口的情况下保存 Qt 控件渲染图。可选截图还覆盖展开详情和最小窗口布局；本机已检查原生 200% 缩放，正常检测的模型、阈值和结果仍沿用上述集成测试验证。
 
+第二步增加以下验收覆盖：
+
+- 真实目录和 manifest 输入混合有效图片与损坏图片；比较 Qt 与 CLI 的输入顺序、计数、逐图状态、稳定汇总字段及成功项完整检测 JSON。耗时、进程信息和各次独立输出目录等运行相关字段不作逐字相等比较。
+- 运行期间事件循环响应、输入锁定和重复启动保护；成功项切换、失败原因、图像与表格内容对应，以及快速选择后显示最后一项。
+- 提前停止、实际图片处理期间停止、停止后重新启动，以及批处理中关闭窗口的协作收尾。
+- 缩放、`1:1`、适应窗口和检测框与明细的双向选择；可选截图覆盖批处理成功、失败、取消和最小窗口布局。
+
+Windows 现有 CLI 的批处理命令参数记录仍使用本机代码页，中文 argv 可能在汇总的 UTF-8 校验处失败。因此 CLI 对照使用 ASCII（含空格）的入口参数，同时保留中文图片名、子目录和 GUI 输出路径；GUI 中文配置及输入路径另由单图恢复测试覆盖。本轮没有修改 CLI 的参数编码逻辑。
+
 ## 文件组织与样式维护
 
 | 位置 | 用途 | 提交 Git |
 |---|---|---|
 | `cpp_infer/apps/qt/` | Qt 客户端源码、独立 CMake target 与本说明 | 是 |
-| `cpp_infer/tests/qt_client_test.cpp` | Qt 与 CLI 一致性、响应及生命周期测试 | 是 |
+| `cpp_infer/tests/qt_client_test.cpp` | 单图/批处理与 CLI 一致性、响应、停止、浏览交互及生命周期测试 | 是 |
 | `cpp_infer/tools/qt.cmd`、`qt.ps1`、`qt.local.example.psd1` | 可复用开发入口及机器配置示例 | 是 |
 | `cpp_infer/.qt.local.psd1`、`.stage1.local.psd1` | 当前机器的依赖路径 | 否 |
 | `cpp_infer/build/qt-msvc-release/` | CMake 缓存、二进制、测试日志与可再生成截图 | 否 |
-| `results/qt/` | 每次检测生成的 JSON/PNG | 否 |
+| `results/qt/` | 每次单图/批处理生成的 JSON/PNG 与批次汇总 | 否 |
 | `tmp/qt_plan/` | 本地设计讨论草稿，无运行依赖 | 否 |
 
 开发入口不依赖 `tmp/` 中的脚本、SDK 或构建缓存；Qt SDK 使用仓库外的正式安装目录。展示用截图到第三步再挑选并存入正式文档资源目录，测试截图不直接全部入库。
 
-界面组件已按职责拆分：`MainWindow` 组织布局和任务状态，`ModelInfoPanel` 展示配置，`PathEdit` 处理长路径，`ImageView` 绘制预览，`DetectionTableModel` 映射结果，`DetectionWorker` 适配后台 Runtime。配色和图标修改不需要改推理、批处理调度或结果协议。
+客户端源码按职责组织：
+
+| 组件 | 职责 |
+|---|---|
+| `MainWindow` | 控件布局、输入与运行状态、生命周期、逐图和检测项选择联动 |
+| `ModelInfoPanel`、`PathEdit` | 生效参数及可展开文件详情、长路径显示与编辑 |
+| `ImageView` | 图像绘制、缩放和平移、检测框命中与选择高亮 |
+| `DetectionTableModel`、`BatchTableModel` | 分别将检测数组、Runtime 批处理逐图结果映射到标准表格 |
+| `DetectionWorker`、`BatchWorker` | 单图/批处理 Runtime 调用与信号适配 |
+| `BatchTaskControl` | 跨 GUI 与工作线程共享的协作停止状态和 Runner 生命周期引用 |
+| `PreviewWorker` | 已有输出的按需异步读取，不执行推理 |
+| `detection_types.h`、`batch_types.h` | Qt 跨线程请求和返回值 |
+| `task_io` | 单图和批处理共用的图像读取、独立结果目录创建 |
+
+配色和图标修改不需要改推理、批处理调度或结果协议。
 
 当前仍是单套样式：QSS 位于 `main_window.cpp`，画布颜色位于 `image_view.cpp`，尚未实现动态主题切换。后续需要深浅主题或图标时，将 QSS、绘制颜色和 `.qrc` 资源集中到客户端即可；常规美化是局部 UI 工作，大幅改变操作流程或改用 QML 则是另一个范围的开发。
 
@@ -92,4 +129,15 @@ Windows x64 / MSVC 19.50 / Qt 6.8.3 / OpenCV 4.8.0 / ORT 1.19.2，Release 构建
 - `YOLO_DEFECT_BUILD_QT=OFF` 的原 Runtime 默认构建成功，相关 `contract|output|metadata|project_core` 回归 **54/54** 通过；`CORE_ONLY=ON` 与 Qt 开关同时开启时仍跳过 Qt，core smoke **1/1** 通过。
 - 开发入口整理后，从 `docs/` 工作目录调用 `qt.cmd test -Screenshots`，在新的 `cpp_infer/build/qt-msvc-release/` 完成正式 SDK 配置、构建与 QtTest **6 passed / 0 failed / 0 skipped**。清理旧临时 SDK/构建后，`qt.cmd run` 的原生窗口启动、响应、正常关闭及成功退出码均已验证。
 
-当前未改动 Runtime 源码和公共接口。Windows 演示目录打包、交互缩放、批处理及 GitHub 展示材料按原计划留待后两步。
+以上为第一步及开发入口整理时的历史验收记录。
+
+## 第二步验收记录（2026-09-27）
+
+沿用正式 Qt 6.8.3 / MSVC x64 Release 构建：
+
+- `qt.cmd test -Screenshots`：QtTest **11 passed / 0 failed / 0 skipped**，包含第一步单图 FP32/U8S8 回归及第二步目录/manifest、损坏图片、停止、关闭与交互检查。日志：`cpp_infer/build/qt-msvc-release/qt_client_test.txt`。
+- `QT_QPA_PLATFORM=windows`、`YOLO_DEFECT_QT_TEST_HIDDEN=1`：批处理浏览与停止用例 **7 passed / 0 failed / 0 skipped**，原生屏幕 DPR 为 2。验证真实鼠标点击、滚轮、拖动，以及最小窗口至少显示两行表格数据。日志：构建目录的 `qt_native_test.txt`。
+- 已检查原生成功、失败、取消和最小窗口截图，保存在构建目录 `native-visual/`；长错误文本可滚动，选框标签限制在可见区域。离屏截图位于 `screenshots/`。
+- Runtime 源码、公共接口、调度和输出协议未改动；共享 CMake 仅更新 Qt 开关的说明文字。本轮未重复第一步已完成的无 Qt 平台回归。
+
+Windows 演示目录打包、发布验收和 GitHub 展示材料属于第三步。

@@ -4,7 +4,7 @@
 
 `cpp_infer` 提供 `yolo_defect_runtime` library 和 `yolo_defect_cpp` CLI。单图、批处理、benchmark 与 profiling 共用配置、模型声明及图像处理组件；Windows、Linux x86_64 与交叉编译的 Linux AArch64 使用同一业务源码。
 
-另有可选的 [Qt 6 Widgets 单图检测客户端](apps/qt/README.md)，支持后台检测、原图与标注图预览、结果表格及文件输出。Windows 开发入口为 `tools/qt.cmd build|test|run`，机器路径按客户端说明保存在 Git 忽略的本地配置中。构建开关 `YOLO_DEFECT_BUILD_QT` 默认关闭，使用原 CLI 时无须安装 Qt。
+另有可选的 [Qt 6 Widgets 检测客户端](apps/qt/README.md)，支持单图、目录和 manifest 输入、后台检测与协作停止、批次汇总及逐图结果浏览。图像可缩放和平移，检测框与明细表双向联动；失败项显示原因。Qt 复用 `DetectorPipeline` 和 `BatchRunner`，批处理期间显示忙碌状态，完成后显示最终计数。Windows 开发入口为 `tools/qt.cmd build|test|run`，机器路径按客户端说明保存在 Git 忽略的本地配置中。构建开关 `YOLO_DEFECT_BUILD_QT` 默认关闭，使用原 CLI 时无须安装 Qt。
 
 ## 构建与依赖
 
@@ -163,6 +163,8 @@ images/val/crazing_242.jpg
 manifest 的绝对路径、缺失图片、不支持的文件、重复 canonical 输入，以及空目录会使输入发现失败。输出目录不能位于输入目录内部，输出路径也不能覆盖 config、artifact、model、manifest 或源图片。
 
 成功项写入 `items/<六位序号>.detections.json`；`--output-images` 增加同序号 PNG，`--overwrite` 允许替换已有普通输出文件。逐图失败记录在汇总中，其他任务继续执行；汇总项顺序与输入任务顺序一致。
+
+Qt 客户端使用相同的输入发现、结果顺序及有界并发实现。运行 `cpp_infer\tools\qt.cmd run` 后，在窗口选择“图片目录”或“Manifest 清单”，填写输入、输出及并发设置；GUI 默认并发数量为 1、队列容量为 2，两项独立设置。每批建立独立输出子目录，自动保存批次汇总及成功项 JSON/PNG。点击“停止”直接调用 Runtime 的线程安全协作停止接口，允许正在处理的图片完成，结束后可重新启动；Qt 不另建推理调度器。客户端的完整操作、线程适配和测试范围见 [Qt 说明](apps/qt/README.md)。
 
 `BatchSummary` schema v1 记录模型和运行条件、输入输出策略、workers/session 数、队列容量/峰值/等待、计数、计时、内存、协作停止状态与逐图结果。
 

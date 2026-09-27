@@ -10,7 +10,7 @@ option(YOLO_DEFECT_CORE_ONLY
   "Build only the dependency-free project-core portability smoke"
   OFF)
 option(YOLO_DEFECT_BUILD_QT
-  "Build the Qt 6 Widgets single-image desktop client"
+  "Build the Qt 6 Widgets single-image and batch desktop client"
   OFF)
 
 include(CTest)

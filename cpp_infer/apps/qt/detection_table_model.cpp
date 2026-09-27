@@ -54,4 +54,8 @@ void DetectionTableModel::setDetections(std::vector<Detection> detections) {
   endResetModel();
 }
 
+const Detection* DetectionTableModel::detectionAt(int row) const {
+  return row >= 0 && row < rowCount() ? &detections_[row] : nullptr;
+}
+
 }  // namespace yolo_defect_cpp::qt

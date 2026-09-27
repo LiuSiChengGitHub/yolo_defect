@@ -1,6 +1,11 @@
 find_package(Qt6 6.2 REQUIRED COMPONENTS Widgets)
 
 add_library(yolo_defect_qt_client STATIC
+  batch_types.h
+  batch_worker.cpp
+  batch_worker.h
+  batch_table_model.cpp
+  batch_table_model.h
   detection_types.h
   detection_worker.cpp
   detection_worker.h
@@ -14,6 +19,10 @@ add_library(yolo_defect_qt_client STATIC
   model_info_panel.h
   path_edit.cpp
   path_edit.h
+  preview_worker.cpp
+  preview_worker.h
+  task_io.cpp
+  task_io.h
 )
 target_compile_features(yolo_defect_qt_client PUBLIC cxx_std_17)
 target_include_directories(yolo_defect_qt_client
