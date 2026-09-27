@@ -9,6 +9,9 @@ project(yolo_defect_cpp
 option(YOLO_DEFECT_CORE_ONLY
   "Build only the dependency-free project-core portability smoke"
   OFF)
+option(YOLO_DEFECT_BUILD_QT
+  "Build the Qt 6 Widgets single-image desktop client"
+  OFF)
 
 include(CTest)
 
@@ -48,7 +51,7 @@ endif()
 
 if(YOLO_DEFECT_CORE_ONLY)
   message(STATUS
-    "YOLO_DEFECT_CORE_ONLY=ON: skipping OpenCV, ONNX Runtime, Python, and GoogleTest")
+    "YOLO_DEFECT_CORE_ONLY=ON: skipping OpenCV, ONNX Runtime, Python, GoogleTest, and Qt")
   return()
 endif()
 
@@ -327,6 +330,10 @@ function(configure_onnxruntime_runtime target_name)
 endfunction()
 
 configure_onnxruntime_runtime(yolo_defect_cpp)
+
+if(YOLO_DEFECT_BUILD_QT)
+  add_subdirectory(apps/qt)
+endif()
 
 if(BUILD_TESTING)
   include(FetchContent)

@@ -4,6 +4,8 @@
 
 `cpp_infer` 提供 `yolo_defect_runtime` library 和 `yolo_defect_cpp` CLI。单图、批处理、benchmark 与 profiling 共用配置、模型声明及图像处理组件；Windows、Linux x86_64 与交叉编译的 Linux AArch64 使用同一业务源码。
 
+另有可选的 [Qt 6 Widgets 单图检测客户端](apps/qt/README.md)，支持后台检测、原图与标注图预览、结果表格及文件输出。构建开关 `YOLO_DEFECT_BUILD_QT` 默认关闭，使用原 CLI 时无须安装 Qt。
+
 ## 构建与依赖
 
 主依赖为 C++17 编译器、CMake 3.16+、OpenCV 4.x 和 ONNX Runtime C++ SDK 1.19.2。测试使用 GoogleTest 和可导入 `cv2`、`numpy`、`onnxruntime==1.19.2` 的 Python；量化工具另外使用 `onnx`。Python 包与 C++ SDK 是独立依赖。
