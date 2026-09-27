@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Position = 0)]
-  [ValidateSet('help', 'configure', 'build', 'test', 'run')]
+  [ValidateSet('help', 'configure', 'build', 'test', 'run', 'package', 'media')]
   [string]$Action = 'help',
   [string]$QtRoot = '',
   [string]$BuildDir = '',
@@ -13,6 +13,7 @@ param(
   [string]$Config = '',
   [string]$Image = '',
   [string]$OutputDir = '',
+  [string]$PackageDir = '',
   [switch]$Screenshots,
   [string]$ScreenshotDir = ''
 )
@@ -29,16 +30,21 @@ Usage from PowerShell or CMD:
   cpp_infer\tools\qt.cmd build
   cpp_infer\tools\qt.cmd test [-Screenshots | -ScreenshotDir <directory>]
   cpp_infer\tools\qt.cmd run [-Config <file>] [-Image <file>] [-OutputDir <dir>]
+  cpp_infer\tools\qt.cmd package [-PackageDir <new-or-empty-directory>]
+  cpp_infer\tools\qt.cmd media
 
 configure/build disable BUILD_TESTING; test enables it, builds the Qt tests
 and CLI, then runs only yolo_defect_qt_client. Test requires a local GoogleTest
 source tree and the project's Python validation environment. No dependencies
 are downloaded or installed by this script. run uses an existing executable.
-help/run do not initialize or require the MSVC compiler.
+help/run do not initialize or require the MSVC compiler. package builds Release
+Qt/CLI executables and creates a portable Windows demo in dist/yolo-defect-qt.
+It refuses a nonempty destination. media captures real UI interactions and
+rebuilds the README/HTML media; it uses the same test dependencies as test.
 
 Path options:
   -QtRoot -BuildDir -OrtRoot -OpenCvDir -OpenCvBin -PythonExe -GTestSource
-  -Config -Image -OutputDir
+  -Config -Image -OutputDir -PackageDir
 
 Settings precedence:
   explicit parameter > cpp_infer/.qt.local.psd1 > .stage1.local.psd1
@@ -51,7 +57,8 @@ environment paths use the caller's working directory.
 Environment equivalents:
   YOLO_DEFECT_QT_ROOT, YOLO_DEFECT_QT_BUILD_DIR, ONNXRUNTIME_ROOT, OpenCV_DIR,
   YOLO_DEFECT_OPENCV_BIN, YOLO_DEFECT_PYTHON, YOLO_DEFECT_GTEST_SOURCE,
-  YOLO_DEFECT_QT_CONFIG, YOLO_DEFECT_QT_IMAGE, YOLO_DEFECT_QT_OUTPUT_DIR
+  YOLO_DEFECT_QT_CONFIG, YOLO_DEFECT_QT_IMAGE, YOLO_DEFECT_QT_OUTPUT_DIR,
+  YOLO_DEFECT_QT_PACKAGE_DIR
   YOLO_DEFECT_VSDEVCMD (optional custom VsDevCmd.bat for the CMD wrapper)
 
 Defaults: cpp_infer/build/qt-msvc-release; configs/default_config.txt;
@@ -133,13 +140,17 @@ function Invoke-Checked {
 
 $savedEnvironment = @{}
 foreach ($name in @('PATH', 'QT_PLUGIN_PATH', 'QT_QPA_PLATFORM',
-    'YOLO_DEFECT_QT_SCREENSHOT_DIR', 'YOLO_DEFECT_QT_TEST_FONT')) {
+    'YOLO_DEFECT_QT_SCREENSHOT_DIR', 'YOLO_DEFECT_QT_TEST_FONT',
+    'YOLO_DEFECT_QT_TEST_HIDDEN')) {
   $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name)
 }
 
 try {
   if (($Screenshots -or $ScreenshotDir) -and $Action -ne 'test') {
     throw '-Screenshots and -ScreenshotDir are options for test only.'
+  }
+  if ($PackageDir -and $Action -ne 'package') {
+    throw '-PackageDir is an option for package only.'
   }
   $sharedFile = Join-Path $sourceRoot '.stage1.local.psd1'
   if (Test-Path -LiteralPath $sharedFile -PathType Leaf) {
@@ -162,6 +173,17 @@ try {
   $resolvedBuild = Resolve-SettingPath BuildDir YOLO_DEFECT_QT_BUILD_DIR `
     (Join-Path $sourceRoot 'build\qt-msvc-release')
   if (-not $resolvedBuild) { throw 'BuildDir must not be empty.' }
+  if ($Action -eq 'package') {
+    $resolvedPackage = Resolve-SettingPath PackageDir YOLO_DEFECT_QT_PACKAGE_DIR `
+      (Join-Path $repoRoot 'dist\yolo-defect-qt')
+    if (-not $resolvedPackage) { throw 'PackageDir must not be empty.' }
+    if (Test-Path -LiteralPath $resolvedPackage) {
+      Require-Path $resolvedPackage 'PackageDir' Container
+      if (@(Get-ChildItem -LiteralPath $resolvedPackage -Force).Count -ne 0) {
+        throw "PackageDir is not empty: '$resolvedPackage'. Choose a new or empty directory."
+      }
+    }
+  }
   $resolvedOpenCvDir = Resolve-SettingPath OpenCvDir OpenCV_DIR
   $defaultOpenCvBin = ''
   if ($resolvedOpenCvDir) {
@@ -213,12 +235,12 @@ try {
     $resolvedOrt = Resolve-SettingPath OrtRoot ONNXRUNTIME_ROOT
     Require-Path $resolvedOrt 'ONNX Runtime SDK (OrtRoot)' Container
     Require-Path (Join-Path $resolvedOrt 'include\onnxruntime_cxx_api.h') 'ONNX Runtime SDK (OrtRoot)'
-    $testing = if ($Action -eq 'test') { 'ON' } else { 'OFF' }
+    $testing = if ($Action -in @('test', 'media')) { 'ON' } else { 'OFF' }
     $configureArgs = @('-S', $sourceRoot, '-B', $resolvedBuild, '-G', 'NMake Makefiles',
       '-DCMAKE_BUILD_TYPE=Release', '-DYOLO_DEFECT_BUILD_QT=ON', '-DYOLO_DEFECT_CORE_ONLY=OFF',
       "-DBUILD_TESTING=$testing", '-UQt6*_DIR', "-DCMAKE_PREFIX_PATH=$resolvedQt",
       "-DONNXRUNTIME_ROOT=$resolvedOrt", "-DOpenCV_DIR=$resolvedOpenCvDir")
-    if ($Action -eq 'test') {
+    if ($Action -in @('test', 'media')) {
       Get-Command ctest -ErrorAction Stop | Out-Null
       Require-Path (Join-Path $resolvedQt 'lib\cmake\Qt6Test\Qt6TestConfig.cmake') 'Qt Test development component'
       $resolvedGTest = Resolve-SettingPath GTestSource YOLO_DEFECT_GTEST_SOURCE `
@@ -234,7 +256,24 @@ try {
     if ($Action -ne 'configure') {
       $targets = @('yolo_defect_qt')
       if ($Action -eq 'test') { $targets += 'yolo_defect_qt_tests' }
+      if ($Action -eq 'package') { $targets += 'yolo_defect_cpp' }
+      if ($Action -eq 'media') { $targets += 'yolo_defect_qt_capture' }
       Invoke-Checked cmake (@('--build', $resolvedBuild, '--target') + $targets)
+    }
+    if ($Action -eq 'package') {
+      & (Join-Path $PSScriptRoot 'qt_package.ps1') -RepoRoot $repoRoot `
+        -BuildDir $resolvedBuild -PackageDir $resolvedPackage -QtRoot $resolvedQt `
+        -OrtRoot $resolvedOrt -OpenCvBin $resolvedOpenCvBin
+    }
+    if ($Action -eq 'media') {
+      $capture = Join-Path $resolvedBuild 'bin\yolo_defect_qt_capture.exe'
+      Require-Path $capture 'Qt media capture executable'
+      $frames = Join-Path $resolvedBuild 'demo-frames'
+      $env:QT_QPA_PLATFORM = 'windows'
+      $env:YOLO_DEFECT_QT_TEST_HIDDEN = '1'
+      Invoke-Checked $capture @('--repo-root', $repoRoot, '--frames', $frames)
+      Invoke-Checked $resolvedPython @((Join-Path $PSScriptRoot 'qt_demo_media.py'),
+        '--frames', $frames)
     }
     if ($Action -eq 'test') {
       $env:YOLO_DEFECT_QT_SCREENSHOT_DIR = $null

@@ -52,6 +52,13 @@ configure_onnxruntime_runtime(yolo_defect_qt)
 if(BUILD_TESTING)
   find_package(Qt6 6.2 QUIET COMPONENTS Test)
   if(TARGET Qt6::Test)
+    # Optional, repeatable showcase capture. It reuses the real client and
+    # Runtime; it is not part of CTest or the shipped application.
+    add_executable(yolo_defect_qt_capture EXCLUDE_FROM_ALL ../../tools/qt_demo_capture.cpp)
+    target_link_libraries(yolo_defect_qt_capture PRIVATE yolo_defect_qt_client Qt6::Test)
+    set_target_properties(yolo_defect_qt_capture PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    configure_onnxruntime_runtime(yolo_defect_qt_capture)
     add_executable(yolo_defect_qt_tests ../../tests/qt_client_test.cpp)
     target_link_libraries(yolo_defect_qt_tests
       PRIVATE yolo_defect_qt_client Qt6::Test)

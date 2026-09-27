@@ -1,0 +1,2 @@
+# Optional screenshot/GIF encoding for `qt.cmd media`; not a Runtime dependency.
+Pillow==11.3.0

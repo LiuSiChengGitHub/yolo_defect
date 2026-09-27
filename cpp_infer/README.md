@@ -1,10 +1,10 @@
 # C++ Runtime 技术手册
 
-[项目介绍](../README_zh.md) · [English overview](../README.md)
+[项目介绍](../README_zh.md) · [English overview](../README.md) · [离线演示指南](../docs/demo/index.html)
 
 `cpp_infer` 提供 `yolo_defect_runtime` library 和 `yolo_defect_cpp` CLI。单图、批处理、benchmark 与 profiling 共用配置、模型声明及图像处理组件；Windows、Linux x86_64 与交叉编译的 Linux AArch64 使用同一业务源码。
 
-另有可选的 [Qt 6 Widgets 检测客户端](apps/qt/README.md)，支持单图、目录和 manifest 输入、后台检测与协作停止、批次汇总及逐图结果浏览。图像可缩放和平移，检测框与明细表双向联动；失败项显示原因。Qt 复用 `DetectorPipeline` 和 `BatchRunner`，批处理期间显示忙碌状态，完成后显示最终计数。Windows 开发入口为 `tools/qt.cmd build|test|run`，机器路径按客户端说明保存在 Git 忽略的本地配置中。构建开关 `YOLO_DEFECT_BUILD_QT` 默认关闭，使用原 CLI 时无须安装 Qt。
+另有可选的 [Qt 6 Widgets 检测客户端](apps/qt/README.md)，支持单图、目录和 manifest 输入、后台检测与协作停止、批次汇总及逐图结果浏览。图像可缩放和平移，检测框与明细表双向联动；失败项显示原因。Qt 复用 `DetectorPipeline` 和 `BatchRunner`，批处理期间显示忙碌状态，完成后显示最终计数。Windows 开发入口为 `tools/qt.cmd build|test|run|package`，机器路径按客户端说明保存在 Git 忽略的本地配置中。构建开关 `YOLO_DEFECT_BUILD_QT` 默认关闭，使用原 CLI 时无须安装 Qt。
 
 ## 构建与依赖
 
@@ -89,6 +89,20 @@ provider = cpu
 | [`int8_config.txt`](configs/int8_config.txt) | QDQ/S8S8 `models/best.int8.qdq.onnx` |
 
 三个配置使用 CPU provider。当前模型的外部输入是 `images`、float32、NCHW `[1,3,800,800]`；输出是 `output0`、float32、BCN `[1,10,13125]`。INT8 模型内部采用量化算子，外部 I/O 保持 float32。六个类别依次为 `crazing`、`inclusion`、`patches`、`pitted_surface`、`rolled-in_scale`、`scratches`。
+
+### 模型与样例获取
+
+默认 FP32 模型 `models/best.onnx`、`data/images/val/` 的 361 张验证图片及训练校准图片均已纳入 Git。正常克隆或下载仓库后，单图样例 `data/images/val/crazing_241.jpg` 与默认配置即可使用，无须另外寻找模型下载地址。模型来源、外部契约及产物许可见对应 artifact 声明。
+
+正式 U8S8 INT8 模型 `models/best.int8.qdq.u8s8.onnx` 由本地量化生成，受 `.gitignore` 忽略。使用符合 [U8S8 协议](protocols/s2_01_ptq_protocol_r2_u8s8.json) `environment` 的 Python 环境执行：
+
+```bash
+python cpp_infer/tools/quantize_s2_01.py --protocol cpp_infer/protocols/s2_01_ptq_protocol_r2_u8s8.json
+```
+
+协议固定 `onnx=1.19.1`、`onnxruntime=1.19.2`、`numpy=2.0.2`、`cv2=4.13.0`，脚本会校验版本、模型及 180 张校准样本；已有输出时需显式增加 `--overwrite`。该环境用于复现量化，普通 FP32 客户端运行不需要这些 Python 包。生成后使用 `configs/int8_u8s8_config.txt`；Qt 完整集成验收要求 FP32 和正式 U8S8 两个模型都到位。量化产物合法性与检测正确性分别由现有量化、比较及测试工具检查，生成成功本身不等于精度验收。
+
+更换自有模型时，另建 artifact 声明并调整 `model_path`、张量契约和类别，再由新 RuntimeConfig 引用；路径按上文规则解析。当前处理器支持已声明的 YOLOv8 raw 输出及 letterbox 语义，不能仅替换为任意 ONNX 文件就期待兼容。演示包中的配置、模型和样例目录及启动方式见[离线指南](../docs/demo/index.html)。
 
 ## 图像处理与 Runtime
 

@@ -22,7 +22,7 @@ cpp_infer\tools\qt.cmd run
 
 路径优先级为：命令参数 → Qt 本地配置 → Stage-1 本地配置 → 环境变量 → 默认值。配置文件内的相对路径基于该文件所在目录，显式命令参数中的相对路径基于调用目录；默认路径基于脚本位置，因此从其他工作目录调用也可用。`-QtRoot`、`-BuildDir` 等参数及环境变量见 `help`。更换 Qt SDK、编译器或生成器时使用新的构建目录，避免复用不兼容缓存。
 
-脚本只设置当前子进程的 DLL 和插件搜索路径，不修改系统环境变量。ONNX Runtime DLL 由已有 CMake 逻辑复制到 `bin`，Qt 和 OpenCV 从已安装 SDK 加载。这是开发入口，演示目录打包属于计划第三步。
+脚本只设置当前子进程的 DLL 和插件搜索路径，不修改系统环境变量。ONNX Runtime DLL 由已有 CMake 逻辑复制到 `bin`，Qt 和 OpenCV 从已安装 SDK 加载。这是开发入口；独立演示目录使用下述 `package` 入口。
 
 `YOLO_DEFECT_BUILD_QT` 默认 `OFF`；原 CLI 构建命令无须更改。`YOLO_DEFECT_CORE_ONLY=ON` 会在查找 Qt 和其他 Runtime 依赖前返回，即使同时指定 Qt 开关也仅构建 project-core。
 
@@ -95,12 +95,17 @@ Windows 现有 CLI 的批处理命令参数记录仍使用本机代码页，中�
 | `cpp_infer/apps/qt/` | Qt 客户端源码、独立 CMake target 与本说明 | 是 |
 | `cpp_infer/tests/qt_client_test.cpp` | 单图/批处理与 CLI 一致性、响应、停止、浏览交互及生命周期测试 | 是 |
 | `cpp_infer/tools/qt.cmd`、`qt.ps1`、`qt.local.example.psd1` | 可复用开发入口及机器配置示例 | 是 |
+| `cpp_infer/tools/qt_package.ps1`、`qt_package/` | 可移动演示目录生成器与启动/验证模板 | 是 |
+| `cpp_infer/tools/qt_demo_capture.cpp`、`qt_demo_media.py`、`requirements-qt-media.txt` | 真实界面捕获、媒体编码与可选依赖 | 是 |
+| `docs/demo/`、`docs/assets/qt/`、`.github/workflows/qt-demo-pages.yml` | HTML 指南、精选媒体与手动发布配置 | 是 |
 | `cpp_infer/.qt.local.psd1`、`.stage1.local.psd1` | 当前机器的依赖路径 | 否 |
 | `cpp_infer/build/qt-msvc-release/` | CMake 缓存、二进制、测试日志与可再生成截图 | 否 |
+| `dist/yolo-defect-qt/` | 可重新生成的 Windows 成品目录及验证输出 | 否 |
+| `docs/me/Qt.md` | 用户教材和 AI 交接补充，个人资料 | 否 |
 | `results/qt/` | 每次单图/批处理生成的 JSON/PNG 与批次汇总 | 否 |
 | `tmp/qt_plan/` | 本地设计讨论草稿，无运行依赖 | 否 |
 
-开发入口不依赖 `tmp/` 中的脚本、SDK 或构建缓存；Qt SDK 使用仓库外的正式安装目录。展示用截图到第三步再挑选并存入正式文档资源目录，测试截图不直接全部入库。
+开发入口不依赖 `tmp/` 中的脚本、SDK 或构建缓存；Qt SDK 使用仓库外的正式安装目录。正式演示素材保存在 `docs/assets/qt/`，测试截图和原始捕获帧留在构建目录，不直接全部入库。
 
 客户端源码按职责组织：
 
@@ -141,4 +146,47 @@ Windows x64 / MSVC 19.50 / Qt 6.8.3 / OpenCV 4.8.0 / ORT 1.19.2，Release 构建
 - 结果区紧凑布局调整后，上述离屏与原生验收通过。在 200% 缩放、1280×730 逻辑窗口下，逐图列表可显示 5 行完整数据（表体 152 px、行高 28 px）；980×700 窗口可显示 4 行完整数据。最小窗口的失败状态另经原生截图检查，窗口保持 980×700，错误区与底部操作正常显示。截图：`batch_browse_compact.png`、`batch_browse_minimum.png`、`batch_failure_minimum.png`；补充日志：`qt_layout_test.txt`。
 - Runtime 源码、公共接口、调度和输出协议未改动；共享 CMake 仅更新 Qt 开关的说明文字。本轮未重复第一步已完成的无 Qt 平台回归。
 
-Windows 演示目录打包、发布验收和 GitHub 展示材料属于第三步。
+## Windows 演示交付与展示素材
+
+演示目录地图、启动与操作顺序集中在 [HTML 演示指南](../../../docs/demo/index.html)。克隆仓库后直接在浏览器打开；GitHub 页面默认显示 HTML 源码，在线浏览需要按指南手动发布 Pages。
+
+```powershell
+# 在已配置 SDK 的开发环境打包，无需 Python / GoogleTest
+cpp_infer\tools\qt.cmd package
+# 默认 dist/yolo-defect-qt；目标必须是新目录或空目录
+cpp_infer\tools\qt.cmd package -PackageDir dist/yolo-defect-qt-new
+# 对成品包运行依赖和真实检测检查
+powershell -NoProfile -ExecutionPolicy Bypass -File dist/yolo-defect-qt/verify.ps1
+```
+
+`package` 构建 Qt 和 CLI Release，用 `windeployqt` 收集 Qt，再收集 OpenCV/ORT 的实际 DLL 依赖及 app-local MSVC CRT。成品包含 `run.cmd`、`verify.ps1`、相对路径配置/模型声明、FP32 模型、可用时的 U8S8 模型、六类各一张样例、manifest、HTML/媒体及原发行版许可材料。模型/样例来源和 INT8 生成方式见 [模型与样例](../../README.md#模型与样例获取)。
+
+打包不覆盖非空目录，不运行 VC 安装器，不修改系统环境；成品和验证输出由 Git 忽略。`verify.ps1` 将 PATH 限制为包目录和 Windows 系统目录，运行 FP32/可选 U8S8 单图、六图 manifest 批处理及真实 Windows QPA 初始化。它是本机依赖隔离检查，不等于干净 Windows 虚拟机验收，也不替代 Qt 集成测试。
+
+### 可重复更新截图与 GIF
+
+```powershell
+# 需要 Qt Test、既有测试依赖，以及 Python Pillow
+python -m pip install -r cpp_infer/tools/requirements-qt-media.txt
+cpp_infer\tools\qt.cmd media
+# 已有原始帧时只重新编码
+python cpp_infer/tools/qt_demo_media.py --frames cpp_infer/build/qt-msvc-release/demo-frames
+```
+
+可选 target `yolo_defect_qt_capture` 通过真实控件与 Runtime 完成六图检测、选择缩放、损坏图片和成功项继续浏览，使用独立 QSettings；它不属于 CTest，也不进入交付目录。`qt_demo_capture.cpp` 保存原始截图和帧时长清单到构建目录，`qt_demo_media.py` 生成 `docs/assets/qt/` 的 PNG/WebP/GIF。12 秒左右的 GIF 是实际状态序列，停留时间经过编排，不能用来推断推理性能。
+
+HTML、根 README 和成品包共用稳定素材路径。颜色/字体/图标变化后重新运行 `media`、检查画面、在新目录 `package` 即可；控件对象名或工作流程变化时同步维护捕获程序。可选连续录屏及视频替换方法见 HTML。`docs/me/Qt.md` 为本地学习/AI 交接补充，沿用个人笔记的 Git 忽略规则。
+
+`.github/workflows/qt-demo-pages.yml` 仅通过 `workflow_dispatch` 手动发布 `docs/demo/index.html` 与指定 Qt 媒体。不会发布整个 `docs/`、模型或私人教材；仓库 Pages 的 Source 需先设为 GitHub Actions。本轮准备配置和素材，不执行远端发布。
+
+## 第三步验收记录（2026-09-27）
+
+| 检查 | 本轮结果与证据 |
+|---|---|
+| Qt 最终回归 | `qt.cmd test -Screenshots`：QtTest **11 passed / 0 failed / 0 skipped**。日志 `build/qt-msvc-release/qt_client_test.txt`；涵盖 GUI/CLI 一致性与任务生命周期。QtTest 计数包含初始化/清理，不等同 11 个独立业务场景。 |
+| 原 Runtime/CLI | 在新目录 `build/qt-disabled-verification/` 显式 `YOLO_DEFECT_BUILD_QT=OFF` 配置、构建，并运行全部 CTest：**155 通过、2 跳过、0 失败**。跳过两项目录符号链接测试，原因是本机缺少创建符号链接权限。日志在该构建的 `Testing/Temporary/LastTest.log`。 |
+| 媒体与真实交互 | `qt.cmd media` 成功捕获 6 个真实状态（Windows QPA、DPR 2），生成 PNG、WebP 和 **11.8 秒 GIF**；已检查实际客户端截图。原始帧及清单在 `build/qt-msvc-release/demo-frames/`。 |
+| Windows 成品包 | `dist/yolo-defect-qt/` 包含 app-local CRT、Qt/OpenCV/ORT、FP32/U8S8、六张样例与完整 HTML 媒体。`verify.ps1` 在限制 PATH 后完成两模型单图、六图 manifest 与 Qt Windows QPA 启动；结果位于包内 `outputs/verify_*/`。没有在干净虚拟机运行，Qt 启动探针也不代替 GUI 集成测试。 |
+| 文档与网页 | 中英文 README、本地链接、HTML 资源及页内锚点、JavaScript 语法检查通过。浏览器工具阻止 `file://`，本轮未进行 HTML 浏览器视觉验收；请本地打开 `docs/demo/index.html` 确认。Pages 工作流已准备，未推送或部署。 |
+
+本轮仅扩展 Qt 的可选展示目标和开发工具，没有修改 Runtime 源码、输出协议或跨平台实现；未重复无关性能实验与 AArch64/QEMU 验证。

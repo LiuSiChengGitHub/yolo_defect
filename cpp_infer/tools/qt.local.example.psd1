@@ -17,4 +17,5 @@
   # Config = 'configs\default_config.txt'
   # Image = '..\data\images\val\crazing_241.jpg'
   # OutputDir = '..\results\qt'
+  # PackageDir = '..\dist\yolo-defect-qt'
 }

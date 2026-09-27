@@ -8,6 +8,8 @@ if /I "%~1"=="run" goto :run_without_vs
 if /I "%~1"=="configure" goto :prepare_vs
 if /I "%~1"=="build" goto :prepare_vs
 if /I "%~1"=="test" goto :prepare_vs
+if /I "%~1"=="package" goto :prepare_vs
+if /I "%~1"=="media" goto :prepare_vs
 goto :run_without_vs
 
 :prepare_vs

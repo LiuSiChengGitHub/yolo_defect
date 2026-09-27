@@ -1,0 +1,32 @@
+{
+  "source": "cpp_infer/tools/qt_demo_capture.cpp",
+  "regenerate": "cpp_infer\\tools\\qt.cmd media",
+  "kind": "Actual Qt widget captures with edited timing; not realtime video or performance evidence.",
+  "frames": [
+    {
+      "duration_ms": 1600,
+      "file": "01-ready.png"
+    },
+    {
+      "duration_ms": 1000,
+      "file": "02-running.png"
+    },
+    {
+      "duration_ms": 2400,
+      "file": "03-results.png"
+    },
+    {
+      "duration_ms": 2200,
+      "file": "04-inspect.png"
+    },
+    {
+      "duration_ms": 2400,
+      "file": "05-failure.png"
+    },
+    {
+      "duration_ms": 2200,
+      "file": "06-browse.png"
+    }
+  ],
+  "device_pixel_ratio": 2
+}
