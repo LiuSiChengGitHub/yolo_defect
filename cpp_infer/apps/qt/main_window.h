@@ -88,7 +88,6 @@ class MainWindow : public QMainWindow {
   QLabel* status_message_ = nullptr;
   QLabel* state_badge_ = nullptr;
   QLabel* result_summary_ = nullptr;
-  QLabel* output_details_ = nullptr;
   QLabel* batch_summary_ = nullptr;
   QLabel* item_details_ = nullptr;
   QPlainTextEdit* item_error_ = nullptr;

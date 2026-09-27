@@ -629,7 +629,18 @@ class QtClientTest : public QObject {
         QTRY_VERIFY(itemError->toPlainText().contains(error));
         QCOMPARE(table->model()->rowCount(), 0);
         QVERIFY(annotated->imageSize().isEmpty());
-        if (!manifestInput) QVERIFY(saveOptionalScreenshot(window, QStringLiteral("batch_failure")));
+        if (!manifestInput) {
+          QVERIFY(saveOptionalScreenshot(window, QStringLiteral("batch_failure")));
+          if (!qEnvironmentVariableIsEmpty("YOLO_DEFECT_QT_SCREENSHOT_DIR")) {
+            const QSize previousSize = window.size();
+            window.resize(980, 700);
+            QVERIFY(saveOptionalScreenshot(window, QStringLiteral("batch_failure_minimum")));
+            qInfo() << "Minimum failed batch list:" << window.size()
+                    << "viewport height" << batchTable->viewport()->height()
+                    << "row height" << batchTable->rowHeight(0);
+            window.resize(previousSize);
+          }
+        }
       }
     }
 
@@ -805,6 +816,21 @@ class QtClientTest : public QObject {
       return;
     }
     QVERIFY(saveOptionalScreenshot(window, QStringLiteral("batch_cancelled")));
+    if (stopPhase == QStringLiteral("running") &&
+        !qEnvironmentVariableIsEmpty("YOLO_DEFECT_QT_SCREENSHOT_DIR")) {
+      const QSize previousSize = window.size();
+      window.resize(1280, 730);
+      QVERIFY(saveOptionalScreenshot(window, QStringLiteral("batch_browse_compact")));
+      qInfo() << "Compact batch list:" << window.size()
+              << "viewport height" << table->viewport()->height()
+              << "row height" << table->rowHeight(0);
+      window.resize(980, 700);
+      QVERIFY(saveOptionalScreenshot(window, QStringLiteral("batch_browse_minimum")));
+      qInfo() << "Minimum batch list:" << window.size()
+              << "viewport height" << table->viewport()->height()
+              << "row height" << table->rowHeight(0);
+      window.resize(previousSize);
+    }
     QVERIFY(run->isEnabled());
     const QString restartInput = temporary.filePath(QStringLiteral("restart input"));
     const QString restartOutput = temporary.filePath(QStringLiteral("restart output"));

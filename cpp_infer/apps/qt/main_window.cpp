@@ -106,7 +106,7 @@ void MainWindow::buildUi() {
     QLabel#sectionTitle { font-size: 15px; font-weight: 600; color: #162e48; }
     QLabel#sectionNumber { color: #127e6b; background: #e6f3ef; border-radius: 6px; font-size: 11px; font-weight: 600; }
     QLabel#fieldLabel { color: #61758a; font-size: 12px; font-weight: 600; }
-    QLabel#muted, QLabel#outputDetails { color: #6a7d92; font-size: 12px; }
+    QLabel#muted { color: #6a7d92; font-size: 12px; }
     QLabel#itemDetails { color: #607489; font-size: 12px; }
     QLabel#itemDetails[state="error"] { color: #b13737; }
     QLabel#batchSummary { color: #48627b; font-size: 12px; }
@@ -136,11 +136,12 @@ void MainWindow::buildUi() {
     QPushButton#stopButton { color: #a45830; border-color: #ead7c9; }
     QPushButton#stopButton:disabled { color: #a1acb8; border-color: #e0e6ec; }
     QPushButton#viewAction { padding: 3px 7px; font-size: 11px; }
+    QPushButton#openSummaryButton, QPushButton#openJsonButton, QPushButton#openOutputButton { padding: 6px 10px; font-size: 12px; }
     QTabWidget::pane { border: none; background: white; }
     QTabBar::tab { padding: 7px 14px; color: #728396; border-bottom: 2px solid transparent; }
     QTabBar::tab:selected { color: #127e6b; border-bottom-color: #127e6b; }
     QTableView { border: none; background: white; alternate-background-color: #f5f8fb; gridline-color: #edf1f5; selection-background-color: #ddf2ec; selection-color: #185449; }
-    QHeaderView::section { border: none; border-bottom: 1px solid #e2e8ef; background: #f4f7fa; color: #607489; padding: 8px; font-size: 12px; }
+    QHeaderView::section { border: none; border-bottom: 1px solid #e2e8ef; background: #f4f7fa; color: #607489; padding: 6px 8px; font-size: 12px; }
     QProgressBar { border: none; background: #e8eef3; border-radius: 2px; max-height: 4px; }
     QProgressBar::chunk { background: #209d87; }
     QScrollArea#sidebarScroll { border: none; background: #eef2f6; }
@@ -150,6 +151,7 @@ void MainWindow::buildUi() {
     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
     QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
     QSplitter::handle { background: #eef2f6; }
+    QSplitter::handle:hover { background: #c4d1dc; }
   )"));
   auto* central = new QWidget(this);
   central->setObjectName("workbenchSurface");
@@ -299,7 +301,9 @@ void MainWindow::buildUi() {
   side->addStretch();
 
   auto* workspace = new QSplitter(Qt::Vertical, central);
+  workspace->setObjectName("workspaceSplitter");
   workspace->setChildrenCollapsible(false);
+  workspace->setHandleWidth(8);
   auto* previews = new QWidget(workspace);
   auto* preview_layout = new QHBoxLayout(previews);
   preview_layout->setContentsMargins(0, 0, 0, 0);
@@ -336,19 +340,21 @@ void MainWindow::buildUi() {
 
   auto* results = card(workspace);
   auto* result_layout = new QVBoxLayout(results);
-  result_layout->setContentsMargins(16, 14, 16, 14);
+  result_layout->setContentsMargins(16, 12, 16, 12);
+  result_layout->setSpacing(6);
   auto* result_header = new QHBoxLayout;
+  result_header->setSpacing(12);
   result_header->addWidget(label(tr("任务结果"), "sectionTitle", results));
-  result_summary_ = label({}, "resultSummary", results);
-  result_header->addWidget(result_summary_, 1, Qt::AlignRight);
-  result_layout->addLayout(result_header);
   batch_summary_ = label({}, "batchSummary", results);
-  result_layout->addWidget(batch_summary_);
+  result_header->addWidget(batch_summary_, 1);
+  result_summary_ = label({}, "resultSummary", results);
+  result_header->addWidget(result_summary_, 0, Qt::AlignRight);
+  result_layout->addLayout(result_header);
   result_tabs_ = new QTabWidget(results);
   result_tabs_->setObjectName("resultTabs");
   // QTabWidget can otherwise shrink its page below QTableView's minimum at
-  // high DPI. Keep room for a header and actual rows in the smallest window.
-  result_tabs_->setMinimumHeight(150);
+  // high DPI. Reserve space for the tabs, header and several complete rows.
+  result_tabs_->setMinimumHeight(200);
   batch_table_ = new QTableView(result_tabs_);
   batch_table_->setObjectName("batchTable");
   batch_model_ = new BatchTableModel(batch_table_);
@@ -358,6 +364,9 @@ void MainWindow::buildUi() {
   batch_table_->setSelectionMode(QAbstractItemView::SingleSelection);
   batch_table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
   batch_table_->setTextElideMode(Qt::ElideMiddle);
+  batch_table_->setWordWrap(false);
+  batch_table_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+  batch_table_->verticalHeader()->setDefaultSectionSize(28);
   batch_table_->verticalHeader()->hide();
   batch_table_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   batch_table_->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
@@ -375,6 +384,9 @@ void MainWindow::buildUi() {
   table->setSelectionBehavior(QAbstractItemView::SelectRows);
   table->setSelectionMode(QAbstractItemView::SingleSelection);
   table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+  table->setWordWrap(false);
+  table->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+  table->verticalHeader()->setDefaultSectionSize(28);
   table->verticalHeader()->hide();
   table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
   table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
@@ -389,19 +401,14 @@ void MainWindow::buildUi() {
   item_details_ = label({}, "itemDetails", results);
   item_details_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
   item_details_->setTextInteractionFlags(Qt::TextSelectableByMouse);
-  result_layout->addWidget(item_details_);
   item_error_ = new QPlainTextEdit(results);
   item_error_->setObjectName("itemError");
   item_error_->setReadOnly(true);
   item_error_->setFixedHeight(58);
   item_error_->hide();
   result_layout->addWidget(item_error_);
-  output_details_ = label({}, "outputDetails", results);
-  output_details_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-  output_details_->setTextInteractionFlags(Qt::TextSelectableByMouse);
-  result_layout->addWidget(output_details_);
   auto* output_actions = new QHBoxLayout;
-  output_actions->addStretch();
+  output_actions->addWidget(item_details_, 1);
   open_summary_button_ = new QPushButton(tr("打开批次汇总"), results);
   open_summary_button_->setObjectName("openSummaryButton");
   open_json_button_ = new QPushButton(tr("打开 JSON"), results);
@@ -419,8 +426,10 @@ void MainWindow::buildUi() {
   connect(open_output_button_, &QPushButton::clicked, this,
           [this] { openPath(completed_directory_); });
   workspace->addWidget(results);
-  workspace->setStretchFactor(0, 3);
-  workspace->setStretchFactor(1, 2);
+  workspace->setStretchFactor(0, 1);
+  workspace->setStretchFactor(1, 1);
+  workspace->setSizes({220, 340});
+  workspace->handle(1)->setToolTip(tr("上下拖动，调整图像与结果列表的高度"));
   body->addWidget(workspace, 1);
   root->addLayout(body, 1);
 
@@ -489,8 +498,7 @@ void MainWindow::invalidateResult() {
   annotated_view_->clear(tr("检测完成后显示标注图"));
   result_summary_->setText(tr("尚未检测"));
   model_panel_->reset();
-  output_details_->clear();
-  output_details_->setToolTip({});
+  open_output_button_->setToolTip({});
   item_details_->clear();
   item_details_->setToolTip({});
   item_error_->clear();
@@ -638,8 +646,7 @@ void MainWindow::showResult(const DetectionResponse& response) {
   if (response.result.outputs.json_path) completed_json_ = from_path(*response.result.outputs.json_path);
   const auto count = response.result.detection_result.detections.size();
   result_summary_->setText(count == 0 ? tr("未检出缺陷") : tr("检出 %1 个目标").arg(count));
-  output_details_->setText(tr("结果已保存  ·  JSON + PNG"));
-  output_details_->setToolTip(QDir::toNativeSeparators(completed_directory_));
+  open_output_button_->setToolTip(QDir::toNativeSeparators(completed_directory_));
   open_output_button_->setEnabled(true);
   open_json_button_->setEnabled(!completed_json_.isEmpty());
   state_badge_->setProperty("state", "ready");
@@ -665,8 +672,7 @@ void MainWindow::showBatchResult(const BatchDetectionResponse& response) {
       .arg(counts.discovered).arg(counts.succeeded).arg(counts.failed).arg(counts.cancelled));
   batch_model_->setItems(response.summary.items);
   result_tabs_->setCurrentIndex(0);
-  output_details_->setText(tr("批次已保存 · 汇总 JSON + 逐图 JSON / PNG"));
-  output_details_->setToolTip(QDir::toNativeSeparators(completed_directory_));
+  open_output_button_->setToolTip(QDir::toNativeSeparators(completed_directory_));
   open_output_button_->setEnabled(true);
   open_summary_button_->setEnabled(true);
   QString completion;
