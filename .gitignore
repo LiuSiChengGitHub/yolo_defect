@@ -61,6 +61,7 @@ results/*
 temp_eval*/
 .claude/
 docs/me/
+docs/archive/
 tmp/
 
 # ---------- Machine-local C++ acceptance environment ----------
