@@ -18,6 +18,15 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[2] / "docs/assets/qt")
     args = parser.parse_args()
     manifest = json.loads((args.frames / "frames.json").read_text(encoding="utf-8"))
+    expected = [
+        ("01-ready.png", "ready"), ("02-running.png", "running"),
+        ("03-results.png", "succeeded"), ("04-inspect.png", "succeeded"),
+        ("05-browse.png", "succeeded"), ("06-overview.png", "succeeded"),
+    ]
+    if [(item["file"], item.get("state")) for item in manifest["frames"]] != expected:
+        raise ValueError("Regenerate the six-frame successful walkthrough with qt.cmd media")
+    if manifest.get("batch") != {"total": 6, "succeeded": 6, "failed": 0, "cancelled": 0}:
+        raise ValueError("The showcase batch must contain six successful images and no failures")
     args.output.mkdir(parents=True, exist_ok=True)
     frames, durations = [], []
     for item in manifest["frames"]:
@@ -40,6 +49,7 @@ def main() -> None:
         "regenerate": "cpp_infer\\tools\\qt.cmd media",
         "kind": "Actual Qt widget captures with edited timing; not realtime video or performance evidence.",
         "frames": manifest["frames"],
+        "batch": manifest["batch"],
         "device_pixel_ratio": manifest["device_pixel_ratio"],
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Generated {len(frames)} real UI frames, workbench.png and walkthrough.gif in {args.output}")

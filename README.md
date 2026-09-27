@@ -4,20 +4,19 @@
 
 A C++17 system for industrial surface-defect detection, with a Qt desktop workbench and a reusable inference Runtime. Built with CMake, OpenCV and ONNX Runtime, it covers model contracts, FP32/INT8 inference, bounded batch processing, correctness checks and performance analysis.
 
-**[Visual demo · available after Pages deployment](https://LiuSiChengGitHub.github.io/yolo_defect/)** · **[Offline demo guide](docs/demo/index.html)** · **[Qt setup](cpp_infer/apps/qt/README.md)** · **[C++ technical manual](cpp_infer/README.md)**
+**[Visual demo · available after Pages deployment](https://LiuSiChengGitHub.github.io/yolo_defect/demo/index.en.html)** · **[Offline demo guide](docs/demo/index.en.html)** · **[Qt setup](cpp_infer/apps/qt/README.md)** · **[C++ technical manual](cpp_infer/README.md)**
 
 ![Qt industrial defect inspection workbench](docs/assets/qt/workbench.png)
 
-<details>
-<summary>Short walkthrough: detection, batch results and image inspection</summary>
+**See the workflow in motion**
+
+Select six sample images → run a batch → browse successful results → inspect linked boxes and table rows.
 
 ![Qt workbench walkthrough](docs/assets/qt/walkthrough.gif)
 
-The walkthrough uses the real Qt client. After UI changes, run `cpp_infer\tools\qt.cmd media` with the test dependencies and Pillow installed to regenerate the screenshot and animation. The [demo guide](docs/demo/index.html) explains the capture and refresh workflow.
+The walkthrough uses the real Qt client. After UI changes, run `cpp_infer\tools\qt.cmd media` with the test dependencies and Pillow installed to regenerate the screenshot and animation. The [demo guide](docs/demo/index.en.html) explains the capture and refresh workflow.
 
-</details>
-
-GitHub displays the offline HTML link as source. Download or clone the repository and open `docs/demo/index.html` in a browser, or use the Pages link after deployment. The guide needs no web service. The current desktop UI and visual guide are in Chinese.
+GitHub displays the offline HTML link as source. Download or clone the repository and open `docs/demo/index.en.html` in a browser, or use the Pages link after deployment. English and Chinese guides share the same media; the current desktop UI is in Chinese.
 
 ## What the project demonstrates
 
@@ -76,7 +75,7 @@ To assemble a relocatable Windows demo directory from the configured development
 .\cpp_infer\tools\qt.cmd package
 ```
 
-The default output is `dist/yolo-defect-qt/`; `-PackageDir <new-empty-directory>` selects another destination. Open its `demo/index.html` for instructions and use `run.cmd` to launch. The [offline guide](docs/demo/index.html) describes bundled files, dependencies and demonstration steps.
+The default output is `dist/yolo-defect-qt/`; `-PackageDir <new-empty-directory>` selects another destination. Open its `demo/index.en.html` for instructions and use `run.cmd` to launch. The [offline guide](docs/demo/index.en.html) describes bundled files, dependencies and demonstration steps.
 
 ### CLI on Windows / Linux
 
@@ -148,7 +147,7 @@ Benchmark uses a separate unprofiled CPU session, excludes warmup and reports st
 
 | Read this | For |
 |---|---|
-| [Visual demo guide](docs/demo/index.html) | Demonstration directory, launch/use instructions and media updates |
+| [Visual demo guide](docs/demo/index.en.html) | Demonstration directory, launch/use instructions and media updates |
 | [Qt client engineering guide](cpp_infer/apps/qt/README.md) | Setup, interaction, thread ownership, lifecycle, tests and UI maintenance |
 | [C++ Runtime manual](cpp_infer/README.md) | Dependencies, model setup, configuration, CLI, output schemas and analysis |
 | [Default configuration](cpp_infer/configs/default_config.txt) / [model declaration](cpp_infer/artifacts/yolov8_neu_det.artifact.txt) | Concrete Runtime and model-contract examples |

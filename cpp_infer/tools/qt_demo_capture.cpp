@@ -1,6 +1,7 @@
 // Real Qt widget captures for documentation. No synthetic inference results.
 #include "main_window.h"
 #include "image_view.h"
+#include "batch_table_model.h"
 
 #include <QApplication>
 #include <QCommandLineParser>
@@ -87,21 +88,28 @@ int main(int argc, char** argv) {
     auto* error = window.findChild<QPlainTextEdit*>("itemError");
     require(run && batch && details && tabs && original && annotated && error, "Missing capture widget");
     QJsonArray sequence;
-    const auto capture = [&](const QString& name, int duration) {
+    const auto capture = [&](const QString& name, int duration, const QString& state) {
       QTest::qWait(50);
       require(window.grab().save(frames.filePath(name + ".png")), "Cannot save capture");
-      sequence.append(QJsonObject{{"file", name + ".png"}, {"duration_ms", duration}});
+      sequence.append(QJsonObject{{"file", name + ".png"}, {"duration_ms", duration},
+                                  {"state", state}});
     };
-    capture("01-ready", 1600);
+    capture("01-ready", 1600, "ready");
     QSignalSpy finished(&window, &MainWindow::taskFinished);
     QTest::mouseClick(run, Qt::LeftButton);
     require(window.isBusy(), "Task did not start");
-    capture("02-running", 1000);
+    capture("02-running", 1000, "running");
     waitUntil([&] { return finished.count() == 1; });
     require(finished.at(0).at(0).toBool() && batch->model()->rowCount() == 6,
             "Showcase batch failed");
+    const auto* batchModel = static_cast<yolo_defect_cpp::qt::BatchTableModel*>(batch->model());
+    for (int row = 0; row < batchModel->rowCount(); ++row) {
+      const auto* item = batchModel->itemAt(row);
+      require(item && item->status == yolo_defect_cpp::BatchItemStatus::kSucceeded
+                  && item->error.empty(), "Showcase requires every image to succeed");
+    }
     waitUntil([&] { return !original->imageSize().isEmpty() && details->model()->rowCount() > 0; });
-    capture("03-results", 2400);
+    capture("03-results", 2400, "succeeded");
     tabs->setCurrentIndex(1);
     details->selectRow(0);
     original->actualSize();
@@ -109,29 +117,26 @@ int main(int argc, char** argv) {
     original->zoomIn();
     annotated->zoomIn();
     require(annotated->selectedDetection() == 0, "Selection did not reach the image view");
-    capture("04-inspect", 2200);
-    // A deliberately damaged input exercises the actual Runtime failure path.
-    QFile damaged(broken);
-    require(damaged.open(QIODevice::WriteOnly), "Cannot write damaged fixture");
-    damaged.write("Intentional damaged image for the reproducible Qt demonstration.\n");
-    damaged.close();
-    configure();
-    QTest::mouseClick(run, Qt::LeftButton);
-    waitUntil([&] { return finished.count() == 2; });
-    require(!finished.at(1).at(0).toBool() && batch->model()->rowCount() == 7,
-            "Expected one real per-image failure");
-    batch->selectRow(6);
-    waitUntil([&] { return !error->isHidden() && !error->toPlainText().isEmpty(); });
-    capture("05-failure", 2400);
+    capture("04-inspect", 2200, "succeeded");
+    tabs->setCurrentIndex(0);
     batch->selectRow(5);
     waitUntil([&] { return original->property("sourcePath").toString().endsWith("scratches_241.jpg")
-                           && !original->imageSize().isEmpty(); });
-    capture("06-browse", 2200);
+                           && !original->imageSize().isEmpty() && !annotated->imageSize().isEmpty(); });
+    require(error->isHidden(), "Successful preview must not show an error");
+    capture("05-browse", 2400, "succeeded");
+    batch->selectRow(0);
+    waitUntil([&] { return original->property("sourcePath").toString().endsWith("crazing_241.jpg")
+                           && !original->imageSize().isEmpty() && !annotated->imageSize().isEmpty(); });
+    original->fitToWindow();
+    annotated->fitToWindow();
+    require(error->isHidden(), "Successful overview must not show an error");
+    capture("06-overview", 2200, "succeeded");
     QFile manifest(frames.filePath("frames.json"));
     require(manifest.open(QIODevice::WriteOnly), "Cannot write frame manifest");
     manifest.write(QJsonDocument(QJsonObject{
       {"description", "Real Qt client states; edited presentation timing, not a realtime recording."},
       {"logical_width", window.width()}, {"logical_height", window.height()},
+      {"batch", QJsonObject{{"total", 6}, {"succeeded", 6}, {"failed", 0}, {"cancelled", 0}}},
       {"device_pixel_ratio", window.devicePixelRatioF()}, {"frames", sequence}}).toJson());
     window.close();
     return 0;

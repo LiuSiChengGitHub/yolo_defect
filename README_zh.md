@@ -4,18 +4,17 @@
 
 基于 C++17、CMake、OpenCV 和 ONNX Runtime 的工业表面缺陷检测系统，包含 Qt 桌面工作台和可复用的推理 Runtime，覆盖模型契约、FP32/INT8 推理、有界批处理、正确性校验及性能分析。
 
-**[可视化演示 · Pages 发布后可访问](https://LiuSiChengGitHub.github.io/yolo_defect/)** · **[离线演示指南](docs/demo/index.html)** · **[Qt 运行说明](cpp_infer/apps/qt/README.md)** · **[C++ 技术手册](cpp_infer/README.md)**
+**[可视化演示 · Pages 发布后可访问](https://LiuSiChengGitHub.github.io/yolo_defect/demo/)** · **[离线演示指南](docs/demo/index.html)** · **[Qt 运行说明](cpp_infer/apps/qt/README.md)** · **[C++ 技术手册](cpp_infer/README.md)**
 
 ![Qt 工业缺陷检测工作台](docs/assets/qt/workbench.png)
 
-<details>
-<summary>短演示：检测、批次结果与图像查看</summary>
+**跟着操作流程看一次完整检测**
+
+选择六张样例 → 启动批处理 → 浏览成功结果 → 联动查看检测框与结果表格。
 
 ![Qt 工作台操作演示](docs/assets/qt/walkthrough.gif)
 
 演示来自真实 Qt 客户端。UI 美化后，在已配置测试依赖及 Pillow 的环境中运行 `cpp_infer\tools\qt.cmd media`，即可重新生成截图和动图；捕获与更新流程见[演示指南](docs/demo/index.html)。
-
-</details>
 
 GitHub 会将离线 HTML 链接显示为源码。下载或克隆仓库后，用浏览器打开 `docs/demo/index.html` 即可查看；完成 Pages 发布后也可使用在线链接。指南不依赖 Web 服务。
 

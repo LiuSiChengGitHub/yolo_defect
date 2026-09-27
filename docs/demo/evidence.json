@@ -1,0 +1,367 @@
+{
+  "schema_version": 1,
+  "generator": "cpp_infer/tools/demo_charts.py",
+  "environments": {
+    "quantization_benchmark": {
+      "zh": "Windows x86_64 · C++ Release · ORT 1.19.2 CPU · 单会话线程 1/1 · 固定单图，预热 10 次、测量 100 次（2026-08-27）",
+      "en": "Windows x86_64 · C++ Release · ORT 1.19.2 CPU · session threads 1/1 · one fixed image, 10 warmups / 100 repeats (2026-08-27)"
+    },
+    "quantization_quality": {
+      "zh": "361 张验证图 · 857 个标注框 · score floor 0.001 · class-agnostic NMS 0.45 · COCO 101 点 AP",
+      "en": "361 validation images · 857 ground-truth boxes · score floor 0.001 · class-agnostic NMS 0.45 · COCO 101-point AP"
+    }
+  },
+  "quantization": {
+    "title": {
+      "zh": "量化：看见收益，也保留质量结论",
+      "en": "Quantization: measure the gains and the quality trade-off"
+    },
+    "environment": {
+      "zh": "Windows x86_64 · C++ Release · ORT 1.19.2 CPU · 单会话线程 1/1 · 固定单图，预热 10 次、测量 100 次（2026-08-27）",
+      "en": "Windows x86_64 · C++ Release · ORT 1.19.2 CPU · session threads 1/1 · one fixed image, 10 warmups / 100 repeats (2026-08-27)"
+    },
+    "metrics": [
+      {
+        "id": "model_size",
+        "label": {
+          "zh": "模型文件",
+          "en": "Model file"
+        },
+        "unit": "MB (10^6 bytes)",
+        "fp32": 12.336935,
+        "int8": 3.544494,
+        "source": "cpp_infer/results/s2_01/round2/benchmark/comparison_u8s8.json",
+        "json_pointer": "/models",
+        "environment_id": "quantization_benchmark"
+      },
+      {
+        "id": "pipeline_mean",
+        "label": {
+          "zh": "Pipeline 平均延迟",
+          "en": "Mean pipeline latency"
+        },
+        "unit": "ms",
+        "fp32": 163.47654100000003,
+        "int8": 103.87204000000001,
+        "source": "cpp_infer/results/s2_01/round2/benchmark/comparison_u8s8.json",
+        "json_pointer": "/latency_ms/pipeline/mean",
+        "environment_id": "quantization_benchmark"
+      },
+      {
+        "id": "map50",
+        "label": {
+          "zh": "验证集 mAP50",
+          "en": "Validation mAP50"
+        },
+        "unit": "%",
+        "fp32": 71.0815486552955,
+        "int8": 70.04594268229609,
+        "source": "cpp_infer/results/s2_01/round2/correctness_u8s8.json",
+        "json_pointer": "/task_quality",
+        "environment_id": "quantization_quality"
+      },
+      {
+        "id": "map50_95",
+        "label": {
+          "zh": "验证集 mAP50–95",
+          "en": "Validation mAP50–95"
+        },
+        "unit": "%",
+        "fp32": 34.578577276040164,
+        "int8": 34.237898326844416,
+        "source": "cpp_infer/results/s2_01/round2/correctness_u8s8.json",
+        "json_pointer": "/task_quality",
+        "environment_id": "quantization_quality"
+      }
+    ],
+    "quality_curve": {
+      "unit": "%",
+      "iou_thresholds": [
+        0.5,
+        0.55,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.8,
+        0.85,
+        0.9,
+        0.95
+      ],
+      "environment_id": "quantization_quality",
+      "source": "cpp_infer/results/s2_01/round2/correctness_u8s8.json",
+      "json_pointer": "/task_quality/{fp32,int8}/per_class/*/ap_by_iou",
+      "fp32": [
+        71.0815486552955,
+        64.97275038053232,
+        57.58270657993222,
+        49.52953098434037,
+        40.79820039029743,
+        28.43283920756304,
+        19.111300725913914,
+        10.168965636627785,
+        3.4932280582494224,
+        0.6147021416496476
+      ],
+      "int8": [
+        70.04594268229609,
+        64.34364907447562,
+        57.8441760501576,
+        50.434977619572706,
+        40.13101809940367,
+        28.16574009227934,
+        18.45652026430219,
+        9.307241786437485,
+        3.236755800406467,
+        0.4129617991130186
+      ]
+    },
+    "conclusion": {
+      "zh": "正式 U8S8 模型缩小 71.3%，单图 Pipeline 平均延迟由 163.48 ms 降至 103.87 ms。下方质量曲线来自独立的 361 图验证集。",
+      "en": "The formal U8S8 model is 71.3% smaller; mean single-image pipeline latency falls from 163.48 to 103.87 ms. The quality curve uses a separate 361-image validation set."
+    },
+    "quality": {
+      "passed": false,
+      "unit": "percentage points",
+      "environment_id": "quantization_quality",
+      "source": "cpp_infer/results/s2_01/round2/correctness_u8s8.json",
+      "map50_drop_percentage_points": 1.0356059729994316,
+      "gate_percentage_points": 1.0,
+      "agreement_precision": 0.9384615384615385,
+      "agreement_precision_gate": 0.95,
+      "note": {
+        "zh": "严格质量门禁未通过：mAP50 下降 1.036 个百分点，略高于 1.000 的上限；30 图产品一致性中的 INT8 agreement precision 和置信度误差 P95 也未过门禁。该结果用于展示工程取舍，未改写为无损量化。",
+        "en": "Strict quality gates remain unmet: mAP50 drops 1.036 percentage points, above the 1.000-point limit. INT8 agreement precision and confidence-error P95 also miss their gates on the 30-image product comparison. This is a measured trade-off, not lossless quantization."
+      }
+    },
+    "chart": {
+      "zh": "../assets/engineering/quantization.zh.svg",
+      "en": "../assets/engineering/quantization.en.svg"
+    },
+    "sources": [
+      {
+        "path": "cpp_infer/results/s2_01/round2/benchmark/comparison_u8s8.json",
+        "label": {
+          "zh": "同协议 FP32 / U8S8 benchmark",
+          "en": "Matched FP32 / U8S8 benchmark"
+        }
+      },
+      {
+        "path": "cpp_infer/results/s2_01/round2/correctness_u8s8.json",
+        "label": {
+          "zh": "361 图质量与 30 图产品一致性",
+          "en": "361-image quality and 30-image product consistency"
+        }
+      },
+      {
+        "path": "cpp_infer/results/s2_01/round2/benchmark/fp32_cpu_release.json",
+        "label": {
+          "zh": "环境、线程与测量口径",
+          "en": "Environment, threading and measurement protocol"
+        }
+      }
+    ]
+  },
+  "batch": {
+    "title": {
+      "zh": "有界并发：吞吐量与内存一起看",
+      "en": "Bounded concurrency: throughput alongside memory"
+    },
+    "environment": {
+      "zh": "FP32 · 361 图 · queue capacity 8 · JSON 输出 · 每 worker 独立 Pipeline / Session · ORT 线程 1/1（2026-08-30）",
+      "en": "FP32 · 361 images · queue capacity 8 · JSON output · independent Pipeline / Session per worker · ORT threads 1/1 (2026-08-30)"
+    },
+    "platforms": [
+      {
+        "id": "windows",
+        "label": {
+          "zh": "Windows x86_64",
+          "en": "Windows x86_64"
+        },
+        "environment": {
+          "zh": "原生 Windows · MSVC 19.50 · OpenCV 4.8.0",
+          "en": "Native Windows · MSVC 19.50 · OpenCV 4.8.0"
+        },
+        "source": "cpp_infer/results/s2_03/windows_x86_64/comparison.json",
+        "runtime_source": "cpp_infer/results/s2_03/windows_x86_64/workers_4/batch_summary.json",
+        "throughput_images_per_second": {
+          "workers_1": 6.285556192161097,
+          "workers_4": 17.853923039542067
+        },
+        "throughput_unit": "images/s",
+        "throughput_ratio": 2.8404682885196735,
+        "peak_process_memory_mib": {
+          "workers_1": 151.8046875,
+          "workers_4": 505.0859375
+        },
+        "memory_unit": "MiB",
+        "memory_metric": "peak_working_set",
+        "memory_scope": "process-lifetime high-water mark",
+        "images": 361,
+        "images_unit": "images",
+        "queue_capacity": 8,
+        "queue_unit": "tasks",
+        "queue_peak_depth_workers_4": 8,
+        "producer_wait_count_workers_4": 352,
+        "json_byte_equal": true
+      },
+      {
+        "id": "linux",
+        "label": {
+          "zh": "WSL2 / Linux x86_64",
+          "en": "WSL2 / Linux x86_64"
+        },
+        "environment": {
+          "zh": "WSL2 Ubuntu 24.04 · GCC 13.3 · OpenCV 4.6.0 · ext4",
+          "en": "WSL2 Ubuntu 24.04 · GCC 13.3 · OpenCV 4.6.0 · ext4"
+        },
+        "source": "cpp_infer/results/s2_03/linux_x86_64/performance/batch_comparison.json",
+        "runtime_source": "cpp_infer/results/s2_03/linux_x86_64/performance/batch_workers_4/batch_summary.json",
+        "throughput_images_per_second": {
+          "workers_1": 8.113805579134825,
+          "workers_4": 20.15958424052882
+        },
+        "throughput_unit": "images/s",
+        "throughput_ratio": 2.484602822178842,
+        "peak_process_memory_mib": {
+          "workers_1": 205.765625,
+          "workers_4": 588.2265625
+        },
+        "memory_unit": "MiB",
+        "memory_metric": "peak_rss",
+        "memory_scope": "process-lifetime high-water mark",
+        "images": 361,
+        "images_unit": "images",
+        "queue_capacity": 8,
+        "queue_unit": "tasks",
+        "queue_peak_depth_workers_4": 8,
+        "producer_wait_count_workers_4": 349,
+        "json_byte_equal": true
+      }
+    ],
+    "conclusion": {
+      "zh": "worker 从 1 增至 4 后，Windows 吞吐量为 2.84 倍，WSL2/Linux 为 2.48 倍；进程峰值内存随独立会话增加。两组各自的 361 份逐图 JSON 均字节一致，队列峰值均未超过容量 8。",
+      "en": "Moving from 1 to 4 workers yields 2.84× throughput on Windows and 2.48× on WSL2/Linux, with higher process peak memory. Within each comparison, all 361 per-image JSON files are byte-identical and peak queue depth stays within capacity 8."
+    },
+    "note": {
+      "zh": "仅在各自记录环境内比较。Windows Peak Working Set 与 Linux peak RSS 是不同口径；这是图像级 batch=1 并发，不是张量 batching。",
+      "en": "Compare runs only within each recorded environment. Windows Peak Working Set and Linux peak RSS are distinct metrics. This is concurrent image-level batch=1, not tensor batching."
+    },
+    "chart": {
+      "zh": "../assets/engineering/batch-throughput.zh.svg",
+      "en": "../assets/engineering/batch-throughput.en.svg"
+    },
+    "sources": [
+      {
+        "path": "cpp_infer/results/s2_03/windows_x86_64/comparison.json",
+        "label": {
+          "zh": "Windows 361 图并发对比",
+          "en": "Windows 361-image worker comparison"
+        }
+      },
+      {
+        "path": "cpp_infer/results/s2_03/linux_x86_64/performance/batch_comparison.json",
+        "label": {
+          "zh": "WSL2/Linux 361 图并发对比",
+          "en": "WSL2/Linux 361-image worker comparison"
+        }
+      },
+      {
+        "path": "cpp_infer/results/s2_03/windows_x86_64/workers_4/batch_summary.json",
+        "label": {
+          "zh": "Windows 队列与运行环境",
+          "en": "Windows queue and runtime environment"
+        }
+      },
+      {
+        "path": "cpp_infer/results/s2_03/linux_x86_64/performance/batch_workers_4/batch_summary.json",
+        "label": {
+          "zh": "WSL2/Linux 队列与运行环境",
+          "en": "WSL2/Linux queue and runtime environment"
+        }
+      }
+    ]
+  },
+  "platforms": {
+    "title": {
+      "zh": "同一条 Runtime 主链，三个验证环境",
+      "en": "One Runtime pipeline across three validation environments"
+    },
+    "conclusion": {
+      "zh": "FP32 与正式 U8S8 复用 RuntimeConfig → DetectorPipeline → BatchRunner；AArch64 通过交叉编译和 QEMU 用户态验证构建、加载及功能。",
+      "en": "FP32 and formal U8S8 reuse RuntimeConfig → DetectorPipeline → BatchRunner. AArch64 cross-build and QEMU user-mode runs validate build, loading and functional portability."
+    },
+    "rows": [
+      {
+        "id": "windows",
+        "name": "Windows x86_64",
+        "environment": {
+          "zh": "原生 Windows · MSVC 19.50 · OpenCV 4.8.0",
+          "en": "Native Windows · MSVC 19.50 · OpenCV 4.8.0"
+        },
+        "capabilities": {
+          "single_image": true,
+          "directory_manifest": true,
+          "fp32_int8": true,
+          "bounded_queue": true
+        },
+        "note": {
+          "zh": "原生 CPU 验证；Qt 客户端的当前交付平台。",
+          "en": "Native CPU validation; current delivery platform for the Qt client."
+        }
+      },
+      {
+        "id": "linux",
+        "name": "WSL2 / Linux x86_64",
+        "environment": {
+          "zh": "WSL2 Ubuntu 24.04 · GCC 13.3 · OpenCV 4.6.0 · ext4",
+          "en": "WSL2 Ubuntu 24.04 · GCC 13.3 · OpenCV 4.6.0 · ext4"
+        },
+        "capabilities": {
+          "single_image": true,
+          "directory_manifest": true,
+          "fp32_int8": true,
+          "bounded_queue": true
+        },
+        "note": {
+          "zh": "Linux Runtime / CLI 验证，含目录与 manifest 一致性。",
+          "en": "Linux Runtime / CLI validation, including directory / manifest parity."
+        }
+      },
+      {
+        "id": "aarch64",
+        "name": "Linux AArch64 / QEMU",
+        "environment": {
+          "zh": "x86_64 主机交叉编译 · GCC 13 · QEMU 用户态",
+          "en": "Cross-compiled on x86_64 · GCC 13 · QEMU user mode"
+        },
+        "capabilities": {
+          "single_image": true,
+          "directory_manifest": true,
+          "fp32_int8": true,
+          "bounded_queue": true
+        },
+        "note": {
+          "zh": "仅证明功能可移植；不提供 ARM 实机速度、内存或功耗结论。",
+          "en": "Functional portability only; no native ARM latency, memory or power claim."
+        }
+      }
+    ],
+    "sources": [
+      {
+        "path": "cpp_infer/results/s2_03/int8_integration/verification_summary.json",
+        "label": {
+          "zh": "FP32 / U8S8 跨平台集成记录",
+          "en": "FP32 / U8S8 cross-platform integration record"
+        }
+      },
+      {
+        "path": "cpp_infer/results/s2_03/linux_aarch64_qemu/verification.md",
+        "label": {
+          "zh": "AArch64 构建、加载与功能验证",
+          "en": "AArch64 build, loader and functional validation"
+        }
+      }
+    ]
+  }
+}

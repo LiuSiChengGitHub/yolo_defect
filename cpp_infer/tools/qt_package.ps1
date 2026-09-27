@@ -75,13 +75,16 @@ function Find-MsvcCrt {
 
 # Validate the maintained presentation before creating a partial package.
 $requiredMedia = @('workbench.png', 'walkthrough.gif', '01-ready.webp',
-  '02-running.webp', '03-results.webp', '04-inspect.webp', '05-failure.webp',
-  '06-browse.webp')
-$requiredInputs = @('docs/demo/index.html', 'models/best.onnx') +
-  @($requiredMedia | ForEach-Object { "docs/assets/qt/$_" })
+  '02-running.webp', '03-results.webp', '04-inspect.webp', '05-browse.webp',
+  '06-overview.webp')
+$requiredCharts = @('quantization.zh.svg', 'quantization.en.svg',
+  'batch-throughput.zh.svg', 'batch-throughput.en.svg')
+$requiredInputs = @('docs/demo/index.html', 'docs/demo/index.en.html', 'models/best.onnx') +
+  @($requiredMedia | ForEach-Object { "docs/assets/qt/$_" }) +
+  @($requiredCharts | ForEach-Object { "docs/assets/engineering/$_" })
 foreach ($file in $requiredInputs) {
   if (-not (Test-Path -LiteralPath (Join-Path $RepoRoot $file) -PathType Leaf)) {
-    throw "Missing package input '$file'. Generate documentation media with qt.cmd media first."
+    throw "Missing package input '$file'. Restore or regenerate the presentation inputs; see docs/demo/README.md."
   }
 }
 $deploy = Join-Path $QtRoot 'bin\windeployqt.exe'
@@ -158,9 +161,13 @@ New-Item -ItemType Directory -Path (Join-Path $PackageDir 'outputs') -Force | Ou
 Copy-PackageFile (Join-Path $PSScriptRoot 'qt_package/run.cmd') 'run.cmd'
 Copy-PackageFile (Join-Path $PSScriptRoot 'qt_package/verify.ps1') 'verify.ps1'
 Copy-PackageFile (Join-Path $RepoRoot 'docs/demo/index.html') 'demo/index.html'
+Copy-PackageFile (Join-Path $RepoRoot 'docs/demo/index.en.html') 'demo/index.en.html'
 foreach ($file in (Get-ChildItem -LiteralPath (Join-Path $RepoRoot 'docs/assets/qt') -File |
     Where-Object { $_.Extension -in @('.png', '.gif', '.webp', '.mp4') } | Sort-Object Name)) {
   Copy-PackageFile $file.FullName "assets/qt/$($file.Name)"
+}
+foreach ($chart in $requiredCharts) {
+  Copy-PackageFile (Join-Path $RepoRoot "docs/assets/engineering/$chart") "assets/engineering/$chart"
 }
 Copy-PackageFile (Join-Path $RepoRoot 'LICENSE') 'LICENSE'
 
@@ -201,7 +208,7 @@ Copied SDK notice files:
 $($copiedNotices -join "`n")
 
 These notices describe the included inputs; they do not replace their terms.
-See demo/index.html for dependencies, source builds, model configuration, and usage.
+See demo/index.html (Chinese) or demo/index.en.html (English) for the showcase and usage.
 "@
 $manifest = [ordered]@{
   format_version = 1
@@ -215,6 +222,7 @@ $manifest = [ordered]@{
   samples = @($samples | ForEach-Object { "samples/$_" })
   entrypoint = 'run.cmd'
   guide = 'demo/index.html'
+  guides = [ordered]@{ zh = 'demo/index.html'; en = 'demo/index.en.html' }
   verification = 'powershell -NoProfile -ExecutionPolicy Bypass -File .\verify.ps1'
 }
 Write-PackageText 'package-info.json' (($manifest | ConvertTo-Json -Depth 4) + "`n")

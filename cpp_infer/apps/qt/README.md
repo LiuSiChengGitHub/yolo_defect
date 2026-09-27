@@ -148,7 +148,7 @@ Windows x64 / MSVC 19.50 / Qt 6.8.3 / OpenCV 4.8.0 / ORT 1.19.2，Release 构建
 
 ## Windows 演示交付与展示素材
 
-演示目录地图、启动与操作顺序集中在 [HTML 演示指南](../../../docs/demo/index.html)。克隆仓库后直接在浏览器打开；GitHub 页面默认显示 HTML 源码，在线浏览需要按指南手动发布 Pages。
+演示目录地图、启动与操作顺序集中在 [中文 HTML 演示页](../../../docs/demo/index.html) / [English](../../../docs/demo/index.en.html)，同时展示 Runtime 架构、量化、并发与跨平台证据。克隆仓库后直接在浏览器打开；GitHub 页面默认显示 HTML 源码，在线浏览需要[手动发布 Pages](../../../docs/demo/README.md#发布-github-pages)。
 
 ```powershell
 # 在已配置 SDK 的开发环境打包，无需 Python / GoogleTest
@@ -171,13 +171,26 @@ python -m pip install -r cpp_infer/tools/requirements-qt-media.txt
 cpp_infer\tools\qt.cmd media
 # 已有原始帧时只重新编码
 python cpp_infer/tools/qt_demo_media.py --frames cpp_infer/build/qt-msvc-release/demo-frames
+python cpp_infer/tools/render_demo.py
 ```
 
-可选 target `yolo_defect_qt_capture` 通过真实控件与 Runtime 完成六图检测、选择缩放、损坏图片和成功项继续浏览，使用独立 QSettings；它不属于 CTest，也不进入交付目录。`qt_demo_capture.cpp` 保存原始截图和帧时长清单到构建目录，`qt_demo_media.py` 生成 `docs/assets/qt/` 的 PNG/WebP/GIF。12 秒左右的 GIF 是实际状态序列，停留时间经过编排，不能用来推断推理性能。
+可选 target `yolo_defect_qt_capture` 通过真实控件与 Runtime 完成六图全成功检测、选择缩放、逐图浏览和恢复总览，使用独立 QSettings；它不属于 CTest，也不进入交付目录。捕获程序逐项检查成功状态，编码器验证六帧清单和成功汇总。`qt_demo_capture.cpp` 保存原始截图和帧时长清单到构建目录，`qt_demo_media.py` 生成 `docs/assets/qt/` 的 PNG/WebP/GIF。11.8 秒 GIF 是实际状态序列，停留时间经过编排，不能用来推断推理性能。
 
-HTML、根 README 和成品包共用稳定素材路径。颜色/字体/图标变化后重新运行 `media`、检查画面、在新目录 `package` 即可；控件对象名或工作流程变化时同步维护捕获程序。可选连续录屏及视频替换方法见 HTML。`docs/me/Qt.md` 为本地学习/AI 交接补充，沿用个人笔记的 Git 忽略规则。
+HTML、根 README 和成品包共用稳定素材路径。`qt.cmd media` 在媒体生成后自动重新生成两种语言的 HTML。颜色/字体/图标变化后重新运行 `media`、检查画面、在新目录 `package` 即可；控件对象名或工作流程变化时同步维护捕获程序。两份 README 顶部直接展示 GIF，中间用操作流程文字与截图分隔。可选连续录屏及视频替换方法见 HTML。`docs/me/Qt.md` 为本地学习/AI 交接补充，沿用个人笔记的 Git 忽略规则。
 
-`.github/workflows/qt-demo-pages.yml` 仅通过 `workflow_dispatch` 手动发布 `docs/demo/index.html` 与指定 Qt 媒体。不会发布整个 `docs/`、模型或私人教材；仓库 Pages 的 Source 需先设为 GitHub Actions。本轮准备配置和素材，不执行远端发布。
+中英文 HTML 由 `docs/demo/page.template.html`、`content.json`、`evidence.json` 和同一生成器维护，不直接修改生成页。工程图由已有正式报告生成，不重新运行性能实验：
+
+```powershell
+# 只在图表或正式报告更新时需要 Matplotlib；UI 媒体更新只需要 Pillow
+python -m pip install -r cpp_infer/tools/requirements-demo-charts.txt
+python cpp_infer/tools/demo_charts.py
+python cpp_infer/tools/render_demo.py
+python cpp_infer/tools/render_demo.py --check
+```
+
+量化图包含模型大小、pipeline 延迟和逐 IoU 阈值 AP；并发图同时展示吞吐收益与内存成本。`evidence.json` 记录来源、测量条件和平台验证范围；AArch64/QEMU 作为功能验证展示。完整目录职责、双语更新与发布步骤见[演示维护说明](../../../docs/demo/README.md)。
+
+`.github/workflows/qt-demo-pages.yml` 仅通过 `workflow_dispatch` 手动发布中英文 HTML、Qt 媒体与工程 SVG；发布前检查双语生成页是否与源文件一致。不会发布整个 `docs/`、模型或私人教材；仓库 Pages 的 Source 需先设为 GitHub Actions。本轮准备配置和素材，不执行远端发布。
 
 ## 第三步验收记录（2026-09-27）
 
@@ -190,3 +203,5 @@ HTML、根 README 和成品包共用稳定素材路径。颜色/字体/图标变
 | 文档与网页 | 中英文 README、本地链接、HTML 资源及页内锚点、JavaScript 语法检查通过。浏览器工具阻止 `file://`，本轮未进行 HTML 浏览器视觉验收；请本地打开 `docs/demo/index.html` 确认。Pages 工作流已准备，未推送或部署。 |
 
 本轮仅扩展 Qt 的可选展示目标和开发工具，没有修改 Runtime 源码、输出协议或跨平台实现；未重复无关性能实验与 AArch64/QEMU 验证。
+
+后续展示更新（2026-09-27）：重新运行 `qt.cmd media`，六张图片逐项成功，GIF 解码为 6 帧 / 11.8 秒。新增中英文共用模板与正式报告图表，双语生成同步、报告来源、资源/锚点、JavaScript、PowerShell 和 Pages YAML 静态检查通过；两份 README 的 GIF 均直接展开。已有 `dist/yolo-defect-qt/` 的 HTML、媒体和图表已同步，逐文件核对与源码素材一致。本次未改业务 Runtime，也未重复整套推理回归；HTML 尚未做浏览器目视验收，Pages 尚未发布。

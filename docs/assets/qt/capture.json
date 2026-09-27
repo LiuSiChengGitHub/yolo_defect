@@ -5,28 +5,40 @@
   "frames": [
     {
       "duration_ms": 1600,
-      "file": "01-ready.png"
+      "file": "01-ready.png",
+      "state": "ready"
     },
     {
       "duration_ms": 1000,
-      "file": "02-running.png"
+      "file": "02-running.png",
+      "state": "running"
     },
     {
       "duration_ms": 2400,
-      "file": "03-results.png"
+      "file": "03-results.png",
+      "state": "succeeded"
     },
     {
       "duration_ms": 2200,
-      "file": "04-inspect.png"
+      "file": "04-inspect.png",
+      "state": "succeeded"
     },
     {
       "duration_ms": 2400,
-      "file": "05-failure.png"
+      "file": "05-browse.png",
+      "state": "succeeded"
     },
     {
       "duration_ms": 2200,
-      "file": "06-browse.png"
+      "file": "06-overview.png",
+      "state": "succeeded"
     }
   ],
+  "batch": {
+    "cancelled": 0,
+    "failed": 0,
+    "succeeded": 6,
+    "total": 6
+  },
   "device_pixel_ratio": 2
 }

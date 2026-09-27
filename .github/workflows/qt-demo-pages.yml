@@ -21,12 +21,15 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check that both demo languages are current
+        run: python3 cpp_infer/tools/render_demo.py --check
       - uses: actions/configure-pages@v5
       - name: Stage only the public demo and its media
         run: |
-          mkdir -p _site/demo _site/assets/qt
-          cp docs/demo/index.html _site/demo/index.html
+          mkdir -p _site/demo _site/assets/qt _site/assets/engineering
+          cp docs/demo/index.html docs/demo/index.en.html _site/demo/
           find docs/assets/qt -maxdepth 1 -type f \( -name '*.png' -o -name '*.webp' -o -name '*.gif' -o -name '*.mp4' \) -exec cp {} _site/assets/qt/ \;
+          cp docs/assets/engineering/*.svg _site/assets/engineering/
           printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=demo/"><title>Qt workbench demo</title><a href="demo/">Open the demo guide</a></html>' > _site/index.html
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v4

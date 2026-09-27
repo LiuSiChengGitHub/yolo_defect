@@ -1,0 +1,2 @@
+# Optional engineering charts; not needed to run Qt or regenerate UI captures.
+matplotlib==3.9.2

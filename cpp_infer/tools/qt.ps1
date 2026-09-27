@@ -274,6 +274,7 @@ try {
       Invoke-Checked $capture @('--repo-root', $repoRoot, '--frames', $frames)
       Invoke-Checked $resolvedPython @((Join-Path $PSScriptRoot 'qt_demo_media.py'),
         '--frames', $frames)
+      Invoke-Checked $resolvedPython @((Join-Path $PSScriptRoot 'render_demo.py'))
     }
     if ($Action -eq 'test') {
       $env:YOLO_DEFECT_QT_SCREENSHOT_DIR = $null
