@@ -14,10 +14,6 @@
 
 ![Qt 工作台操作演示](docs/assets/qt/walkthrough.gif)
 
-演示来自真实 Qt 客户端。UI 美化后，在已配置测试依赖及 Pillow 的环境中运行 `cpp_infer\tools\qt.cmd media`，即可重新生成截图和动图；捕获与更新流程见[演示指南](docs/demo/index.html)。
-
-GitHub 会将离线 HTML 链接显示为源码。下载或克隆仓库后，用浏览器打开 `docs/demo/index.html` 即可查看；完成 Pages 发布后也可使用在线链接。指南不依赖 Web 服务。
-
 ## 项目展示的工程能力
 
 | 模块 | 已实现能力 |
@@ -56,9 +52,21 @@ Qt 使用独立、可选的 CMake target，`YOLO_DEFECT_BUILD_QT` 默认关闭�
 
 ### Windows 桌面工作台
 
+**启动方式**
+
+| 方式 | 适用场景 | 操作 |
+|---|---|---|
+| 双击成品包 | 演示或交付；目标机器无需安装 Qt、编译器或 Python | 打开打包生成的目录（如 `dist/yolo-defect-qt/`），双击 `run.cmd` |
+| 双击源码启动器 | 已配置 SDK 的开发机，不想使用命令行 | 双击仓库根目录的 `start_qt_workbench.cmd`；尚未构建时会先自动构建一次 |
+| 命令行 | 开发调试，或指定配置与输入 | `.\cpp_infer\tools\qt.cmd run`，可追加 `-Config`、`-Image`、`-OutputDir` |
+
+三种方式都预填 FP32 配置与样图，点击“运行检测”即可；切换到目录或 Manifest 模式可执行批处理。运行时显示忙碌状态，完成后显示最终计数，不估算百分比。每次任务独立保存结果：源码方式默认位于 `results/qt/`，成品包位于包内 `outputs/`。双击启动时会同时打开一个命令行窗口，关闭工作台后自动退出；启动失败时窗口保留错误信息。构建目录中的 `yolo_defect_qt.exe` 不能直接双击，它依赖上述入口设置的 Qt / OpenCV 运行库路径。
+
+**源码方式的首次配置**
+
 需要 x64 MSVC 工具链、**Qt 6.2+ MSVC x64** SDK、OpenCV 4 和 ONNX Runtime C++ SDK 1.19.2。当前桌面验收使用 Qt 6.8.3。依赖准备与路径配置见 [Qt 客户端说明](cpp_infer/apps/qt/README.md#windows-x64-构建与启动)。
 
-首次使用时，在仓库根目录复制本地配置示例，填入实际 SDK 路径；本地配置由 Git 忽略，已有配置无需重复复制：
+在仓库根目录复制本地配置示例并填入实际 SDK 路径；本地配置由 Git 忽略，已有配置无需重复复制。之后可以双击 `start_qt_workbench.cmd`，也可以用命令行构建并启动：
 
 ```powershell
 Copy-Item cpp_infer/tools/stage1.local.example.psd1 cpp_infer/.stage1.local.psd1
@@ -67,7 +75,9 @@ Copy-Item cpp_infer/tools/qt.local.example.psd1 cpp_infer/.qt.local.psd1
 .\cpp_infer\tools\qt.cmd run
 ```
 
-启动器预填 FP32 配置与样图，点击“运行检测”即可；切换到目录或 manifest 模式可执行批处理。运行时显示忙碌状态，完成后显示最终计数，不估算百分比。每次任务独立保存结果，默认位于 `results/qt/`。
+双击启动器只在客户端尚未构建时自动构建；修改源码后先运行一次 `qt.cmd build`，再双击或用 `run` 启动。
+
+**生成双击即用的成品包**
 
 在已配置的开发环境中生成可移动的 Windows 演示目录：
 
@@ -75,7 +85,7 @@ Copy-Item cpp_infer/tools/qt.local.example.psd1 cpp_infer/.qt.local.psd1
 .\cpp_infer\tools\qt.cmd package
 ```
 
-默认输出到 `dist/yolo-defect-qt/`，可用 `-PackageDir <新的空目录>` 指定其他位置。打开其中的 `demo/index.html` 查看说明，通过 `run.cmd` 启动。打包内容、运行依赖和演示顺序统一见[离线指南](docs/demo/index.html)。
+默认输出到 `dist/yolo-defect-qt/`，可用 `-PackageDir <新的空目录>` 指定其他位置。整个目录可以复制到其他 Windows x64 机器，双击 `run.cmd` 启动，打开其中的 `demo/index.html` 查看说明；运行包内 `verify.ps1` 可检查依赖与真实检测。打包内容、运行依赖和演示顺序统一见[离线指南](docs/demo/index.html)。
 
 ### Windows / Linux CLI
 

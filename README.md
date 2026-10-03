@@ -14,10 +14,6 @@ Select six sample images → run a batch → browse successful results → inspe
 
 ![Qt workbench walkthrough](docs/assets/qt/walkthrough.gif)
 
-The walkthrough uses the real Qt client. After UI changes, run `cpp_infer\tools\qt.cmd media` with the test dependencies and Pillow installed to regenerate the screenshot and animation. The [demo guide](docs/demo/index.en.html) explains the capture and refresh workflow.
-
-GitHub displays the offline HTML link as source. Download or clone the repository and open `docs/demo/index.en.html` in a browser, or use the Pages link after deployment. English and Chinese guides share the same media; the current desktop UI is in Chinese.
-
 ## What the project demonstrates
 
 | Area | Implemented behavior |
@@ -56,9 +52,21 @@ Qt is an optional CMake target (`YOLO_DEFECT_BUILD_QT=OFF` by default). The Runt
 
 ### Windows desktop workbench
 
+**Ways to launch**
+
+| Method | When to use | How |
+|---|---|---|
+| Double-click the package | Demos and hand-off; the target machine needs no Qt, compiler or Python | Open the packaged directory (for example `dist/yolo-defect-qt/`) and double-click `run.cmd` |
+| Double-click the source launcher | A configured development machine, without using a terminal | Double-click `start_qt_workbench.cmd` in the repository root; it builds the client once if it has not been built yet |
+| Command line | Development and debugging, or a specific configuration and input | `.\cpp_infer\tools\qt.cmd run`, optionally with `-Config`, `-Image` and `-OutputDir` |
+
+Every method preselects the FP32 configuration and sample image. Choose **Run detection**, or switch the input mode to a directory or manifest for batch processing. The GUI shows a busy state while running and final counts when complete; it does not estimate a percentage. Each run saves its own result directory: under `results/qt/` for the source methods and under `outputs/` inside the package. Double-click launches also open a console window that closes with the workbench and keeps any startup error visible. The `yolo_defect_qt.exe` in the build directory cannot be double-clicked directly, because these entry points set the Qt and OpenCV runtime paths it needs.
+
+**First-time setup for the source methods**
+
 Use an x64 MSVC toolchain, **Qt 6.2+ MSVC x64** SDK, OpenCV 4 and ONNX Runtime C++ SDK 1.19.2. The validated desktop build uses Qt 6.8.3. Dependency setup and path options are in the [Qt client guide](cpp_infer/apps/qt/README.md#windows-x64-构建与启动).
 
-From the repository root, create the ignored local settings files **once** and fill in your installed SDK paths:
+From the repository root, create the ignored local settings files **once** and fill in your installed SDK paths. Then double-click `start_qt_workbench.cmd`, or build and launch from a terminal:
 
 ```powershell
 Copy-Item cpp_infer/tools/stage1.local.example.psd1 cpp_infer/.stage1.local.psd1
@@ -67,7 +75,9 @@ Copy-Item cpp_infer/tools/qt.local.example.psd1 cpp_infer/.qt.local.psd1
 .\cpp_infer\tools\qt.cmd run
 ```
 
-The launcher preselects the FP32 configuration and sample image. Choose **Run detection**, or change input mode to a directory/manifest for batch processing. The GUI shows a busy state while running and final counts when complete; it does not estimate a percentage. Each run saves its own result directory under `results/qt/` by default.
+The double-click launcher builds only when the client is missing. After changing source code, run `qt.cmd build` once, then double-click or use `run`.
+
+**Build a double-click package**
 
 To assemble a relocatable Windows demo directory from the configured development environment:
 
@@ -75,7 +85,7 @@ To assemble a relocatable Windows demo directory from the configured development
 .\cpp_infer\tools\qt.cmd package
 ```
 
-The default output is `dist/yolo-defect-qt/`; `-PackageDir <new-empty-directory>` selects another destination. Open its `demo/index.en.html` for instructions and use `run.cmd` to launch. The [offline guide](docs/demo/index.en.html) describes bundled files, dependencies and demonstration steps.
+The default output is `dist/yolo-defect-qt/`; `-PackageDir <new-empty-directory>` selects another destination. Copy the whole directory to another Windows x64 machine, double-click `run.cmd` to launch, and open its `demo/index.en.html` for instructions; the bundled `verify.ps1` checks dependencies and runs real detections. The [offline guide](docs/demo/index.en.html) describes bundled files, dependencies and demonstration steps.
 
 ### CLI on Windows / Linux
 

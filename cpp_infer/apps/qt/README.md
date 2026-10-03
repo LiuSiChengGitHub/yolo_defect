@@ -20,6 +20,8 @@ cpp_infer\tools\qt.cmd run
 
 默认使用 `cpp_infer/build/qt-msvc-release/`，与 CLI 构建分开。`configure` 仅配置，`build` 配置并增量构建客户端，`test` 启用并运行 Qt 集成测试，`run` 启动已构建程序并预填默认配置、样图和 `results/qt/`。`run` 无须 MSVC、Python 或 GoogleTest；第一次使用或修改源码后先运行 `build` 或 `test`。
 
+不想使用命令行时，双击仓库根目录的 `start_qt_workbench.cmd`：客户端尚未构建时它先调用一次 `qt.cmd build`，随后执行 `qt.cmd run`；启动失败时窗口暂停并保留错误信息。它只在可执行文件缺失时构建，修改源码后仍需手动 `build`。成品包则直接双击包内 `run.cmd`。
+
 路径优先级为：命令参数 → Qt 本地配置 → Stage-1 本地配置 → 环境变量 → 默认值。配置文件内的相对路径基于该文件所在目录，显式命令参数中的相对路径基于调用目录；默认路径基于脚本位置，因此从其他工作目录调用也可用。`-QtRoot`、`-BuildDir` 等参数及环境变量见 `help`。更换 Qt SDK、编译器或生成器时使用新的构建目录，避免复用不兼容缓存。
 
 脚本只设置当前子进程的 DLL 和插件搜索路径，不修改系统环境变量。ONNX Runtime DLL 由已有 CMake 逻辑复制到 `bin`，Qt 和 OpenCV 从已安装 SDK 加载。这是开发入口；独立演示目录使用下述 `package` 入口。
