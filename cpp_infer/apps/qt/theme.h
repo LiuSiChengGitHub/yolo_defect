@@ -3,25 +3,33 @@
 
 #include <QColor>
 #include <QIcon>
+#include <QPalette>
 #include <QString>
+
+class QWidget;
 
 namespace yolo_defect_cpp::qt::theme {
 
-// The single light palette shared by the stylesheet, custom painting and
+// The single warm dark palette shared by the stylesheet, custom painting and
 // table models. Visual code reads colors from here instead of hard-coding them.
 struct Palette {
-  QColor window, surface, surface_alt, border, border_strong, divider;
-  QColor text, text_secondary, text_muted, text_disabled, on_accent;
-  QColor accent, accent_hover, accent_pressed, accent_soft, accent_text, accent_disabled;
-  QColor header, header_raised, header_text, header_muted, brand;
-  QColor canvas, canvas_grid, canvas_text, highlight;
-  QColor success, success_soft, warning, warning_soft, danger, danger_soft, danger_line;
+  // Surfaces from the deepest layer (image canvas) to raised controls.
+  QColor canvas, window, panel, field, raised, raised_hover;
+  QColor border, border_strong, divider;
+  QColor text, text_secondary, text_muted, text_disabled;
+  QColor accent, accent_bright, accent_deep, accent_soft, accent_line, on_accent;
+  QColor canvas_text, highlight, selection, row_alt;
+  QColor success, warning, danger, danger_soft, danger_line;
 };
 
 const Palette& palette();
 
 // The workbench stylesheet resource with its @token colors resolved from palette().
 QString styleSheet();
+
+// A matching QPalette for the few areas a stylesheet leaves to the base style,
+// such as scroll area corners and popup frames.
+QPalette widgetPalette();
 
 // A client resource icon drawn with its own SVG colors (for example the logo).
 QIcon icon(const QString& name);
@@ -30,6 +38,10 @@ QIcon icon(const QString& name);
 // state and stays sharp at any device pixel ratio. An invalid disabled color
 // falls back to palette().text_disabled.
 QIcon icon(const QString& name, const QColor& color, const QColor& disabled = {});
+
+// Dark native title bar matching the window background. Windows only; older
+// systems ignore the attributes they do not support.
+void applyWindowFrame(QWidget* window);
 
 }  // namespace yolo_defect_cpp::qt::theme
 #endif

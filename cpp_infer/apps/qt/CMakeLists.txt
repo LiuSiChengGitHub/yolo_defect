@@ -21,6 +21,8 @@ add_library(yolo_defect_qt_client STATIC
   path_edit.h
   preview_worker.cpp
   preview_worker.h
+  segmented_control.cpp
+  segmented_control.h
   table_delegates.cpp
   table_delegates.h
   task_io.cpp
@@ -38,6 +40,10 @@ target_link_libraries(yolo_defect_qt_client
   PUBLIC Qt6::Widgets yolo_defect::runtime
   PRIVATE ${OpenCV_LIBS}
 )
+if(WIN32)
+  # Dark native title bar (theme::applyWindowFrame).
+  target_link_libraries(yolo_defect_qt_client PRIVATE dwmapi)
+endif()
 set_target_properties(yolo_defect_qt_client PROPERTIES
   AUTOMOC ON
   AUTORCC ON

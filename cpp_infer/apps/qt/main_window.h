@@ -8,7 +8,6 @@
 #include <memory>
 #include <optional>
 
-class QComboBox;
 class QLabel;
 class QLineEdit;
 class QProgressBar;
@@ -26,6 +25,7 @@ class ImageView;
 class ModelInfoPanel;
 class BatchTaskControl;
 class BatchTableModel;
+class SegmentedControl;
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -50,6 +50,7 @@ class MainWindow : public QMainWindow {
   void previewRequested(PreviewRequest request);
 
  protected:
+  void showEvent(QShowEvent* event) override;
   void closeEvent(QCloseEvent* event) override;
 
  private:
@@ -71,7 +72,7 @@ class MainWindow : public QMainWindow {
 
   QWidget* input_panel_ = nullptr;
   QWidget* input_fields_ = nullptr;
-  QComboBox* input_mode_ = nullptr;
+  SegmentedControl* input_mode_ = nullptr;
   QLabel* input_label_ = nullptr;
   QWidget* batch_options_ = nullptr;
   QSpinBox* workers_ = nullptr;
@@ -112,6 +113,7 @@ class MainWindow : public QMainWindow {
   bool stop_requested_ = false;
   bool task_result_received_ = false;
   bool close_pending_ = false;
+  bool frame_styled_ = false;
 };
 
 }  // namespace yolo_defect_cpp::qt

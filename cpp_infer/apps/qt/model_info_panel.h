@@ -20,6 +20,8 @@ class ModelInfoPanel : public QFrame {
   void reset();
 
  private:
+  void setLoaded(bool loaded);
+
   QLabel* model_id_ = nullptr;
   QLabel* provider_ = nullptr;
   QLabel* input_shape_ = nullptr;

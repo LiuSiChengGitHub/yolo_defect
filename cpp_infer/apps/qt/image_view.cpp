@@ -224,17 +224,10 @@ void ImageView::paintEvent(QPaintEvent*) {
   const auto& colors = theme::palette();
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
+  // A plain canvas keeps attention on the image itself.
   QPainterPath canvas;
   canvas.addRoundedRect(QRectF(rect()), 8, 8);
   painter.fillPath(canvas, colors.canvas);
-  painter.save();
-  // Crisp one-pixel grid lines; the rounded canvas only clips their ends.
-  painter.setClipPath(canvas);
-  painter.setRenderHint(QPainter::Antialiasing, false);
-  painter.setPen(colors.canvas_grid);
-  for (int x = 24; x < width(); x += 24) painter.drawLine(x, 0, x, height());
-  for (int y = 24; y < height(); y += 24) painter.drawLine(0, y, width(), y);
-  painter.restore();
   if (image_.isNull()) {
     constexpr int kIconSize = 36;
     constexpr int kIconGap = 10;
@@ -261,6 +254,10 @@ void ImageView::paintEvent(QPaintEvent*) {
   painter.setClipRect(viewportRect());
   painter.setRenderHint(QPainter::SmoothPixmapTransform);
   painter.drawImage(target, image_);
+  // A faint outline separates dark image edges from the canvas.
+  painter.setPen(QPen(QColor(255, 255, 255, 28), 1));
+  painter.setBrush(Qt::NoBrush);
+  painter.drawRect(target.adjusted(-0.5, -0.5, 0.5, 0.5));
   if (selected_detection_ >= 0) {
     const auto box = detectionRect(detections_[selected_detection_]);
     const QRectF selected_box(target.topLeft() + box.topLeft() * zoom_,

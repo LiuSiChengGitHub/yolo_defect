@@ -4,7 +4,6 @@
 #include "yolo_defect_cpp/batch_result.h"
 
 #include <QApplication>
-#include <QComboBox>
 #include <QDebug>
 #include <QDir>
 #include <QDirIterator>
@@ -519,7 +518,7 @@ class QtClientTest : public QObject {
     MainWindow window;
     window.setBatchInputs(fixture.config, input, guiOutput, kind, 2, 1);
     showTestWindow(window);
-    auto* mode = window.findChild<QComboBox*>(QStringLiteral("inputMode"));
+    auto* mode = window.findChild<QWidget*>(QStringLiteral("inputMode"));
     auto* workers = window.findChild<QSpinBox*>(QStringLiteral("workersSpin"));
     auto* queue = window.findChild<QSpinBox*>(QStringLiteral("queueSpin"));
     auto* run = window.findChild<QPushButton*>(QStringLiteral("runButton"));
@@ -533,7 +532,7 @@ class QtClientTest : public QObject {
     auto* annotated = window.findChild<ImageView*>(QStringLiteral("annotatedView"));
     QVERIFY(mode && workers && queue && run && stop && batchTable && table &&
             summaryLabel && itemDetails && itemError && original && annotated);
-    QCOMPARE(mode->currentIndex(), manifestInput ? 2 : 1);
+    QCOMPARE(mode->property("currentIndex").toInt(), manifestInput ? 2 : 1);
     QCOMPARE(workers->value(), 2);
     QCOMPARE(queue->value(), 1);
     QSignalSpy finished(&window, &MainWindow::taskFinished);

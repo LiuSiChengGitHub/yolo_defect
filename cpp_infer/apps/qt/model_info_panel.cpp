@@ -8,6 +8,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QStringList>
+#include <QStyle>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -29,19 +30,13 @@ void setValue(QLabel* label, const QString& value) {
 }  // namespace
 
 ModelInfoPanel::ModelInfoPanel(QWidget* parent) : QFrame(parent) {
-  setObjectName("card");
+  // A section of the sidebar panel rather than a separate card.
+  setObjectName("sidebarSection");
   auto* layout = new QVBoxLayout(this);
-  layout->setContentsMargins(18, 16, 18, 16);
+  layout->setContentsMargins(16, 16, 16, 16);
   layout->setSpacing(10);
 
-  auto* heading = new QHBoxLayout;
-  heading->setSpacing(10);
-  auto* number = makeLabel("02", "sectionNumber", this);
-  number->setFixedSize(26, 26);
-  number->setAlignment(Qt::AlignCenter);
-  heading->addWidget(number);
-  heading->addWidget(makeLabel(tr("生效参数"), "sectionTitle", this), 1);
-  layout->addLayout(heading);
+  layout->addWidget(makeLabel(tr("生效参数"), "sectionTitle", this));
 
   model_id_ = makeLabel({}, "modelDetails", this);
   model_id_->setWordWrap(true);
@@ -72,8 +67,8 @@ ModelInfoPanel::ModelInfoPanel(QWidget* parent) : QFrame(parent) {
   layout->addLayout(parameters);
 
   const auto& colors = theme::palette();
-  const QIcon collapsed_icon = theme::icon(QStringLiteral("chevron-right"), colors.accent_text);
-  const QIcon expanded_icon = theme::icon(QStringLiteral("chevron-down"), colors.accent_text);
+  const QIcon collapsed_icon = theme::icon(QStringLiteral("chevron-right"), colors.text_secondary);
+  const QIcon expanded_icon = theme::icon(QStringLiteral("chevron-down"), colors.text_secondary);
   details_toggle_ = new QToolButton(this);
   details_toggle_->setObjectName("modelDetailsToggle");
   details_toggle_->setText(tr("类别与文件详情"));
@@ -123,6 +118,7 @@ void ModelInfoPanel::setContract(const RuntimeContract& contract) {
     dimensions << QString::number(dimension);
   }
   setValue(model_id_, QString::fromStdString(contract.artifact.model_id));
+  setLoaded(true);
   setValue(provider_, QString::fromStdString(to_string(contract.runtime.provider)));
   setValue(input_shape_, dimensions.join(" × "));
   setValue(score_threshold_, QString::number(contract.runtime.score_threshold));
@@ -134,9 +130,17 @@ void ModelInfoPanel::setContract(const RuntimeContract& contract) {
   details_toggle_->setEnabled(true);
 }
 
+void ModelInfoPanel::setLoaded(bool loaded) {
+  // The stylesheet mutes the model chip while it only shows a placeholder.
+  model_id_->setProperty("loaded", loaded);
+  model_id_->style()->unpolish(model_id_);
+  model_id_->style()->polish(model_id_);
+}
+
 void ModelInfoPanel::reset() {
   model_id_->setText(tr("尚未加载模型"));
   model_id_->setToolTip(tr("运行检测后显示本次使用的模型与参数。"));
+  setLoaded(false);
   for (auto* value : {provider_, input_shape_, score_threshold_, nms_threshold_, nms_mode_}) {
     value->setText(QStringLiteral("—"));
     value->setToolTip({});

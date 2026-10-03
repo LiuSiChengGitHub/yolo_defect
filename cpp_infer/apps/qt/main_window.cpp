@@ -8,16 +8,17 @@
 #include "model_info_panel.h"
 #include "path_edit.h"
 #include "preview_worker.h"
+#include "segmented_control.h"
 #include "table_delegates.h"
 #include "theme.h"
 
 #include <QCloseEvent>
-#include <QComboBox>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFrame>
+#include <QApplication>
 #include <QHeaderView>
 #include <QLabel>
 #include <QItemSelectionModel>
@@ -31,7 +32,6 @@
 #include <QSpinBox>
 #include <QStandardPaths>
 #include <QStyle>
-#include <QStyledItemDelegate>
 #include <QTableView>
 #include <QTabWidget>
 #include <QThread>
@@ -51,11 +51,12 @@ QLabel* label(const QString& text, const QString& name, QWidget* parent) {
   return result;
 }
 
-QFrame* card(QWidget* parent) {
+QFrame* panel(QWidget* parent) {
   auto* frame = new QFrame(parent);
-  frame->setObjectName("card");
+  frame->setObjectName("panel");
   return frame;
 }
+
 
 }  // namespace
 
@@ -66,6 +67,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
   qRegisterMetaType<BatchDetectionResponse>();
   qRegisterMetaType<PreviewRequest>();
   qRegisterMetaType<PreviewResponse>();
+  // Fusion draws only from the palette and stylesheet. Native styles still
+  // paint parts of item views themselves, which breaks the dark theme.
+  if (QApplication::style()->name().compare(QLatin1String("fusion"), Qt::CaseInsensitive) != 0) {
+    QApplication::setStyle(QStringLiteral("Fusion"));
+  }
   setWindowTitle(tr("工业缺陷检测工作台"));
   setWindowIcon(theme::icon(QStringLiteral("app")));
   resize(1280, 860);
@@ -96,89 +102,92 @@ MainWindow::~MainWindow() {
 
 void MainWindow::buildUi() {
   setStyleSheet(theme::styleSheet());
+  // Dark roles for anything the stylesheet leaves to the base style; window
+  // propagation passes them on to popups such as line edit context menus.
+  setPalette(theme::widgetPalette());
+  setAttribute(Qt::WA_WindowPropagation);
   const auto& colors = theme::palette();
   auto* central = new QWidget(this);
   central->setObjectName("workbenchSurface");
   central->setAttribute(Qt::WA_StyledBackground);
   setCentralWidget(central);
   auto* root = new QVBoxLayout(central);
-  root->setContentsMargins(20, 16, 20, 14);
-  root->setSpacing(14);
+  root->setContentsMargins(0, 0, 0, 0);
+  root->setSpacing(0);
 
-  // A compact app bar leaves more height for the image and result areas.
-  auto* header = new QFrame(central);
-  header->setObjectName("header");
-  auto* header_layout = new QHBoxLayout(header);
-  header_layout->setContentsMargins(14, 12, 20, 12);
-  header_layout->setSpacing(14);
-  auto* logo = new QToolButton(header);
+  // A slim title bar continuing the dark native caption from applyWindowFrame().
+  auto* top_bar = new QFrame(central);
+  top_bar->setObjectName("topBar");
+  auto* top_layout = new QHBoxLayout(top_bar);
+  top_layout->setContentsMargins(16, 10, 16, 10);
+  top_layout->setSpacing(10);
+  auto* logo = new QToolButton(top_bar);
   logo->setObjectName("logo");
   logo->setIcon(theme::icon(QStringLiteral("app")));
-  logo->setIconSize(QSize(40, 40));
+  logo->setIconSize(QSize(28, 28));
   logo->setFocusPolicy(Qt::NoFocus);
   logo->setAttribute(Qt::WA_TransparentForMouseEvents);
-  header_layout->addWidget(logo);
-  auto* titles = new QVBoxLayout;
-  titles->setSpacing(2);
-  titles->addWidget(label(tr("工业缺陷检测工作台"), "title", header));
-  auto* tagline = new QHBoxLayout;
-  tagline->setSpacing(10);
-  tagline->addWidget(label("VISION / INSPECTION", "brand", header));
-  tagline->addWidget(label(tr("单图 / 批处理  ·  模型配置驱动  ·  本地推理"), "subtitle", header), 1);
-  titles->addLayout(tagline);
-  header_layout->addLayout(titles, 1);
-  state_badge_ = label({}, "stateBadge", header);
+  top_layout->addWidget(logo);
+  top_layout->addWidget(label(tr("工业缺陷检测工作台"), "title", top_bar));
+  top_layout->addSpacing(6);
+  top_layout->addWidget(label(tr("单图 / 批处理  ·  模型配置驱动  ·  本地推理"), "subtitle", top_bar), 1);
+  state_badge_ = label({}, "stateBadge", top_bar);
   state_badge_->setTextFormat(Qt::RichText);
-  header_layout->addWidget(state_badge_, 0, Qt::AlignVCenter);
-  root->addWidget(header);
+  top_layout->addWidget(state_badge_, 0, Qt::AlignVCenter);
+  root->addWidget(top_bar);
 
   auto* body = new QHBoxLayout;
-  body->setSpacing(16);
+  body->setContentsMargins(12, 0, 12, 12);
+  body->setSpacing(10);
   auto* sidebar_scroll = new QScrollArea(central);
   sidebar_scroll->setObjectName("sidebarScroll");
   sidebar_scroll->viewport()->setObjectName("sidebarViewport");
   sidebar_scroll->viewport()->setAttribute(Qt::WA_StyledBackground);
   sidebar_scroll->setWidgetResizable(true);
-  sidebar_scroll->setFixedWidth(340);
+  sidebar_scroll->setFixedWidth(336);
   sidebar_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   auto* sidebar = new QWidget;
   sidebar->setObjectName("sidebarContent");
   sidebar->setAttribute(Qt::WA_StyledBackground);
   auto* side = new QVBoxLayout(sidebar);
-  side->setContentsMargins(0, 0, 6, 0);
-  side->setSpacing(12);
+  side->setContentsMargins(0, 0, 0, 0);
+  side->setSpacing(0);
   sidebar_scroll->setWidget(sidebar);
   body->addWidget(sidebar_scroll);
+  // One continuous sidebar panel; its sections are separated by a hairline.
+  auto* sidebar_panel = panel(sidebar);
+  auto* sidebar_sections = new QVBoxLayout(sidebar_panel);
+  sidebar_sections->setContentsMargins(0, 0, 0, 0);
+  sidebar_sections->setSpacing(0);
+  side->addWidget(sidebar_panel);
 
-  input_panel_ = card(sidebar);
+  input_panel_ = new QFrame(sidebar_panel);
+  input_panel_->setObjectName("sidebarSection");
   auto* input_layout = new QVBoxLayout(input_panel_);
-  input_layout->setContentsMargins(18, 16, 18, 16);
-  input_layout->setSpacing(10);
-  auto* task_heading = new QHBoxLayout;
-  auto* task_number = label("01", "sectionNumber", input_panel_);
-  task_number->setFixedSize(26, 26);
-  task_number->setAlignment(Qt::AlignCenter);
-  task_heading->setSpacing(10);
-  task_heading->addWidget(task_number);
-  task_heading->addWidget(label(tr("检测任务"), "sectionTitle", input_panel_), 1);
-  input_layout->addLayout(task_heading);
+  input_layout->setContentsMargins(16, 16, 16, 16);
+  input_layout->setSpacing(12);
+  input_layout->addWidget(label(tr("检测任务"), "sectionTitle", input_panel_));
   input_fields_ = new QWidget(input_panel_);
   auto* inputs = new QVBoxLayout(input_fields_);
   inputs->setContentsMargins(0, 0, 0, 0);
-  inputs->setSpacing(10);
-  inputs->addWidget(label(tr("输入方式"), "fieldLabel", input_fields_));
-  input_mode_ = new QComboBox(input_fields_);
+  inputs->setSpacing(12);
+  auto* mode_group = new QVBoxLayout;
+  mode_group->setSpacing(6);
+  mode_group->addWidget(label(tr("输入方式"), "fieldLabel", input_fields_));
+  input_mode_ = new SegmentedControl({tr("单张图片"), tr("图片目录"), QStringLiteral("Manifest")},
+                                     input_fields_);
   input_mode_->setObjectName("inputMode");
-  input_mode_->addItems({tr("单张图片"), tr("图片目录"), tr("Manifest 清单")});
-  // QStyledItemDelegate lets the popup rows follow the stylesheet item rules.
-  input_mode_->setItemDelegate(new QStyledItemDelegate(input_mode_));
-  inputs->addWidget(input_mode_);
+  input_mode_->setSegmentToolTip(0, tr("检测一张图片"));
+  input_mode_->setSegmentToolTip(1, tr("递归发现目录中的图片并批量检测"));
+  input_mode_->setSegmentToolTip(2, tr("按 UTF-8 清单逐行列出的图片路径批量检测"));
+  mode_group->addWidget(input_mode_);
+  inputs->addLayout(mode_group);
   input_layout->addWidget(input_fields_);
   auto add_path = [&](const QString& title, const QString& object_name,
                       const QString& placeholder, QLineEdit*& field,
                       const QString& filter, bool directory) {
     auto* field_group = new QVBoxLayout;
-    field_group->setSpacing(5);
+    field_group->setSpacing(6);
     auto* field_label = label(title, "fieldLabel", input_fields_);
     if (object_name == "imagePath") input_label_ = field_label;
     field_group->addWidget(field_label);
@@ -231,7 +240,7 @@ void MainWindow::buildUi() {
   batch_settings->setSpacing(10);
   auto add_number = [&](const QString& title, const char* name, int maximum, int value) {
     auto* column = new QVBoxLayout;
-    column->setSpacing(5);
+    column->setSpacing(6);
     column->addWidget(label(title, "fieldLabel", batch_options_));
     auto* spin = new QSpinBox(batch_options_);
     spin->setObjectName(name);
@@ -252,7 +261,7 @@ void MainWindow::buildUi() {
   input_layout->addWidget(output_hint);
   run_button_ = new QPushButton(tr("运行检测"), input_panel_);
   run_button_->setObjectName("runButton");
-  run_button_->setIcon(theme::icon(QStringLiteral("play"), colors.on_accent, colors.on_accent));
+  run_button_->setIcon(theme::icon(QStringLiteral("play"), colors.on_accent));
   run_button_->setIconSize(QSize(14, 14));
   auto* task_actions = new QHBoxLayout;
   task_actions->setSpacing(8);
@@ -265,36 +274,38 @@ void MainWindow::buildUi() {
   stop_button_->setToolTip(tr("停止派发新图片，等待正在处理的图片完成并保存结果。"));
   stop_button_->setEnabled(false);
   task_actions->addWidget(stop_button_);
+  input_layout->addSpacing(2);
   input_layout->addLayout(task_actions);
   connect(run_button_, &QPushButton::clicked, this, &MainWindow::startDetection);
   connect(stop_button_, &QPushButton::clicked, this, &MainWindow::stopDetection);
-  side->addWidget(input_panel_);
-
-  model_panel_ = new ModelInfoPanel(sidebar);
-  side->addWidget(model_panel_);
-  side->addStretch();
+  sidebar_sections->addWidget(input_panel_);
+  auto* divider = new QFrame(sidebar_panel);
+  divider->setObjectName("divider");
+  sidebar_sections->addWidget(divider);
+  model_panel_ = new ModelInfoPanel(sidebar_panel);
+  sidebar_sections->addWidget(model_panel_);
+  sidebar_sections->addStretch();
 
   auto* workspace = new QSplitter(Qt::Vertical, central);
   workspace->setObjectName("workspaceSplitter");
   workspace->setChildrenCollapsible(false);
-  workspace->setHandleWidth(8);
-  auto* previews = new QWidget(workspace);
-  auto* preview_layout = new QHBoxLayout(previews);
-  preview_layout->setContentsMargins(0, 0, 0, 0);
-  preview_layout->setSpacing(12);
-  auto add_preview = [&](const QString& title, const QString& name, ImageView*& view) {
-    auto* frame = card(previews);
-    auto* layout = new QVBoxLayout(frame);
-    layout->setContentsMargins(12, 10, 12, 12);
-    layout->setSpacing(8);
+  workspace->setHandleWidth(10);
+  // Both canvases share one viewer panel, like a compare view.
+  auto* viewer = panel(workspace);
+  auto* viewer_layout = new QHBoxLayout(viewer);
+  viewer_layout->setContentsMargins(12, 10, 12, 12);
+  viewer_layout->setSpacing(12);
+  auto add_view = [&](const QString& title, const QString& name, ImageView*& view) {
+    auto* column = new QVBoxLayout;
+    column->setSpacing(8);
     auto* view_heading = new QHBoxLayout;
-    view_heading->setContentsMargins(4, 0, 0, 0);
-    view_heading->addWidget(label(title, "sectionTitle", frame), 1);
-    view = new ImageView(frame);
+    view_heading->setContentsMargins(2, 0, 0, 0);
+    view_heading->addWidget(label(title, "viewTitle", viewer), 1);
+    view = new ImageView(viewer);
     view->setObjectName(name);
     view->setToolTip(tr("滚轮缩放 · 拖动平移 · 点击检测框选择 · 双击适应窗口"));
     // The view actions form one segmented toolbar, disabled while no image is shown.
-    auto* toolbar = new QFrame(frame);
+    auto* toolbar = new QFrame(viewer);
     toolbar->setObjectName("viewToolbar");
     auto* tools = new QHBoxLayout(toolbar);
     tools->setContentsMargins(2, 2, 2, 2);
@@ -325,51 +336,58 @@ void MainWindow::buildUi() {
     connect(view, &ImageView::zoomChanged, toolbar,
             [toolbar](double factor) { toolbar->setEnabled(factor > 0.0); });
     view_heading->addWidget(toolbar);
-    layout->addLayout(view_heading);
-    layout->addWidget(view, 1);
+    column->addLayout(view_heading);
+    column->addWidget(view, 1);
     connect(view, &ImageView::detectionSelected, this, &MainWindow::selectDetection);
-    preview_layout->addWidget(frame, 1);
+    viewer_layout->addLayout(column, 1);
   };
-  add_preview(tr("原始图像"), "originalView", original_view_);
-  add_preview(tr("检测结果"), "annotatedView", annotated_view_);
-  workspace->addWidget(previews);
+  add_view(tr("原始图像"), "originalView", original_view_);
+  add_view(tr("检测结果"), "annotatedView", annotated_view_);
+  workspace->addWidget(viewer);
 
-  auto* results = card(workspace);
+  auto* results = panel(workspace);
   auto* result_layout = new QVBoxLayout(results);
-  result_layout->setContentsMargins(16, 12, 16, 12);
-  result_layout->setSpacing(6);
-  auto* result_header = new QHBoxLayout;
-  result_header->setSpacing(12);
-  result_header->addWidget(label(tr("任务结果"), "sectionTitle", results));
-  batch_summary_ = label({}, "batchSummary", results);
-  result_header->addWidget(batch_summary_, 1);
-  result_summary_ = label({}, "resultSummary", results);
-  result_header->addWidget(result_summary_, 0, Qt::AlignRight);
-  result_layout->addLayout(result_header);
+  result_layout->setContentsMargins(14, 12, 14, 12);
+  result_layout->setSpacing(8);
   result_tabs_ = new QTabWidget(results);
   result_tabs_->setObjectName("resultTabs");
   // QTabWidget can otherwise shrink its page below QTableView's minimum at
   // high DPI. Reserve space for the tabs, header and several complete rows.
   result_tabs_->setMinimumHeight(200);
+  // The summaries share the tab row, leaving the panel height to the lists.
+  auto* summaries = new QWidget(result_tabs_);
+  auto* summaries_layout = new QHBoxLayout(summaries);
+  // Corner widgets sit on the pane edge; the bottom margin lifts the text to
+  // the tab label line above the tabs' own bottom margin.
+  summaries_layout->setContentsMargins(0, 0, 2, 15);
+  summaries_layout->setSpacing(14);
+  batch_summary_ = label({}, "batchSummary", summaries);
+  summaries_layout->addWidget(batch_summary_);
+  result_summary_ = label({}, "resultSummary", summaries);
+  summaries_layout->addWidget(result_summary_);
+  result_tabs_->setCornerWidget(summaries, Qt::TopRightCorner);
+  auto configure_table = [](QTableView* table) {
+    table->setAlternatingRowColors(true);
+    table->setShowGrid(false);
+    table->setSelectionBehavior(QAbstractItemView::SelectRows);
+    table->setSelectionMode(QAbstractItemView::SingleSelection);
+    table->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    table->setWordWrap(false);
+    table->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    table->verticalHeader()->setDefaultSectionSize(30);
+    table->verticalHeader()->hide();
+    table->setMinimumHeight(100);
+  };
   batch_table_ = new QTableView(result_tabs_);
   batch_table_->setObjectName("batchTable");
   batch_model_ = new BatchTableModel(batch_table_);
   batch_table_->setModel(batch_model_);
-  batch_table_->setAlternatingRowColors(true);
-  batch_table_->setShowGrid(false);
+  configure_table(batch_table_);
   batch_table_->setItemDelegateForColumn(2, new StatusPillDelegate(batch_table_));
-  batch_table_->setSelectionBehavior(QAbstractItemView::SelectRows);
-  batch_table_->setSelectionMode(QAbstractItemView::SingleSelection);
-  batch_table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
   batch_table_->setTextElideMode(Qt::ElideMiddle);
-  batch_table_->setWordWrap(false);
-  batch_table_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-  batch_table_->verticalHeader()->setDefaultSectionSize(28);
-  batch_table_->verticalHeader()->hide();
   batch_table_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   batch_table_->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
   batch_table_->horizontalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
-  batch_table_->setMinimumHeight(100);
   result_tabs_->addTab(batch_table_, tr("逐图结果"));
   connect(batch_table_->selectionModel(), &QItemSelectionModel::currentRowChanged,
           this, [this](const QModelIndex& current) { selectBatchItem(current.row()); });
@@ -378,19 +396,10 @@ void MainWindow::buildUi() {
   table->setObjectName("resultTable");
   result_model_ = new DetectionTableModel(table);
   table->setModel(result_model_);
-  table->setAlternatingRowColors(true);
-  table->setShowGrid(false);
+  configure_table(table);
   table->setItemDelegateForColumn(2, new ConfidenceBarDelegate(table));
-  table->setSelectionBehavior(QAbstractItemView::SelectRows);
-  table->setSelectionMode(QAbstractItemView::SingleSelection);
-  table->setEditTriggers(QAbstractItemView::NoEditTriggers);
-  table->setWordWrap(false);
-  table->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
-  table->verticalHeader()->setDefaultSectionSize(28);
-  table->verticalHeader()->hide();
   table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
   table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-  table->setMinimumHeight(100);
   result_tabs_->addTab(table, tr("检测明细"));
   connect(table->selectionModel(), &QItemSelectionModel::currentRowChanged,
           this, [this](const QModelIndex& current) {
@@ -433,21 +442,30 @@ void MainWindow::buildUi() {
   workspace->addWidget(results);
   workspace->setStretchFactor(0, 1);
   workspace->setStretchFactor(1, 1);
-  workspace->setSizes({220, 340});
+  workspace->setSizes({400, 330});
   workspace->handle(1)->setToolTip(tr("上下拖动，调整图像与结果列表的高度"));
   body->addWidget(workspace, 1);
   root->addLayout(body, 1);
 
-  progress_ = new QProgressBar(central);
+  auto* status_bar = new QFrame(central);
+  status_bar->setObjectName("statusBar");
+  auto* status_layout = new QHBoxLayout(status_bar);
+  status_layout->setContentsMargins(16, 7, 16, 7);
+  status_layout->setSpacing(16);
+  status_message_ = label({}, "statusMessage", status_bar);
+  status_message_->setWordWrap(true);
+  status_message_->setTextInteractionFlags(Qt::TextSelectableByMouse);
+  status_layout->addWidget(status_message_, 1);
+  // Indeterminate activity indicator, shown only while a task runs.
+  progress_ = new QProgressBar(status_bar);
   progress_->setTextVisible(false);
   progress_->setRange(0, 1);
   progress_->setValue(0);
-  root->addWidget(progress_);
-  status_message_ = label({}, "statusMessage", central);
-  status_message_->setWordWrap(true);
-  status_message_->setTextInteractionFlags(Qt::TextSelectableByMouse);
-  root->addWidget(status_message_);
-  connect(input_mode_, &QComboBox::currentIndexChanged, this, [this] {
+  progress_->setFixedWidth(180);
+  progress_->hide();
+  status_layout->addWidget(progress_, 0, Qt::AlignVCenter);
+  root->addWidget(status_bar);
+  connect(input_mode_, &SegmentedControl::currentIndexChanged, this, [this] {
     image_path_->clear();
     updateInputMode();
     invalidateResult();
@@ -508,7 +526,7 @@ void MainWindow::invalidateResult() {
   item_details_->setToolTip({});
   item_error_->clear();
   item_error_->hide();
-  batch_summary_->setText(tr("尚未处理 · 完成后按输入顺序列出每张图片"));
+  batch_summary_->setText(tr("完成后按输入顺序列出每张图片"));
   open_json_button_->setEnabled(false);
   open_output_button_->setEnabled(false);
   open_summary_button_->setEnabled(false);
@@ -530,6 +548,7 @@ void MainWindow::setBusy(bool busy) {
   stop_button_->setText(tr("停止"));
   progress_->setRange(0, busy ? 0 : 1);
   progress_->setValue(busy ? -1 : 0);
+  progress_->setVisible(busy);
 }
 
 void MainWindow::startDetection() {
@@ -603,12 +622,16 @@ void MainWindow::stopDetection() {
 }
 
 void MainWindow::setState(const QString& text, const char* state) {
-  state_badge_->setProperty("state", state);
-  // The leading dot inherits the badge text color chosen by the state rule.
-  state_badge_->setText(QStringLiteral("<span style=\"font-size:9px\">&#9679;</span>&nbsp;&nbsp;%1")
-                            .arg(text.toHtmlEscaped()));
-  state_badge_->style()->unpolish(state_badge_);
-  state_badge_->style()->polish(state_badge_);
+  // A neutral badge; only the leading dot carries the state color.
+  const auto& colors = theme::palette();
+  const QByteArray kind(state);
+  const QColor dot = kind == "ready" ? colors.success
+      : kind == "busy" ? colors.accent
+      : kind == "warning" ? colors.warning
+      : kind == "error" ? colors.danger : colors.text_muted;
+  state_badge_->setText(
+      QStringLiteral("<span style=\"color:%1; font-size:10px\">&#9679;</span>&nbsp;&nbsp;%2")
+          .arg(dot.name(), text.toHtmlEscaped()));
 }
 
 void MainWindow::setDetections(const std::vector<Detection>& detections) {
@@ -669,7 +692,7 @@ void MainWindow::showBatchResult(const BatchDetectionResponse& response) {
   completed_directory_ = response.output_directory;
   completed_summary_ = response.summary_path;
   const auto& counts = response.summary.counts;
-  batch_summary_->setText(tr("共 %1 张  ·  成功 %2  ·  失败 %3  ·  取消 %4")
+  batch_summary_->setText(tr("共 %1 张 · 成功 %2 · 失败 %3 · 取消 %4")
       .arg(counts.discovered).arg(counts.succeeded).arg(counts.failed).arg(counts.cancelled));
   batch_model_->setItems(response.summary.items);
   result_tabs_->setCurrentIndex(0);
@@ -806,6 +829,15 @@ void MainWindow::showError(const QString& message) {
 void MainWindow::openPath(const QString& path) {
   if (!path.isEmpty() && !QDesktopServices::openUrl(QUrl::fromLocalFile(path))) {
     status_message_->setText(tr("无法打开：%1\n请在文件管理器中查看此路径。" ).arg(path));
+  }
+}
+
+void MainWindow::showEvent(QShowEvent* event) {
+  QMainWindow::showEvent(event);
+  // The native window exists from the first show; style its caption once.
+  if (!frame_styled_ && QGuiApplication::platformName() == QLatin1String("windows")) {
+    frame_styled_ = true;
+    theme::applyWindowFrame(this);
   }
 }
 
