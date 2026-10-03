@@ -21,8 +21,13 @@ add_library(yolo_defect_qt_client STATIC
   path_edit.h
   preview_worker.cpp
   preview_worker.h
+  table_delegates.cpp
+  table_delegates.h
   task_io.cpp
   task_io.h
+  theme.cpp
+  theme.h
+  resources/qt_client.qrc
 )
 target_compile_features(yolo_defect_qt_client PUBLIC cxx_std_17)
 target_include_directories(yolo_defect_qt_client
@@ -35,6 +40,7 @@ target_link_libraries(yolo_defect_qt_client
 )
 set_target_properties(yolo_defect_qt_client PROPERTIES
   AUTOMOC ON
+  AUTORCC ON
   CXX_EXTENSIONS OFF
 )
 if(MSVC)

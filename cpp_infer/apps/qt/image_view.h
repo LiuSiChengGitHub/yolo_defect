@@ -3,6 +3,7 @@
 
 #include "yolo_defect_cpp/detection_result.h"
 
+#include <QIcon>
 #include <QImage>
 #include <QPointF>
 #include <QRectF>
@@ -55,6 +56,7 @@ class ImageView : public QWidget {
 
   QImage image_;
   QString empty_message_;
+  QIcon empty_icon_;
   std::vector<Detection> detections_;
   int selected_detection_ = -1;
   double zoom_ = 1.0;

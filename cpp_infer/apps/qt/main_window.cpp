@@ -8,6 +8,8 @@
 #include "model_info_panel.h"
 #include "path_edit.h"
 #include "preview_worker.h"
+#include "table_delegates.h"
+#include "theme.h"
 
 #include <QCloseEvent>
 #include <QComboBox>
@@ -29,10 +31,12 @@
 #include <QSpinBox>
 #include <QStandardPaths>
 #include <QStyle>
+#include <QStyledItemDelegate>
 #include <QTableView>
 #include <QTabWidget>
 #include <QThread>
 #include <QTimer>
+#include <QToolButton>
 #include <QUrl>
 #include <QVBoxLayout>
 #include <type_traits>
@@ -63,6 +67,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
   qRegisterMetaType<PreviewRequest>();
   qRegisterMetaType<PreviewResponse>();
   setWindowTitle(tr("工业缺陷检测工作台"));
+  setWindowIcon(theme::icon(QStringLiteral("app")));
   resize(1280, 860);
   setMinimumSize(980, 700);
   buildUi();
@@ -90,87 +95,40 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::buildUi() {
-  setStyleSheet(QStringLiteral(R"(
-    QMainWindow { background: #eef2f6; }
-    QWidget { font-family: "Segoe UI", "Microsoft YaHei UI"; font-size: 13px; color: #24364b; }
-    QWidget#workbenchSurface, QWidget#sidebarViewport, QWidget#sidebarContent { background: #eef2f6; }
-    QFrame#header { background: #122235; border-radius: 10px; }
-    QLabel#title { color: #f6f9fc; font-size: 23px; font-weight: 600; }
-    QLabel#subtitle { color: #a1b4c9; font-size: 12px; }
-    QLabel#brand { color: #6de2c2; font-size: 11px; font-weight: 600; }
-    QLabel#stateBadge { color: #146450; background: #dff5ed; border-radius: 12px; padding: 6px 14px; font-weight: 600; }
-    QLabel#stateBadge[state="busy"] { color: #825c0b; background: #fff0c9; }
-    QLabel#stateBadge[state="warning"] { color: #825c0b; background: #fff0c9; }
-    QLabel#stateBadge[state="error"] { color: #a83838; background: #ffe2e2; }
-    QFrame#card { background: white; border: 1px solid #dde5ed; border-radius: 10px; }
-    QLabel#sectionTitle { font-size: 15px; font-weight: 600; color: #162e48; }
-    QLabel#sectionNumber { color: #127e6b; background: #e6f3ef; border-radius: 6px; font-size: 11px; font-weight: 600; }
-    QLabel#fieldLabel { color: #61758a; font-size: 12px; font-weight: 600; }
-    QLabel#muted { color: #6a7d92; font-size: 12px; }
-    QLabel#itemDetails { color: #607489; font-size: 12px; }
-    QLabel#itemDetails[state="error"] { color: #b13737; }
-    QLabel#batchSummary { color: #48627b; font-size: 12px; }
-    QPlainTextEdit#itemError { border: 1px solid #f0ded8; border-radius: 5px; background: #fff8f5; color: #99412d; padding: 4px; font-size: 12px; }
-    QLabel#modelDetails { font-size: 12px; color: #243e56; font-weight: 600; }
-    QLabel#parameterLabel { color: #728396; font-size: 12px; }
-    QLabel#parameterValue, QLabel#scoreThreshold, QLabel#nmsThreshold { color: #243e56; font-size: 12px; font-weight: 600; }
-    QLabel#classNames, QLabel#modelPath, QLabel#runtimeConfigPath { color: #4e647a; font-size: 12px; }
-    QToolButton#modelDetailsToggle { color: #347b70; border: none; background: transparent; padding: 4px 0; font-size: 12px; }
-    QToolButton#modelDetailsToggle:hover { color: #0a6655; }
-    QToolButton#modelDetailsToggle:disabled { color: #9dabb7; }
-    QLabel#resultSummary { color: #1e7566; font-weight: 600; }
-    QLabel#statusMessage[state="error"] { color: #b13737; }
-    QLineEdit { border: 1px solid #d8e1e9; background: #f8fafc; border-radius: 6px; padding: 8px; selection-background-color: #c7ebe5; selection-color: #164d43; }
-    QLineEdit:focus { border: 1px solid #219984; }
-    QLineEdit:disabled { color: #8090a3; background: #f0f3f7; }
-    QComboBox, QSpinBox { border: 1px solid #d8e1e9; border-radius: 6px; background: #f8fafc; padding: 6px; min-height: 20px; }
-    QComboBox QAbstractItemView { background: white; selection-background-color: #ddf2ec; selection-color: #185449; }
-    QComboBox:disabled, QSpinBox:disabled { color: #8090a3; background: #f0f3f7; }
-    QPushButton { border: 1px solid #d4dfe8; border-radius: 6px; background: white; padding: 8px 12px; font-weight: 500; }
-    QPushButton#browseButton { background: #f4f7fa; color: #48627b; padding: 8px 10px; font-size: 12px; }
-    QPushButton:hover { background: #edf6f4; border-color: #42a38f; }
-    QPushButton:disabled { color: #a1acb8; background: #f4f6f8; border-color: #e0e6ec; }
-    QPushButton#runButton { color: white; background: #127e6b; border: none; padding: 11px; font-size: 14px; font-weight: 600; }
-    QPushButton#runButton:hover { background: #0c9179; }
-    QPushButton#runButton:disabled { background: #91b9b0; }
-    QPushButton#stopButton { color: #a45830; border-color: #ead7c9; }
-    QPushButton#stopButton:disabled { color: #a1acb8; border-color: #e0e6ec; }
-    QPushButton#viewAction { padding: 3px 7px; font-size: 11px; }
-    QPushButton#openSummaryButton, QPushButton#openJsonButton, QPushButton#openOutputButton { padding: 6px 10px; font-size: 12px; }
-    QTabWidget::pane { border: none; background: white; }
-    QTabBar::tab { padding: 7px 14px; color: #728396; border-bottom: 2px solid transparent; }
-    QTabBar::tab:selected { color: #127e6b; border-bottom-color: #127e6b; }
-    QTableView { border: none; background: white; alternate-background-color: #f5f8fb; gridline-color: #edf1f5; selection-background-color: #ddf2ec; selection-color: #185449; }
-    QHeaderView::section { border: none; border-bottom: 1px solid #e2e8ef; background: #f4f7fa; color: #607489; padding: 6px 8px; font-size: 12px; }
-    QProgressBar { border: none; background: #e8eef3; border-radius: 2px; max-height: 4px; }
-    QProgressBar::chunk { background: #209d87; }
-    QScrollArea#sidebarScroll { border: none; background: #eef2f6; }
-    QScrollBar:vertical { border: none; background: transparent; width: 8px; margin: 2px 0; }
-    QScrollBar::handle:vertical { background: #c4d1dc; border-radius: 4px; min-height: 36px; }
-    QScrollBar::handle:vertical:hover { background: #98adbf; }
-    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
-    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
-    QSplitter::handle { background: #eef2f6; }
-    QSplitter::handle:hover { background: #c4d1dc; }
-  )"));
+  setStyleSheet(theme::styleSheet());
+  const auto& colors = theme::palette();
   auto* central = new QWidget(this);
   central->setObjectName("workbenchSurface");
   central->setAttribute(Qt::WA_StyledBackground);
   setCentralWidget(central);
   auto* root = new QVBoxLayout(central);
-  root->setContentsMargins(22, 18, 22, 16);
+  root->setContentsMargins(20, 16, 20, 14);
   root->setSpacing(14);
 
+  // A compact app bar leaves more height for the image and result areas.
   auto* header = new QFrame(central);
   header->setObjectName("header");
   auto* header_layout = new QHBoxLayout(header);
-  header_layout->setContentsMargins(22, 18, 22, 18);
+  header_layout->setContentsMargins(14, 12, 20, 12);
+  header_layout->setSpacing(14);
+  auto* logo = new QToolButton(header);
+  logo->setObjectName("logo");
+  logo->setIcon(theme::icon(QStringLiteral("app")));
+  logo->setIconSize(QSize(40, 40));
+  logo->setFocusPolicy(Qt::NoFocus);
+  logo->setAttribute(Qt::WA_TransparentForMouseEvents);
+  header_layout->addWidget(logo);
   auto* titles = new QVBoxLayout;
-  titles->addWidget(label("VISION / INSPECTION", "brand", header));
+  titles->setSpacing(2);
   titles->addWidget(label(tr("工业缺陷检测工作台"), "title", header));
-  titles->addWidget(label(tr("单图 / 批处理  ·  模型配置驱动  ·  本地推理"), "subtitle", header));
+  auto* tagline = new QHBoxLayout;
+  tagline->setSpacing(10);
+  tagline->addWidget(label("VISION / INSPECTION", "brand", header));
+  tagline->addWidget(label(tr("单图 / 批处理  ·  模型配置驱动  ·  本地推理"), "subtitle", header), 1);
+  titles->addLayout(tagline);
   header_layout->addLayout(titles, 1);
-  state_badge_ = label(tr("待就绪"), "stateBadge", header);
+  state_badge_ = label({}, "stateBadge", header);
+  state_badge_->setTextFormat(Qt::RichText);
   header_layout->addWidget(state_badge_, 0, Qt::AlignVCenter);
   root->addWidget(header);
 
@@ -212,6 +170,8 @@ void MainWindow::buildUi() {
   input_mode_ = new QComboBox(input_fields_);
   input_mode_->setObjectName("inputMode");
   input_mode_->addItems({tr("单张图片"), tr("图片目录"), tr("Manifest 清单")});
+  // QStyledItemDelegate lets the popup rows follow the stylesheet item rules.
+  input_mode_->setItemDelegate(new QStyledItemDelegate(input_mode_));
   inputs->addWidget(input_mode_);
   input_layout->addWidget(input_fields_);
   auto add_path = [&](const QString& title, const QString& object_name,
@@ -228,9 +188,15 @@ void MainWindow::buildUi() {
     auto* path_row = new QHBoxLayout;
     path_row->setSpacing(6);
     path_row->addWidget(field, 1);
-    auto* browse = new QPushButton(tr("浏览"), input_panel_);
+    auto* browse = new QPushButton(input_panel_);
     browse->setObjectName("browseButton");
-    browse->setToolTip(title);
+    browse->setIcon(theme::icon(QStringLiteral("folder"), colors.text_secondary));
+    browse->setIconSize(QSize(16, 16));
+    browse->setToolTip(tr("浏览"));
+    browse->setAccessibleName(tr("浏览%1").arg(title));
+    // Icon-only and as tall as the path field, leaving more room for the path.
+    browse->setFixedWidth(36);
+    browse->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
     path_row->addWidget(browse);
     field_group->addLayout(path_row);
     inputs->addLayout(field_group);
@@ -262,8 +228,10 @@ void MainWindow::buildUi() {
   batch_options_ = new QWidget(input_fields_);
   auto* batch_settings = new QHBoxLayout(batch_options_);
   batch_settings->setContentsMargins(0, 0, 0, 0);
+  batch_settings->setSpacing(10);
   auto add_number = [&](const QString& title, const char* name, int maximum, int value) {
     auto* column = new QVBoxLayout;
+    column->setSpacing(5);
     column->addWidget(label(title, "fieldLabel", batch_options_));
     auto* spin = new QSpinBox(batch_options_);
     spin->setObjectName(name);
@@ -284,10 +252,16 @@ void MainWindow::buildUi() {
   input_layout->addWidget(output_hint);
   run_button_ = new QPushButton(tr("运行检测"), input_panel_);
   run_button_->setObjectName("runButton");
+  run_button_->setIcon(theme::icon(QStringLiteral("play"), colors.on_accent, colors.on_accent));
+  run_button_->setIconSize(QSize(14, 14));
   auto* task_actions = new QHBoxLayout;
+  task_actions->setSpacing(8);
   task_actions->addWidget(run_button_, 1);
   stop_button_ = new QPushButton(tr("停止"), input_panel_);
   stop_button_->setObjectName("stopButton");
+  stop_button_->setIcon(theme::icon(QStringLiteral("stop"), colors.danger));
+  stop_button_->setIconSize(QSize(12, 12));
+  stop_button_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
   stop_button_->setToolTip(tr("停止派发新图片，等待正在处理的图片完成并保存结果。"));
   stop_button_->setEnabled(false);
   task_actions->addWidget(stop_button_);
@@ -311,24 +285,46 @@ void MainWindow::buildUi() {
   auto add_preview = [&](const QString& title, const QString& name, ImageView*& view) {
     auto* frame = card(previews);
     auto* layout = new QVBoxLayout(frame);
-    layout->setContentsMargins(12, 12, 12, 12);
+    layout->setContentsMargins(12, 10, 12, 12);
+    layout->setSpacing(8);
     auto* view_heading = new QHBoxLayout;
+    view_heading->setContentsMargins(4, 0, 0, 0);
     view_heading->addWidget(label(title, "sectionTitle", frame), 1);
     view = new ImageView(frame);
     view->setObjectName(name);
     view->setToolTip(tr("滚轮缩放 · 拖动平移 · 点击检测框选择 · 双击适应窗口"));
-    auto add_action = [&](const QString& text, const QString& tip, auto action) {
-      auto* button = new QPushButton(text, frame);
+    // The view actions form one segmented toolbar, disabled while no image is shown.
+    auto* toolbar = new QFrame(frame);
+    toolbar->setObjectName("viewToolbar");
+    auto* tools = new QHBoxLayout(toolbar);
+    tools->setContentsMargins(2, 2, 2, 2);
+    tools->setSpacing(2);
+    auto add_action = [&](const QString& icon, const QString& text, const QString& tip,
+                          auto action) {
+      auto* button = new QToolButton(toolbar);
       button->setObjectName("viewAction");
       button->setToolTip(tip);
+      button->setAccessibleName(tip);
       button->setFocusPolicy(Qt::NoFocus);
-      view_heading->addWidget(button);
-      connect(button, &QPushButton::clicked, view, action);
+      button->setAutoRaise(true);
+      button->setMinimumWidth(28);
+      button->setFixedHeight(24);
+      if (icon.isEmpty()) {
+        button->setText(text);
+      } else {
+        button->setIcon(theme::icon(icon, colors.text_secondary));
+        button->setIconSize(QSize(15, 15));
+      }
+      tools->addWidget(button);
+      connect(button, &QToolButton::clicked, view, action);
     };
-    add_action(QStringLiteral("−"), tr("缩小"), &ImageView::zoomOut);
-    add_action(QStringLiteral("+"), tr("放大"), &ImageView::zoomIn);
-    add_action(QStringLiteral("1:1"), tr("按原始像素查看"), &ImageView::actualSize);
-    add_action(tr("适应"), tr("显示完整图片"), &ImageView::fitToWindow);
+    add_action(QStringLiteral("zoom-out"), {}, tr("缩小"), &ImageView::zoomOut);
+    add_action(QStringLiteral("zoom-in"), {}, tr("放大"), &ImageView::zoomIn);
+    add_action({}, QStringLiteral("1:1"), tr("按原始像素查看"), &ImageView::actualSize);
+    add_action(QStringLiteral("fit"), {}, tr("适应窗口，显示完整图片"), &ImageView::fitToWindow);
+    connect(view, &ImageView::zoomChanged, toolbar,
+            [toolbar](double factor) { toolbar->setEnabled(factor > 0.0); });
+    view_heading->addWidget(toolbar);
     layout->addLayout(view_heading);
     layout->addWidget(view, 1);
     connect(view, &ImageView::detectionSelected, this, &MainWindow::selectDetection);
@@ -360,6 +356,8 @@ void MainWindow::buildUi() {
   batch_model_ = new BatchTableModel(batch_table_);
   batch_table_->setModel(batch_model_);
   batch_table_->setAlternatingRowColors(true);
+  batch_table_->setShowGrid(false);
+  batch_table_->setItemDelegateForColumn(2, new StatusPillDelegate(batch_table_));
   batch_table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   batch_table_->setSelectionMode(QAbstractItemView::SingleSelection);
   batch_table_->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -381,6 +379,8 @@ void MainWindow::buildUi() {
   result_model_ = new DetectionTableModel(table);
   table->setModel(result_model_);
   table->setAlternatingRowColors(true);
+  table->setShowGrid(false);
+  table->setItemDelegateForColumn(2, new ConfidenceBarDelegate(table));
   table->setSelectionBehavior(QAbstractItemView::SelectRows);
   table->setSelectionMode(QAbstractItemView::SingleSelection);
   table->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -408,13 +408,18 @@ void MainWindow::buildUi() {
   item_error_->hide();
   result_layout->addWidget(item_error_);
   auto* output_actions = new QHBoxLayout;
+  output_actions->setSpacing(8);
   output_actions->addWidget(item_details_, 1);
-  open_summary_button_ = new QPushButton(tr("打开批次汇总"), results);
-  open_summary_button_->setObjectName("openSummaryButton");
-  open_json_button_ = new QPushButton(tr("打开 JSON"), results);
-  open_json_button_->setObjectName("openJsonButton");
-  open_output_button_ = new QPushButton(tr("打开结果目录"), results);
-  open_output_button_->setObjectName("openOutputButton");
+  auto output_button = [&](const QString& text, const char* name, const QString& icon) {
+    auto* button = new QPushButton(text, results);
+    button->setObjectName(name);
+    button->setIcon(theme::icon(icon, colors.text_secondary));
+    button->setIconSize(QSize(14, 14));
+    return button;
+  };
+  open_summary_button_ = output_button(tr("打开批次汇总"), "openSummaryButton", QStringLiteral("chart"));
+  open_json_button_ = output_button(tr("打开 JSON"), "openJsonButton", QStringLiteral("file"));
+  open_output_button_ = output_button(tr("打开结果目录"), "openOutputButton", QStringLiteral("folder"));
   output_actions->addWidget(open_summary_button_);
   output_actions->addWidget(open_json_button_);
   output_actions->addWidget(open_output_button_);
@@ -511,10 +516,7 @@ void MainWindow::invalidateResult() {
   status_message_->style()->unpolish(status_message_);
   status_message_->style()->polish(status_message_);
   status_message_->setText(tr("准备就绪。选择配置和输入后开始；图像支持滚轮缩放、拖动和检测框选择。"));
-  state_badge_->setProperty("state", "ready");
-  state_badge_->setText(tr("待检测"));
-  state_badge_->style()->unpolish(state_badge_);
-  state_badge_->style()->polish(state_badge_);
+  setState(tr("待检测"), "idle");
   run_button_->setEnabled(!config_path_->text().trimmed().isEmpty() &&
                            !image_path_->text().trimmed().isEmpty() &&
                            !output_directory_->text().trimmed().isEmpty());
@@ -602,7 +604,9 @@ void MainWindow::stopDetection() {
 
 void MainWindow::setState(const QString& text, const char* state) {
   state_badge_->setProperty("state", state);
-  state_badge_->setText(text);
+  // The leading dot inherits the badge text color chosen by the state rule.
+  state_badge_->setText(QStringLiteral("<span style=\"font-size:9px\">&#9679;</span>&nbsp;&nbsp;%1")
+                            .arg(text.toHtmlEscaped()));
   state_badge_->style()->unpolish(state_badge_);
   state_badge_->style()->polish(state_badge_);
 }
@@ -649,10 +653,7 @@ void MainWindow::showResult(const DetectionResponse& response) {
   open_output_button_->setToolTip(QDir::toNativeSeparators(completed_directory_));
   open_output_button_->setEnabled(true);
   open_json_button_->setEnabled(!completed_json_.isEmpty());
-  state_badge_->setProperty("state", "ready");
-  state_badge_->setText(tr("检测完成"));
-  state_badge_->style()->unpolish(state_badge_);
-  state_badge_->style()->polish(state_badge_);
+  setState(tr("检测完成"), "ready");
   if (!close_pending_) {
     status_message_->setText(tr("检测完成 · %1 · 任务总耗时 %2 s（包含模型加载、推理与文件写出）")
         .arg(QString::fromStdString(response.result.detection_result.actual_provider))
@@ -793,10 +794,7 @@ void MainWindow::showError(const QString& message) {
   task_result_received_ = true;
   stop_button_->setEnabled(false);
   task_succeeded_ = false;
-  state_badge_->setProperty("state", "error");
-  state_badge_->setText(tr("检测失败"));
-  state_badge_->style()->unpolish(state_badge_);
-  state_badge_->style()->polish(state_badge_);
+  setState(tr("检测失败"), "error");
   status_message_->setProperty("state", "error");
   status_message_->style()->unpolish(status_message_);
   status_message_->style()->polish(status_message_);

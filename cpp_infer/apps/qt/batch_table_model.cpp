@@ -1,5 +1,6 @@
 #include "batch_table_model.h"
 #include "detection_types.h"
+#include "theme.h"
 
 #include <QColor>
 #include <QFileInfo>
@@ -33,9 +34,10 @@ QVariant BatchTableModel::data(const QModelIndex& index, int role) const {
         ? Qt::AlignLeft | Qt::AlignVCenter : Qt::AlignCenter);
   }
   if (role == Qt::ForegroundRole && index.column() == 2) {
-    if (item->status == BatchItemStatus::kFailed) return QColor("#b13737");
-    if (item->status == BatchItemStatus::kCancelled) return QColor("#8a681d");
-    return QColor("#127e6b");
+    const auto& colors = theme::palette();
+    if (item->status == BatchItemStatus::kFailed) return colors.danger;
+    if (item->status == BatchItemStatus::kCancelled) return colors.warning;
+    return colors.success;
   }
   if (role != Qt::DisplayRole) return {};
   switch (index.column()) {

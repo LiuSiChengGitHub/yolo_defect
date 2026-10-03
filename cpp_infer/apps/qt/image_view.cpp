@@ -1,8 +1,11 @@
 #include "image_view.h"
 
+#include "theme.h"
+
 #include <QApplication>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <QResizeEvent>
 #include <QWheelEvent>
 #include <algorithm>
@@ -26,6 +29,9 @@ ImageView::ImageView(QWidget* parent) : QWidget(parent) {
   setMouseTracking(true);
   setToolTip(tr("滚轮缩放 · 拖动平移 · 点击检测框选择 · 双击适应窗口"));
   empty_message_ = tr("选择图片并运行检测");
+  QColor empty_icon_color = theme::palette().canvas_text;
+  empty_icon_color.setAlpha(150);
+  empty_icon_ = theme::icon(QStringLiteral("image"), empty_icon_color);
 }
 
 void ImageView::setImage(QImage image) {
@@ -215,15 +221,38 @@ void ImageView::mouseDoubleClickEvent(QMouseEvent* event) {
 }
 
 void ImageView::paintEvent(QPaintEvent*) {
+  const auto& colors = theme::palette();
   QPainter painter(this);
-  painter.fillRect(rect(), QColor("#152334"));
-  painter.setPen(QColor("#1c2c3e"));
-  for (int x = 0; x < width(); x += 24) painter.drawLine(x, 0, x, height());
-  for (int y = 0; y < height(); y += 24) painter.drawLine(0, y, width(), y);
+  painter.setRenderHint(QPainter::Antialiasing);
+  QPainterPath canvas;
+  canvas.addRoundedRect(QRectF(rect()), 8, 8);
+  painter.fillPath(canvas, colors.canvas);
+  painter.save();
+  // Crisp one-pixel grid lines; the rounded canvas only clips their ends.
+  painter.setClipPath(canvas);
+  painter.setRenderHint(QPainter::Antialiasing, false);
+  painter.setPen(colors.canvas_grid);
+  for (int x = 24; x < width(); x += 24) painter.drawLine(x, 0, x, height());
+  for (int y = 24; y < height(); y += 24) painter.drawLine(0, y, width(), y);
+  painter.restore();
   if (image_.isNull()) {
-    painter.setPen(QColor("#9bacbe"));
-    painter.drawText(rect().adjusted(20, 20, -20, -20),
-                     Qt::AlignCenter | Qt::TextWordWrap, empty_message_);
+    constexpr int kIconSize = 36;
+    constexpr int kIconGap = 10;
+    const QRect area = rect().adjusted(20, 20, -20, -20);
+    const QRect text_bounds = painter.fontMetrics().boundingRect(
+        area, Qt::AlignCenter | Qt::TextWordWrap, empty_message_);
+    // Show the icon only when it fits above the message in a short view.
+    const bool with_icon = text_bounds.height() + kIconSize + kIconGap <= area.height();
+    const int top = area.center().y() -
+        (text_bounds.height() + (with_icon ? kIconSize + kIconGap : 0)) / 2;
+    if (with_icon) {
+      empty_icon_.paint(&painter, QRect(area.center().x() - kIconSize / 2, top,
+                                        kIconSize, kIconSize));
+    }
+    painter.setPen(colors.canvas_text);
+    painter.drawText(QRect(area.left(), with_icon ? top + kIconSize + kIconGap : top,
+                           area.width(), text_bounds.height()),
+                     Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap, empty_message_);
     return;
   }
 
@@ -238,11 +267,11 @@ void ImageView::paintEvent(QPaintEvent*) {
                               box.size() * zoom_);
     painter.setClipRect(target, Qt::IntersectClip);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.setPen(QPen(QColor("#152334"), 5));
+    painter.setPen(QPen(colors.canvas, 5));
     painter.drawRect(selected_box);
-    painter.setPen(QPen(QColor("#66f2d3"), 2));
+    painter.setPen(QPen(colors.highlight, 2));
     painter.drawRect(selected_box);
-    painter.setBrush(QColor("#66f2d3"));
+    painter.setBrush(colors.highlight);
     for (const auto& corner : {selected_box.topLeft(), selected_box.topRight(),
                               selected_box.bottomLeft(), selected_box.bottomRight()}) {
       painter.drawRect(QRectF(corner - QPointF(2, 2), QSizeF(4, 4)));
@@ -261,7 +290,7 @@ void ImageView::paintEvent(QPaintEvent*) {
       const QRectF label_box(label_position, label_size);
       painter.setPen(Qt::NoPen);
       painter.drawRoundedRect(label_box, 3, 3);
-      painter.setPen(QColor("#102c2b"));
+      painter.setPen(colors.canvas);
       painter.drawText(label_box, Qt::AlignCenter, label);
     }
   }
@@ -272,10 +301,19 @@ void ImageView::paintEvent(QPaintEvent*) {
   const QString caption = tr("%1 × %2 px  ·  %3%  ·  %4")
       .arg(image_.width()).arg(image_.height())
       .arg(zoom_ * 100.0, 0, 'f', zoom_ < 0.1 ? 1 : 0).arg(mode);
-  painter.setPen(QColor("#9bacbe"));
+  // A translucent pill in the bottom band keeps the caption off the image.
+  constexpr int kCaptionPadding = 10;
   const QRect caption_rect = rect().adjusted(12, height() - 28, -12, -6);
-  painter.drawText(caption_rect, Qt::AlignRight | Qt::AlignVCenter,
-      painter.fontMetrics().elidedText(caption, Qt::ElideRight, caption_rect.width()));
+  const QString shown = painter.fontMetrics().elidedText(
+      caption, Qt::ElideRight, caption_rect.width() - 2 * kCaptionPadding);
+  const int pill_width = painter.fontMetrics().horizontalAdvance(shown) + 2 * kCaptionPadding;
+  const QRectF pill(caption_rect.right() + 1 - pill_width, caption_rect.top() + 1,
+                    pill_width, caption_rect.height() - 2);
+  painter.setPen(Qt::NoPen);
+  painter.setBrush(QColor(255, 255, 255, 16));
+  painter.drawRoundedRect(pill, pill.height() / 2, pill.height() / 2);
+  painter.setPen(colors.canvas_text);
+  painter.drawText(pill, Qt::AlignCenter, shown);
 }
 
 }  // namespace yolo_defect_cpp::qt

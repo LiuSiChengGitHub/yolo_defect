@@ -1,0 +1,22 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource prefix="/theme">
+    <file alias="workbench.qss">workbench.qss</file>
+  </qresource>
+  <qresource prefix="/icons">
+    <file alias="app.svg">icons/app.svg</file>
+    <file alias="chart.svg">icons/chart.svg</file>
+    <file alias="chevron-down.svg">icons/chevron-down.svg</file>
+    <file alias="chevron-right.svg">icons/chevron-right.svg</file>
+    <file alias="chevron-up.svg">icons/chevron-up.svg</file>
+    <file alias="file.svg">icons/file.svg</file>
+    <file alias="fit.svg">icons/fit.svg</file>
+    <file alias="folder.svg">icons/folder.svg</file>
+    <file alias="grip.svg">icons/grip.svg</file>
+    <file alias="image.svg">icons/image.svg</file>
+    <file alias="play.svg">icons/play.svg</file>
+    <file alias="stop.svg">icons/stop.svg</file>
+    <file alias="zoom-in.svg">icons/zoom-in.svg</file>
+    <file alias="zoom-out.svg">icons/zoom-out.svg</file>
+  </qresource>
+</RCC>

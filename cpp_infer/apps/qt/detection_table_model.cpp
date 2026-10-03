@@ -26,8 +26,10 @@ QVariant DetectionTableModel::data(const QModelIndex& index, int role) const {
     return static_cast<int>(index.column() == 1 ? Qt::AlignLeft | Qt::AlignVCenter
                                               : Qt::AlignCenter);
   }
-  if (role != Qt::DisplayRole) return {};
   const auto& detection = detections_[index.row()];
+  // The raw score lets the confidence column draw a bar under its text.
+  if (role == Qt::UserRole && index.column() == 2) return detection.confidence;
+  if (role != Qt::DisplayRole) return {};
   switch (index.column()) {
     case 0: return index.row() + 1;
     case 1: return QString::fromStdString(detection.class_name);

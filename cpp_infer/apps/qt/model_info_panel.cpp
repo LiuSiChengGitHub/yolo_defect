@@ -1,6 +1,7 @@
 #include "model_info_panel.h"
 
 #include "detection_types.h"
+#include "theme.h"
 
 #include <QDir>
 #include <QGridLayout>
@@ -50,7 +51,7 @@ ModelInfoPanel::ModelInfoPanel(QWidget* parent) : QFrame(parent) {
 
   auto* parameters = new QGridLayout;
   parameters->setHorizontalSpacing(12);
-  parameters->setVerticalSpacing(6);
+  parameters->setVerticalSpacing(8);
   parameters->setColumnStretch(1, 1);
   auto add_parameter = [&](int row, const QString& title, const QString& object_name) {
     auto* key = makeLabel(title, "parameterLabel", this);
@@ -70,11 +71,15 @@ ModelInfoPanel::ModelInfoPanel(QWidget* parent) : QFrame(parent) {
   nms_mode_ = add_parameter(4, tr("NMS 模式"), "parameterValue");
   layout->addLayout(parameters);
 
+  const auto& colors = theme::palette();
+  const QIcon collapsed_icon = theme::icon(QStringLiteral("chevron-right"), colors.accent_text);
+  const QIcon expanded_icon = theme::icon(QStringLiteral("chevron-down"), colors.accent_text);
   details_toggle_ = new QToolButton(this);
   details_toggle_->setObjectName("modelDetailsToggle");
   details_toggle_->setText(tr("类别与文件详情"));
   details_toggle_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-  details_toggle_->setArrowType(Qt::RightArrow);
+  details_toggle_->setIcon(collapsed_icon);
+  details_toggle_->setIconSize(QSize(12, 12));
   details_toggle_->setAutoRaise(true);
   details_toggle_->setCheckable(true);
   details_toggle_->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Fixed);
@@ -99,9 +104,10 @@ ModelInfoPanel::ModelInfoPanel(QWidget* parent) : QFrame(parent) {
   model_path_ = add_detail(tr("模型文件"), "modelPath");
   config_path_ = add_detail(tr("配置文件"), "runtimeConfigPath");
   layout->addWidget(extra_details_);
-  connect(details_toggle_, &QToolButton::toggled, this, [this](bool expanded) {
+  connect(details_toggle_, &QToolButton::toggled, this,
+          [this, collapsed_icon, expanded_icon](bool expanded) {
     extra_details_->setVisible(expanded);
-    details_toggle_->setArrowType(expanded ? Qt::DownArrow : Qt::RightArrow);
+    details_toggle_->setIcon(expanded ? expanded_icon : collapsed_icon);
     details_toggle_->setText(expanded ? tr("收起详情") : tr("类别与文件详情"));
   });
   reset();
