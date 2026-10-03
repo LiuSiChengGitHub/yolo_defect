@@ -22,7 +22,7 @@ GitHub displays the offline HTML link as source. Download or clone the repositor
 
 | Area | Implemented behavior |
 |---|---|
-| Desktop application | Qt 6 Widgets; single-image, directory and manifest input; responsive background execution; cooperative stop; per-image failures; zoom, pan and linked box/table selection |
+| Desktop application | Qt 6 Widgets; warm dark interface with one palette driving the QSS theme and custom-painted canvases; single-image, directory and manifest input; responsive background execution; cooperative stop; per-image failures; zoom, pan and linked box/table selection |
 | Inference Runtime | Configuration and model-contract validation; OpenCV preprocessing; ONNX Runtime CPU inference; YOLO decode, NMS and coordinate restoration; JSON/PNG output |
 | Bounded concurrency | A bounded task queue, one pipeline/session per worker, deterministic result ordering, partial-failure isolation and final batch summaries |
 | Validation and analysis | Python/C++ and GUI/CLI comparison, FP32/QDQ U8S8 INT8 workflows, standalone benchmark, ORT profiling and batch-run comparison |
@@ -50,7 +50,7 @@ flowchart TD
 
 Qt and CLI call the same Runtime directly. Qt background workers adapt synchronous calls to signals and value results; the GUI requests cooperative stop through the Runner's thread-safe interface. Batch scheduling remains inside the Runtime. Result previews read saved JSON/images without repeating inference, and widgets remain on the GUI thread.
 
-Qt is an optional CMake target (`YOLO_DEFECT_BUILD_QT=OFF` by default). The Runtime, CLI and dependency-free core build without Qt. Layout, QSS, image interaction and future theme assets stay in the desktop module.
+Qt is an optional CMake target (`YOLO_DEFECT_BUILD_QT=OFF` by default). The Runtime, CLI and dependency-free core build without Qt. Layout, the palette and QSS theme, SVG icons and image interaction stay in the desktop module, so visual changes never touch inference code.
 
 ## Run the project
 

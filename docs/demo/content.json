@@ -14,7 +14,7 @@
       "secondary": "查看实验与架构",
       "pills": ["六类钢材表面缺陷", "配置驱动的 Runtime", "目录 / Manifest 批处理", "跨平台 C++17"],
       "image_alt": "Qt 工作台成功完成六张样例检测，展示原图、检测框、逐图结果和生效参数",
-      "caption": "Qt 客户端 · 六张样例全部完成 · 原图、检测框与逐图结果联动。"
+      "caption": "Qt 客户端 · 暖调暗色工作台 · 六张样例全部完成，原图、检测框与逐图结果联动。"
     },
     "features": [
       {"tag": "01 / APPLICATION", "title": "让检测可操作", "body": "单图、批量、协作停止、缩放与结果浏览，形成完整桌面流程。"},
@@ -28,7 +28,7 @@
       "label": "演示步骤",
       "steps": ["01 配置输入", "02 后台运行", "03 批次结果", "04 检查细节", "05 切换图片", "06 全图预览"],
       "captions": [
-        "01 · 选择 RuntimeConfig 与图片目录，设置并发数量和队列容量。模型参数由同一套 Runtime 校验。",
+        "01 · 输入方式切换到“图片目录”，选择 RuntimeConfig 与输入目录，设置并发数量和队列容量。模型参数由同一套 Runtime 校验。",
         "02 · 加载、推理与结果写出在后台执行，工作台保持响应，并显示忙碌状态。",
         "03 · 六张样例全部检测成功，按输入顺序显示目标数量与逐图耗时，结果自动归档。",
         "04 · 选择检测明细，在图像中高亮对应框；放大到原始像素检查局部细节。",
@@ -53,7 +53,7 @@
       "cards": [
         {"tag": "CONTRACT", "title": "显式的模型契约", "body": "RuntimeConfig 定义运行参数，ModelArtifactSpec 声明模型、类别及 I/O 语义。FP32 与 INT8 通过配置切换，外部 I/O 均保持 float32。"},
         {"tag": "BOUNDED CONCURRENCY", "title": "有上限的并发资源", "body": "BatchRunner 使用有界队列，每个 worker 独占 pipeline / session。按输入顺序收集结果，损坏单图不会阻断其他任务，停止请求允许在途任务完成。"},
-        {"tag": "PRESENTATION", "title": "独立维护的展示层", "body": "GUI 线程负责控件与交互，后台调用既有 Runtime。表格 Model、图像绘制、QSS 与布局集中在 Qt 模块，调整主题不改变推理协议。"}
+        {"tag": "PRESENTATION", "title": "独立维护的展示层", "body": "GUI 线程负责控件与交互，后台调用既有 Runtime。表格 Model、图像绘制、色板与 QSS 主题、SVG 图标和布局集中在 Qt 模块，调整主题不改变推理协议。"}
       ]
     },
     "engineering": {
@@ -92,7 +92,7 @@
       "tree_results": "每次任务独立归档",
       "tree_licenses": "组件许可材料",
       "demo_title": "推荐演示顺序",
-      "demo_steps": ["单图：运行默认样例，查看生效参数、类别、置信度及检测框。", "目录：选择 samples/，开始批处理；完成后展示成功计数与逐图结果。", "细节：点选表格行，滚轮缩放、拖动平移；点击检测框联动明细，“适应”恢复全图。", "Manifest：选择样例清单，展示稳定的输入顺序和可复现的任务列表。", "停止：用较大目录演示协作停止，在途图片完成后收尾，再开始一批任务。", "结果：打开逐图 JSON、批次汇总与输出目录，说明结果可以复查与比较。"]
+      "demo_steps": ["单图：运行默认样例，查看生效参数、类别、置信度及检测框。", "目录：选择 samples/，开始批处理；完成后展示成功计数与逐图结果。", "细节：点选表格行，滚轮缩放、拖动平移；点击检测框联动明细，工具栏“适应窗口”按钮或双击图像恢复全图。", "Manifest：选择样例清单，展示稳定的输入顺序和可复现的任务列表。", "停止：用较大目录演示协作停止，在途图片完成后收尾，再开始一批任务。", "结果：打开逐图 JSON、批次汇总与输出目录，说明结果可以复查与比较。"]
     },
     "verify": {
       "heading": "演示之后，也能回到可复现的验证",
@@ -111,7 +111,7 @@
       "lead": "README 与两版网页共用媒体资源。页面由一个结构模板和成对文案生成，图表由证据数据生成，让截图、交互步骤与双语介绍保持一致。",
       "code_hint": "更新真实 UI 素材与双语页面，检查同步后重新打包",
       "media_title": "素材、图表和中英文页面如何维护",
-      "media_body": "qt_demo_capture.cpp 驱动真实 Qt 控件与推理；qt_demo_media.py 生成 PNG、WebP 和 GIF，需安装 requirements-qt-media.txt 中的 Pillow。精选素材位于 docs/assets/qt/，临时帧保留在构建目录。修改颜色、字体、图标或布局后重新运行 media 即可；若控件名称或流程变化，同时更新捕获脚本。",
+      "media_body": "qt_demo_capture.cpp 驱动真实 Qt 控件与推理；qt_demo_media.py 生成 PNG、WebP 和 GIF，需安装 requirements-qt-media.txt 中的 Pillow。精选素材位于 docs/assets/qt/，临时帧保留在构建目录。界面颜色集中在 theme.cpp 的 Palette；修改颜色、字体、图标或布局后重新运行 media 即可；若控件名称或流程变化，同时更新捕获脚本。",
       "translation_body": "页面结构与样式只编辑 docs/demo/page.template.html；中英文文案成对维护在 content.json。render_demo.py 同时生成 index.html 与 index.en.html，--check 检查两种语言的字段、步骤数量和输出是否同步。生成后的 HTML 可直接离线打开，无需服务器。",
       "evidence_body": "仅在实验报告更新时运行下面两条命令。demo_charts.py 读取已提交报告，生成 evidence.json 与 docs/assets/engineering/ 图表，需安装 requirements-demo-charts.txt 中的 Matplotlib。新实验完成后更新来源再生成；不要手工修改图中的数值，模型大小、延迟与质量评估指标保留各自定义。",
       "guide_link": "查看完整维护说明与文件分工",
@@ -145,7 +145,7 @@
       "secondary": "Explore architecture and results",
       "pills": ["Six surface-defect classes", "Configuration-driven Runtime", "Directory / manifest batches", "Portable C++17"],
       "image_alt": "Qt workbench after six successful detections, showing original and annotated images, batch results and effective parameters",
-      "caption": "Qt desktop client · All six samples completed · Linked images, detection boxes and per-image results. The desktop UI is currently in Chinese."
+      "caption": "Qt desktop client · Warm dark workbench · All six samples completed, with linked images, detection boxes and per-image results. The desktop UI is currently in Chinese."
     },
     "features": [
       {"tag": "01 / APPLICATION", "title": "A usable workflow", "body": "Single images, batches, cooperative stop, zoom and result browsing in one desktop client."},
@@ -159,7 +159,7 @@
       "label": "Demonstration steps",
       "steps": ["01 Configure", "02 Run", "03 Results", "04 Inspect", "05 Switch image", "06 Overview"],
       "captions": [
-        "01 · Select a RuntimeConfig and image directory, then set worker count and queue capacity. The shared Runtime validates the model contract.",
+        "01 · Switch the input mode to an image directory, select a RuntimeConfig and the directory, then set worker count and queue capacity. The shared Runtime validates the model contract.",
         "02 · Loading, inference and result writing run in the background. The workbench remains responsive and shows a busy state.",
         "03 · All six samples succeed. Results retain input order and show detection counts and per-image timings; outputs are saved automatically.",
         "04 · Select a detection row to highlight its box, then inspect image details at native pixel scale.",
@@ -184,7 +184,7 @@
       "cards": [
         {"tag": "CONTRACT", "title": "Explicit model contracts", "body": "RuntimeConfig defines execution parameters; ModelArtifactSpec declares model, classes and I/O semantics. FP32 and INT8 are selected by configuration and retain float32 external I/O."},
         {"tag": "BOUNDED CONCURRENCY", "title": "Controlled resource use", "body": "BatchRunner uses a bounded queue, with one pipeline / session owned by each worker. Results preserve input order. A corrupt image does not interrupt other tasks, and cooperative stop lets in-flight work finish."},
-        {"tag": "PRESENTATION", "title": "An independent UI layer", "body": "The GUI thread owns widgets and interaction; background work calls the existing Runtime. Table models, image rendering, QSS and layout live in the Qt module, so visual changes leave inference contracts intact."}
+        {"tag": "PRESENTATION", "title": "An independent UI layer", "body": "The GUI thread owns widgets and interaction; background work calls the existing Runtime. Table models, image rendering, the palette and QSS theme, SVG icons and layout live in the Qt module, so visual changes leave inference contracts intact."}
       ]
     },
     "engineering": {
@@ -223,7 +223,7 @@
       "tree_results": "Separate output per run",
       "tree_licenses": "Component licenses",
       "demo_title": "Suggested walkthrough",
-      "demo_steps": ["Single image: run the default sample and inspect effective parameters, classes, confidence and detection boxes.", "Directory: select samples/, start a batch and review the completed counts and per-image results.", "Details: select a row, zoom with the wheel and drag to pan. Click a box to select its detection; Fit restores the full image.", "Manifest: select the sample list to demonstrate stable input order and a reproducible task set.", "Stop: use a larger directory, request cooperative stop, let in-flight images finish and start another batch.", "Outputs: open per-image JSON, the batch summary and the output directory to inspect and compare results."]
+      "demo_steps": ["Single image: run the default sample and inspect effective parameters, classes, confidence and detection boxes.", "Directory: select samples/, start a batch and review the completed counts and per-image results.", "Details: select a row, zoom with the wheel and drag to pan. Click a box to select its detection; the fit-to-window toolbar button or a double-click restores the full image.", "Manifest: select the sample list to demonstrate stable input order and a reproducible task set.", "Stop: use a larger directory, request cooperative stop, let in-flight images finish and start another batch.", "Outputs: open per-image JSON, the batch summary and the output directory to inspect and compare results."]
     },
     "verify": {
       "heading": "From the showcase back to reproducible checks.",
@@ -242,7 +242,7 @@
       "lead": "Both READMEs and both pages share media assets. A common template and paired translations generate the pages; recorded evidence generates the charts, keeping screenshots, tour steps and bilingual explanations aligned.",
       "code_hint": "Refresh UI captures and both pages, check synchronization, then repackage",
       "media_title": "Maintaining media, charts and translations",
-      "media_body": "qt_demo_capture.cpp drives real Qt widgets and inference; qt_demo_media.py creates PNG, WebP and GIF assets using Pillow from requirements-qt-media.txt. Selected media lives in docs/assets/qt/, with temporary frames in the build directory. After changes to colors, fonts, icons or layout, run media again. Changes to widget names or workflow also require updating the capture script.",
+      "media_body": "qt_demo_capture.cpp drives real Qt widgets and inference; qt_demo_media.py creates PNG, WebP and GIF assets using Pillow from requirements-qt-media.txt. Selected media lives in docs/assets/qt/, with temporary frames in the build directory. Interface colors live in the Palette in theme.cpp; after changes to colors, fonts, icons or layout, run media again. Changes to widget names or workflow also require updating the capture script.",
       "translation_body": "Edit page structure and styling only in docs/demo/page.template.html, with paired Chinese and English copy in content.json. render_demo.py generates index.html and index.en.html together; --check detects mismatched translation fields, step counts and stale output. Generated pages work directly offline without a server.",
       "evidence_body": "Run the following commands only when experiment reports change. demo_charts.py reads committed reports to generate evidence.json and docs/assets/engineering/ charts, using Matplotlib from requirements-demo-charts.txt. Update sources after new experiments and regenerate instead of editing plotted values manually. Preserve model-size, latency and quality-metric definitions.",
       "guide_link": "Full maintenance instructions and file ownership",

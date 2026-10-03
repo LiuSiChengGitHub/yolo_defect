@@ -212,3 +212,13 @@ python cpp_infer/tools/render_demo.py --check
 本轮仅扩展 Qt 的可选展示目标和开发工具，没有修改 Runtime 源码、输出协议或跨平台实现；未重复无关性能实验与 AArch64/QEMU 验证。
 
 后续展示更新（2026-09-27）：重新运行 `qt.cmd media`，六张图片逐项成功，GIF 解码为 6 帧 / 11.8 秒。新增中英文共用模板与正式报告图表，双语生成同步、报告来源、资源/锚点、JavaScript、PowerShell 和 Pages YAML 静态检查通过；两份 README 的 GIF 均直接展开。已有 `dist/yolo-defect-qt/` 的 HTML、媒体和图表已同步，逐文件核对与源码素材一致。本次未改业务 Runtime，也未重复整套推理回归；HTML 尚未做浏览器目视验收，Pages 尚未发布。
+
+## 界面改版验收记录（2026-10-03）
+
+| 检查 | 本轮结果与证据 |
+|---|---|
+| Qt 回归 | `qt.cmd test`：QtTest **11 passed / 0 failed / 0 skipped**；原生 Windows QPA（DPR 2、隐藏窗口）运行单图、目录批处理、停止与 Unicode 恢复用例 **6 passed / 0 failed / 0 skipped**，含真实点击、滚轮与拖动。980×700 最小窗口仍显示多行列表数据。 |
+| 媒体与网页 | `qt.cmd media` 重新捕获 6 个真实状态（六图全部成功）并生成 PNG、WebP 与 GIF；工程图表按新色板由 `demo_charts.py` 重新生成，`--check` 确认证据与已提交报告一致；`render_demo.py --check` 双语同步。两种语言页面已用无头 Edge 渲染检查。 |
+| Windows 成品包 | 新目录 `dist/yolo-defect-qt-20261003/`，包含 `qsvgicon` / `qsvg` 插件；包内媒体和 HTML 与 `docs/` 一致。`verify.ps1` 通过：两个模型单图、六图 manifest 批处理及原生 Qt 启动。 |
+
+本轮只改 Qt 界面层、展示页样式与图表配色；Runtime 源码、输出协议和检测结果未改动。测试仅把 `inputMode` 的查找方式改为读取 `currentIndex` 属性，断言不变。

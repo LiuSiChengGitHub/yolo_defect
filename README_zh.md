@@ -22,7 +22,7 @@ GitHub 会将离线 HTML 链接显示为源码。下载或克隆仓库后，用�
 
 | 模块 | 已实现能力 |
 |---|---|
-| 桌面应用 | Qt 6 Widgets；单图、目录及 manifest 输入；后台执行与协作停止；逐图失败反馈；缩放平移及检测框与表格联动 |
+| 桌面应用 | Qt 6 Widgets；暖调暗色界面，统一色板驱动 QSS 主题与自绘画布；单图、目录及 manifest 输入；后台执行与协作停止；逐图失败反馈；缩放平移及检测框与表格联动 |
 | 推理 Runtime | 配置与模型契约校验；OpenCV 预处理；ONNX Runtime CPU 推理；YOLO 解码、NMS 与坐标恢复；JSON/PNG 输出 |
 | 有界并发 | 有界任务队列；每个 worker 独立拥有 pipeline/session；稳定结果顺序；逐项失败隔离与最终批次汇总 |
 | 校验与分析 | Python/C++、GUI/CLI 结果比较；FP32/QDQ U8S8 INT8 流程；独立 benchmark、ORT profiling 与批次对比 |
@@ -50,7 +50,7 @@ flowchart TD
 
 Qt 与 CLI 直接调用同一 Runtime。Qt 后台 worker 将同步调用适配为信号和值类型结果，GUI 通过 Runner 的线程安全接口请求协作停止，批处理调度仍由 Runtime 负责。逐图预览读取已保存的 JSON/图片，不重复推理；控件始终由 GUI 线程操作。
 
-Qt 使用独立、可选的 CMake target，`YOLO_DEFECT_BUILD_QT` 默认关闭。Runtime、CLI 和无外部依赖的 core 构建不要求 Qt；布局、QSS、图像交互与后续主题资源留在客户端模块。
+Qt 使用独立、可选的 CMake target，`YOLO_DEFECT_BUILD_QT` 默认关闭。Runtime、CLI 和无外部依赖的 core 构建不要求 Qt；布局、色板与 QSS 主题、SVG 图标和图像交互都留在客户端模块，调整外观不涉及推理代码。
 
 ## 运行项目
 

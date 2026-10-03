@@ -27,8 +27,8 @@ QUANT_QUALITY = "cpp_infer/results/s2_01/round2/correctness_u8s8.json"
 WINDOWS_COMPARE = "cpp_infer/results/s2_03/windows_x86_64/comparison.json"
 LINUX_COMPARE = "cpp_infer/results/s2_03/linux_x86_64/performance/batch_comparison.json"
 INTEGRATION = "cpp_infer/results/s2_03/int8_integration/verification_summary.json"
-NAVY, TEAL, INK, MUTED, GRID, AMBER = (
-    "#344d6b", "#099b8c", "#142b42", "#607489", "#e3eaf0", "#a65d10"
+STONE, CLAY, INK, MUTED, GRID, AMBER = (
+    "#5c564d", "#c96442", "#1f1e1c", "#6b675e", "#ebe6db", "#a8770f"
 )
 
 
@@ -207,7 +207,7 @@ def style(lang):
 
 
 def horizontal_comparison(ax, values, title, unit, labels, fmt=".2f"):
-    ax.barh([1, 0], values, height=0.48, color=[NAVY, TEAL], zorder=3)
+    ax.barh([1, 0], values, height=0.48, color=[STONE, CLAY], zorder=3)
     ax.set_yticks([1, 0], labels)
     ax.tick_params(axis="both", length=0, pad=7)
     ax.set_xlim(0, max(values) * 1.28)
@@ -237,7 +237,7 @@ def quantization_chart(data, lang):
         horizontal_comparison(fig.add_subplot(grid[0, index]), [item["fp32"], item["int8"]], item["label"][lang], "MB" if index == 0 else "ms", ["FP32", "INT8"])
     curve = quant["quality_curve"]
     ax = fig.add_subplot(grid[1, :])
-    for key, color, label in [("fp32", NAVY, "FP32"), ("int8", TEAL, "INT8 / U8S8")]:
+    for key, color, label in [("fp32", STONE, "FP32"), ("int8", CLAY, "INT8 / U8S8")]:
         ax.plot(curve["iou_thresholds"], curve[key], "o-", color=color, label=label, linewidth=2.4, markersize=5)
     ax.set_ylim(0, 80)
     ax.set_xlim(0.485, 0.965)
