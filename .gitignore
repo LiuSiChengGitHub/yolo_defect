@@ -78,3 +78,7 @@ cpp_infer/results/s2_03/**/inputs/
 # ---------- Misc ----------
 *.bak
 *.tmp
+
+# ---------- Other ----------
+AGENTS.md
+
